@@ -13,8 +13,12 @@
         "assistant": "@package://prompt/domain/assistant/thought/assistant.thought.md",
         "remember": "@package://prompt/core/thought/remember.thought.md",
         "recall": "@package://prompt/core/thought/recall.thought.md",
+        "role-designer": "@package://prompt/domain/role-designer/thought/role-designer.thought.md",
         "product-manager": "@package://prompt/domain/product-manager/thought/product-manager.thought.md",
-        "java-backend-developer": "@package://prompt/domain/java-backend-developer/thought/java-backend-developer.thought.md"
+        "java-backend-developer": "@package://prompt/domain/java-backend-developer/thought/java-backend-developer.thought.md",
+        "promptx-fullstack-developer": "@package://prompt/domain/promptx-fullstack-developer/thought/promptx-fullstack-developer.thought.md",
+        "xiaohongshu-marketer": "@package://prompt/domain/xiaohongshu-marketer/thought/xiaohongshu-marketer.thought.md",
+        "frontend-developer": "@package://prompt/domain/frontend-developer/thought/frontend-developer.thought.md"
       }
     },
     "execution": {
@@ -26,6 +30,7 @@
       },
       "registry": {
         "assistant": "@package://prompt/domain/assistant/execution/assistant.execution.md",
+        "role-designer": "@package://prompt/domain/role-designer/execution/role-designer.execution.md",
         "product-manager": "@package://prompt/domain/product-manager/execution/product-manager.execution.md",
         "market-analysis": "@package://prompt/domain/product-manager/execution/market-analysis.execution.md",
         "user-research": "@package://prompt/domain/product-manager/execution/user-research.execution.md",
@@ -33,7 +38,10 @@
         "system-architecture": "@package://prompt/domain/java-backend-developer/execution/system-architecture.execution.md",
         "spring-ecosystem": "@package://prompt/domain/java-backend-developer/execution/spring-ecosystem.execution.md",
         "code-quality": "@package://prompt/domain/java-backend-developer/execution/code-quality.execution.md",
-        "database-design": "@package://prompt/domain/java-backend-developer/execution/database-design.execution.md"
+        "database-design": "@package://prompt/domain/java-backend-developer/execution/database-design.execution.md",
+        "promptx-fullstack-developer": "@package://prompt/domain/promptx-fullstack-developer/execution/promptx-fullstack-developer.execution.md",
+        "xiaohongshu-marketer": "@package://prompt/domain/xiaohongshu-marketer/execution/xiaohongshu-marketer.execution.md",
+        "frontend-developer": "@package://prompt/domain/frontend-developer/execution/frontend-developer.execution.md"
       }
     },
     "memory": {
@@ -82,6 +90,21 @@
           "file": "@package://prompt/domain/test-role/test-role.role.md",
           "name": "🧪 测试角色",
           "description": "这是一个用于测试动态发现和注册功能的示例角色"
+        },
+        "promptx-fullstack-developer": {
+          "file": "@package://prompt/domain/promptx-fullstack-developer/promptx-fullstack-developer.role.md",
+          "name": "🚀 PromptX全栈开发者",
+          "description": "专业PromptX全栈开发专家，精通DPML协议、锦囊系统和AI工程化开发"
+        },
+        "xiaohongshu-marketer": {
+          "file": "@package://prompt/domain/xiaohongshu-marketer/xiaohongshu-marketer.role.md",
+          "name": "📱 小红书营销专家",
+          "description": "专业小红书营销专家，精通内容创作、用户运营、电商转化和数据分析"
+        },
+        "frontend-developer": {
+          "file": "@package://prompt/domain/frontend-developer/frontend-developer.role.md",
+          "name": "💻 前端开发者",
+          "description": "现代前端开发专家，精通React/Vue生态、工程化实践和用户体验优化"
         }
       }
     },

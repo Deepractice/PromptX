@@ -85,9 +85,24 @@ class ResourceManager {
     // 设置协议依赖关系
     const packageProtocol = handlers.get('package')
     const promptProtocol = handlers.get('prompt')
+    const roleProtocol = handlers.get('role')
+    const thoughtProtocol = handlers.get('thought')
+    const executionProtocol = handlers.get('execution')
 
     if (promptProtocol && packageProtocol) {
       promptProtocol.setPackageProtocol(packageProtocol)
+    }
+
+    if (roleProtocol && packageProtocol) {
+      roleProtocol.setPackageProtocol(packageProtocol)
+    }
+
+    if (thoughtProtocol && packageProtocol) {
+      thoughtProtocol.setPackageProtocol(packageProtocol)
+    }
+
+    if (executionProtocol && packageProtocol) {
+      executionProtocol.setPackageProtocol(packageProtocol)
     }
 
     // 将所有处理器注册到管理器

@@ -1,0 +1,336 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PromptX Role Format Schema",
+  "description": "基于assistant.role.md的PromptX角色标准格式规范",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "mainFile": {
+      "type": "object",
+      "description": "主角色文件格式规范",
+      "properties": {
+        "structure": {
+          "type": "object",
+          "properties": {
+            "rootElement": {
+              "type": "string",
+              "const": "role",
+              "description": "根元素必须是role"
+            },
+            "requiredComponents": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["personality", "principle"]
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "必须包含且仅包含personality和principle两个组件"
+            },
+            "allowInlineContent": {
+              "type": "boolean",
+              "const": false,
+              "description": "主文件不允许内联内容，所有内容必须通过引用实现"
+            }
+          },
+          "required": ["rootElement", "requiredComponents", "allowInlineContent"]
+        },
+        "personality": {
+          "type": "object",
+          "properties": {
+            "requiredReferences": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "contains": {
+                "const": "@!thought://remember"
+              },
+              "description": "personality组件必须包含的引用"
+            },
+            "referenceFormat": {
+              "type": "string",
+              "pattern": "^@!thought://[a-zA-Z0-9_-]+$",
+              "description": "引用格式必须为@!thought://格式"
+            },
+            "customRoleReference": {
+              "type": "string",
+              "pattern": "^@!thought://{{roleName}}$",
+              "description": "必须包含角色特定的thought引用"
+            }
+          },
+          "required": ["requiredReferences", "referenceFormat"]
+        },
+        "principle": {
+          "type": "object",
+          "properties": {
+            "requiredReferences": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^@!execution://[a-zA-Z0-9_-]+$"
+              },
+              "minItems": 1,
+              "description": "principle组件必须包含execution引用"
+            },
+            "referenceFormat": {
+              "type": "string",
+              "pattern": "^@!execution://[a-zA-Z0-9_-]+$",
+              "description": "引用格式必须为@!execution://格式"
+            }
+          },
+          "required": ["requiredReferences", "referenceFormat"]
+        }
+      },
+      "required": ["structure", "personality", "principle"]
+    },
+    "thoughtComponent": {
+      "type": "object",
+      "description": "thought组件文件格式规范",
+      "properties": {
+        "structure": {
+          "type": "object",
+          "properties": {
+            "rootElement": {
+              "type": "string",
+              "const": "thought",
+              "description": "根元素必须是thought"
+            },
+            "requiredSections": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["exploration", "reasoning", "challenge", "plan"]
+              },
+              "minItems": 4,
+              "maxItems": 4,
+              "description": "必须包含四个思维模式部分"
+            },
+            "sectionOrder": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "推荐的部分顺序"
+            }
+          },
+          "required": ["rootElement", "requiredSections"]
+        },
+        "contentRequirements": {
+          "type": "object",
+          "properties": {
+            "exploration": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "divergent thinking, capability exploration"
+                },
+                "minLength": {
+                  "type": "number",
+                  "minimum": 200
+                },
+                "requireHeaders": {
+                  "type": "boolean",
+                  "const": true
+                }
+              }
+            },
+            "reasoning": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "logical framework, systematic analysis"
+                },
+                "requireDiagrams": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "diagramFormats": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["mermaid", "flowchart", "code block"]
+                  }
+                }
+              }
+            },
+            "challenge": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "critical thinking, limitation analysis"
+                },
+                "requireQuestions": {
+                  "type": "boolean",
+                  "const": true
+                }
+              }
+            },
+            "plan": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "structured approach, implementation framework"
+                },
+                "requireSteps": {
+                  "type": "boolean",
+                  "const": true
+                }
+              }
+            }
+          },
+          "required": ["exploration", "reasoning", "challenge", "plan"]
+        }
+      },
+      "required": ["structure", "contentRequirements"]
+    },
+    "executionComponent": {
+      "type": "object",
+      "description": "execution组件文件格式规范",
+      "properties": {
+        "structure": {
+          "type": "object",
+          "properties": {
+            "rootElement": {
+              "type": "string",
+              "const": "execution",
+              "description": "根元素必须是execution"
+            },
+            "requiredSections": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["constraint", "rule", "guideline", "process", "criteria"]
+              },
+              "minItems": 5,
+              "maxItems": 5,
+              "description": "必须包含五个执行要素"
+            },
+            "priorityOrder": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "优先级顺序：constraint > rule > guideline > process > criteria"
+            }
+          },
+          "required": ["rootElement", "requiredSections", "priorityOrder"]
+        },
+        "contentRequirements": {
+          "type": "object",
+          "properties": {
+            "constraint": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "objective limitations, unchangeable conditions"
+                },
+                "priority": {
+                  "type": "number",
+                  "const": 1
+                }
+              }
+            },
+            "rule": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "mandatory rules, strict compliance required"
+                },
+                "priority": {
+                  "type": "number",
+                  "const": 2
+                }
+              }
+            },
+            "guideline": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "recommended practices, flexible principles"
+                },
+                "priority": {
+                  "type": "number",
+                  "const": 3
+                }
+              }
+            },
+            "process": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "execution steps, workflow definition"
+                },
+                "requireFlowchart": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "priority": {
+                  "type": "number",
+                  "const": 4
+                }
+              }
+            },
+            "criteria": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "const": "evaluation standards, quality metrics"
+                },
+                "priority": {
+                  "type": "number",
+                  "const": 5
+                }
+              }
+            }
+          },
+          "required": ["constraint", "rule", "guideline", "process", "criteria"]
+        }
+      },
+      "required": ["structure", "contentRequirements"]
+    },
+    "fileStructure": {
+      "type": "object",
+      "description": "文件结构规范",
+      "properties": {
+        "directoryLayout": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+\\.role\\.md$",
+          "description": "主文件路径格式：{roleName}/{roleName}.role.md"
+        },
+        "thoughtFile": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+/thought/[a-zA-Z0-9_-]+\\.thought\\.md$",
+          "description": "thought文件路径格式"
+        },
+        "executionFile": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+/execution/[a-zA-Z0-9_-]+\\.execution\\.md$",
+          "description": "execution文件路径格式"
+        },
+        "namingConsistency": {
+          "type": "boolean",
+          "const": true,
+          "description": "文件名必须与角色名保持一致"
+        },
+        "componentSeparation": {
+          "type": "boolean",
+          "const": true,
+          "description": "组件必须分离到独立文件"
+        }
+      },
+      "required": ["directoryLayout", "thoughtFile", "executionFile", "namingConsistency", "componentSeparation"]
+    }
+  },
+  "required": ["mainFile", "thoughtComponent", "executionComponent", "fileStructure"],
+  "additionalProperties": false
+}

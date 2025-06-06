@@ -2,15 +2,17 @@ const BasePouchCommand = require('../BasePouchCommand')
 const fs = require('fs-extra')
 const path = require('path')
 const { buildCommand } = require('../../../../constants')
+const ResourceManager = require('../../resource/resourceManager')
 
 /**
  * 角色发现锦囊命令
  * 负责展示可用的AI角色和领域专家
+ * 基于奥卡姆剃刀原则：注册表为主，文件系统为辅
  */
 class HelloCommand extends BasePouchCommand {
   constructor () {
     super()
-    this.roleRegistry = null // 角色注册表将从资源系统动态加载
+    this.resourceManager = new ResourceManager()
   }
 
   getPurpose () {
@@ -18,86 +20,121 @@ class HelloCommand extends BasePouchCommand {
   }
 
   /**
-   * 动态加载角色注册表
+   * 简化的角色发现机制 - 注册表为主，文件系统为辅
+   * 约定：优先使用注册表，补充本地发现的角色
    */
-  async loadRoleRegistry () {
-    if (this.roleRegistry) {
-      return this.roleRegistry
-    }
+  async discoverAllRoles () {
+    const allRoles = {}
 
     try {
-      // 从ResourceManager获取统一注册表
-      const ResourceManager = require('../../resource/resourceManager')
-      const resourceManager = new ResourceManager()
-      await resourceManager.initialize() // 确保初始化完成
-
-      let registeredRoles = {}
-      if (resourceManager.registry && resourceManager.registry.protocols && resourceManager.registry.protocols.role && resourceManager.registry.protocols.role.registry) {
-        registeredRoles = resourceManager.registry.protocols.role.registry
-      }
-
-      // 动态发现本地角色并合并
-      const discoveredRoles = await this.discoverLocalRoles()
+      // 1. 加载注册表中的角色（主要数据源）
+      await this.resourceManager.initialize()
       
-      // 合并注册表中的角色和动态发现的角色
-      this.roleRegistry = {
-        ...registeredRoles,
-        ...discoveredRoles
-      }
-
-      // 如果没有任何角色，使用基础角色
-      if (Object.keys(this.roleRegistry).length === 0) {
-        this.roleRegistry = {
-          assistant: {
-            file: '@package://prompt/domain/assistant/assistant.role.md',
-            name: '🙋 智能助手',
-            description: '通用助理角色，提供基础的助理服务和记忆支持'
+      if (this.resourceManager.registry?.protocols?.role?.registry) {
+        const registeredRoles = this.resourceManager.registry.protocols.role.registry
+        
+        // 验证注册表中的角色文件存在性
+        for (const [roleId, roleInfo] of Object.entries(registeredRoles)) {
+          if (await this.validateRoleFile(roleInfo.file)) {
+            allRoles[roleId] = roleInfo
           }
         }
       }
+
+      // 2. 补充本地发现的角色（仅添加注册表中没有的）
+      const localRoles = await this.scanLocalRoles()
+      Object.entries(localRoles).forEach(([roleId, roleInfo]) => {
+        if (!allRoles[roleId]) {
+          allRoles[roleId] = roleInfo
+        }
+      })
+
+      // 3. 确保至少有一个可用角色
+      if (Object.keys(allRoles).length === 0) {
+        const defaultRoles = this.getDefaultRoles()
+        Object.assign(allRoles, defaultRoles)
+      }
+
+      return allRoles
+
     } catch (error) {
-      console.warn('角色注册表加载失败，尝试动态发现:', error.message)
-      
-      // fallback到动态发现
-      try {
-        const discoveredRoles = await this.discoverLocalRoles()
-        this.roleRegistry = Object.keys(discoveredRoles).length > 0 ? discoveredRoles : {
-          assistant: {
-            file: '@package://prompt/domain/assistant/assistant.role.md',
-            name: '🙋 智能助手',
-            description: '通用助理角色，提供基础的助理服务和记忆支持'
-          }
-        }
-      } catch (discoveryError) {
-        console.warn('动态角色发现也失败了:', discoveryError.message)
-        this.roleRegistry = {
-          assistant: {
-            file: '@package://prompt/domain/assistant/assistant.role.md',
-            name: '🙋 智能助手',
-            description: '通用助理角色，提供基础的助理服务和记忆支持'
-          }
-        }
-      }
+      console.warn('角色发现失败，使用默认角色:', error.message)
+      return this.getDefaultRoles()
     }
-
-    return this.roleRegistry
   }
 
   /**
-   * 获取所有角色列表（转换为数组格式）
+   * 扫描本地角色文件
+   */
+  async scanLocalRoles () {
+    const domainPath = './prompt/domain'
+    const roles = {}
+
+    try {
+      if (!await fs.pathExists(domainPath)) {
+        return roles
+      }
+
+      const entries = await fs.readdir(domainPath, { withFileTypes: true })
+      
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const roleId = entry.name
+          const roleFile = path.join(domainPath, roleId, `${roleId}.role.md`)
+          
+          if (await fs.pathExists(roleFile)) {
+            roles[roleId] = this.createRoleMetadata(roleId, roleFile)
+          }
+        }
+      }
+
+      return roles
+    } catch (error) {
+      console.warn('本地角色扫描失败:', error.message)
+      return {}
+    }
+  }
+
+  /**
+   * 创建角色元数据（基于约定的默认值）
+   */
+  createRoleMetadata (roleId, roleFile) {
+    return {
+      file: roleFile,
+      name: `🎭 ${roleId}`,
+      description: `${roleId}专业服务`
+    }
+  }
+
+  /**
+   * 获取默认角色
+   */
+  getDefaultRoles () {
+    return {
+      assistant: {
+        file: '@package://prompt/domain/assistant/assistant.role.md',
+        name: '🙋 智能助手',
+        description: '通用助理角色，提供基础的助理服务和记忆支持'
+      }
+    }
+  }
+
+  /**
+   * 获取所有角色（简化版本）
    */
   async getAllRoles () {
-    const registry = await this.loadRoleRegistry()
-    return Object.entries(registry).map(([id, roleInfo]) => ({
-      id,
-      name: roleInfo.name,
-      description: roleInfo.description,
-      file: roleInfo.file
+    const roles = await this.discoverAllRoles()
+    
+    return Object.keys(roles).map(roleId => ({
+      id: roleId,
+      name: roles[roleId].name,
+      description: roles[roleId].description,
+      file: roles[roleId].file,
+      source: roles[roleId].file.startsWith('@package://') ? 'registry' : 'local'
     }))
   }
 
   async getContent (args) {
-    await this.loadRoleRegistry()
     const allRoles = await this.getAllRoles()
     const totalRoles = allRoles.length
 
@@ -174,7 +211,7 @@ ${buildCommand.action(allRoles[0]?.id || 'assistant')}
       metadata: {
         totalRoles: allRoles.length,
         availableRoles,
-        dataSource: 'resource.registry.json',
+        dataSource: 'registry + local filesystem',
         systemVersion: '锦囊串联状态机 v1.0',
         designPhilosophy: 'AI use CLI get prompt for AI'
       }
@@ -182,11 +219,29 @@ ${buildCommand.action(allRoles[0]?.id || 'assistant')}
   }
 
   /**
+   * 验证角色文件是否存在（支持@package://协议）
+   */
+  async validateRoleFile (filePath) {
+    try {
+      if (filePath.startsWith('@package://')) {
+        const PackageProtocol = require('../../resource/protocols/PackageProtocol')
+        const packageProtocol = new PackageProtocol()
+        const packageRoot = await packageProtocol.getPackageRoot()
+        const actualPath = path.join(packageRoot, filePath.replace('@package://', ''))
+        return await fs.pathExists(actualPath)
+      }
+      return await fs.pathExists(filePath)
+    } catch (error) {
+      return false
+    }
+  }
+
+  /**
    * 获取角色信息（提供给其他命令使用）
    */
   async getRoleInfo (roleId) {
-    const registry = await this.loadRoleRegistry()
-    const roleData = registry[roleId]
+    const roles = await this.discoverAllRoles()
+    const roleData = roles[roleId]
 
     if (!roleData) {
       return null
@@ -201,71 +256,11 @@ ${buildCommand.action(allRoles[0]?.id || 'assistant')}
   }
 
   /**
-   * 未来扩展：动态角色发现
-   * TODO: 实现真正的文件扫描和解析
+   * 获取可用领域（简化版本）
    */
   async discoverAvailableDomains () {
-    // 现在基于注册表返回角色ID列表
     const allRoles = await this.getAllRoles()
     return allRoles.map(role => role.id)
-  }
-
-  /**
-   * 动态发现本地角色文件
-   */
-  async discoverLocalRoles () {
-    const PackageProtocol = require('../../resource/protocols/PackageProtocol')
-    const packageProtocol = new PackageProtocol()
-    const glob = require('glob')
-    const path = require('path')
-    
-    try {
-      const packageRoot = await packageProtocol.getPackageRoot()
-      const domainPath = path.join(packageRoot, 'prompt', 'domain')
-      
-      // 扫描所有角色目录
-      const rolePattern = path.join(domainPath, '*', '*.role.md')
-      const roleFiles = glob.sync(rolePattern)
-      
-      const discoveredRoles = {}
-      
-      for (const roleFile of roleFiles) {
-        try {
-          const content = await fs.readFile(roleFile, 'utf-8')
-          const relativePath = path.relative(packageRoot, roleFile)
-          const roleName = path.basename(roleFile, '.role.md')
-          
-          // 尝试从文件内容中提取角色信息
-          let description = '本地发现的角色'
-          let name = `🎭 ${roleName}`
-          
-          // 简单的元数据提取（支持多行）
-          const descMatch = content.match(/description:\s*(.+?)(?:\n|$)/i)
-          if (descMatch) {
-            description = descMatch[1].trim()
-          }
-          
-          const nameMatch = content.match(/name:\s*(.+?)(?:\n|$)/i)
-          if (nameMatch) {
-            name = nameMatch[1].trim()
-          }
-          
-          discoveredRoles[roleName] = {
-            file: `@package://${relativePath}`,
-            name,
-            description,
-            source: 'local-discovery'
-          }
-        } catch (error) {
-          console.warn(`跳过无效的角色文件: ${roleFile}`, error.message)
-        }
-      }
-      
-      return discoveredRoles
-    } catch (error) {
-      console.warn('动态角色发现失败:', error.message)
-      return {}
-    }
   }
 }
 

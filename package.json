@@ -1,10 +1,11 @@
 {
-  "name": "dpml-prompt",
-  "version": "0.0.2-snapshot.6",
-  "description": "DPML-powered AI prompt framework - Revolutionary AI-First CLI system based on Deepractice Prompt Markup Language. Build sophisticated AI agents with structured prompts, memory systems, and execution frameworks.",
+  "name": "dpml-prompt-local",
+  "version": "0.0.2-local.6",
+  "description": "DPML-powered AI prompt framework - LOCAL DEVELOPMENT VERSION - Revolutionary AI-First CLI system based on Deepractice Prompt Markup Language. Build sophisticated AI agents with structured prompts, memory systems, and execution frameworks.",
   "main": "src/lib/index.js",
   "bin": {
-    "dpml-prompt": "src/bin/promptx.js"
+    "dpml-prompt-local": "src/bin/promptx.js",
+    "promptx-local": "src/bin/promptx.js"
   },
   "scripts": {
     "start": "node src/bin/promptx.js",

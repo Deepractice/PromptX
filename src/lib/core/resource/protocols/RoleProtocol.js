@@ -10,6 +10,14 @@ class RoleProtocol extends ResourceProtocol {
   constructor () {
     super('role')
     this.registry = {}
+    this.packageProtocol = null
+  }
+
+  /**
+   * 设置PackageProtocol实例
+   */
+  setPackageProtocol (packageProtocol) {
+    this.packageProtocol = packageProtocol
   }
 
   /**
@@ -46,14 +54,30 @@ class RoleProtocol extends ResourceProtocol {
       throw new Error(`角色 "${roleId}" 未在注册表中找到。可用角色：${Object.keys(this.registry).join(', ')}`)
     }
 
-    let resolvedPath = this.registry[roleId]
-
-    // 处理 @package:// 前缀
-    if (resolvedPath.startsWith('@package://')) {
-      resolvedPath = resolvedPath.replace('@package://', '')
+    const registryEntry = this.registry[roleId]
+    
+    // 兼容两种格式：字符串路径或对象格式
+    let registryPath
+    if (typeof registryEntry === 'string') {
+      registryPath = registryEntry
+    } else if (registryEntry && registryEntry.file) {
+      registryPath = registryEntry.file
+    } else {
+      throw new Error(`无效的注册表条目格式: ${JSON.stringify(registryEntry)}`)
     }
 
-    return resolvedPath
+    // 处理 @package:// 前缀 - 通过PackageProtocol正确解析
+    if (registryPath && registryPath.startsWith('@package://')) {
+      if (!this.packageProtocol) {
+        throw new Error('PackageProtocol未设置，无法解析@package://路径')
+      }
+      
+      const packageRelativePath = registryPath.replace('@package://', '')
+      const resolvedPath = await this.packageProtocol.resolvePath(packageRelativePath, queryParams)
+      return resolvedPath
+    }
+
+    return registryPath
   }
 
   /**

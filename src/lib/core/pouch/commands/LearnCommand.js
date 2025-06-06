@@ -25,13 +25,18 @@ class LearnCommand extends BasePouchCommand {
 
     try {
       // 直接使用ResourceManager解析资源
-      const content = await this.resourceManager.resolve(resourceUrl)
+      const result = await this.resourceManager.resolve(resourceUrl)
+      
+      // 检查解析结果
+      if (!result.success) {
+        throw new Error(result.error?.message || '资源解析失败')
+      }
 
       // 解析协议信息
       const urlMatch = resourceUrl.match(/^([a-zA-Z]+):\/\/(.+)$/)
       const [, protocol, resourceId] = urlMatch
 
-      return this.formatSuccessResponse(protocol, resourceId, content)
+      return this.formatSuccessResponse(protocol, resourceId, result.content)
     } catch (error) {
       return this.formatErrorResponse(resourceUrl, error.message)
     }

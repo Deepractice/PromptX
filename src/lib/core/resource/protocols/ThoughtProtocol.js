@@ -10,6 +10,14 @@ class ThoughtProtocol extends ResourceProtocol {
   constructor () {
     super('thought')
     this.registry = {}
+    this.packageProtocol = null
+  }
+
+  /**
+   * 设置PackageProtocol实例
+   */
+  setPackageProtocol (packageProtocol) {
+    this.packageProtocol = packageProtocol
   }
 
   /**
@@ -44,14 +52,20 @@ class ThoughtProtocol extends ResourceProtocol {
       throw new Error(`思维模式 "${thoughtId}" 未在注册表中找到`)
     }
 
-    let resolvedPath = this.registry[thoughtId]
+    let registryPath = this.registry[thoughtId]
 
-    // 处理 @package:// 前缀
-    if (resolvedPath.startsWith('@package://')) {
-      resolvedPath = resolvedPath.replace('@package://', '')
+    // 处理 @package:// 前缀 - 通过PackageProtocol正确解析
+    if (registryPath.startsWith('@package://')) {
+      if (!this.packageProtocol) {
+        throw new Error('PackageProtocol未设置，无法解析@package://路径')
+      }
+      
+      const packageRelativePath = registryPath.replace('@package://', '')
+      const resolvedPath = await this.packageProtocol.resolvePath(packageRelativePath, queryParams)
+      return resolvedPath
     }
 
-    return resolvedPath
+    return registryPath
   }
 
   /**

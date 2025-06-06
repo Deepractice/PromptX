@@ -10,6 +10,14 @@ class ExecutionProtocol extends ResourceProtocol {
   constructor () {
     super('execution')
     this.registry = {}
+    this.packageProtocol = null
+  }
+
+  /**
+   * 设置PackageProtocol实例
+   */
+  setPackageProtocol (packageProtocol) {
+    this.packageProtocol = packageProtocol
   }
 
   /**
@@ -45,14 +53,20 @@ class ExecutionProtocol extends ResourceProtocol {
       throw new Error(`执行模式 "${executionId}" 未在注册表中找到`)
     }
 
-    let resolvedPath = this.registry[executionId]
+    let registryPath = this.registry[executionId]
 
-    // 处理 @package:// 前缀
-    if (resolvedPath.startsWith('@package://')) {
-      resolvedPath = resolvedPath.replace('@package://', '')
+    // 处理 @package:// 前缀 - 通过PackageProtocol正确解析
+    if (registryPath.startsWith('@package://')) {
+      if (!this.packageProtocol) {
+        throw new Error('PackageProtocol未设置，无法解析@package://路径')
+      }
+      
+      const packageRelativePath = registryPath.replace('@package://', '')
+      const resolvedPath = await this.packageProtocol.resolvePath(packageRelativePath, queryParams)
+      return resolvedPath
     }
 
-    return resolvedPath
+    return registryPath
   }
 
   /**

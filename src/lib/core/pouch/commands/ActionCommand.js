@@ -69,13 +69,11 @@ ${COMMANDS.HELLO}
    * 获取角色信息（从HelloCommand）
    */
   async getRoleInfo (roleId) {
-    // 懒加载HelloCommand实例
-    if (!this.helloCommand) {
-      const HelloCommand = require('./HelloCommand')
-      this.helloCommand = new HelloCommand()
-    }
+    // 每次都创建新的HelloCommand实例，确保获取最新的角色信息
+    const HelloCommand = require('./HelloCommand')
+    const helloCommand = new HelloCommand()
 
-    return await this.helloCommand.getRoleInfo(roleId)
+    return await helloCommand.getRoleInfo(roleId)
   }
 
   /**
@@ -83,10 +81,16 @@ ${COMMANDS.HELLO}
    */
   async analyzeRoleDependencies (roleInfo) {
     try {
-      // 处理文件路径，将@package://前缀替换为实际路径
+      // 处理文件路径，支持@package://路径和绝对路径
       let filePath = roleInfo.file
       if (filePath.startsWith('@package://')) {
-        filePath = filePath.replace('@package://', '')
+        const PackageProtocol = require('../../resource/protocols/PackageProtocol')
+        const packageProtocol = new PackageProtocol()
+        const packageRoot = await packageProtocol.getPackageRoot()
+        filePath = path.join(packageRoot, filePath.replace('@package://', ''))
+      } else if (path.isAbsolute(filePath)) {
+        // 绝对路径直接使用（来自工作目录的角色）
+        // filePath 保持不变
       }
 
       // 读取角色文件内容
