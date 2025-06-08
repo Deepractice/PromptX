@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "promptx": {
+      "command": "npx",
+      "args": ["dpml-prompt", "mcp"],
+      "description": "PromptX专业角色系统 - 7个AI专家角色",
+      "env": {
+        "NODE_ENV": "production",
+        "PROMPTX_DEBUG": "false"
+      },
+      "cwd": "/Users/macmima1234/Desktop/PromptX版本/PromptX-集成role-designer",
+      "timeout": 30000,
+      "restart": "onCrash"
+    }
+  },
+  "tools": [
+    {
+      "name": "promptx_discover",
+      "description": "发现所有可用的PromptX角色"
+    },
+    {
+      "name": "promptx_execute", 
+      "description": "执行特定角色的任务",
+      "parameters": {
+        "role": "角色名称(assistant|role-designer|product-manager|java-backend-developer|promptx-fullstack-developer|xiaohongshu-marketer|frontend-developer)",
+        "task": "要执行的具体任务描述"
+      }
+    },
+    {
+      "name": "promptx_read_resource",
+      "description": "读取角色的资源文件",
+      "parameters": {
+        "role": "角色名称",
+        "resource": "资源路径"
+      }
+    },
+    {
+      "name": "promptx_status",
+      "description": "检查PromptX系统状态"
+    }
+  ]
+} 

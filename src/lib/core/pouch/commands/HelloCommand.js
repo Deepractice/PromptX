@@ -65,25 +65,54 @@ class HelloCommand extends BasePouchCommand {
 
   /**
    * 扫描本地角色文件
+   * 双重扫描机制：包根目录 + 当前工作目录
    */
   async scanLocalRoles () {
-    const domainPath = './prompt/domain'
     const roles = {}
 
     try {
-      if (!await fs.pathExists(domainPath)) {
-        return roles
+      // 1. 扫描包根目录中的角色（内置角色）
+      const PackageProtocol = require('../../resource/protocols/PackageProtocol')
+      const packageProtocol = new PackageProtocol()
+      const packageRoot = await packageProtocol.getPackageRoot()
+      const packageDomainPath = path.join(packageRoot, 'prompt', 'domain')
+      
+      if (await fs.pathExists(packageDomainPath)) {
+        const packageEntries = await fs.readdir(packageDomainPath, { withFileTypes: true })
+        
+        for (const entry of packageEntries) {
+          if (entry.isDirectory()) {
+            const roleId = entry.name
+            const roleFile = path.join(packageDomainPath, roleId, `${roleId}.role.md`)
+            
+            if (await fs.pathExists(roleFile)) {
+              // 验证角色文件格式
+              if (await this.validateRoleFileFormat(`@package://prompt/domain/${roleId}/${roleId}.role.md`)) {
+                roles[roleId] = await this.createRoleMetadata(roleId, `@package://prompt/domain/${roleId}/${roleId}.role.md`)
+              }
+            }
+          }
+        }
       }
 
-      const entries = await fs.readdir(domainPath, { withFileTypes: true })
+      // 2. 扫描当前工作目录中的角色（用户自定义角色）
+      const workingDomainPath = path.join(process.cwd(), 'prompt', 'domain')
       
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          const roleId = entry.name
-          const roleFile = path.join(domainPath, roleId, `${roleId}.role.md`)
-          
-          if (await fs.pathExists(roleFile)) {
-            roles[roleId] = this.createRoleMetadata(roleId, roleFile)
+      if (await fs.pathExists(workingDomainPath)) {
+        const workingEntries = await fs.readdir(workingDomainPath, { withFileTypes: true })
+        
+        for (const entry of workingEntries) {
+          if (entry.isDirectory()) {
+            const roleId = entry.name
+            const roleFile = path.join(workingDomainPath, roleId, `${roleId}.role.md`)
+            
+            if (await fs.pathExists(roleFile)) {
+              // 验证角色文件格式
+              if (await this.validateRoleFileFormat(roleFile)) {
+                // 工作目录角色优先级更高，可以覆盖包内角色
+                roles[roleId] = await this.createRoleMetadata(roleId, roleFile)
+              }
+            }
           }
         }
       }
@@ -96,13 +125,73 @@ class HelloCommand extends BasePouchCommand {
   }
 
   /**
-   * 创建角色元数据（基于约定的默认值）
+   * 创建角色元数据（支持绝对路径和@package://路径）
    */
-  createRoleMetadata (roleId, roleFile) {
-    return {
-      file: roleFile,
-      name: `🎭 ${roleId}`,
-      description: `${roleId}专业服务`
+  async createRoleMetadata (roleId, roleFile) {
+    try {
+      // 尝试读取角色文件获取真实描述
+      const description = await this.extractRoleDescription(roleFile)
+      return {
+        file: roleFile,
+        name: `🎭 ${roleId}`,
+        description: description || `${roleId}专业服务`
+      }
+    } catch (error) {
+      // 如果读取失败，使用默认描述
+      return {
+        file: roleFile,
+        name: `🎭 ${roleId}`,
+        description: `${roleId}专业服务`
+      }
+    }
+  }
+
+  /**
+   * 从角色文件中提取描述信息
+   */
+  async extractRoleDescription (roleFile) {
+    try {
+      let content = ''
+      
+      if (roleFile.startsWith('@package://')) {
+        const PackageProtocol = require('../../resource/protocols/PackageProtocol')
+        const packageProtocol = new PackageProtocol()
+        const packageRoot = await packageProtocol.getPackageRoot()
+        const actualPath = path.join(packageRoot, roleFile.replace('@package://', ''))
+        content = await fs.readFile(actualPath, 'utf8')
+      } else {
+        content = await fs.readFile(roleFile, 'utf8')
+      }
+
+      // 简单解析XML获取personality或description
+      const personalityMatch = content.match(/<personality>(.*?)<\/personality>/s)
+      if (personalityMatch) {
+        return personalityMatch[1].trim()
+      }
+
+      const descriptionMatch = content.match(/<description>(.*?)<\/description>/s)
+      if (descriptionMatch) {
+        return descriptionMatch[1].trim()
+      }
+
+      // 如果没有找到特定标签，尝试提取role标签内的第一句
+      const roleMatch = content.match(/<role>(.*?)<\/role>/s)
+      if (roleMatch) {
+        const roleContent = roleMatch[1].trim()
+        // 提取第一行非标签内容作为描述
+        const lines = roleContent.split('\n')
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed && !trimmed.startsWith('<') && !trimmed.startsWith('@!')) {
+            return trimmed
+          }
+        }
+      }
+
+      return null
+    } catch (error) {
+      console.warn(`无法提取角色描述 ${roleFile}:`, error.message)
+      return null
     }
   }
 
@@ -232,6 +321,43 @@ ${buildCommand.action(allRoles[0]?.id || 'assistant')}
       }
       return await fs.pathExists(filePath)
     } catch (error) {
+      return false
+    }
+  }
+
+  /**
+   * 验证角色文件格式是否正确（支持@package://协议）
+   */
+  async validateRoleFileFormat (filePath) {
+    try {
+      let content = ''
+      
+      if (filePath.startsWith('@package://')) {
+        const PackageProtocol = require('../../resource/protocols/PackageProtocol')
+        const packageProtocol = new PackageProtocol()
+        const packageRoot = await packageProtocol.getPackageRoot()
+        const actualPath = path.join(packageRoot, filePath.replace('@package://', ''))
+        content = await fs.readFile(actualPath, 'utf8')
+      } else {
+        content = await fs.readFile(filePath, 'utf8')
+      }
+
+      // 验证是否包含基本的role标签结构
+      const roleMatch = content.match(/<role>(.*?)<\/role>/s)
+      if (!roleMatch) {
+        return false
+      }
+
+      // 验证是否包含必要的子标签（personality或description或principle）
+      const roleContent = roleMatch[1]
+      const hasPersonality = /<personality>(.*?)<\/personality>/s.test(roleContent)
+      const hasDescription = /<description>(.*?)<\/description>/s.test(roleContent)
+      const hasPrinciple = /<principle>(.*?)<\/principle>/s.test(roleContent)
+      
+      // 至少需要包含其中一个标签
+      return hasPersonality || hasDescription || hasPrinciple
+    } catch (error) {
+      console.warn(`角色文件格式验证失败 ${filePath}:`, error.message)
       return false
     }
   }

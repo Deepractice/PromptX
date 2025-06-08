@@ -1,0 +1,11 @@
+{
+  "mcp": {
+    "servers": {
+      "promptx": {
+        "command": "npx",
+        "args": ["promptx-mcp-server"],
+        "description": "PromptX专业角色系统"
+      }
+    }
+  }
+} 

@@ -1,11 +1,11 @@
 {
   "name": "dpml-prompt-local",
-  "version": "0.0.2-local.6",
-  "description": "DPML-powered AI prompt framework - LOCAL DEVELOPMENT VERSION - Revolutionary AI-First CLI system based on Deepractice Prompt Markup Language. Build sophisticated AI agents with structured prompts, memory systems, and execution frameworks.",
+  "version": "0.0.2-local.8",
+  "description": "PromptX - DPML-powered AI prompt framework - LOCAL DEVELOPMENT VERSION - Revolutionary AI-First CLI system based on Deepractice Prompt Markup Language. Build sophisticated AI agents with structured prompts, memory systems, and execution frameworks.",
   "main": "src/lib/index.js",
   "bin": {
-    "dpml-prompt-local": "src/bin/promptx.js",
-    "promptx-local": "src/bin/promptx.js"
+    "dpml-prompt": "./src/bin/promptx.js",
+    "promptx-mcp-server": "./src/mcp/cli/promptx-mcp-cli.js"
   },
   "scripts": {
     "start": "node src/bin/promptx.js",
@@ -24,12 +24,18 @@
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "build": "node src/scripts/build.js",
     "build:watch": "node src/scripts/build.js --watch",
+    "build:mcp": "tsc --project tsconfig.json",
+    "dev:mcp": "node src/mcp/server.js",
+    "test:mcp": "jest --selectProjects setup",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
     "validate": "npm run lint && npm run test:ci",
-    "precommit": "npm run lint && npm run test:unit"
+    "precommit": "npm run lint && npm run test:unit",
+    "update": "node scripts/update-package.js",
+    "update:version": "node scripts/update-package.js",
+    "update:bash": "bash scripts/update-local-package.sh"
   },
   "files": [
     "src/",
@@ -39,10 +45,11 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "@reaxi/node-detect-runtime": "^0.1.0",
     "boxen": "^5.1.2",
     "chalk": "^4.1.2",
-    "commander": "^11.0.0",
+    "commander": "^11.1.0",
     "find-monorepo-root": "^1.0.3",
     "find-pkg-dir": "^2.0.0",
     "find-up": "^7.0.0",
@@ -55,10 +62,13 @@
     "resolve": "^1.22.10",
     "resolve-package": "^1.0.1",
     "semver": "^7.5.0",
-    "yaml": "^2.3.0"
+    "uuid": "^11.1.0",
+    "yaml": "^2.3.0",
+    "zod": "^3.25.55"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
+    "@types/node": "^22.15.30",
     "eslint": "^8.42.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-jest": "^27.2.0",
@@ -68,7 +78,9 @@
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.0",
     "supertest": "^6.3.0",
-    "tmp": "^0.2.1"
+    "tmp": "^0.2.1",
+    "ts-jest": "^29.3.4",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "node": ">=14.0.0"
@@ -93,7 +105,9 @@
     "framework",
     "role-playing",
     "memory-system",
-    "automation"
+    "automation",
+    "mcp",
+    "model-context-protocol"
   ],
   "author": {
     "name": "Deepractice",

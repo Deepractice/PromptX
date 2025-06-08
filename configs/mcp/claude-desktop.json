@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "promptx-jinang": {
+      "command": "npx",
+      "args": ["promptx-mcp-server"],
+      "description": "PromptX五大锦囊系统 - AI专业角色工具包",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+} 

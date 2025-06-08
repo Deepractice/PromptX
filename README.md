@@ -20,14 +20,20 @@ npx -y dpml-prompt@snapshot init
 
 ## 👤 快速开始（人类阅读区）
 
-### 两种使用方式：
+### 三种使用方式：
 
-1. 已安装 Node.js, 请复制这句话给AI：
+1. **MCP 集成模式** (推荐 - 支持 Claude Desktop, Cursor, VS Code 等)：
+   ```bash
+   npm install -g dpml-prompt-local
+   npx promptx-mcp-server
+   ```
+
+2. 已安装 Node.js, 请复制这句话给AI：
    ```bash
    npx -y dpml-prompt@snapshot init
    ```
 
-2. 未安装 Node.js, 请复制以下提示词给 AI：
+3. 未安装 Node.js, 请复制以下提示词给 AI：
    ```bash
    https://github.com/Deepractice/PromptX/blob/main/README.md 启动
    ```
@@ -147,6 +153,7 @@ PromptX不仅仅是工具，更是一套AI认知架构：
 
 - **[DPML规范](https://github.com/Deepractice/dpml)** - 提示词标记语言标准
 - **[深度实践](https://www.deepracticex.com/)** - AI工程化实践社区
+- **MCP 集成** - 支持 Claude Desktop, Cursor, VS Code, Zed 等 AI IDE
 - **角色库** - 持续增长的专业AI角色库
 - **最佳实践** - 提示词工程经验分享
 
