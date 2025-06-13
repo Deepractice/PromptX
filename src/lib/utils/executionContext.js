@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 /**
  * 执行上下文检测工具
@@ -43,7 +44,7 @@ function getMCPWorkingDirectory() {
   }
 
   // 策略2：PROMPTX_WORKSPACE（PromptX专用环境变量）
-  const promptxWorkspace = process.env.PROMPTX_WORKSPACE;
+  const promptxWorkspace = normalizePath(expandHome(process.env.PROMPTX_WORKSPACE || ''));
   if (promptxWorkspace && isValidDirectory(promptxWorkspace)) {
     console.error(`[执行上下文] 使用PROMPTX_WORKSPACE: ${promptxWorkspace}`);
     return promptxWorkspace;
@@ -148,6 +149,18 @@ function getDebugInfo() {
     nodeVersion: process.version,
     platform: process.platform
   };
+}
+
+
+function normalizePath(p) {
+  return path.normalize(p);
+}
+
+function expandHome(filepath) {
+  if (filepath.startsWith('~/') || filepath === '~') {
+    return path.join(os.homedir(), filepath.slice(1));
+  }
+  return filepath;
 }
 
 module.exports = {
