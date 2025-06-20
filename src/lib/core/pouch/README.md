@@ -19,7 +19,7 @@
 ├── PouchStateMachine    # 状态机管理器
 └── Commands/            # 五个核心锦囊
     ├── InitCommand      # 初始化锦囊
-    ├── HelloCommand     # 角色发现锦囊
+    ├── WelcomeCommand     # 角色发现锦囊
     ├── ActionCommand    # 角色激活锦囊
     ├── LearnCommand     # 领域学习锦囊
     └── RecallCommand    # 记忆检索锦囊
@@ -43,7 +43,7 @@ const { PouchCLI, BasePouchCommand } = require('./lib/core/pouch');
 await cli.execute('init');
 
 // 发现可用角色
-await cli.execute('hello');
+await cli.execute('welcome');
 
 // 激活特定角色
 await cli.execute('action', ['copywriter']);
@@ -137,7 +137,7 @@ command.setOutputFormat('human');
 | 命令 | 说明 | 示例 |
 |------|------|------|
 | init | 初始化工作环境 | `promptx init` |
-| hello | 发现可用角色 | `promptx hello` |
+| welcome | 发现可用角色 | `promptx welcome` |
 | action | 激活特定角色 | `promptx action copywriter` |
 | learn | 学习领域知识 | `promptx learn scrum` |
 | recall | 检索相关记忆 | `promptx recall test` |
@@ -156,7 +156,7 @@ await cli.runInteractive();
 ```javascript
 const commands = [
   { name: 'init', args: [] },
-  { name: 'hello', args: [] },
+  { name: 'welcome', args: [] },
   { name: 'action', args: ['frontend'] }
 ];
 

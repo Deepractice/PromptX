@@ -1,0 +1,3 @@
+[submodule "product"]
+	path = product
+	url = https://github.com/Deepractice/PromptXProduct.git

@@ -29,4 +29,14 @@ fi
 
 # 切换到项目根目录并执行命令
 echo -e "${GREEN}✅ 正在启动 MCP Server...${NC}"
-cd "$PROJECT_ROOT" && pnpm start mcp-server
+
+# 设置环境变量
+export PROMPTX_ENV=development
+
+# 检查是否传入了 --with-dacp 参数
+if [[ "$1" == "--with-dacp" ]]; then
+    echo -e "${YELLOW}🔌 将同时启动 DACP 服务...${NC}"
+    cd "$PROJECT_ROOT" && node src/bin/promptx.js mcp-server --with-dacp
+else
+    cd "$PROJECT_ROOT" && node src/bin/promptx.js mcp-server
+fi

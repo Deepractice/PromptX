@@ -26,7 +26,7 @@ const TOOL_DEFINITIONS = [
     })
   },
   {
-    name: 'promptx_hello',
+    name: 'promptx_welcome',
     description: '🎭 [专业角色选择菜单] 🔥 当你需要专业能力时必须先看这个 - 展示大量可激活的专家身份清单：产品经理/Java开发者/UI设计师/文案策划师/数据分析师/项目经理等，每个角色都有完整的专业思维模式和工作技能。🛑 **重要**：使用此工具时必须首先关注并响应工具返回结果开头的项目环境验证提示，确认项目路径正确后再处理角色列表内容，看完后选择最适合当前任务的专家身份',
     inputSchema: {
       type: 'object',
@@ -70,7 +70,7 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'promptx_recall',
-    description: '🔍 [记忆回想器] ⚡ 让你记住并运用以前的经验和知识 - 瞬间检索之前学会的专业技能/处理过的项目经验/掌握的最佳实践/解决过的问题方案，避免重复犯错和重新学习，当需要参考历史经验做决策时必须使用，让你的工作越来越专业',
+    description: '🔍 [记忆回想器] ⚡ 让你记住并运用以前的经验和知识 - 瞬间检索专业技能/项目经验/最佳实践/问题方案。**关键字策略**：1️⃣有把握精确匹配时使用query（如"女娲"、"PromptX"、"MCP"）；2️⃣语义搜索或不确定时留空query获取全量记忆；3️⃣如果第一次使用参数没获取到想要的结果，建议重新使用无参数获取全量信息；4️⃣全量检索比错过重要记忆更有价值。避免重复犯错，让工作越来越专业',
     inputSchema: {
       type: 'object',
       properties: {
@@ -80,13 +80,13 @@ const TOOL_DEFINITIONS = [
         },
         query: {
           type: 'string',
-          description: '检索关键词或描述，可选参数，不提供则返回所有记忆'
+          description: '检索关键词，仅在确信能精确匹配时使用（如"女娲"、"PromptX"等具体词汇）。语义搜索或不确定时请留空以获取全量记忆，如果使用关键字无结果建议重试无参数方式'
         }
       },
       required: ['random_string']
     },
     zodSchema: z.object({
-      query: z.string().optional().describe('检索关键词或描述，可选参数，不提供则返回所有记忆')
+      query: z.string().optional().describe('检索关键词，仅在确信能精确匹配时使用（如"女娲"、"PromptX"等具体词汇）。语义搜索或不确定时请留空以获取全量记忆，如果使用关键字无结果建议重试无参数方式')
     })
   },
   {
@@ -109,6 +109,46 @@ const TOOL_DEFINITIONS = [
     zodSchema: z.object({
       content: z.string().describe('要保存的重要信息或经验'),
       tags: z.string().optional().describe('自定义标签，用空格分隔，可选')
+    })
+  },
+  {
+    name: 'promptx_dacp',
+    description: '🚀 [DACP专业服务调用器] 让PromptX角色拥有执行能力 - 调用邮件发送、日程管理、文档处理等专业服务，将AI建议转化为实际行动。支持自然语言需求智能路由到合适的DACP服务包。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        service_id: {
+          type: 'string',
+          description: 'DACP服务ID，如：dacp-email-service'
+        },
+        action: {
+          type: 'string',
+          description: '具体操作，如：send_email'
+        },
+        parameters: {
+          type: 'object',
+          properties: {
+            user_request: {
+              type: 'string',
+              description: '用户自然语言需求'
+            },
+            context: {
+              type: 'object',
+              description: '上下文信息'
+            }
+          },
+          required: ['user_request']
+        }
+      },
+      required: ['service_id', 'action', 'parameters']
+    },
+    zodSchema: z.object({
+      service_id: z.string().describe('DACP服务ID，如：dacp-email-service'),
+      action: z.string().describe('具体操作，如：send_email'),
+      parameters: z.object({
+        user_request: z.string().describe('用户自然语言需求'),
+        context: z.object({}).optional().describe('上下文信息')
+      })
     })
   }
 ];

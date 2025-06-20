@@ -2,6 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const fs = require('fs-extra')
 const path = require('path')
 const { COMMANDS } = require('../../../../constants')
+const { getGlobalResourceManager } = require('../../resource')
 
 /**
  * 记忆检索锦囊命令
@@ -10,6 +11,8 @@ const { COMMANDS } = require('../../../../constants')
 class RecallCommand extends BasePouchCommand {
   constructor () {
     super()
+    // 复用ActionCommand的ResourceManager方式
+    this.resourceManager = getGlobalResourceManager()
   }
 
   getPurpose () {
@@ -23,11 +26,28 @@ class RecallCommand extends BasePouchCommand {
       const memories = await this.getAllMemories(query)
 
       if (memories.length === 0) {
-        return `🧠 AI记忆体系中暂无内容。
+        if (query) {
+          // 针对特定查询的优化提示
+          return `🔍 记忆检索结果：未找到匹配"${query}"的相关记忆
+
+💡 优化建议：
+1. **扩大查询范围**：尝试使用更通用的关键词
+2. **换个角度查询**：尝试相关词汇或概念
+3. **检查拼写**：确认关键词拼写正确
+4. **查看全部记忆**：不使用查询参数，浏览所有记忆寻找灵感
+
+🔄 下一步行动：
+- 不带参数再次使用 recall 工具查看全部记忆
+- 使用 remember 工具记录新的相关知识
+- 使用 learn 工具学习相关资源后再检索`
+        } else {
+          // 无记忆的情况
+          return `🧠 AI记忆体系中暂无内容。
 💡 建议：
 1. 使用 MCP PromptX remember 工具内化新知识
 2. 使用 MCP PromptX learn 工具学习后再内化
 3. 开始构建AI的专业知识体系`
+        }
       }
 
       const formattedMemories = this.formatRetrievedKnowledge(memories, query)
@@ -49,12 +69,12 @@ ${formattedMemories}
 
     return {
       currentState,
-      availableTransitions: ['hello', 'remember', 'learn', 'recall'],
+      availableTransitions: ['welcome', 'remember', 'learn', 'recall'],
       nextActions: [
         {
           name: '选择角色',
           description: '选择专业角色来应用检索到的知识',
-          method: 'MCP PromptX hello 工具'
+          method: 'MCP PromptX welcome 工具'
         },
         {
           name: '记忆新知识',
@@ -82,16 +102,20 @@ ${formattedMemories}
   }
 
   /**
-   * 获取所有记忆（支持多行格式）
+   * 获取所有记忆（支持多行格式，使用ResourceManager路径获取）
    */
   async getAllMemories (query) {
     this.lastSearchCount = 0
     const memories = []
 
-    // 读取单一记忆文件
-    const { getDirectoryService } = require('../../../utils/DirectoryService')
-    const directoryService = getDirectoryService()
-    const memoryDir = await directoryService.getMemoryDirectory()
+    // 确保ResourceManager已初始化（就像ActionCommand那样）
+    if (!this.resourceManager.initialized) {
+      await this.resourceManager.initializeWithNewArchitecture()
+    }
+    
+    // 通过ResourceManager获取项目路径（与ActionCommand一致）
+    const projectPath = await this.getProjectPath()
+    const memoryDir = path.join(projectPath, '.promptx', 'memory')
     const memoryFile = path.join(memoryDir, 'declarative.md')
 
     try {
@@ -112,6 +136,14 @@ ${formattedMemories}
 
     this.lastSearchCount = memories.length
     return memories
+  }
+
+  /**
+   * 获取项目路径（复用ActionCommand逻辑）
+   */
+  async getProjectPath() {
+    // 使用ResourceManager的项目路径获取逻辑
+    return this.resourceManager.projectPath || process.cwd()
   }
 
   /**
@@ -242,12 +274,80 @@ ${formattedMemories}
   }
 
   /**
-   * 检查记忆是否匹配查询
+   * 检查记忆是否匹配查询 - 增强版匹配算法
    */
   matchesMemory (memory, query) {
     const lowerQuery = query.toLowerCase()
-    return memory.content.toLowerCase().includes(lowerQuery) ||
-           memory.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+    const lowerContent = memory.content.toLowerCase()
+    
+    // 1. 完全匹配 - 最高优先级
+    if (lowerContent.includes(lowerQuery) || 
+        memory.tags.some(tag => tag.toLowerCase().includes(lowerQuery))) {
+      return true
+    }
+    
+    // 2. 分词匹配 - 支持多关键词组合查询
+    const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 1)
+    if (queryWords.length > 1) {
+      const matchedWords = queryWords.filter(word => 
+        lowerContent.includes(word) || 
+        memory.tags.some(tag => tag.toLowerCase().includes(word))
+      )
+      // 如果匹配了一半以上的关键词，认为相关
+      return matchedWords.length >= Math.ceil(queryWords.length / 2)
+    }
+    
+    // 3. 模糊匹配 - 支持常见同义词和缩写
+    const synonyms = this.getSynonyms(lowerQuery)
+    for (const synonym of synonyms) {
+      if (lowerContent.includes(synonym) || 
+          memory.tags.some(tag => tag.toLowerCase().includes(synonym))) {
+        return true
+      }
+    }
+    
+    return false
+  }
+  
+  /**
+   * 获取查询词的同义词和相关词
+   */
+  getSynonyms (query) {
+    const synonymMap = {
+      'mcp': ['model context protocol', '工具'],
+      'promptx': ['prompt-x', '提示词'],
+      '测试': ['test', 'testing', 'qa', '质量保证'],
+      '工具': ['tool', 'mcp', '功能'],
+      '记忆': ['memory', 'recall', '回忆'],
+      '学习': ['learn', 'study', '学会'],
+      '角色': ['role', 'character', '专家'],
+      '产品': ['product', 'pm', '产品经理'],
+      '开发': ['develop', 'dev', 'coding', '编程'],
+      '前端': ['frontend', 'fe', 'ui'],
+      '后端': ['backend', 'be', 'api', '服务端'],
+      'github': ['git', '代码仓库', '版本控制'],
+      'issue': ['问题', 'bug', '需求'],
+      '敏捷': ['agile', 'scrum', '迭代']
+    }
+    
+    const result = [query] // 包含原查询词
+    
+    // 查找直接同义词
+    if (synonymMap[query]) {
+      result.push(...synonymMap[query])
+    }
+    
+    // 查找包含关系的同义词
+    for (const [key, values] of Object.entries(synonymMap)) {
+      if (key.includes(query) || query.includes(key)) {
+        result.push(key, ...values)
+      }
+      if (values.some(v => v.includes(query) || query.includes(v))) {
+        result.push(key, ...values)
+      }
+    }
+    
+    return [...new Set(result)] // 去重
   }
 
   matchesQuery (content, query) {
@@ -263,28 +363,17 @@ ${formattedMemories}
    */
   formatRetrievedKnowledge (memories, query) {
     return memories.map((memory, index) => {
-      // 多行内容处理：如果内容包含换行，保持原始格式，但限制总长度
+      // 保持完整的记忆内容，不进行截断
+      // 陈述性记忆的完整性对于系统价值至关重要
       let content = memory.content
-      if (content.length > 200) {
-        // 保持换行结构但截断过长内容
-        const lines = content.split('\n')
-        let truncated = ''
-        let currentLength = 0
-        
-        for (const line of lines) {
-          if (currentLength + line.length + 1 > 180) {
-            truncated += '...'
-            break
-          }
-          truncated += (truncated ? '\n' : '') + line
-          currentLength += line.length + 1
-        }
-        content = truncated
-      }
+      
+      // 只对格式进行优化，但不截断内容
+      // 确保换行符正确显示
+      content = content.trim()
 
       return `📝 ${index + 1}. **记忆** (${memory.timestamp})
 ${content}
-${memory.tags.slice(0, 5).join(' ')}
+${memory.tags.slice(0, 8).join(' ')}  
 ---`
     }).join('\n')
   }

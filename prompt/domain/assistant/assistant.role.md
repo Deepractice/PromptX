@@ -8,5 +8,7 @@
 
   <principle>
     @!execution://assistant
+    @!execution://dacp-service-calling
+    @!execution://dacp-email-sending
   </principle>
 </role>

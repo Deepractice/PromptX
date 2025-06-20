@@ -34,7 +34,7 @@ PromptX 能做什么？简单来说，它让你的 AI 助手拥有了"大脑"和
 ### 📸 **配置成功后的使用效果**
 
 #### **1. 发现并激活专业角色**
-*使用 `promptx_hello` 发现可用角色，再用 `promptx_action` 激活，AI即刻变身领域专家。*
+*使用 `promptx_welcome` 发现可用角色，再用 `promptx_action` 激活，AI即刻变身领域专家。*
 <img src="assets/role-discovery.png" alt="角色发现与激活" width="80%">
 
 #### **2. 拥有智能记忆**

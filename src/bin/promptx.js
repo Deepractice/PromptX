@@ -31,10 +31,10 @@ program
   })
 
 program
-  .command('hello')
-  .description('👋 hello锦囊 - 发现并展示所有可用的AI角色和领域专家')
+  .command('welcome')
+  .description('👋 welcome锦囊 - 发现并展示所有可用的AI角色和领域专家')
   .action(async (options) => {
-    await cli.execute('hello', [])
+    await cli.execute('welcome', [])
   })
 
 program
@@ -66,6 +66,36 @@ program
     await cli.execute('remember', args)
   })
 
+// DACP命令
+program
+  .command('dacp <service_id> <action> [parameters]')
+  .description('🚀 dacp锦囊 - 调用DACP专业服务，让AI角色拥有执行能力')
+  .action(async (service_id, action, parameters, options) => {
+    try {
+      // 解析参数（如果是JSON字符串）
+      let parsedParams = {};
+      if (parameters) {
+        try {
+          parsedParams = JSON.parse(parameters);
+        } catch (error) {
+          console.error('❌ 参数解析错误，请提供有效的JSON格式');
+          process.exit(1);
+        }
+      }
+      
+      const args = {
+        service_id,
+        action, 
+        parameters: parsedParams
+      };
+      
+      await cli.execute('dacp', args);
+    } catch (error) {
+      console.error(`❌ DACP命令执行失败: ${error.message}`);
+      process.exit(1);
+    }
+  })
+
 // MCP Server命令
 program
   .command('mcp-server')
@@ -75,6 +105,7 @@ program
   .option('--host <address>', '绑定地址 (仅http/sse传输)', 'localhost')
   .option('--cors', '启用CORS (仅http/sse传输)', false)
   .option('--debug', '启用调试模式', false)
+  .option('--with-dacp', '同时启动DACP服务', false)
   .action(async (options) => {
     try {
       // 设置调试模式
@@ -85,7 +116,7 @@ program
       // 根据传输类型选择命令
       if (options.transport === 'stdio') {
         const mcpServer = new MCPServerCommand();
-        await mcpServer.execute();
+        await mcpServer.execute({ withDacp: options.withDacp });
       } else if (options.transport === 'http' || options.transport === 'sse') {
         const mcpHttpServer = new MCPStreamableHttpCommand();
         const serverOptions = {
@@ -118,13 +149,14 @@ program.addHelpText('after', `
 
 ${chalk.cyan('💡 PromptX 锦囊框架 - AI use CLI get prompt for AI')}
 
-${chalk.cyan('🎒 六大核心命令:')}
+${chalk.cyan('🎒 七大核心命令:')}
   🏗️ ${chalk.cyan('init')}   → 初始化环境，传达系统协议
-  👋 ${chalk.yellow('hello')}  → 发现可用角色和领域专家  
+  👋 ${chalk.yellow('welcome')}  → 发现可用角色和领域专家  
   ⚡ ${chalk.red('action')} → 激活特定角色，获取专业能力
   📚 ${chalk.blue('learn')}  → 深入学习领域知识体系
   🔍 ${chalk.green('recall')} → AI主动检索应用记忆
   🧠 ${chalk.magenta('remember')} → AI主动内化知识增强记忆
+  🚀 ${chalk.cyan('dacp')} → 调用DACP专业服务，AI角色执行能力
   🔌 ${chalk.blue('mcp-server')} → 启动MCP Server，连接AI应用
 
 ${chalk.cyan('示例:')}
@@ -132,7 +164,7 @@ ${chalk.cyan('示例:')}
   promptx init
 
   ${chalk.gray('# 2️⃣ 发现可用角色')}
-  promptx hello
+  promptx welcome
 
   ${chalk.gray('# 3️⃣ 激活专业角色')}
   promptx action copywriter
@@ -150,7 +182,11 @@ ${chalk.cyan('示例:')}
   promptx remember "每日站会控制在15分钟内"
   promptx remember "测试→预发布→生产"
 
-  ${chalk.gray('# 7️⃣ 启动MCP服务')}
+  ${chalk.gray('# 7️⃣ 调用DACP专业服务')}
+  promptx dacp dacp-promptx-service calculate '{"user_request": "计算2+3"}'
+  promptx dacp dacp-email-service send_email '{"user_request": "发送邮件"}'
+
+  ${chalk.gray('# 8️⃣ 启动MCP服务')}
   promptx mcp-server                    # stdio传输(默认)
   promptx mcp-server -t http -p 3000    # HTTP传输
   promptx mcp-server -t sse -p 3001     # SSE传输

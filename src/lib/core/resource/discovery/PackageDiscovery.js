@@ -1,6 +1,7 @@
 const BaseDiscovery = require('./BaseDiscovery')
 const RegistryData = require('../RegistryData')
 const ResourceData = require('../ResourceData')
+const ResourceFileNaming = require('../ResourceFileNaming')
 const logger = require('../../../utils/logger')
 const path = require('path')
 const fs = require('fs-extra')
@@ -243,26 +244,31 @@ class PackageDiscovery extends BaseDiscovery {
           registryData.addResource(resourceData)
         }
         
-        // 查找thought文件
+        // 查找thought文件 - 使用统一命名管理器
         const thoughtDir = path.join(itemPath, 'thought')
         if (await fs.pathExists(thoughtDir)) {
-          const thoughtFile = path.join(thoughtDir, `${item}.thought.md`)
-          if (await fs.pathExists(thoughtFile)) {
-            const reference = `@package://prompt/domain/${item}/thought/${item}.thought.md`
-            
-            const resourceData = new ResourceData({
-              id: item,
-              source: 'package',
-              protocol: 'thought',
-              name: ResourceData._generateDefaultName(item, 'thought'),
-              description: ResourceData._generateDefaultDescription(item, 'thought'),
-              reference: reference,
-              metadata: {
-                scannedAt: new Date().toISOString()
-              }
-            })
-            
-            registryData.addResource(resourceData)
+          const thoughtFiles = await ResourceFileNaming.scanTagFiles(thoughtDir, 'thought')
+          
+          for (const thoughtFile of thoughtFiles) {
+            const thoughtId = ResourceFileNaming.extractResourceId(thoughtFile, 'thought')
+            if (thoughtId) {
+              const fileName = path.basename(thoughtFile)
+              const reference = `@package://prompt/domain/${item}/thought/${fileName}`
+              
+              const resourceData = new ResourceData({
+                id: thoughtId,
+                source: 'package',
+                protocol: 'thought',
+                name: ResourceData._generateDefaultName(thoughtId, 'thought'),
+                description: ResourceData._generateDefaultDescription(thoughtId, 'thought'),
+                reference: reference,
+                metadata: {
+                  scannedAt: new Date().toISOString()
+                }
+              })
+              
+              registryData.addResource(resourceData)
+            }
           }
         }
         

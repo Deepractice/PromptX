@@ -3,17 +3,19 @@
  */
 
 const InitCommand = require('./InitCommand')
-const HelloCommand = require('./HelloCommand')
+const WelcomeCommand = require('./WelcomeCommand')
 const ActionCommand = require('./ActionCommand')
 const LearnCommand = require('./LearnCommand')
 const RecallCommand = require('./RecallCommand')
 const RememberCommand = require('./RememberCommand')
+const DACPCommand = require('./DACPCommand')
 
 module.exports = {
   InitCommand,
-  HelloCommand,
+  WelcomeCommand,
   ActionCommand,
   LearnCommand,
   RecallCommand,
-  RememberCommand
+  RememberCommand,
+  DACPCommand
 }

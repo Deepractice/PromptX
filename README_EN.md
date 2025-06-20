@@ -34,7 +34,7 @@ What can PromptX do? Simply put, it gives your AI assistant a "brain" and "memor
 ### 📸 **Usage Effects After Configuration**
 
 #### **1. Discover and Activate Professional Roles**
-*Use `promptx_hello` to discover available roles, then `promptx_action` to activate them, instantly transforming your AI into a domain expert.*
+*Use `promptx_welcome` to discover available roles, then `promptx_action` to activate them, instantly transforming your AI into a domain expert.*
 <img src="assets/role-discovery.png" alt="Role Discovery and Activation" width="80%">
 
 #### **2. Intelligent Memory**

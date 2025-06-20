@@ -1,0 +1,48 @@
+{
+  "service": {
+    "id": "dacp-promptx-service",
+    "name": "PromptX DACP Demo Service",
+    "version": "1.0.0",
+    "description": "DACP protocol demonstration service with calculator and email examples",
+    "type": "demo",
+    "status": "active"
+  },
+  "capabilities": {
+    "actions": [
+      {
+        "name": "calculate",
+        "description": "Demo: Simple calculator for basic math operations",
+        "category": "demo"
+      },
+      {
+        "name": "send_email",
+        "description": "Demo: Send professional emails with AI-powered content generation",
+        "category": "demo"
+      }
+    ],
+    "protocols": ["DACP/1.0"],
+    "authentication": false
+  },
+  "execution": {
+    "constraint": {
+      "max_concurrent_requests": 100,
+      "request_timeout": 30000,
+      "rate_limit": "1000/hour"
+    },
+    "rule": {
+      "require_action": true,
+      "require_parameters": true,
+      "validate_service_id": true
+    },
+    "guideline": {
+      "response_format": "DACP standard",
+      "error_handling": "graceful with detailed messages",
+      "logging": "structured JSON logs"
+    }
+  },
+  "deployment": {
+    "port": 3002,
+    "host": "localhost",
+    "environment": "development"
+  }
+}

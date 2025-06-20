@@ -179,6 +179,26 @@ class ResourceManager {
         }
       }
       
+      // 处理URL格式（如 thought://systematic-testing）
+      const urlMatch = resourceId.match(/^([a-zA-Z][a-zA-Z0-9_-]*):\/\/(.+)$/)
+      if (urlMatch) {
+        const [, protocol, id] = urlMatch
+        const resourceData = this.registryData.findResourceById(id, protocol)
+        if (!resourceData) {
+          throw new Error(`Resource not found: ${resourceId}`)
+        }
+        
+        // 通过协议解析加载内容
+        const content = await this.loadResourceByProtocol(resourceData.reference)
+        
+        return {
+          success: true,
+          content,
+          resourceId,
+          reference: resourceData.reference
+        }
+      }
+      
       // 处理传统格式（如 role:java-developer）
       let reference = null
       

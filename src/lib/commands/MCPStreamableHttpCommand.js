@@ -431,7 +431,7 @@ class MCPStreamableHttpCommand {
   convertMCPToCliParams(toolName, mcpArgs) {
     const paramMapping = {
       'promptx_init': () => [],
-      'promptx_hello': () => [],
+      'promptx_welcome': () => [],
       'promptx_action': (args) => args && args.role ? [args.role] : [],
       'promptx_learn': (args) => args && args.resource ? [args.resource] : [],
       'promptx_recall': (args) => {
@@ -449,7 +449,8 @@ class MCPStreamableHttpCommand {
           result.push('--tags', args.tags);
         }
         return result;
-      }
+      },
+      'promptx_dacp': (args) => [args]
     };
     
     const mapper = paramMapping[toolName];

@@ -120,7 +120,7 @@ class InitCommand extends BasePouchCommand {
 ${registryStats.message}
 
 ## 🚀 下一步建议
-- 使用 \`hello\` 发现可用的专业角色
+- 使用 \`welcome\` 发现可用的专业角色
 - 使用 \`action\` 激活特定角色获得专业能力  
 - 使用 \`learn\` 深入学习专业知识
 - 使用 \`remember/recall\` 管理专业记忆
@@ -231,12 +231,12 @@ ${registryStats.message}
     const version = await this.getVersionInfo()
     return {
       currentState: 'initialized',
-      availableTransitions: ['hello', 'action', 'learn', 'recall', 'remember'],
+      availableTransitions: ['welcome', 'action', 'learn', 'recall', 'remember'],
       nextActions: [
         {
           name: '发现专业角色',
           description: '查看所有可用的AI专业角色',
-          method: 'MCP PromptX hello 工具',
+          method: 'MCP PromptX welcome 工具',
           priority: 'recommended'
         },
         {

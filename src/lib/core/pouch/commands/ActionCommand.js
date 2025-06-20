@@ -3,8 +3,8 @@ const fs = require('fs-extra')
 const path = require('path')
 const { COMMANDS } = require('../../../../constants')
 const { getGlobalResourceManager } = require('../../resource')
-const DPMLContentParser = require('../../resource/DPMLContentParser')
-const SemanticRenderer = require('../../resource/SemanticRenderer')
+const DPMLContentParser = require('../../dpml/DPMLContentParser')
+const SemanticRenderer = require('../../dpml/SemanticRenderer')
 const CurrentProjectManager = require('../../../utils/CurrentProjectManager')
 const logger = require('../../../utils/logger')
 
@@ -15,8 +15,8 @@ const logger = require('../../../utils/logger')
 class ActionCommand extends BasePouchCommand {
   constructor () {
     super()
-    // 获取HelloCommand的角色注册表
-    this.helloCommand = null
+    // 获取WelcomeCommand的角色注册表
+    this.welcomeCommand = null
     // 使用全局单例 ResourceManager
     this.resourceManager = getGlobalResourceManager()
     this.dpmlParser = new DPMLContentParser()
@@ -40,7 +40,7 @@ class ActionCommand extends BasePouchCommand {
 通过 MCP PromptX 工具的 action 功能激活角色
 
 💡 查看可用角色：
-使用 MCP PromptX 工具的 hello 功能`
+使用 MCP PromptX 工具的 welcome 功能`
     }
 
     try {
@@ -66,7 +66,7 @@ class ActionCommand extends BasePouchCommand {
 💡 解决方案：
 1. **首先尝试**：使用 MCP PromptX 工具的 **init** 功能刷新注册表
 2. **然后重试**：再次使用 action 功能激活角色
-3. **查看角色**：使用 hello 功能查看所有可用角色
+3. **查看角色**：使用 welcome 功能查看所有可用角色
 
 🚨 **特别提示**：如果刚刚用女娲创建了新角色，必须先执行 init 刷新注册表！`
       }
@@ -89,7 +89,7 @@ class ActionCommand extends BasePouchCommand {
 💡 解决方案：
 1. **优先尝试**：使用 MCP PromptX 工具的 **init** 功能刷新注册表
 2. **然后重试**：再次尝试激活角色
-3. **查看可用角色**：使用 hello 功能查看角色列表
+3. **查看可用角色**：使用 welcome 功能查看角色列表
 
 🚨 **新角色提示**：如果是女娲等工具刚创建的角色，必须先执行 init！
 
@@ -98,18 +98,18 @@ class ActionCommand extends BasePouchCommand {
   }
 
   /**
-   * 获取角色信息（从HelloCommand）
+   * 获取角色信息（从WelcomeCommand）
    */
   async getRoleInfo (roleId) {
     logger.debug(`[ActionCommand] getRoleInfo调用，角色ID: ${roleId}`)
     
-    // 总是创建新的HelloCommand实例，确保获取最新的角色信息
-    logger.debug(`[ActionCommand] 创建新的HelloCommand实例以获取最新角色信息`)
-    const HelloCommand = require('./HelloCommand')
-    this.helloCommand = new HelloCommand()
+    // 总是创建新的WelcomeCommand实例，确保获取最新的角色信息
+    logger.debug(`[ActionCommand] 创建新的WelcomeCommand实例以获取最新角色信息`)
+    const WelcomeCommand = require('./WelcomeCommand')
+    this.welcomeCommand = new WelcomeCommand()
 
-    const result = await this.helloCommand.getRoleInfo(roleId)
-    logger.debug(`[ActionCommand] HelloCommand.getRoleInfo返回:`, result)
+    const result = await this.welcomeCommand.getRoleInfo(roleId)
+    logger.debug(`[ActionCommand] WelcomeCommand.getRoleInfo返回:`, result)
     return result
   }
 
@@ -276,7 +276,7 @@ promptx learn principle://${roleInfo.id}
 角色激活完成后，可以：
 - 📝 **开始专业工作** - 运用角色能力解决实际问题
 - 🔍 **调用记忆** - 使用 \`promptx recall\` 检索相关经验
-- 🔄 **切换角色** - 使用 \`promptx hello\` 选择其他专业角色
+- 🔄 **切换角色** - 使用 \`promptx welcome\` 选择其他专业角色
 
 💡 **设计理念**：基于 DPML 基础协议组合，通过thought和execution的灵活编排实现角色能力。`
 
@@ -443,12 +443,12 @@ ${recallContent}
     if (!roleId) {
       return {
         currentState: 'action_awaiting_role',
-        availableTransitions: ['hello'],
+        availableTransitions: ['welcome'],
         nextActions: [
                   {
           name: '查看可用角色',
           description: '返回角色发现页面',
-          method: 'MCP PromptX hello 工具',
+          method: 'MCP PromptX welcome 工具',
           priority: 'high'
         }
         ],
@@ -460,7 +460,7 @@ ${recallContent}
 
     return {
       currentState: 'role_activated_with_memory',
-      availableTransitions: ['hello', 'remember', 'learn'],
+      availableTransitions: ['welcome', 'remember', 'learn'],
       nextActions: [
         {
           name: '开始专业服务',
@@ -471,7 +471,7 @@ ${recallContent}
         {
           name: '返回角色选择',
           description: '选择其他角色',
-          method: 'MCP PromptX hello 工具',
+          method: 'MCP PromptX welcome 工具',
           priority: 'medium'
         },
         {

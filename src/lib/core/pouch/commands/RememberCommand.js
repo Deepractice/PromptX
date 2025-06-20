@@ -2,6 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const fs = require('fs-extra')
 const path = require('path')
 const { COMMANDS } = require('../../../../constants')
+const { getGlobalResourceManager } = require('../../resource')
 
 /**
  * 记忆保存锦囊命令
@@ -10,6 +11,8 @@ const { COMMANDS } = require('../../../../constants')
 class RememberCommand extends BasePouchCommand {
   constructor () {
     super()
+    // 复用ActionCommand的ResourceManager方式
+    this.resourceManager = getGlobalResourceManager()
   }
 
   getPurpose () {
@@ -67,16 +70,28 @@ class RememberCommand extends BasePouchCommand {
   }
 
   /**
-   * 确保AI记忆体系目录存在
+   * 确保AI记忆体系目录存在（使用ResourceManager路径获取）
    */
   async ensureMemoryDirectory () {
-    const { getDirectoryService } = require('../../../utils/DirectoryService')
-    const directoryService = getDirectoryService()
+    // 确保ResourceManager已初始化（就像ActionCommand那样）
+    if (!this.resourceManager.initialized) {
+      await this.resourceManager.initializeWithNewArchitecture()
+    }
     
-    const memoryDir = await directoryService.getMemoryDirectory()
+    // 通过ResourceManager获取项目路径（与ActionCommand一致）
+    const projectPath = await this.getProjectPath()
+    const memoryDir = path.join(projectPath, '.promptx', 'memory')
+    
     await fs.ensureDir(memoryDir)
-
     return memoryDir
+  }
+
+  /**
+   * 获取项目路径（复用ActionCommand逻辑）
+   */
+  async getProjectPath() {
+    // 使用ResourceManager的项目路径获取逻辑
+    return this.resourceManager.projectPath || process.cwd()
   }
 
   /**
@@ -201,12 +216,12 @@ AI学习和内化各种专业知识：
     if (!content) {
       return {
         currentState: 'remember_awaiting_input',
-        availableTransitions: ['hello', 'learn', 'recall'],
+        availableTransitions: ['welcome', 'learn', 'recall'],
         nextActions: [
           {
             name: '查看角色',
             description: '选择角色获取专业知识',
-            method: 'MCP PromptX hello 工具',
+            method: 'MCP PromptX welcome 工具',
             priority: 'medium'
           },
           {

@@ -4,6 +4,7 @@ const { cli } = require('../core/pouch');
 const { MCPOutputAdapter } = require('../adapters/MCPOutputAdapter');
 const { getExecutionContext, getDebugInfo } = require('../utils/executionContext');
 const { getToolDefinitions } = require('../mcp/toolDefinitions');
+const treeKill = require('tree-kill');
 
 /**
  * MCP Server 适配器 - 函数调用架构
@@ -78,8 +79,16 @@ class MCPServerCommand {
   /**
    * 启动MCP Server
    */
-  async execute() {
+  async execute(options = {}) {
     try {
+      // 设置进程清理处理器
+      this.setupProcessCleanup();
+      
+      // 如果需要启动DACP服务
+      if (options.withDacp) {
+        await this.startDACPService();
+      }
+      
       this.log('🚀 启动MCP Server...');
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
@@ -89,18 +98,301 @@ class MCPServerCommand {
       return new Promise((resolve) => {
         // MCP服务器现在正在运行，监听stdin输入
         process.on('SIGINT', () => {
-          this.log('🛑 收到终止信号，关闭MCP Server');
+          this.log('🛑 收到SIGINT信号，正在关闭...');
+          this.cleanup();
           resolve();
         });
         
         process.on('SIGTERM', () => {
-          this.log('🛑 收到终止信号，关闭MCP Server');
+          this.log('🛑 收到SIGTERM信号，正在关闭...');
+          this.cleanup();
           resolve();
         });
       });
     } catch (error) {
       // 输出到stderr
       console.error(`❌ MCP Server 启动失败: ${error.message}`);
+      this.cleanup();
+      throw error;
+    }
+  }
+  
+  /**
+   * 设置进程清理处理器
+   */
+  setupProcessCleanup() {
+    // 处理各种退出情况
+    const exitHandler = (signal) => {
+      this.log(`收到信号: ${signal}`);
+      this.cleanup();
+      process.exit(0);
+    };
+    
+    // 捕获所有可能的退出信号
+    process.on('exit', () => this.cleanup());
+    process.on('SIGHUP', () => exitHandler('SIGHUP'));
+    process.on('SIGQUIT', () => exitHandler('SIGQUIT'));
+    process.on('uncaughtException', (err) => {
+      console.error('未捕获的异常:', err);
+      this.cleanup();
+      process.exit(1);
+    });
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('未处理的Promise拒绝:', reason);
+      this.cleanup();
+      process.exit(1);
+    });
+  }
+  
+  /**
+   * 清理子进程
+   */
+  cleanup() {
+    if (this.dacpProcess && !this.dacpProcess.killed && this.dacpProcess.pid) {
+      this.log('🛑 正在终止DACP服务及其所有子进程...');
+      
+      // 使用 tree-kill 终止整个进程树
+      treeKill(this.dacpProcess.pid, 'SIGTERM', (err) => {
+        if (err) {
+          this.log(`⚠️ 优雅终止失败: ${err.message}`);
+          
+          // 3秒后强制终止
+          setTimeout(() => {
+            if (this.dacpProcess && !this.dacpProcess.killed && this.dacpProcess.pid) {
+              this.log('⚠️ DACP服务未响应SIGTERM，强制终止整个进程树...');
+              treeKill(this.dacpProcess.pid, 'SIGKILL', (killErr) => {
+                if (killErr) {
+                  this.log(`❌ 强制终止失败: ${killErr.message}`);
+                } else {
+                  this.log('✅ DACP服务进程树已强制终止');
+                }
+              });
+            }
+          }, 3000);
+        } else {
+          this.log('✅ DACP服务进程树已优雅终止');
+        }
+      });
+    }
+  }
+  
+  /**
+   * 检测DACP服务是否已经运行
+   * @param {string} host - 主机地址
+   * @param {number} port - 端口号
+   * @returns {Promise<boolean>} 服务是否运行
+   */
+  async isDACPServiceRunning(host = 'localhost', port = 3002) {
+    const http = require('http');
+    
+    return new Promise((resolve) => {
+      const options = {
+        hostname: host,
+        port: port,
+        path: '/health',
+        method: 'GET',
+        timeout: 2000 // 2秒超时
+      };
+
+      const req = http.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            const healthData = JSON.parse(data);
+            // 检查是否是DACP服务且状态健康
+            const isHealthy = healthData.status === 'healthy';
+            const isDACPService = healthData.service && healthData.service.includes('DACP');
+            resolve(isHealthy && isDACPService);
+          } catch (error) {
+            resolve(false);
+          }
+        });
+      });
+
+      req.on('error', () => {
+        resolve(false);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(false);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * 获取DACP服务信息
+   * @param {string} host - 主机地址  
+   * @param {number} port - 端口号
+   * @returns {Promise<Object|null>} 服务信息
+   */
+  async getDACPServiceInfo(host = 'localhost', port = 3002) {
+    const http = require('http');
+    
+    return new Promise((resolve) => {
+      const options = {
+        hostname: host,
+        port: port,
+        path: '/info',
+        method: 'GET',
+        timeout: 2000
+      };
+
+      const req = http.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            const serviceInfo = JSON.parse(data);
+            resolve(serviceInfo);
+          } catch (error) {
+            resolve(null);
+          }
+        });
+      });
+
+      req.on('error', () => {
+        resolve(null);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(null);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * 启动DACP服务
+   */
+  async startDACPService() {
+    const { spawn } = require('child_process');
+    const path = require('path');
+    
+    try {
+      this.log('🔍 检测DACP服务状态...');
+      
+      // 先检测是否已有DACP服务运行
+      const isRunning = await this.isDACPServiceRunning();
+      
+      if (isRunning) {
+        // 服务已存在，获取服务信息并直接使用
+        const serviceInfo = await this.getDACPServiceInfo();
+        console.error(''); // 空行分隔
+        console.error('=====================================');
+        console.error('🔄 发现现有DACP服务，直接复用');
+        console.error('📍 DACP服务地址: http://localhost:3002');
+        if (serviceInfo) {
+          console.error(`🏷️ 服务名称: ${serviceInfo.service?.name || 'Unknown'}`);
+          console.error(`📦 服务版本: ${serviceInfo.service?.version || 'Unknown'}`);
+          console.error(`🔧 可用操作: ${serviceInfo.available_actions?.join(', ') || 'Unknown'}`);
+        }
+        console.error('=====================================');
+        console.error(''); // 空行分隔
+        return; // 直接返回，不启动新服务
+      }
+      
+      this.log('🚀 启动新的DACP服务...');
+      
+      // DACP服务路径
+      const dacpPath = path.join(__dirname, '../../dacp/dacp-promptx-service');
+      
+      // 启动DACP服务作为子进程
+      // 注意：不能直接使用 'inherit'，因为会干扰MCP的stdio通信
+      // 但我们需要看到DACP的启动信息
+      this.dacpProcess = spawn('node', ['server.js'], {
+        cwd: dacpPath,
+        stdio: ['ignore', 'pipe', 'pipe'], // stdin忽略, stdout和stderr都输出到pipe
+        shell: true,
+        detached: false // tree-kill 会处理整个进程树，不需要 detached
+      });
+      
+      // 将DACP的输出转发到stderr（这样不会干扰MCP的stdout）
+      this.dacpProcess.stdout.on('data', (data) => {
+        const output = data.toString().trim();
+        if (output) {
+          console.error(`[DACP] ${output}`);
+        }
+      });
+      
+      this.dacpProcess.stderr.on('data', (data) => {
+        const output = data.toString().trim();
+        if (output) {
+          console.error(`[DACP ERROR] ${output}`);
+        }
+      });
+      
+      // 监听子进程退出
+      this.dacpProcess.on('exit', (code, signal) => {
+        this.log(`DACP服务已退出 (code: ${code}, signal: ${signal})`);
+        this.dacpProcess = null;
+      });
+      
+      // 监听子进程错误
+      this.dacpProcess.on('error', (err) => {
+        console.error(`DACP进程错误: ${err.message}`);
+      });
+      
+      // 等待服务启动 - 通过监听输出来判断
+      await new Promise((resolve, reject) => {
+        let started = false;
+        const timeout = setTimeout(() => {
+          if (!started) {
+            reject(new Error('DACP服务启动超时'));
+          }
+        }, 10000); // 10秒超时
+        
+        // 监听输出，判断服务是否启动
+        const checkStarted = (data) => {
+          const output = data.toString();
+          // 检查是否包含启动成功的标志
+          if (output.includes('Running at http://localhost:') || 
+              output.includes('🚀') || 
+              output.includes('DACP') ||
+              output.includes('3002')) {
+            if (!started) {
+              started = true;
+              clearTimeout(timeout);
+              console.error(''); // 空行分隔
+              console.error('=====================================');
+              console.error('✅ DACP服务启动成功');
+              console.error('📍 DACP服务地址: http://localhost:3002');
+              console.error('🔧 支持的Actions: send_email, schedule_meeting, create_document');
+              console.error('=====================================');
+              console.error(''); // 空行分隔
+              resolve();
+            }
+          }
+        };
+        
+        this.dacpProcess.stdout.on('data', checkStarted);
+        
+        this.dacpProcess.on('error', (err) => {
+          clearTimeout(timeout);
+          reject(new Error(`DACP服务启动失败: ${err.message}`));
+        });
+        
+        this.dacpProcess.on('exit', (code) => {
+          if (!started) {
+            clearTimeout(timeout);
+            reject(new Error(`DACP服务意外退出，退出码: ${code}`));
+          }
+        });
+      });
+      
+    } catch (error) {
+      this.log(`❌ DACP服务启动失败: ${error.message}`);
       throw error;
     }
   }
@@ -168,7 +460,7 @@ class MCPServerCommand {
     const paramMapping = {
       'promptx_init': (args) => args.workingDirectory ? [args] : [],
       
-      'promptx_hello': () => [],
+      'promptx_welcome': () => [],
       
       'promptx_action': (args) => [args.role],
       
@@ -189,7 +481,9 @@ class MCPServerCommand {
           result.push('--tags', args.tags);
         }
         return result;
-      }
+      },
+      
+      'promptx_dacp': (args) => [args]
     };
     
     const mapper = paramMapping[toolName];

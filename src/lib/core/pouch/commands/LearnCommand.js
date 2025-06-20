@@ -1,7 +1,7 @@
 const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
-const DPMLContentParser = require('../../resource/DPMLContentParser')
-const SemanticRenderer = require('../../resource/SemanticRenderer')
+const DPMLContentParser = require('../../dpml/DPMLContentParser')
+const SemanticRenderer = require('../../dpml/SemanticRenderer')
 const CurrentProjectManager = require('../../../utils/CurrentProjectManager')
 const { COMMANDS } = require('../../../../constants')
 
@@ -24,6 +24,9 @@ class LearnCommand extends BasePouchCommand {
     return '智能学习指定协议的资源内容，支持thought、execution、memory等DPML协议以及角色组件，支持@引用的语义渲染'
   }
 
+  /**
+   * 学习指定资源并返回结果
+   */
   async getContent (args) {
     const [resourceUrl] = args
 
@@ -31,21 +34,29 @@ class LearnCommand extends BasePouchCommand {
       return this.getUsageHelp()
     }
 
+    // 复用ActionCommand的成功资源加载逻辑
+    return await this.loadLearnContentUsingActionLogic(resourceUrl)
+  }
+
+  /**
+   * 使用ActionCommand的成功逻辑加载学习内容
+   * 这个方法复用了ActionCommand.loadLearnContent的逻辑
+   */
+  async loadLearnContentUsingActionLogic(resourceUrl) {
     try {
-      // 解析协议信息
-      const urlMatch = resourceUrl.match(/^(@[!?]?)?([a-zA-Z][a-zA-Z0-9_-]*):\/\/(.+)$/)
-      if (!urlMatch) {
-        return this.formatErrorResponse(resourceUrl, '无效的资源URL格式')
-      }
-      
-      const [, loadingSemantic, protocol, resourceId] = urlMatch
-
-      // 使用ResourceManager解析资源
       const result = await this.resourceManager.resolve(resourceUrl)
-
+      
       if (!result.success) {
         return this.formatErrorResponse(resourceUrl, result.error.message)
       }
+
+      // 解析协议信息
+      const urlMatch = resourceUrl.match(/^(@[!?]?)?([a-zA-Z][a-zA-Z0-9_-]*):\/\/(.+)$/)
+      if (!urlMatch) {
+        return this.formatErrorResponse(resourceUrl, "无效的资源URL格式")
+      }
+      
+      const [, loadingSemantic, protocol, resourceId] = urlMatch
 
       // 检查内容是否包含@引用，如果包含则进行语义渲染
       let finalContent = result.content
@@ -154,7 +165,7 @@ ${errorMessage}
   - 继续学习: 使用 MCP PromptX learn 工具学习其他资源
   - 应用记忆: 使用 MCP PromptX recall 工具检索相关经验
   - 激活角色: 使用 MCP PromptX action 工具激活完整角色能力
-  - 查看角色列表: 使用 MCP PromptX hello 工具选择其他角色`
+  - 查看角色列表: 使用 MCP PromptX welcome 工具选择其他角色`
   }
 
   /**
@@ -187,11 +198,11 @@ ${errorMessage}
 
 ## 🔍 发现可学习资源
 - 使用 MCP PromptX action 工具查看角色需要的所有资源
-- 使用 MCP PromptX hello 工具查看可用角色列表
+- 使用 MCP PromptX welcome 工具查看可用角色列表
 
 🔄 下一步行动：
   - 激活角色: 使用 MCP PromptX action 工具分析角色依赖
-  - 查看角色: 使用 MCP PromptX hello 工具选择感兴趣的角色`
+  - 查看角色: 使用 MCP PromptX welcome 工具选择感兴趣的角色`
   }
 
   /**
@@ -203,12 +214,12 @@ ${errorMessage}
     if (!resourceUrl) {
       return {
         currentState: 'learn_awaiting_resource',
-        availableTransitions: ['hello', 'action'],
+        availableTransitions: ['welcome', 'action'],
         nextActions: [
           {
             name: '查看可用角色',
             description: '返回角色选择页面',
-            method: 'MCP PromptX hello 工具',
+            method: 'MCP PromptX welcome 工具',
             priority: 'high'
           },
           {
@@ -225,7 +236,7 @@ ${errorMessage}
     if (!urlMatch) {
       return {
         currentState: 'learn_error',
-        availableTransitions: ['hello', 'action'],
+        availableTransitions: ['welcome', 'action'],
         nextActions: [
           {
             name: '查看使用帮助',
@@ -241,7 +252,7 @@ ${errorMessage}
 
     return {
       currentState: `learned_${protocol}`,
-      availableTransitions: ['learn', 'recall', 'hello', 'action'],
+      availableTransitions: ['learn', 'recall', 'welcome', 'action'],
       nextActions: [
         {
           name: '继续学习',
@@ -264,7 +275,7 @@ ${errorMessage}
         {
           name: '查看角色列表',
           description: '选择其他角色',
-          method: 'MCP PromptX hello 工具',
+          method: 'MCP PromptX welcome 工具',
           priority: 'low'
         }
       ],

@@ -14,8 +14,8 @@ async function testPouchFramework () {
     console.log('\n')
 
     // 测试2: 发现角色
-    console.log('2️⃣ 测试 hello 命令:')
-    await cli.execute('hello')
+    console.log('2️⃣ 测试 welcome 命令:')
+    await cli.execute('welcome')
     console.log('\n')
 
     // 测试3: 激活角色
