@@ -262,7 +262,7 @@ Have you ever thought: What if I could customize a professional AI assistant for
 > 
 > ---
 >
-> "The 'Nuwa' feature makes it more convenient and faster for me to use AI roles. It transforms a very professional and complex task that requires knowledge of underlying 'prompt engineering' into a process that can be completed through natural language conversation. I don't need to worry about how to write those complex configuration files; I just need to tell 'Nuwa' what I want, and she can guide me through the rest."
+> "'Nuwa' makes it more convenient and faster for me to use AI roles. I found that I don't need to know how to code or understand complex AI principles. I just need to tell 'Nuwa' what I want in plain language, and it can handle the complex design work behind the scenes and guide me through the rest. 'Nuwa' itself doesn't write Little Red Book notes, but it can create an expert 'proficient in Little Red Book marketing'. Once this expert is created, I can hand over all my future Little Red Book related work to this new role, which greatly improves efficiency and professionalism."
 
 #### **📚 Related Resources**
 
