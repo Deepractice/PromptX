@@ -70,21 +70,29 @@ Open your configuration file and copy the `promptx` configuration code below. Th
 {
   "mcpServers": {
     "promptx": {
-      // Use npx to run promptx service
       "command": "npx",
-      // Startup parameters configuration
       "args": [
-        "-y",                               // Auto-confirm
-        "-f",                               // Force refresh cache
-        "--registry",                       // Specify registry
-        "https://registry.npmjs.org",       // Use official registry
-        "dpml-prompt@beta",                 // Use stable beta version
-        "mcp-server"                        // Start service
+        "-y",
+        "-f",
+        "--registry",
+        "https://registry.npmjs.org",
+        "dpml-prompt@beta",
+        "mcp-server"
       ]
     }
   }
 }
 ```
+
+**Configuration Parameters:**
+- `command`: Specifies using npx to run promptx service
+- `args`: Startup parameters configuration list
+  - `-y`: Auto-confirm
+  - `-f`: Force refresh cache
+  - `--registry`: Specify registry source
+  - `https://registry.npmjs.org`: Use official registry
+  - `dpml-prompt@beta`: Use stable beta version
+  - `mcp-server`: Start service
 
 **🎯 It's that simple!** Save the file and restart your AI application, and PromptX is successfully activated.
 

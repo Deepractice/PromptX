@@ -70,45 +70,33 @@ PromptX 目前处于 **初始开发阶段**，我们正在积极完善功能和�
 {
   "mcpServers": {
     "promptx": {
-      // 指定使用 npx 运行 promptx 服务
       "command": "npx",
-      // 启动参数配置
       "args": [
-        "-y",                               // 自动确认
-        "-f",                               // 强制刷新缓存
-        "--registry",                       // 指定镜像源
-        "https://registry.npmjs.org",       // 使用官方镜像
-        "dpml-prompt@beta",                 // 使用稳定测试版
-        "mcp-server"                        // 启动服务
+        "-y",
+        "-f",
+        "--registry",
+        "https://registry.npmjs.org",
+        "dpml-prompt@beta",
+        "mcp-server"
       ]
     }
   }
 }
 ```
 
+**配置参数说明：**
+- `command`: 指定使用 npx 运行 promptx 服务
+- `args`: 启动参数配置列表
+  - `-y`: 自动确认
+  - `-f`: 强制刷新缓存
+  - `--registry`: 指定镜像源
+  - `https://registry.npmjs.org`: 使用官方镜像
+  - `dpml-prompt@beta`: 使用稳定测试版
+  - `mcp-server`: 启动服务
+
 **🎯 就这么简单！** 保存文件并重启您的AI应用，PromptX 就已成功激活。
 
 > **💡 提示：** 配置中特意指定了官方镜像源 `registry.npmjs.org`，这可以避免因使用非官方镜像导致的安装问题。如果您发现安装很慢，建议使用代理工具加速，而不是切换到其他镜像源。
-
-### 🌐 **高级配置：HTTP 模式支持**
-
-除了上述本地模式外，PromptX 还支持 **HTTP 模式**，适用于远程部署或特殊网络环境：
-
-```bash
-# 启动 HTTP 模式服务器
-npx -f -y dpml-prompt@beta mcp-server --transport http --port 3000
-```
-
-然后在客户端配置中使用：
-```json
-{
-  "mcpServers": {
-    "promptx": {
-      "url": "http://localhost:3000/mcp"
-    }
-  }
-}
-```
 
 📖 **[完整安装配置指南](https://github.com/Deepractice/PromptX/wiki/PromptX-MCP-Install)** - 包含各种客户端的详细配置方法和故障排除
 
@@ -165,7 +153,7 @@ graph TD
 ## 🎨 **女娲创造工坊 - 让每个人都成为AI角色设计师**
 
 <div align="center">
-  <img src="assets/nuwa-logo.png" alt="女娲创造工坊" width="120" style="border-radius: 50%; margin: 15px 0 25px 0;">
+  <img src="assets/logo/nuwa-logo-backgroud.jpg" alt="女娲创造工坊" width="120" style="border-radius: 50%; margin: 15px 0 25px 0;">
 </div>
 
 #### **💫 从想法到现实，只需2分钟**
@@ -263,6 +251,24 @@ graph TD
 #### **📚 相关资源**
 
 - **AI集成标准与实践指南：** https://github.com/LegacyLands/legacy-lands-library/blob/main/AI_CODE_STANDARDS_ZHCN.md
+
+---
+
+## 📚 **社区教程与案例**
+
+社区成员 **coso** 基于 PromptX 架构开发了 MCP 工具，并分享了完整的开发经验：
+
+#### 🔧 **使用 PromptX 架构开发 crawl-mcp 工具**
+- **文章**：[从想法到产品：我如何用Cursor Agent开发出智能内容处理MCP工具](https://mp.weixin.qq.com/s/x23Ap3t9LBDVNcr_7dcMHQ)
+- **成果**：[crawl-mcp-server](https://www.npmjs.com/package/crawl-mcp-server) - NPM包 | [GitHub](https://github.com/wutongci/crawl-mcp)
+- **亮点**：以 PromptX 为架构参考，实现零代码开发，几小时完成从想法到发布
+
+#### 🛠️ **MCP 开发模板化实践**
+- **文章**：[从零代码到开源：我如何用模板革命MCP开发](https://mp.weixin.qq.com/s/aQ9Io2KFoQt8k779L5kuuA)
+- **成果**：[mcp-template](https://github.com/wutongci/mcp-template) - 通用MCP开发模板
+- **价值**：将 MCP 开发时间从 40 小时缩短到 30 分钟
+
+> 💡 欢迎社区成员分享基于 PromptX 的实践经验，提交 PR 添加到此处。
 
 ---
 
