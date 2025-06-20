@@ -173,7 +173,7 @@ When you call the `promptx_...` series of tools, your AI application sends the r
 ## 🎨 **Nuwa Creation Workshop - Let everyone become an AI role designer**
 
 <div align="center">
-  <img src="assets/nuwa-logo.png" alt="Nuwa Creation Workshop" width="120" style="border-radius: 50%; margin: 15px 0 25px 0;">
+  <img src="assets/logo/nuwa-logo-backgroud.jpg" alt="Nuwa Creation Workshop" width="120" style="border-radius: 50%; margin: 15px 0 25px 0;">
 </div>
 
 #### **💫 From Idea to Reality, in Just 2 Minutes**
@@ -262,15 +262,29 @@ Have you ever thought: What if I could customize a professional AI assistant for
 > 
 > ---
 >
-> "I experienced the role creation process as Nuwa, and I have a few deep impressions: Nuwa's biggest highlight is its ability to simplify complexity, standardizing the intricate process of AI role design. What was once a role definition requiring deep thought has been transformed into a concise process of 'requirement identification → pattern matching → rapid generation' through a design pattern library and templated workflow."
-> 
-> The true value of Nuwa is not in "creating" roles, but in "unleashing" the user's creativity—allowing anyone to quickly obtain a professional AI assistant. This ability to lower barriers and increase efficiency is exactly what is needed in the AI era. Nuwa let me experience the charm of "making professional things simple"!
->
-> *-- 🎭 Nuwa Role Experience Feedback*
+> "The 'Nuwa' feature makes it more convenient and faster for me to use AI roles. It transforms a very professional and complex task that requires knowledge of underlying 'prompt engineering' into a process that can be completed through natural language conversation. I don't need to worry about how to write those complex configuration files; I just need to tell 'Nuwa' what I want, and she can guide me through the rest."
 
 #### **📚 Related Resources**
 
 - **AI Integration Standards & Practice Guide:** https://github.com/LegacyLands/legacy-lands-library/blob/main/AI_CODE_STANDARDS_ZHCN.md
+
+---
+
+## 📚 **Community Tutorials & Cases**
+
+Community member **coso** developed an MCP tool based on the PromptX architecture and shared the complete development experience:
+
+#### 🔧 **Developing the crawl-mcp tool with the PromptX architecture**
+- **Article**: [From Idea to Product: How I Developed an Intelligent Content Processing MCP Tool with Cursor Agent](https://mp.weixin.qq.com/s/x23Ap3t9LBDVNcr_7dcMHQ)
+- **Outcome**: [crawl-mcp-server](https://www.npmjs.com/package/crawl-mcp-server) - NPM package | [GitHub](https://github.com/wutongci/crawl-mcp)
+- **Highlight**: Using PromptX as an architectural reference, achieved zero-code development, from idea to release in just a few hours.
+
+#### 🛠️ **Templated Practice for MCP Development**
+- **Article**: [From Zero Code to Open Source: How I Revolutionized MCP Development with a Template](https://mp.weixin.qq.com/s/aQ9Io2KFoQt8k779L5kuuA)
+- **Outcome**: [mcp-template](https://github.com/wutongci/mcp-template) - A universal MCP development template
+- **Value**: Reduced MCP development time from 40 hours to 30 minutes.
+
+> 💡 We welcome community members to share their practical experience with PromptX. Submit a PR to add it here.
 
 ---
 
