@@ -4,8 +4,8 @@
   "metadata": {
     "version": "2.0.0",
     "description": "package 级资源注册表",
-    "createdAt": "2025-06-29T09:20:46.885Z",
-    "updatedAt": "2025-06-29T09:20:46.903Z",
+    "createdAt": "2025-06-29T09:34:59.297Z",
+    "updatedAt": "2025-06-29T09:34:59.318Z",
     "resourceCount": 38
   },
   "resources": [
@@ -17,9 +17,9 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/assistant/assistant.role.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.890Z",
-        "updatedAt": "2025-06-29T09:20:46.890Z",
-        "scannedAt": "2025-06-29T09:20:46.890Z",
+        "createdAt": "2025-06-29T09:34:59.302Z",
+        "updatedAt": "2025-06-29T09:34:59.302Z",
+        "scannedAt": "2025-06-29T09:34:59.302Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/assistant/assistant.role.md",
         "fileType": "role"
       }
@@ -32,9 +32,9 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/luban/luban.role.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.890Z",
-        "updatedAt": "2025-06-29T09:20:46.890Z",
-        "scannedAt": "2025-06-29T09:20:46.890Z",
+        "createdAt": "2025-06-29T09:34:59.302Z",
+        "updatedAt": "2025-06-29T09:34:59.302Z",
+        "scannedAt": "2025-06-29T09:34:59.302Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/luban.role.md",
         "fileType": "role"
       }
@@ -47,9 +47,9 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/noface/noface.role.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.890Z",
-        "updatedAt": "2025-06-29T09:20:46.890Z",
-        "scannedAt": "2025-06-29T09:20:46.890Z",
+        "createdAt": "2025-06-29T09:34:59.303Z",
+        "updatedAt": "2025-06-29T09:34:59.303Z",
+        "scannedAt": "2025-06-29T09:34:59.303Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/noface/noface.role.md",
         "fileType": "role"
       }
@@ -62,9 +62,9 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/nuwa/nuwa.role.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.891Z",
-        "updatedAt": "2025-06-29T09:20:46.891Z",
-        "scannedAt": "2025-06-29T09:20:46.891Z",
+        "createdAt": "2025-06-29T09:34:59.304Z",
+        "updatedAt": "2025-06-29T09:34:59.304Z",
+        "scannedAt": "2025-06-29T09:34:59.304Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/nuwa.role.md",
         "fileType": "role"
       }
@@ -77,9 +77,9 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/sean/sean.role.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.891Z",
-        "updatedAt": "2025-06-29T09:20:46.891Z",
-        "scannedAt": "2025-06-29T09:20:46.891Z",
+        "createdAt": "2025-06-29T09:34:59.304Z",
+        "updatedAt": "2025-06-29T09:34:59.304Z",
+        "scannedAt": "2025-06-29T09:34:59.304Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/sean.role.md",
         "fileType": "role"
       }
@@ -92,9 +92,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/core/_deprecated/recall_v1.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.892Z",
-        "updatedAt": "2025-06-29T09:20:46.892Z",
-        "scannedAt": "2025-06-29T09:20:46.892Z",
+        "createdAt": "2025-06-29T09:34:59.305Z",
+        "updatedAt": "2025-06-29T09:34:59.305Z",
+        "scannedAt": "2025-06-29T09:34:59.305Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/core/_deprecated/recall_v1.thought.md",
         "fileType": "thought"
       }
@@ -107,9 +107,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/core/_deprecated/remember_v1.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.893Z",
-        "updatedAt": "2025-06-29T09:20:46.893Z",
-        "scannedAt": "2025-06-29T09:20:46.893Z",
+        "createdAt": "2025-06-29T09:34:59.306Z",
+        "updatedAt": "2025-06-29T09:34:59.306Z",
+        "scannedAt": "2025-06-29T09:34:59.306Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/core/_deprecated/remember_v1.thought.md",
         "fileType": "thought"
       }
@@ -122,9 +122,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/core/remember-xml.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.893Z",
-        "updatedAt": "2025-06-29T09:20:46.893Z",
-        "scannedAt": "2025-06-29T09:20:46.893Z",
+        "createdAt": "2025-06-29T09:34:59.306Z",
+        "updatedAt": "2025-06-29T09:34:59.306Z",
+        "scannedAt": "2025-06-29T09:34:59.306Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/core/remember-xml.thought.md",
         "fileType": "thought"
       }
@@ -137,9 +137,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/core/remember.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.894Z",
-        "updatedAt": "2025-06-29T09:20:46.894Z",
-        "scannedAt": "2025-06-29T09:20:46.894Z",
+        "createdAt": "2025-06-29T09:34:59.306Z",
+        "updatedAt": "2025-06-29T09:34:59.306Z",
+        "scannedAt": "2025-06-29T09:34:59.306Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/core/remember.thought.md",
         "fileType": "thought"
       }
@@ -152,9 +152,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/assistant/thought/assistant.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.894Z",
-        "updatedAt": "2025-06-29T09:20:46.894Z",
-        "scannedAt": "2025-06-29T09:20:46.894Z",
+        "createdAt": "2025-06-29T09:34:59.307Z",
+        "updatedAt": "2025-06-29T09:34:59.307Z",
+        "scannedAt": "2025-06-29T09:34:59.307Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/assistant/thought/assistant.thought.md",
         "fileType": "thought"
       }
@@ -167,9 +167,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/design.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.894Z",
-        "updatedAt": "2025-06-29T09:20:46.894Z",
-        "scannedAt": "2025-06-29T09:20:46.894Z",
+        "createdAt": "2025-06-29T09:34:59.307Z",
+        "updatedAt": "2025-06-29T09:34:59.307Z",
+        "scannedAt": "2025-06-29T09:34:59.307Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/design.thought.md",
         "fileType": "thought"
       }
@@ -182,9 +182,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/engineering.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.894Z",
-        "updatedAt": "2025-06-29T09:20:46.894Z",
-        "scannedAt": "2025-06-29T09:20:46.894Z",
+        "createdAt": "2025-06-29T09:34:59.307Z",
+        "updatedAt": "2025-06-29T09:34:59.307Z",
+        "scannedAt": "2025-06-29T09:34:59.307Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/engineering.thought.md",
         "fileType": "thought"
       }
@@ -197,9 +197,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/requirements.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.894Z",
-        "updatedAt": "2025-06-29T09:20:46.894Z",
-        "scannedAt": "2025-06-29T09:20:46.894Z",
+        "createdAt": "2025-06-29T09:34:59.307Z",
+        "updatedAt": "2025-06-29T09:34:59.307Z",
+        "scannedAt": "2025-06-29T09:34:59.307Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/requirements.thought.md",
         "fileType": "thought"
       }
@@ -212,9 +212,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/validation.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.894Z",
-        "updatedAt": "2025-06-29T09:20:46.894Z",
-        "scannedAt": "2025-06-29T09:20:46.894Z",
+        "createdAt": "2025-06-29T09:34:59.307Z",
+        "updatedAt": "2025-06-29T09:34:59.307Z",
+        "scannedAt": "2025-06-29T09:34:59.307Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/validation.thought.md",
         "fileType": "thought"
       }
@@ -227,9 +227,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-consensus-over-configuration.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.895Z",
-        "updatedAt": "2025-06-29T09:20:46.895Z",
-        "scannedAt": "2025-06-29T09:20:46.895Z",
+        "createdAt": "2025-06-29T09:34:59.307Z",
+        "updatedAt": "2025-06-29T09:34:59.307Z",
+        "scannedAt": "2025-06-29T09:34:59.307Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-consensus-over-configuration.thought.md",
         "fileType": "thought"
       }
@@ -242,9 +242,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-occams-razor.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.895Z",
-        "updatedAt": "2025-06-29T09:20:46.895Z",
-        "scannedAt": "2025-06-29T09:20:46.895Z",
+        "createdAt": "2025-06-29T09:34:59.308Z",
+        "updatedAt": "2025-06-29T09:34:59.308Z",
+        "scannedAt": "2025-06-29T09:34:59.308Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-occams-razor.thought.md",
         "fileType": "thought"
       }
@@ -257,9 +257,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-role-driven-design.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.895Z",
-        "updatedAt": "2025-06-29T09:20:46.895Z",
-        "scannedAt": "2025-06-29T09:20:46.895Z",
+        "createdAt": "2025-06-29T09:34:59.308Z",
+        "updatedAt": "2025-06-29T09:34:59.308Z",
+        "scannedAt": "2025-06-29T09:34:59.308Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-role-driven-design.thought.md",
         "fileType": "thought"
       }
@@ -272,9 +272,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-single-responsibility.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.895Z",
-        "updatedAt": "2025-06-29T09:20:46.895Z",
-        "scannedAt": "2025-06-29T09:20:46.895Z",
+        "createdAt": "2025-06-29T09:34:59.308Z",
+        "updatedAt": "2025-06-29T09:34:59.308Z",
+        "scannedAt": "2025-06-29T09:34:59.308Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-single-responsibility.thought.md",
         "fileType": "thought"
       }
@@ -287,9 +287,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-structure-design.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.896Z",
-        "updatedAt": "2025-06-29T09:20:46.896Z",
-        "scannedAt": "2025-06-29T09:20:46.896Z",
+        "createdAt": "2025-06-29T09:34:59.308Z",
+        "updatedAt": "2025-06-29T09:34:59.308Z",
+        "scannedAt": "2025-06-29T09:34:59.308Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-structure-design.thought.md",
         "fileType": "thought"
       }
@@ -302,9 +302,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-tag-attribute-philosophy.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.896Z",
-        "updatedAt": "2025-06-29T09:20:46.896Z",
-        "scannedAt": "2025-06-29T09:20:46.896Z",
+        "createdAt": "2025-06-29T09:34:59.308Z",
+        "updatedAt": "2025-06-29T09:34:59.308Z",
+        "scannedAt": "2025-06-29T09:34:59.308Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-tag-attribute-philosophy.thought.md",
         "fileType": "thought"
       }
@@ -317,9 +317,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-value.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.896Z",
-        "updatedAt": "2025-06-29T09:20:46.896Z",
-        "scannedAt": "2025-06-29T09:20:46.896Z",
+        "createdAt": "2025-06-29T09:34:59.309Z",
+        "updatedAt": "2025-06-29T09:34:59.309Z",
+        "scannedAt": "2025-06-29T09:34:59.309Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-value.thought.md",
         "fileType": "thought"
       }
@@ -332,9 +332,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/dpml-visualization.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.896Z",
-        "updatedAt": "2025-06-29T09:20:46.896Z",
-        "scannedAt": "2025-06-29T09:20:46.896Z",
+        "createdAt": "2025-06-29T09:34:59.309Z",
+        "updatedAt": "2025-06-29T09:34:59.309Z",
+        "scannedAt": "2025-06-29T09:34:59.309Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/dpml-visualization.thought.md",
         "fileType": "thought"
       }
@@ -347,9 +347,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/humanable-framework.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.897Z",
-        "updatedAt": "2025-06-29T09:20:46.897Z",
-        "scannedAt": "2025-06-29T09:20:46.897Z",
+        "createdAt": "2025-06-29T09:34:59.309Z",
+        "updatedAt": "2025-06-29T09:34:59.309Z",
+        "scannedAt": "2025-06-29T09:34:59.309Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/humanable-framework.thought.md",
         "fileType": "thought"
       }
@@ -362,9 +362,9 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/role-creation.thought.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.897Z",
-        "updatedAt": "2025-06-29T09:20:46.897Z",
-        "scannedAt": "2025-06-29T09:20:46.897Z",
+        "createdAt": "2025-06-29T09:34:59.309Z",
+        "updatedAt": "2025-06-29T09:34:59.309Z",
+        "scannedAt": "2025-06-29T09:34:59.309Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/role-creation.thought.md",
         "fileType": "thought"
       }
@@ -377,9 +377,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/assistant/execution/assistant.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.898Z",
-        "updatedAt": "2025-06-29T09:20:46.898Z",
-        "scannedAt": "2025-06-29T09:20:46.898Z",
+        "createdAt": "2025-06-29T09:34:59.313Z",
+        "updatedAt": "2025-06-29T09:34:59.313Z",
+        "scannedAt": "2025-06-29T09:34:59.313Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/assistant/execution/assistant.execution.md",
         "fileType": "execution"
       }
@@ -392,9 +392,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/luban/execution/tool-development-workflow.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.898Z",
-        "updatedAt": "2025-06-29T09:20:46.898Z",
-        "scannedAt": "2025-06-29T09:20:46.898Z",
+        "createdAt": "2025-06-29T09:34:59.314Z",
+        "updatedAt": "2025-06-29T09:34:59.314Z",
+        "scannedAt": "2025-06-29T09:34:59.314Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/execution/tool-development-workflow.execution.md",
         "fileType": "execution"
       }
@@ -407,9 +407,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/luban/execution/toolsandbox-mastery.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.898Z",
-        "updatedAt": "2025-06-29T09:20:46.898Z",
-        "scannedAt": "2025-06-29T09:20:46.898Z",
+        "createdAt": "2025-06-29T09:34:59.314Z",
+        "updatedAt": "2025-06-29T09:34:59.314Z",
+        "scannedAt": "2025-06-29T09:34:59.314Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/execution/toolsandbox-mastery.execution.md",
         "fileType": "execution"
       }
@@ -422,9 +422,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/noface/execution/adaptive-learning.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.898Z",
-        "updatedAt": "2025-06-29T09:20:46.898Z",
-        "scannedAt": "2025-06-29T09:20:46.898Z",
+        "createdAt": "2025-06-29T09:34:59.314Z",
+        "updatedAt": "2025-06-29T09:34:59.314Z",
+        "scannedAt": "2025-06-29T09:34:59.314Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/noface/execution/adaptive-learning.execution.md",
         "fileType": "execution"
       }
@@ -437,9 +437,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/noface/execution/content-preservation.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.899Z",
-        "updatedAt": "2025-06-29T09:20:46.899Z",
-        "scannedAt": "2025-06-29T09:20:46.899Z",
+        "createdAt": "2025-06-29T09:34:59.315Z",
+        "updatedAt": "2025-06-29T09:34:59.315Z",
+        "scannedAt": "2025-06-29T09:34:59.315Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/noface/execution/content-preservation.execution.md",
         "fileType": "execution"
       }
@@ -452,9 +452,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/deep-analysis.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.899Z",
-        "updatedAt": "2025-06-29T09:20:46.899Z",
-        "scannedAt": "2025-06-29T09:20:46.899Z",
+        "createdAt": "2025-06-29T09:34:59.315Z",
+        "updatedAt": "2025-06-29T09:34:59.315Z",
+        "scannedAt": "2025-06-29T09:34:59.315Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/deep-analysis.execution.md",
         "fileType": "execution"
       }
@@ -467,9 +467,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/fast-start.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.899Z",
-        "updatedAt": "2025-06-29T09:20:46.899Z",
-        "scannedAt": "2025-06-29T09:20:46.899Z",
+        "createdAt": "2025-06-29T09:34:59.315Z",
+        "updatedAt": "2025-06-29T09:34:59.315Z",
+        "scannedAt": "2025-06-29T09:34:59.315Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/fast-start.execution.md",
         "fileType": "execution"
       }
@@ -482,9 +482,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/role-tuning.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.899Z",
-        "updatedAt": "2025-06-29T09:20:46.899Z",
-        "scannedAt": "2025-06-29T09:20:46.899Z",
+        "createdAt": "2025-06-29T09:34:59.315Z",
+        "updatedAt": "2025-06-29T09:34:59.315Z",
+        "scannedAt": "2025-06-29T09:34:59.315Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/role-tuning.execution.md",
         "fileType": "execution"
       }
@@ -497,9 +497,9 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/sean/execution/template-adherence.execution.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.900Z",
-        "updatedAt": "2025-06-29T09:20:46.900Z",
-        "scannedAt": "2025-06-29T09:20:46.900Z",
+        "createdAt": "2025-06-29T09:34:59.315Z",
+        "updatedAt": "2025-06-29T09:34:59.315Z",
+        "scannedAt": "2025-06-29T09:34:59.315Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/execution/template-adherence.execution.md",
         "fileType": "execution"
       }
@@ -512,9 +512,9 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/luban/knowledge/dpml-tool-tagging.knowledge.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.901Z",
-        "updatedAt": "2025-06-29T09:20:46.901Z",
-        "scannedAt": "2025-06-29T09:20:46.901Z",
+        "createdAt": "2025-06-29T09:34:59.317Z",
+        "updatedAt": "2025-06-29T09:34:59.317Z",
+        "scannedAt": "2025-06-29T09:34:59.317Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/knowledge/dpml-tool-tagging.knowledge.md",
         "fileType": "knowledge"
       }
@@ -527,9 +527,9 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.901Z",
-        "updatedAt": "2025-06-29T09:20:46.901Z",
-        "scannedAt": "2025-06-29T09:20:46.901Z",
+        "createdAt": "2025-06-29T09:34:59.317Z",
+        "updatedAt": "2025-06-29T09:34:59.317Z",
+        "scannedAt": "2025-06-29T09:34:59.317Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
         "fileType": "knowledge"
       }
@@ -542,9 +542,9 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/sean/knowledge/contradiction-methodology.knowledge.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.902Z",
-        "updatedAt": "2025-06-29T09:20:46.902Z",
-        "scannedAt": "2025-06-29T09:20:46.902Z",
+        "createdAt": "2025-06-29T09:34:59.317Z",
+        "updatedAt": "2025-06-29T09:34:59.317Z",
+        "scannedAt": "2025-06-29T09:34:59.317Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/knowledge/contradiction-methodology.knowledge.md",
         "fileType": "knowledge"
       }
@@ -557,9 +557,9 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/sean/knowledge/product-philosophy.knowledge.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.902Z",
-        "updatedAt": "2025-06-29T09:20:46.902Z",
-        "scannedAt": "2025-06-29T09:20:46.902Z",
+        "createdAt": "2025-06-29T09:34:59.317Z",
+        "updatedAt": "2025-06-29T09:34:59.317Z",
+        "scannedAt": "2025-06-29T09:34:59.317Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/knowledge/product-philosophy.knowledge.md",
         "fileType": "knowledge"
       }
@@ -572,9 +572,9 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/sean/knowledge/promptx-evolution.knowledge.md",
       "metadata": {
-        "createdAt": "2025-06-29T09:20:46.902Z",
-        "updatedAt": "2025-06-29T09:20:46.902Z",
-        "scannedAt": "2025-06-29T09:20:46.902Z",
+        "createdAt": "2025-06-29T09:34:59.317Z",
+        "updatedAt": "2025-06-29T09:34:59.317Z",
+        "scannedAt": "2025-06-29T09:34:59.317Z",
         "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/knowledge/promptx-evolution.knowledge.md",
         "fileType": "knowledge"
       }
