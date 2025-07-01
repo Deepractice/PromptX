@@ -45,8 +45,9 @@ class InitCommand extends BasePouchCommand {
     let projectPath
     
     if (workingDirectory) {
-      // AI提供了工作目录，使用AI提供的路径
-      projectPath = path.resolve(workingDirectory)
+      // AI提供了工作目录，先解码中文路径，然后使用
+      const decodedWorkingDirectory = decodeURIComponent(workingDirectory)
+      projectPath = path.resolve(decodedWorkingDirectory)
       
       // 验证AI提供的路径是否有效
       if (!await this.currentProjectManager.validateProjectPath(projectPath)) {
@@ -153,7 +154,7 @@ ${registryStats.message}
       if (registryData.size === 0) {
         return {
           message: `✅ 项目资源目录已创建，注册表已初始化
-   📂 目录: ${path.relative(process.cwd(), domainDir)}
+   📂 目录: ${path.relative(process.cwd(), resourceDir)}
    💾 注册表: ${path.relative(process.cwd(), registryPath)}
    💡 现在可以在 domain 目录下创建角色资源了`,
           totalResources: 0
