@@ -128,16 +128,8 @@ const TOOL_DEFINITIONS = [
         },
         context: {
           type: 'object',
-          description: '执行上下文信息（可选）- 可包含角色信息、会话ID、执行选项等系统级元数据',
+          description: '执行上下文信息（可选）- 用于传递执行选项等系统级配置',
           properties: {
-            role_id: {
-              type: 'string',
-              description: '当前激活的角色ID'
-            },
-            session_id: {
-              type: 'string',
-              description: '会话ID'
-            },
             options: {
               type: 'object',
               description: '执行选项配置，用于控制工具沙箱行为',
@@ -164,8 +156,6 @@ const TOOL_DEFINITIONS = [
       parameters: z.object({}).passthrough()
         .describe('传递给工具的参数对象'),
       context: z.object({
-        role_id: z.string().optional().describe('当前激活的角色ID'),
-        session_id: z.string().optional().describe('会话ID'),
         options: z.object({
           forceReinstall: z.boolean().optional().describe('是否强制重新安装工具依赖'),
           timeout: z.number().optional().describe('工具执行超时时间（毫秒）')
