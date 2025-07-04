@@ -113,7 +113,7 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'promptx_tool',
-    description: '🔧 [工具执行器] 执行通过@tool协议声明的JavaScript工具 - 支持角色配置中定义的专业工具能力，如@tool://calculator数学计算、@tool://send-email邮件发送等。提供安全沙箱执行、参数验证、错误处理和性能监控。',
+    description: '🔧 [工具执行器] 执行通过@tool协议声明的JavaScript工具 - 支持角色配置中定义的专业工具能力，如@tool://calculator数学计算、@tool://send-email邮件发送等。提供安全沙箱执行、参数验证、错误处理和性能监控。context参数用于传递系统级配置，如执行选项、角色信息等元数据。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -128,7 +128,7 @@ const TOOL_DEFINITIONS = [
         },
         context: {
           type: 'object',
-          description: '执行上下文信息（可选）',
+          description: '执行上下文信息（可选）- 可包含角色信息、会话ID、执行选项等系统级元数据',
           properties: {
             role_id: {
               type: 'string',
@@ -137,6 +137,20 @@ const TOOL_DEFINITIONS = [
             session_id: {
               type: 'string',
               description: '会话ID'
+            },
+            options: {
+              type: 'object',
+              description: '执行选项配置，用于控制工具沙箱行为',
+              properties: {
+                forceReinstall: {
+                  type: 'boolean',
+                  description: '是否强制重新安装工具依赖，用于解决缓存问题'
+                },
+                timeout: {
+                  type: 'number',
+                  description: '工具执行超时时间（毫秒），默认30000ms'
+                }
+              }
             }
           }
         }
@@ -151,7 +165,11 @@ const TOOL_DEFINITIONS = [
         .describe('传递给工具的参数对象'),
       context: z.object({
         role_id: z.string().optional().describe('当前激活的角色ID'),
-        session_id: z.string().optional().describe('会话ID')
+        session_id: z.string().optional().describe('会话ID'),
+        options: z.object({
+          forceReinstall: z.boolean().optional().describe('是否强制重新安装工具依赖'),
+          timeout: z.number().optional().describe('工具执行超时时间（毫秒）')
+        }).optional().describe('执行选项配置')
       }).optional().describe('执行上下文信息')
     })
   }
