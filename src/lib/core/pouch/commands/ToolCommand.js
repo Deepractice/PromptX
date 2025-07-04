@@ -97,10 +97,8 @@ ${JSON.stringify(result.result, null, 2)}
    * @param {Object} args - 命令参数
    * @param {string} args.tool_resource - 工具资源引用，格式：@tool://tool-name
    * @param {Object} args.parameters - 传递给工具的参数
-   * @param {Object} args.context - 执行上下文信息（可选）
-   * @param {Object} args.context.options - 执行选项配置
-   * @param {boolean} args.context.options.forceReinstall - 是否强制重新安装依赖
-   * @param {number} args.context.options.timeout - 工具执行超时时间（毫秒）
+   * @param {boolean} args.forceReinstall - 是否强制重新安装工具依赖（默认false）
+   * @param {number} args.timeout - 工具执行超时时间（毫秒，默认30000ms）
    * @returns {Promise<Object>} 执行结果
    */
   async executeToolInternal(args) {
@@ -111,12 +109,12 @@ ${JSON.stringify(result.result, null, 2)}
       // 1. 参数验证
       this.validateArguments(args)
       
-      const { tool_resource, parameters, context = {} } = args
+      const { tool_resource, parameters, forceReinstall = false, timeout = 30000 } = args
       
       logger.debug(`[PromptXTool] 开始执行工具: ${tool_resource}`)
       
-      // 2. 提取执行选项并创建ToolSandbox实例
-      const sandboxOptions = context.options || {}
+      // 2. 构建沙箱选项并创建ToolSandbox实例
+      const sandboxOptions = { forceReinstall, timeout }
       logger.debug(`[PromptXTool] 沙箱选项:`, sandboxOptions)
       sandbox = new ToolSandbox(tool_resource, sandboxOptions)
       
