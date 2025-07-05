@@ -211,7 +211,17 @@ class ToolSandbox {
     const script = new vm.Script(this.toolContent, { filename: `${this.toolId}.js` });
     const context = vm.createContext(basicSandbox);
     
-    script.runInContext(context);
+    try {
+      script.runInContext(context);
+    } catch (error) {
+      // 使用智能错误过滤处理require错误
+      const filteredError = this._filterRequireError(error);
+      if (filteredError) {
+        throw filteredError;
+      }
+      // 如果是预期的require错误，继续执行
+    }
+    
     const exported = context.module.exports;
     
     if (!exported) {
@@ -239,6 +249,87 @@ class ToolSandbox {
     }
     
     this.toolInstance = toolInstance;
+  }
+
+  /**
+   * 智能过滤require错误
+   * @param {Error} error - 捕获的错误
+   * @returns {Error|null} - 如果是真正的错误则返回Error对象，如果是预期的require错误则返回null
+   * @private
+   */
+  _filterRequireError(error) {
+    // 检查是否是MODULE_NOT_FOUND错误
+    if (error.code === 'MODULE_NOT_FOUND') {
+      const missingModule = this._extractMissingModuleName(error.message);
+      
+      if (missingModule) {
+        // 获取已声明的依赖列表
+        const declaredDependencies = this._extractDeclaredDependencies();
+        
+        // 检查缺失的模块是否在依赖声明中
+        if (this._isDeclaredInDependencies(missingModule, declaredDependencies)) {
+          console.log(`[ToolSandbox] 依赖 ${missingModule} 未安装，将在prepareDependencies阶段安装`);
+          return null; // 预期的错误，忽略
+        } else {
+          return new Error(`未声明的依赖: ${missingModule}，请在getDependencies()中添加此依赖`);
+        }
+      }
+    }
+    
+    // 其他错误直接返回
+    return error;
+  }
+
+  /**
+   * 从错误信息中提取缺失的模块名
+   * @param {string} errorMessage - 错误信息
+   * @returns {string|null} - 模块名或null
+   * @private
+   */
+  _extractMissingModuleName(errorMessage) {
+    // 匹配 "Cannot find module 'moduleName'" 或 "Cannot resolve module 'moduleName'"
+    const match = errorMessage.match(/Cannot (?:find|resolve) module ['"]([^'"]+)['"]/);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * 尝试从工具代码中提取已声明的依赖
+   * @returns {string[]} - 依赖列表
+   * @private
+   */
+  _extractDeclaredDependencies() {
+    try {
+      // 尝试通过正则表达式从代码中提取getDependencies的返回值
+      const dependencyMatch = this.toolContent.match(/getDependencies\s*\(\s*\)\s*\{[\s\S]*?return\s*\[([\s\S]*?)\]/);
+      
+      if (dependencyMatch) {
+        const dependencyString = dependencyMatch[1];
+        // 提取字符串字面量
+        const stringMatches = dependencyString.match(/['"]([^'"]+)['"]/g);
+        if (stringMatches) {
+          return stringMatches.map(str => str.slice(1, -1)); // 去掉引号
+        }
+      }
+    } catch (error) {
+      console.warn(`[ToolSandbox] 无法解析依赖声明: ${error.message}`);
+    }
+    
+    return [];
+  }
+
+  /**
+   * 检查模块是否在依赖声明中
+   * @param {string} moduleName - 模块名
+   * @param {string[]} declaredDependencies - 已声明的依赖列表
+   * @returns {boolean} - 是否已声明
+   * @private
+   */
+  _isDeclaredInDependencies(moduleName, declaredDependencies) {
+    return declaredDependencies.some(dep => {
+      // 支持 "axios@^1.6.0" 格式，提取模块名部分
+      const depName = dep.split('@')[0];
+      return depName === moduleName;
+    });
   }
 
   /**
