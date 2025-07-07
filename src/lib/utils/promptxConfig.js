@@ -9,7 +9,6 @@ const { getDirectoryService } = require('./DirectoryService')
 class PromptXConfig {
   constructor(baseDir = null) {
     this.baseDir = baseDir
-    this.directoryService = getDirectoryService()
     this.promptxDir = null // 将在需要时动态计算
   }
 
@@ -21,12 +20,10 @@ class PromptXConfig {
       if (this.baseDir) {
         this.promptxDir = path.join(this.baseDir, '.promptx')
       } else {
-        const context = {
-          startDir: process.cwd(),
-          platform: process.platform,
-          avoidUserHome: true
-        }
-        this.promptxDir = await this.directoryService.getPromptXDirectory(context)
+        // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
+        const { getGlobalProjectPathResolver } = require('./ProjectPathResolver')
+        const pathResolver = getGlobalProjectPathResolver()
+        this.promptxDir = pathResolver.getPromptXDirectory()
       }
     }
     return this.promptxDir

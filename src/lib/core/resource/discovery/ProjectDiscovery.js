@@ -129,11 +129,9 @@ class ProjectDiscovery extends FilePatternDiscovery {
    * @returns {Promise<string>} 项目根目录路径
    */
   async _findProjectRoot() {
-    // 使用新的统一目录服务
-    const { getDirectoryService } = require('../../../utils/DirectoryService')
-    const directoryService = getDirectoryService()
-    
-    return await directoryService.getProjectRoot()
+    // 🚀 新架构：直接使用ProjectManager的当前项目状态
+    const ProjectManager = require('../../../utils/ProjectManager')
+    return ProjectManager.getCurrentProjectPath()
   }
 
   /**

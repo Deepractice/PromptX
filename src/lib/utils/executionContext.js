@@ -111,11 +111,16 @@ function getWorkspaceSynchronous(context) {
     }
   }
 
-  // 策略3：现有.promptx目录
-  const existingPrompxRoot = findExistingPromptxDirectory(context.startDir, debug);
-  if (existingPrompxRoot) {
-    if (debug) console.error(`[执行上下文] 发现现有.promptx目录: ${existingPrompxRoot}`);
-    return existingPrompxRoot;
+  // 策略3：使用新架构的ProjectManager
+  try {
+    const ProjectManager = require('./ProjectManager');
+    if (ProjectManager.isInitialized()) {
+      const projectPath = ProjectManager.getCurrentProjectPath();
+      if (debug) console.error(`[执行上下文] 使用ProjectManager当前项目: ${projectPath}`);
+      return projectPath;
+    }
+  } catch (error) {
+    // ProjectManager未初始化，继续其他策略
   }
 
   // 策略4：PWD环境变量
@@ -123,13 +128,6 @@ function getWorkspaceSynchronous(context) {
   if (pwd && isValidDirectory(pwd) && pwd !== process.cwd()) {
     if (debug) console.error(`[执行上下文] 使用PWD环境变量: ${pwd}`);
     return pwd;
-  }
-
-  // 策略5：项目根目录
-  const projectRoot = findProjectRoot(context.startDir);
-  if (projectRoot && projectRoot !== process.cwd()) {
-    if (debug) console.error(`[执行上下文] 智能推测项目根目录: ${projectRoot}`);
-    return projectRoot;
   }
 
   // 策略6：回退到当前目录
@@ -150,98 +148,7 @@ function getMCPWorkingDirectoryLegacy() {
   return process.cwd();
 }
 
-/**
- * 向上查找现有的.promptx目录
- * @param {string} startDir 开始查找的目录
- * @param {boolean} debug 是否输出调试信息
- * @returns {string|null} 包含.promptx目录的父目录路径或null
- */
-function findExistingPromptxDirectory(startDir, debug = false) {
-  if (debug) {
-    console.error(`🔍 [executionContext] 查找.promptx目录: ${startDir}`);
-  }
-  
-  let currentDir = path.resolve(startDir);
-  const root = path.parse(currentDir).root;
 
-  while (currentDir !== root) {
-    // 检查当前目录是否包含.promptx目录
-    const promptxPath = path.join(currentDir, '.promptx');
-    
-    if (fs.existsSync(promptxPath)) {
-      try {
-        const stat = fs.statSync(promptxPath);
-        if (stat.isDirectory()) {
-          if (debug) console.error(`🔍 [executionContext] 找到.promptx目录: ${currentDir}`);
-          return currentDir;
-        }
-      } catch (error) {
-        // 忽略权限错误等，继续查找
-        if (debug) console.error(`🔍 [executionContext] 访问.promptx目录时出错: ${error.message}`);
-      }
-    }
-
-    // 向上一级目录
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      break; // 防止无限循环
-    }
-    currentDir = parentDir;
-  }
-
-  if (debug) console.error(`🔍 [executionContext] 未找到.promptx目录`);
-  return null;
-}
-
-/**
- * 向上查找项目根目录
- * @param {string} startDir 开始查找的目录
- * @returns {string|null} 项目根目录或null
- */
-function findProjectRoot(startDir) {
-  const projectMarkers = [
-    'package.json',
-    '.git',
-    'pyproject.toml',
-    'Cargo.toml',
-    'go.mod',
-    'pom.xml',
-    'build.gradle',
-    '.gitignore'
-  ];
-
-  let currentDir = path.resolve(startDir);
-  const root = path.parse(currentDir).root;
-
-  while (currentDir !== root) {
-    // Windows特有：避免用户家目录
-    if (process.platform === 'win32') {
-      const homeDir = os.homedir();
-      if (path.resolve(currentDir) === path.resolve(homeDir)) {
-        console.error(`[executionContext] 跳过用户家目录: ${currentDir}`);
-        const parentDir = path.dirname(currentDir);
-        if (parentDir === currentDir) break;
-        currentDir = parentDir;
-        continue;
-      }
-    }
-
-    // 检查是否包含项目标识文件
-    for (const marker of projectMarkers) {
-      const markerPath = path.join(currentDir, marker);
-      if (fs.existsSync(markerPath)) {
-        return currentDir;
-      }
-    }
-
-    // 向上一级目录
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) break; // 防止无限循环
-    currentDir = parentDir;
-  }
-
-  return null;
-}
 
 /**
  * 验证目录是否有效

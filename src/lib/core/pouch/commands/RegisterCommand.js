@@ -15,7 +15,6 @@ class RegisterCommand extends BasePouchCommand {
     this.packageProtocol = new PackageProtocol()
     // 复用ActionCommand的ResourceManager方式
     this.resourceManager = getGlobalResourceManager()
-    this.directoryService = getDirectoryService()
   }
 
   getPurpose () {
@@ -149,8 +148,10 @@ class RegisterCommand extends BasePouchCommand {
    */
   async registerRole (roleId, metadata) {
     try {
-      // 通过DirectoryService获取注册表路径（与其他命令一致）
-      const registryPath = await this.directoryService.getRegistryPath()
+      // 🚀 新架构：通过ProjectPathResolver获取注册表路径
+      const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
+      const pathResolver = getGlobalProjectPathResolver()
+      const registryPath = pathResolver.getRegistryPath()
       
       // 读取当前注册表
       const registry = await fs.readJson(registryPath)
@@ -180,12 +181,9 @@ class RegisterCommand extends BasePouchCommand {
    */
   async getProjectPath() {
     // 使用DirectoryService统一获取项目路径（与InitCommand保持一致）
-    const context = {
-      startDir: process.cwd(),
-      platform: process.platform,
-      avoidUserHome: true
-    }
-    return await this.directoryService.getProjectRoot(context)
+    // 🚀 新架构：直接使用ProjectManager获取当前项目路径
+    const ProjectManager = require('../../../utils/ProjectManager')
+    return ProjectManager.getCurrentProjectPath()
   }
 
   getPATEOAS (args) {

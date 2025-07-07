@@ -5,14 +5,70 @@ const crypto = require('crypto')
 const { getGlobalServerEnvironment } = require('./ServerEnvironment')
 
 /**
- * 多项目管理器
- * 支持多个MCP实例同时绑定不同项目，彻底解决多项目开发环境下的角色混乱问题
- * 使用三元组唯一标识：MCP ID + IDE类型 + 项目Hash
+ * 统一项目管理器 - 新架构
+ * 核心原则：一次设置，全程使用
+ * 负责当前项目状态管理和多项目配置持久化
  */
 class ProjectManager {
   constructor() {
     this.promptxHomeDir = path.join(os.homedir(), '.promptx')
     this.projectsDir = path.join(this.promptxHomeDir, 'project')
+  }
+
+  // 🎯 新架构：当前项目状态管理
+  static currentProject = {
+    workingDirectory: null,
+    mcpId: null,
+    ideType: null,
+    transport: null,
+    initialized: false
+  }
+
+  /**
+   * 设置当前项目（init时调用）
+   * @param {string} workingDirectory - 项目工作目录绝对路径
+   * @param {string} mcpId - MCP进程ID
+   * @param {string} ideType - IDE类型
+   * @param {string} transport - 传输协议类型
+   */
+  static setCurrentProject(workingDirectory, mcpId, ideType, transport) {
+    this.currentProject = {
+      workingDirectory: path.resolve(workingDirectory),
+      mcpId,
+      ideType,
+      transport,
+      initialized: true
+    }
+  }
+
+  /**
+   * 获取当前项目路径（@project协议使用）
+   * @returns {string} 当前项目工作目录
+   */
+  static getCurrentProjectPath() {
+    if (!this.currentProject.initialized) {
+      throw new Error('项目未初始化，请先调用 init 命令')
+    }
+    return this.currentProject.workingDirectory
+  }
+
+  /**
+   * 获取当前项目信息
+   * @returns {Object} 当前项目完整信息
+   */
+  static getCurrentProject() {
+    if (!this.currentProject.initialized) {
+      throw new Error('项目未初始化，请先调用 init 命令')
+    }
+    return { ...this.currentProject }
+  }
+
+  /**
+   * 检查项目是否已初始化
+   * @returns {boolean} 是否已初始化
+   */
+  static isInitialized() {
+    return this.currentProject.initialized
   }
 
   /**
@@ -328,7 +384,7 @@ ${projectList}
   }
 
   /**
-   * 统一项目注册方法 - 从ServerEnvironment获取服务信息
+   * 统一项目注册方法 - 新架构：设置当前项目并持久化配置
    * @param {string} workingDirectory - 项目工作目录
    * @param {string} ideType - IDE类型（可选，默认'unknown'）
    * @returns {Promise<Object>} 项目配置对象
@@ -341,8 +397,12 @@ ${projectList}
     
     const mcpId = serverEnv.getMcpId()
     const transport = serverEnv.getTransport()
-    const projectManager = getGlobalProjectManager()
     
+    // 🎯 新架构：设置当前项目状态
+    this.setCurrentProject(workingDirectory, mcpId, ideType, transport)
+    
+    // 持久化项目配置（保持多项目管理功能）
+    const projectManager = getGlobalProjectManager()
     return await projectManager.registerProject(workingDirectory, mcpId, ideType, transport)
   }
 }

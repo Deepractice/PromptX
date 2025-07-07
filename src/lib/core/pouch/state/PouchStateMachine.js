@@ -107,9 +107,10 @@ class PouchStateMachine {
    * 保存状态到文件
    */
   async saveState () {
-    const { getDirectoryService } = require('../../../utils/DirectoryService')
-    const directoryService = getDirectoryService()
-    const promptxDir = await directoryService.getPromptXDirectory()
+    // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
+    const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
+    const pathResolver = getGlobalProjectPathResolver()
+    const promptxDir = pathResolver.getPromptXDirectory()
     const configPath = path.join(promptxDir, 'pouch.json')
 
     try {
@@ -135,9 +136,10 @@ class PouchStateMachine {
    * 从文件加载状态
    */
   async loadState () {
-    const { getDirectoryService } = require('../../../utils/DirectoryService')
-    const directoryService = getDirectoryService()
-    const promptxDir = await directoryService.getPromptXDirectory()
+    // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
+    const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
+    const pathResolver = getGlobalProjectPathResolver()
+    const promptxDir = pathResolver.getPromptXDirectory()
     const configPath = path.join(promptxDir, 'pouch.json')
 
     try {

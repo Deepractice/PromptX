@@ -16,7 +16,6 @@ class RecallCommand extends BasePouchCommand {
     super()
     this.lastSearchCount = 0
     this.resourceManager = getGlobalResourceManager()
-    this.directoryService = getDirectoryService()
     this.FORCE_XML_MODE = true  // 🎯 强制XML模式标志
   }
 
@@ -230,14 +229,9 @@ ${formattedMemories}
   async getProjectPath() {
     logger.debug('📍 [RecallCommand] 获取项目路径...')
     
-    // 使用DirectoryService统一获取项目路径（与InitCommand保持一致）
-    const context = {
-      startDir: process.cwd(),
-      platform: process.platform,
-      avoidUserHome: true
-    }
-    
-    const projectPath = await this.directoryService.getProjectRoot(context)
+    // 🚀 新架构：直接使用ProjectManager的当前项目状态
+    const ProjectManager = require('../../../utils/ProjectManager')
+    const projectPath = ProjectManager.getCurrentProjectPath()
     
     if (process.env.PROMPTX_DEBUG === 'true') {
       logger.debug(`📍 [RecallCommand] 项目路径解析结果: ${projectPath}`)

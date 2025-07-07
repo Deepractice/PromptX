@@ -518,33 +518,41 @@ class ToolSandbox {
       throw new Error('protocolPath is required but was undefined');
     }
     
-    // 如果是协议路径，使用ResourceManager解析
+    // 🚀 新架构：@project协议直接使用ProjectPathResolver
+    if (protocolPath.startsWith('@project://')) {
+      const { getGlobalProjectPathResolver } = require('../utils/ProjectPathResolver');
+      const pathResolver = getGlobalProjectPathResolver();
+      
+      try {
+        // 提取协议路径的相对部分
+        const relativePath = protocolPath.replace(/^@project:\/\//, '');
+        const resolvedPath = pathResolver.resolvePath(relativePath);
+        
+        // 确保目录存在
+        const fs = require('fs').promises;
+        try {
+          await fs.access(resolvedPath);
+        } catch (error) {
+          if (error.code === 'ENOENT') {
+            await fs.mkdir(resolvedPath, { recursive: true });
+            console.log(`[ToolSandbox] 创建统一工作目录: ${resolvedPath}`);
+          }
+        }
+        
+        return resolvedPath;
+      } catch (error) {
+        throw new Error(`解析@project://路径失败: ${error.message}`);
+      }
+    }
+    
+    // 其他协议路径使用ResourceManager解析
     if (protocolPath.startsWith('@')) {
       if (!this.resourceManager) {
         throw new Error('ResourceManager not set. Cannot resolve protocol path.');
       }
       
-      const projectProtocol = this.resourceManager.protocols.get('project');
-      if (!projectProtocol) {
-        throw new Error('ProjectProtocol not found. Cannot resolve @project:// path.');
-      }
-      
-      // 提取协议路径的相对部分
-      const relativePath = protocolPath.replace(/^@project:\/\//, '');
-      const resolvedPath = await projectProtocol.resolvePath(relativePath, new Map());
-      
-      // 确保目录存在
-      const fs = require('fs').promises;
-      try {
-        await fs.access(resolvedPath);
-      } catch (error) {
-        if (error.code === 'ENOENT') {
-          await fs.mkdir(resolvedPath, { recursive: true });
-          console.log(`[ToolSandbox] 创建统一工作目录: ${resolvedPath}`);
-        }
-      }
-      
-      return resolvedPath;
+      // 其他协议处理逻辑保持不变
+      throw new Error(`暂不支持的协议路径: ${protocolPath}`);
     }
     
     // 普通路径直接返回
