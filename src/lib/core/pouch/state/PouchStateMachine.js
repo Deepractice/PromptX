@@ -107,13 +107,20 @@ class PouchStateMachine {
    * 保存状态到文件
    */
   async saveState () {
-    // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
-    const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
-    const pathResolver = getGlobalProjectPathResolver()
-    const promptxDir = pathResolver.getPromptXDirectory()
-    const configPath = path.join(promptxDir, 'pouch.json')
-
     try {
+      // ✅ 修复：检查项目是否已初始化，未初始化时跳过文件保存
+      const ProjectManager = require('../../../utils/ProjectManager')
+      if (!ProjectManager.isInitialized()) {
+        // 项目未初始化，只保存在内存中，不持久化到文件
+        return
+      }
+
+      // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
+      const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
+      const pathResolver = getGlobalProjectPathResolver()
+      const promptxDir = pathResolver.getPromptXDirectory()
+      const configPath = path.join(promptxDir, 'pouch.json')
+
       // 确保 .promptx 目录存在
       await fs.ensureDir(promptxDir)
 
@@ -136,13 +143,20 @@ class PouchStateMachine {
    * 从文件加载状态
    */
   async loadState () {
-    // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
-    const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
-    const pathResolver = getGlobalProjectPathResolver()
-    const promptxDir = pathResolver.getPromptXDirectory()
-    const configPath = path.join(promptxDir, 'pouch.json')
-
     try {
+      // ✅ 修复：检查项目是否已初始化，未初始化时跳过文件加载
+      const ProjectManager = require('../../../utils/ProjectManager')
+      if (!ProjectManager.isInitialized()) {
+        // 项目未初始化，使用默认内存状态
+        return
+      }
+
+      // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
+      const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
+      const pathResolver = getGlobalProjectPathResolver()
+      const promptxDir = pathResolver.getPromptXDirectory()
+      const configPath = path.join(promptxDir, 'pouch.json')
+
       if (await fs.pathExists(configPath)) {
         const config = await fs.readJson(configPath)
 
