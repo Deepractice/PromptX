@@ -3,6 +3,7 @@ const path = require('path')
 const os = require('os')
 const crypto = require('crypto')
 const { getGlobalServerEnvironment } = require('./ServerEnvironment')
+const logger = require('./logger')
 
 /**
  * 统一项目管理器 - 新架构
@@ -46,9 +47,17 @@ class ProjectManager {
    * @returns {string} 当前项目工作目录
    */
   static getCurrentProjectPath() {
+    logger.debug(`[ProjectManager DEBUG] getCurrentProjectPath被调用`)
+    logger.debug(`[ProjectManager DEBUG] currentProject.initialized: ${this.currentProject.initialized}`)
+    logger.debug(`[ProjectManager DEBUG] currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
+    logger.debug(`[ProjectManager DEBUG] 调用栈:`, new Error().stack)
+    
     if (!this.currentProject.initialized) {
+      logger.error(`[ProjectManager DEBUG] ❌ 项目未初始化，将抛出错误`)
       throw new Error('项目未初始化，请先调用 init 命令')
     }
+    
+    logger.debug(`[ProjectManager DEBUG] ✅ 返回项目路径: ${this.currentProject.workingDirectory}`)
     return this.currentProject.workingDirectory
   }
 
@@ -57,9 +66,16 @@ class ProjectManager {
    * @returns {Object} 当前项目完整信息
    */
   static getCurrentProject() {
+    logger.debug(`[ProjectManager DEBUG] getCurrentProject被调用`)
+    logger.debug(`[ProjectManager DEBUG] currentProject.initialized: ${this.currentProject.initialized}`)
+    logger.debug(`[ProjectManager DEBUG] currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
+    
     if (!this.currentProject.initialized) {
+      logger.error(`[ProjectManager DEBUG] ❌ 项目未初始化，将抛出错误`)
       throw new Error('项目未初始化，请先调用 init 命令')
     }
+    
+    logger.debug(`[ProjectManager DEBUG] ✅ 返回项目信息`)
     return { ...this.currentProject }
   }
 
@@ -142,7 +158,7 @@ class ProjectManager {
           }
         } catch (error) {
           // 忽略损坏的配置文件
-          console.warn(`跳过损坏的配置文件: ${file}`)
+          logger.warn(`跳过损坏的配置文件: ${file}`)
         }
       }
     }
@@ -174,7 +190,7 @@ class ProjectManager {
             instances.push(config)
           }
         } catch (error) {
-          console.warn(`跳过损坏的配置文件: ${file}`)
+          logger.warn(`跳过损坏的配置文件: ${file}`)
         }
       }
     }
@@ -224,13 +240,13 @@ class ProjectManager {
           if (!await fs.pathExists(config.projectPath)) {
             await fs.remove(configPath)
             cleanedCount++
-            console.log(`清理过期项目配置: ${file}`)
+            logger.info(`清理过期项目配置: ${file}`)
           }
         } catch (error) {
           // 清理损坏的配置文件
           await fs.remove(path.join(this.projectsDir, file))
           cleanedCount++
-          console.log(`清理损坏配置文件: ${file}`)
+          logger.info(`清理损坏配置文件: ${file}`)
         }
       }
     }
@@ -390,20 +406,34 @@ ${projectList}
    * @returns {Promise<Object>} 项目配置对象
    */
   static async registerCurrentProject(workingDirectory, ideType = 'unknown') {
+    logger.debug(`[ProjectManager DEBUG] ======= registerCurrentProject开始 =======`)
+    logger.debug(`[ProjectManager DEBUG] 参数 - workingDirectory: ${workingDirectory}`)
+    logger.debug(`[ProjectManager DEBUG] 参数 - ideType: ${ideType}`)
+    logger.debug(`[ProjectManager DEBUG] 注册前 currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
+    
     const serverEnv = getGlobalServerEnvironment()
     if (!serverEnv.isInitialized()) {
+      logger.error(`[ProjectManager DEBUG] ❌ ServerEnvironment未初始化`)
       throw new Error('ServerEnvironment not initialized')
     }
     
     const mcpId = serverEnv.getMcpId()
     const transport = serverEnv.getTransport()
+    logger.debug(`[ProjectManager DEBUG] ServerEnvironment信息 - mcpId: ${mcpId}, transport: ${transport}`)
     
     // 🎯 新架构：设置当前项目状态
+    logger.debug(`[ProjectManager DEBUG] 调用 setCurrentProject...`)
     this.setCurrentProject(workingDirectory, mcpId, ideType, transport)
+    logger.debug(`[ProjectManager DEBUG] setCurrentProject完成后 currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
     
     // 持久化项目配置（保持多项目管理功能）
+    logger.debug(`[ProjectManager DEBUG] 开始持久化项目配置...`)
     const projectManager = getGlobalProjectManager()
-    return await projectManager.registerProject(workingDirectory, mcpId, ideType, transport)
+    const result = await projectManager.registerProject(workingDirectory, mcpId, ideType, transport)
+    logger.debug(`[ProjectManager DEBUG] 项目配置持久化完成:`, JSON.stringify(result, null, 2))
+    logger.debug(`[ProjectManager DEBUG] ======= registerCurrentProject结束 =======`)
+    
+    return result
   }
 }
 
