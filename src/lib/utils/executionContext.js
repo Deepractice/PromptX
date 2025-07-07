@@ -217,7 +217,5 @@ function expandHome(filepath) {
 module.exports = {
   getExecutionContext,
   isValidDirectory,
-  getDebugInfo,
-  findExistingPromptxDirectory,
-  findProjectRoot
+  getDebugInfo
 }; 
