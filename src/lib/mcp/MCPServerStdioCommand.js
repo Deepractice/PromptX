@@ -2,7 +2,7 @@ const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { cli } = require('../core/pouch');
 const { MCPOutputAdapter } = require('../mcp/MCPOutputAdapter');
-const { getExecutionContext, getDebugInfo } = require('../utils/executionContext');
+const { getDirectoryService } = require('../utils/DirectoryService');
 const { getToolDefinitions } = require('../mcp/toolDefinitions');
 const { getGlobalServerEnvironment } = require('../utils/ServerEnvironment');
 const treeKill = require('tree-kill');
@@ -22,8 +22,8 @@ class MCPServerStdioCommand {
     const serverEnv = getGlobalServerEnvironment();
     serverEnv.initialize({ transport: 'stdio' });
     
-    // 智能检测执行上下文
-    this.executionContext = getExecutionContext();
+    // 🎯 新架构：智能检测执行上下文
+    this.executionContext = this.getExecutionContext();
     
     // 调试信息输出
     this.log(`🎯 检测到执行模式: ${this.executionContext.mode}`);
@@ -48,9 +48,9 @@ class MCPServerStdioCommand {
     
     // DirectoryService路径信息将在需要时异步获取
     
-    // 输出完整调试信息
+    // 🎯 新架构：输出完整调试信息
     if (this.debug) {
-      this.log(`🔍 完整调试信息: ${JSON.stringify(getDebugInfo(), null, 2)}`);
+      this.initializeDebugInfo();
     }
     
     // 创建输出适配器
@@ -150,6 +150,35 @@ class MCPServerStdioCommand {
    */
   cleanup() {
     this.log('🔧 清理MCP Server资源');
+  }
+
+  /**
+   * 🎯 新架构：智能检测执行上下文
+   */
+  getExecutionContext() {
+    const args = process.argv;
+    const command = args[2];
+    const isMCPMode = command === 'mcp-server';
+    
+    return {
+      mode: isMCPMode ? 'MCP' : 'CLI',
+      workingDirectory: process.cwd(),
+      originalCwd: process.cwd()
+    };
+  }
+
+  /**
+   * 🎯 新架构：初始化调试信息
+   */
+  async initializeDebugInfo() {
+    try {
+      const directoryService = getDirectoryService();
+      await directoryService.initialize();
+      const debugInfo = await directoryService.getDebugInfo();
+      this.log(`🔍 完整调试信息: ${JSON.stringify(debugInfo, null, 2)}`);
+    } catch (error) {
+      this.log(`⚠️ 调试信息获取失败: ${error.message}`);
+    }
   }
   
 
