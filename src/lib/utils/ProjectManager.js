@@ -50,7 +50,14 @@ class ProjectManager {
     logger.debug(`[ProjectManager DEBUG] getCurrentProjectPath被调用`)
     logger.debug(`[ProjectManager DEBUG] currentProject.initialized: ${this.currentProject.initialized}`)
     logger.debug(`[ProjectManager DEBUG] currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
-    logger.debug(`[ProjectManager DEBUG] 调用栈:`, new Error().stack)
+    
+    // 输出完整的调用栈，包含文件名和行号
+    const stack = new Error().stack
+    const stackLines = stack.split('\n').slice(1, 8) // 取前7层调用栈
+    logger.error(`[ProjectManager DEBUG] 完整调用栈:`)
+    stackLines.forEach((line, index) => {
+      logger.error(`[ProjectManager DEBUG]   ${index + 1}. ${line.trim()}`)
+    })
     
     if (!this.currentProject.initialized) {
       logger.error(`[ProjectManager DEBUG] ❌ 项目未初始化，将抛出错误`)
