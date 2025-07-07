@@ -16,10 +16,10 @@ const fs = require('fs-extra')
 class InitCommand extends BasePouchCommand {
   constructor () {
     super()
-    // 使用全局单例 ResourceManager
-    this.resourceManager = getGlobalResourceManager()
-    this.projectDiscovery = new ProjectDiscovery()
-    this.projectManager = getGlobalProjectManager()
+    // 延迟初始化：这些组件可能依赖项目状态，在 getContent 中按需初始化
+    this.resourceManager = null
+    this.projectDiscovery = null
+    this.projectManager = null
   }
 
   getPurpose () {
@@ -59,8 +59,18 @@ class InitCommand extends BasePouchCommand {
     const decodedWorkingDirectory = decodeURIComponent(workingDirectory)
     const projectPath = path.resolve(decodedWorkingDirectory)
     
-    // 验证AI提供的路径是否有效
-    if (!await this.projectManager.validateProjectPath(projectPath)) {
+    // 🎯 第一优先级：立即设置项目状态，确保后续所有操作都有正确的项目上下文
+    // 在任何依赖项目状态的操作之前，必须先设置当前项目状态
+    const detectedIdeType = this.detectIdeType()
+    let ideType = userIdeType || detectedIdeType || 'unknown'
+    
+    // 规范化IDE类型（移除特殊字符，转小写）
+    if (userIdeType) {
+      ideType = userIdeType.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase() || 'unknown'
+    }
+    
+    // 基础路径验证（使用简单的 fs 检查，避免依赖 ProjectManager 实例方法）
+    if (!await this.validateProjectPathDirectly(projectPath)) {
       return `❌ 提供的工作目录无效: ${projectPath}
       
 请确保：
@@ -71,31 +81,29 @@ class InitCommand extends BasePouchCommand {
 💡 请提供一个有效的项目目录路径。`
     }
     
-    // 确定IDE类型：用户指定 > 自动检测 > unknown
-    const detectedIdeType = this.detectIdeType()
-    let ideType = userIdeType || detectedIdeType || 'unknown'
-    
-    // 规范化IDE类型（移除特殊字符，转小写）
-    if (userIdeType) {
-      ideType = userIdeType.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase() || 'unknown'
-    }
-    
     // 使用统一项目注册方法（从ServerEnvironment获取服务信息）
+    // 这将设置 ProjectManager.currentProject 状态，确保后续操作有正确的项目上下文
     const projectConfig = await ProjectManager.registerCurrentProject(projectPath, ideType)
     
-    logger.debug(`[InitCommand] 项目已注册: ${projectConfig.projectPath} -> ${projectConfig.mcpId} (${ideType}) [${projectConfig.transport}]`)
+    logger.debug(`[InitCommand] 🎯 项目状态已设置: ${projectConfig.projectPath} -> ${projectConfig.mcpId} (${ideType}) [${projectConfig.transport}]`)
     logger.debug(`[InitCommand] IDE类型: ${userIdeType ? `用户指定(${ideType})` : `自动检测(${detectedIdeType})`}`)
+
+    // 现在项目状态已设置，可以安全初始化依赖组件
+    this.resourceManager = getGlobalResourceManager()
+    this.projectDiscovery = new ProjectDiscovery()
+    this.projectManager = getGlobalProjectManager()
 
     // 1. 获取版本信息
     const version = await this.getVersionInfo()
 
-    // 2. 基础环境准备 - 直接使用AI提供的项目路径
+    // 2. 基础环境准备 - 现在可以安全使用项目路径
     await this.ensurePromptXDirectory(projectPath)
 
-    // 3. 生成项目级资源注册表 - 直接使用AI提供的项目路径
+    // 3. 生成项目级资源注册表 - 现在 ProjectDiscovery 可以正确获取项目路径
     const registryStats = await this.generateProjectRegistry(projectPath)
 
-    // 4. 刷新全局 ResourceManager（确保新资源立即可用）
+    // 4. 最后步骤：刷新全局 ResourceManager
+    // 确保所有依赖项目状态的组件都已正确初始化后，再初始化 ResourceManager
     await this.refreshGlobalResourceManager()
 
     // 生成配置文件名
@@ -220,6 +228,36 @@ ${registryStats.message}
       logger.warn('无法读取版本信息:', error.message)
     }
     return '未知版本'
+  }
+
+  /**
+   * 直接验证项目路径（避免依赖 ProjectManager 实例）
+   * @param {string} projectPath - 要验证的路径
+   * @returns {Promise<boolean>} 是否为有效项目目录
+   */
+  async validateProjectPathDirectly(projectPath) {
+    try {
+      const os = require('os')
+      
+      // 基础检查：路径存在且为目录
+      const stat = await fs.stat(projectPath)
+      if (!stat.isDirectory()) {
+        return false
+      }
+
+      // 简单检查：避免明显错误的路径
+      const resolved = path.resolve(projectPath)
+      const homeDir = os.homedir()
+      
+      // 不允许是用户主目录
+      if (resolved === homeDir) {
+        return false
+      }
+
+      return true
+    } catch (error) {
+      return false
+    }
   }
 
   /**

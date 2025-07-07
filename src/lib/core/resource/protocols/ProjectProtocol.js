@@ -12,8 +12,19 @@ class ProjectProtocol extends ResourceProtocol {
   constructor (options = {}) {
     super('project', options)
     
-    // 🎯 新架构：使用轻量级路径解析器
-    this.pathResolver = getGlobalProjectPathResolver()
+    // 🎯 新架构：延迟初始化路径解析器，避免在项目未初始化时创建
+    this.pathResolver = null
+  }
+
+  /**
+   * 获取路径解析器（延迟初始化）
+   * @returns {ProjectPathResolver} 路径解析器实例
+   */
+  getPathResolver() {
+    if (!this.pathResolver) {
+      this.pathResolver = getGlobalProjectPathResolver()
+    }
+    return this.pathResolver
   }
 
   /**
@@ -40,7 +51,7 @@ class ProjectProtocol extends ResourceProtocol {
         'project://root/package.json',
         'project://test/unit/'
       ],
-      supportedDirectories: this.pathResolver.getSupportedDirectories(),
+      supportedDirectories: this.getPathResolver().getSupportedDirectories(),
       architecture: 'state-based',
       params: this.getSupportedParams()
     }
@@ -79,7 +90,7 @@ class ProjectProtocol extends ResourceProtocol {
     const parts = resourcePath.split('/')
     const dirType = parts[0]
 
-    return this.pathResolver.isSupportedDirectory(dirType)
+    return this.getPathResolver().isSupportedDirectory(dirType)
   }
 
 
@@ -92,7 +103,7 @@ class ProjectProtocol extends ResourceProtocol {
   async resolvePath (resourcePath, queryParams) {
     // 🚀 新架构：直接使用路径解析器，无需查找.promptx
     try {
-      return this.pathResolver.resolvePath(resourcePath)
+      return this.getPathResolver().resolvePath(resourcePath)
     } catch (error) {
       throw new Error(`解析@project://路径失败: ${error.message}`)
     }
@@ -206,21 +217,21 @@ class ProjectProtocol extends ResourceProtocol {
    */
   async getProjectInfo () {
     try {
-      const projectRoot = this.pathResolver.getProjectRoot()
-      const promptxPath = this.pathResolver.getPromptXDirectory()
+      const projectRoot = this.getPathResolver().getProjectRoot()
+      const promptxPath = this.getPathResolver().getPromptXDirectory()
       
       const result = {
         projectRoot,
         promptxPath,
         architecture: 'state-based',
-        supportedDirectories: this.pathResolver.getSupportedDirectories(),
+        supportedDirectories: this.getPathResolver().getSupportedDirectories(),
         directories: {}
       }
 
       // 检查支持的目录是否存在
-      for (const dirType of this.pathResolver.getSupportedDirectories()) {
+      for (const dirType of this.getPathResolver().getSupportedDirectories()) {
         try {
-          const fullPath = this.pathResolver.resolvePath(dirType)
+          const fullPath = this.getPathResolver().resolvePath(dirType)
           const stats = await fs.stat(fullPath)
           result.directories[dirType] = {
             path: fullPath,
