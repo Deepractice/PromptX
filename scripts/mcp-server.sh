@@ -135,41 +135,95 @@ start_server() {
 
 # 停止服务
 stop_server() {
-    if ! is_running; then
-        print_info "服务未运行"
-        return 0
+    local stopped_any=false
+    
+    # 1. 停止PID文件中记录的进程
+    if is_running; then
+        local pid=$(cat "$PID_FILE")
+        print_info "停止 HTTP MCP Server (PID: $pid)..."
+        
+        # 发送 TERM 信号
+        kill "$pid" 2>/dev/null
+        
+        # 等待进程结束
+        local retries=0
+        while [ $retries -lt 10 ]; do
+            if ! kill -0 "$pid" 2>/dev/null; then
+                rm -f "$PID_FILE"
+                print_success "PID文件中的服务已停止"
+                stopped_any=true
+                break
+            fi
+            retries=$((retries + 1))
+            sleep 1
+        done
+        
+        # 如果进程还在运行，强制终止
+        if kill -0 "$pid" 2>/dev/null; then
+            print_warning "正常停止失败，强制终止..."
+            kill -9 "$pid" 2>/dev/null
+            rm -f "$PID_FILE"
+            stopped_any=true
+        fi
     fi
     
-    local pid=$(cat "$PID_FILE")
-    print_info "停止 HTTP MCP Server (PID: $pid)..."
+    # 2. 检查并停止占用端口的其他进程
+    local port_pids=$(lsof -ti :$SERVER_PORT 2>/dev/null)
+    if [ -n "$port_pids" ]; then
+        print_info "发现占用端口 $SERVER_PORT 的其他进程: $port_pids"
+        for pid in $port_pids; do
+            print_info "停止端口占用进程 (PID: $pid)..."
+            kill "$pid" 2>/dev/null
+            sleep 1
+            if kill -0 "$pid" 2>/dev/null; then
+                print_warning "强制终止端口占用进程 (PID: $pid)..."
+                kill -9 "$pid" 2>/dev/null
+            fi
+            stopped_any=true
+        done
+    fi
     
-    # 发送 TERM 信号
-    kill "$pid" 2>/dev/null
+    # 3. 等待端口释放
+    if [ "$stopped_any" = true ]; then
+        print_info "等待端口释放..."
+        local retries=0
+        while [ $retries -lt 15 ]; do
+            if ! lsof -i :$SERVER_PORT >/dev/null 2>&1; then
+                print_success "端口 $SERVER_PORT 已释放"
+                return 0
+            fi
+            retries=$((retries + 1))
+            sleep 1
+        done
+        print_warning "端口释放超时，但继续执行..."
+    else
+        print_info "未发现运行中的服务"
+    fi
     
-    # 等待进程结束
-    local retries=0
-    while [ $retries -lt 10 ]; do
-        if ! kill -0 "$pid" 2>/dev/null; then
-            rm -f "$PID_FILE"
-            print_success "服务已停止"
-            return 0
-        fi
-        retries=$((retries + 1))
-        sleep 1
-    done
-    
-    # 如果进程还在运行，强制终止
-    print_warning "正常停止失败，强制终止..."
-    kill -9 "$pid" 2>/dev/null
+    # 清理PID文件
     rm -f "$PID_FILE"
-    print_success "服务已强制停止"
 }
 
 # 重启服务
 restart_server() {
     print_info "重启 HTTP MCP Server..."
     stop_server
-    sleep 2
+    
+    # 确保端口完全释放
+    print_info "确保端口完全释放..."
+    sleep 3
+    
+    # 最后检查一次端口状态
+    if lsof -i :$SERVER_PORT >/dev/null 2>&1; then
+        print_warning "端口 $SERVER_PORT 仍被占用，尝试再次清理..."
+        local remaining_pids=$(lsof -ti :$SERVER_PORT 2>/dev/null)
+        for pid in $remaining_pids; do
+            print_info "强制终止残留进程 (PID: $pid)..."
+            kill -9 "$pid" 2>/dev/null
+        done
+        sleep 2
+    fi
+    
     start_server
 }
 

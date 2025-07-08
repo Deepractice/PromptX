@@ -165,14 +165,15 @@ ${formattedMemories}
       logger.success('⚙️ [RecallCommand] ResourceManager初始化完成')
     }
     
-    const projectPath = await this.getProjectPath()
-    logger.info(`📍 [RecallCommand] 项目根路径: ${projectPath}`)
-    
-    // 🎯 从角色专属目录读取记忆
+    // 🎯 使用@project协议获取记忆目录（支持HTTP模式）
     const currentRole = await this.getCurrentRole(context)
-    const memoryDir = path.join(projectPath, '.promptx', 'memory')
-    const roleMemoryDir = path.join(memoryDir, currentRole)
+    logger.info(`📁 [RecallCommand] 通过@project协议解析角色记忆目录...`)
+    
+    const projectProtocol = this.resourceManager.protocols.get('project')
+    const roleMemoryDir = await projectProtocol.resolvePath(`.promptx/memory/${currentRole}`)
     const xmlFile = path.join(roleMemoryDir, 'declarative.dpml')
+    
+    logger.info(`📁 [RecallCommand] @project协议解析结果: ${roleMemoryDir}`)
     
     logger.info(`📁 [RecallCommand] 检索角色记忆: ${xmlFile}`)
 
@@ -223,22 +224,6 @@ ${formattedMemories}
     }
   }
 
-  /**
-   * 获取项目路径（复用ActionCommand逻辑）
-   */
-  async getProjectPath() {
-    logger.debug('📍 [RecallCommand] 获取项目路径...')
-    
-    // 🚀 新架构：直接使用ProjectManager的当前项目状态
-    const ProjectManager = require('../../../utils/ProjectManager')
-    const projectPath = ProjectManager.getCurrentProjectPath()
-    
-    if (process.env.PROMPTX_DEBUG === 'true') {
-      logger.debug(`📍 [RecallCommand] 项目路径解析结果: ${projectPath}`)
-    }
-    
-    return projectPath
-  }
 
   /**
    * 检查记忆是否匹配查询 - 增强版匹配算法

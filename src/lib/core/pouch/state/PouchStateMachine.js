@@ -115,10 +115,17 @@ class PouchStateMachine {
         return
       }
 
-      // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
-      const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
-      const pathResolver = getGlobalProjectPathResolver()
-      const promptxDir = pathResolver.getPromptXDirectory()
+      // 🎯 使用@project协议获取.promptx目录（支持HTTP模式）
+      const { getGlobalResourceManager } = require('../../resource')
+      const resourceManager = getGlobalResourceManager()
+      
+      // 确保ResourceManager已初始化
+      if (!resourceManager.initialized) {
+        await resourceManager.initializeWithNewArchitecture()
+      }
+      
+      const projectProtocol = resourceManager.protocols.get('project')
+      const promptxDir = await projectProtocol.resolvePath('.promptx')
       const configPath = path.join(promptxDir, 'pouch.json')
 
       // 确保 .promptx 目录存在
@@ -151,10 +158,17 @@ class PouchStateMachine {
         return
       }
 
-      // 🚀 新架构：使用ProjectPathResolver获取.promptx目录
-      const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
-      const pathResolver = getGlobalProjectPathResolver()
-      const promptxDir = pathResolver.getPromptXDirectory()
+      // 🎯 使用@project协议获取.promptx目录（支持HTTP模式）
+      const { getGlobalResourceManager } = require('../../resource')
+      const resourceManager = getGlobalResourceManager()
+      
+      // 确保ResourceManager已初始化
+      if (!resourceManager.initialized) {
+        await resourceManager.initializeWithNewArchitecture()
+      }
+      
+      const projectProtocol = resourceManager.protocols.get('project')
+      const promptxDir = await projectProtocol.resolvePath('.promptx')
       const configPath = path.join(promptxDir, 'pouch.json')
 
       if (await fs.pathExists(configPath)) {

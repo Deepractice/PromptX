@@ -135,22 +135,23 @@ ${registryStats.message}
 
   /**
    * 生成项目级资源注册表
-   * @param {string} projectPath - AI提供的项目路径
+   * @param {string} projectPath - AI提供的项目路径（仅用于显示，实际路径通过@project协议解析）
    * @returns {Promise<Object>} 注册表生成统计信息
    */
   async generateProjectRegistry(projectPath) {
     try {
-      // 1. 直接基于AI提供的项目路径计算资源目录
-      const resourceDir = path.join(projectPath, '.promptx', 'resource')
+      // 🎯 使用@project协议进行路径解析，支持HTTP/本地模式
+      const projectProtocol = this.resourceManager.protocols.get('project')
+      const resourceDir = await projectProtocol.resolvePath('.promptx/resource')
       const registryPath = path.join(resourceDir, 'project.registry.json')
       
-      // 2. 确保资源目录存在
+      // 2. 确保资源目录存在（已通过@project协议映射）
       await fs.ensureDir(resourceDir)
       logger.debug(`[InitCommand] 确保资源目录存在: ${resourceDir}`)
 
-      // 3. 使用 ProjectDiscovery 的正确方法生成注册表
+      // 3. 使用 ProjectDiscovery 的正确方法生成注册表（已内置@project协议支持）
       logger.step('正在扫描项目资源...')
-      const registryData = await this.projectDiscovery.generateRegistry(projectPath)
+      const registryData = await this.projectDiscovery.generateRegistry()
       
       // 4. 生成统计信息
       const stats = registryData.getStats()
@@ -158,8 +159,8 @@ ${registryStats.message}
       if (registryData.size === 0) {
         return {
           message: `✅ 项目资源目录已创建，注册表已初始化
-   📂 目录: ${path.relative(process.cwd(), resourceDir)}
-   💾 注册表: ${path.relative(process.cwd(), registryPath)}
+   📂 目录: .promptx/resource
+   💾 注册表: .promptx/resource/project.registry.json
    💡 现在可以在 domain 目录下创建角色资源了`,
           totalResources: 0
         }
@@ -169,7 +170,7 @@ ${registryStats.message}
         message: `✅ 项目资源注册表已重新生成
    📊 总计: ${registryData.size} 个资源
    📋 分类: role(${stats.byProtocol.role || 0}), thought(${stats.byProtocol.thought || 0}), execution(${stats.byProtocol.execution || 0}), knowledge(${stats.byProtocol.knowledge || 0})
-   💾 位置: ${path.relative(process.cwd(), registryPath)}`,
+   💾 位置: .promptx/resource/project.registry.json`,
         totalResources: registryData.size
       }
       
@@ -184,10 +185,12 @@ ${registryStats.message}
 
   /**
    * 确保 .promptx 基础目录存在
-   * 直接基于AI提供的项目路径创建目录
+   * 使用@project协议进行路径解析，支持HTTP/本地模式
    */
   async ensurePromptXDirectory (projectPath) {
-    const promptxDir = path.join(projectPath, '.promptx')
+    // 🎯 使用@project协议解析路径，支持HTTP模式的路径映射
+    const projectProtocol = this.resourceManager.protocols.get('project')
+    const promptxDir = await projectProtocol.resolvePath('.promptx')
     await fs.ensureDir(promptxDir)
     logger.debug(`[InitCommand] 确保.promptx目录存在: ${promptxDir}`)
   }

@@ -135,7 +135,7 @@ class ProjectProtocol extends ResourceProtocol {
 
   /**
    * HTTP模式路径解析（映射到用户目录的项目空间）
-   * @param {string} resourcePath - 资源路径
+   * @param {string} resourcePath - 资源路径，如".promptx/resource/xxx"
    * @param {QueryParams} queryParams - 查询参数
    * @param {Object} currentProject - 当前项目信息
    * @returns {Promise<string>} 解析后的绝对路径
@@ -144,8 +144,23 @@ class ProjectProtocol extends ResourceProtocol {
     // 🎯 使用projectHash作为目录名
     const projectHash = this.generateProjectHash(currentProject.workingDirectory)
     
-    // 映射路径：@project://path → @user://.promptx/project/{projectHash}/path
-    const mappedPath = `.promptx/project/${projectHash}/${resourcePath}`
+    // 🔧 HTTP模式专用路径转换：将.promptx替换为data（仅HTTP模式）
+    // @project://.promptx → @user://.promptx/project/{projectHash}/data/
+    // @project://.promptx/resource/xxx → @user://.promptx/project/{projectHash}/data/resource/xxx
+    // @project://src/index.js → @user://.promptx/project/{projectHash}/data/src/index.js
+    let mappedResourcePath = resourcePath
+    if (resourcePath === '.promptx') {
+      // 特殊处理：.promptx根目录映射到data目录
+      mappedResourcePath = 'data'
+    } else if (resourcePath.startsWith('.promptx/')) {
+      // HTTP模式：将.promptx/替换为data/，提升用户体验
+      mappedResourcePath = resourcePath.replace(/^\.promptx\//, 'data/')
+    } else {
+      // 非.promptx路径直接映射到data目录下
+      mappedResourcePath = `data/${resourcePath}`
+    }
+    
+    const mappedPath = `.promptx/project/${projectHash}/${mappedResourcePath}`
     
     // 委托给UserProtocol处理
     return await this.userProtocol.resolvePath(mappedPath, queryParams)

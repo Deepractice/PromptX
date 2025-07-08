@@ -87,8 +87,10 @@ class RememberCommand extends BasePouchCommand {
    * 🛡️ 确保安全备份存在
    */
   async ensureSafetyBackupExists() {
-    const projectPath = await this.getProjectPath()
-    const backupMarker = path.join(projectPath, '.promptx', '.xml-upgrade-backup-done')
+    // 🎯 使用@project协议获取.promptx目录
+    const projectProtocol = this.resourceManager.protocols.get('project')
+    const promptxDir = await projectProtocol.resolvePath('.promptx')
+    const backupMarker = path.join(promptxDir, '.xml-upgrade-backup-done')
     
     if (!await fs.pathExists(backupMarker)) {
       logger.step('🛡️ [RememberCommand] 执行升级前安全备份...')
@@ -102,9 +104,12 @@ class RememberCommand extends BasePouchCommand {
    * 🛡️ 创建安全备份
    */
   async createSafetyBackup() {
-    const projectPath = await this.getProjectPath()
-    const memoryDir = path.join(projectPath, '.promptx', 'memory')
-    const backupDir = path.join(projectPath, '.promptx', 'backup', `backup_${Date.now()}`)
+    // 🎯 使用@project协议获取目录
+    const projectProtocol = this.resourceManager.protocols.get('project')
+    const memoryDir = await projectProtocol.resolvePath('.promptx/memory')
+    const backupBaseDir = await projectProtocol.resolvePath('.promptx/backup')
+    
+    const backupDir = path.join(backupBaseDir, `backup_${Date.now()}`)
     
     await fs.ensureDir(backupDir)
     
@@ -229,7 +234,7 @@ class RememberCommand extends BasePouchCommand {
   }
 
   /**
-   * 确保AI记忆体系目录存在（使用ResourceManager路径获取）
+   * 确保AI记忆体系目录存在（使用@project协议）
    */
   async ensureMemoryDirectory () {
     logger.debug('🔍 [RememberCommand] 初始化ResourceManager...')
@@ -241,12 +246,12 @@ class RememberCommand extends BasePouchCommand {
       logger.success('⚙️ [RememberCommand] ResourceManager初始化完成')
     }
     
-    // 通过ResourceManager获取项目路径（与ActionCommand一致）
-    const projectPath = await this.getProjectPath()
-    logger.info(`📍 [RememberCommand] 项目根路径: ${projectPath}`)
+    // 🎯 使用@project协议获取记忆目录（支持HTTP模式）
+    logger.info('📁 [RememberCommand] 通过@project协议解析记忆目录...')
+    const projectProtocol = this.resourceManager.protocols.get('project')
+    const memoryDir = await projectProtocol.resolvePath('.promptx/memory')
     
-    const memoryDir = path.join(projectPath, '.promptx', 'memory')
-    logger.info(`📁 [RememberCommand] 创建记忆目录: ${memoryDir}`)
+    logger.info(`📁 [RememberCommand] @project协议解析结果: ${memoryDir}`)
     
     await fs.ensureDir(memoryDir)
     logger.success(`📁 [RememberCommand] 记忆目录确保完成: ${memoryDir}`)
@@ -280,22 +285,6 @@ class RememberCommand extends BasePouchCommand {
     }
   }
 
-  /**
-   * 获取项目路径（复用ActionCommand逻辑）
-   */
-  async getProjectPath() {
-    logger.debug('📍 [RememberCommand] 获取项目路径...')
-    
-    // 🚀 新架构：直接使用ProjectManager的当前项目状态
-    const ProjectManager = require('../../../utils/ProjectManager')
-    const projectPath = ProjectManager.getCurrentProjectPath()
-    
-    if (process.env.PROMPTX_DEBUG === 'true') {
-      logger.debug(`📍 [RememberCommand] 项目路径解析结果: ${projectPath}`)
-    }
-    
-    return projectPath
-  }
 
   /**
    * 格式化为XML记忆项
