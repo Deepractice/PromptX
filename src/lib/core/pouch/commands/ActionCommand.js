@@ -433,8 +433,8 @@ ${result.content}
       const RecallCommand = require('./RecallCommand')
       const recallCommand = new RecallCommand()
       
-      // 执行 recall，获取所有记忆（不传入查询参数）
-      const recallContent = await recallCommand.getContent([])
+      // 执行 recall，获取所有记忆（传入角色ID参数）
+      const recallContent = await recallCommand.getContent([roleId])
       
       return `---
 ## 🧠 自动记忆检索结果
