@@ -95,7 +95,7 @@ class ProjectManager {
   }
 
   /**
-   * 注册项目到MCP实例
+   * 注册项目到MCP实例 - 使用Hash目录结构
    * @param {string} projectPath - 项目绝对路径
    * @param {string} mcpId - MCP进程ID
    * @param {string} ideType - IDE类型（cursor/vscode等）
@@ -117,12 +117,19 @@ class ProjectManager {
       projectHash: this.generateProjectHash(projectPath)
     }
 
-    // 确保项目目录存在
-    await fs.ensureDir(this.projectsDir)
+    // 生成项目Hash目录
+    const projectHash = this.generateProjectHash(projectPath)
+    const projectConfigDir = path.join(this.projectsDir, projectHash)
 
-    // 生成配置文件名并保存
+    // 🎯 确保Hash目录和.promptx子目录存在
+    await fs.ensureDir(projectConfigDir)
+    await fs.ensureDir(path.join(projectConfigDir, '.promptx'))
+    await fs.ensureDir(path.join(projectConfigDir, '.promptx', 'memory'))
+    await fs.ensureDir(path.join(projectConfigDir, '.promptx', 'resource'))
+
+    // 生成配置文件名并保存到Hash目录下
     const fileName = this.generateConfigFileName(mcpId, ideType, transport, projectPath)
-    const configPath = path.join(this.projectsDir, fileName)
+    const configPath = path.join(projectConfigDir, fileName)
     
     await fs.writeJson(configPath, projectConfig, { spaces: 2 })
     
@@ -140,7 +147,7 @@ class ProjectManager {
   }
 
   /**
-   * 根据MCP ID获取所有绑定的项目配置
+   * 根据MCP ID获取所有绑定的项目配置 - 支持Hash目录结构
    * @param {string} mcpId - MCP进程ID
    * @returns {Promise<Array>} 项目配置数组
    */
@@ -149,24 +156,37 @@ class ProjectManager {
       return []
     }
 
-    const files = await fs.readdir(this.projectsDir)
+    const hashDirs = await fs.readdir(this.projectsDir)
     const projects = []
 
-    for (const file of files) {
-      // 适配新的格式：mcp-transport-id-idetype-projectname-hash.json
-      // 需要匹配包含指定mcpId的文件（去掉mcp-前缀）
-      const idWithoutPrefix = mcpId.replace('mcp-', '')
-      if (file.startsWith('mcp-') && file.includes(`-${idWithoutPrefix}-`) && file.endsWith('.json')) {
-        try {
-          const configPath = path.join(this.projectsDir, file)
-          const config = await fs.readJson(configPath)
-          if (config.mcpId === mcpId) {
-            projects.push(config)
+    for (const hashDir of hashDirs) {
+      const hashDirPath = path.join(this.projectsDir, hashDir)
+      
+      // 🎯 只处理Hash目录（忽略旧的平铺文件）
+      if (!(await fs.stat(hashDirPath)).isDirectory()) {
+        continue
+      }
+      
+      try {
+        const configFiles = await fs.readdir(hashDirPath)
+        for (const file of configFiles) {
+          // 查找MCP配置文件
+          if (file.startsWith('mcp-') && file.endsWith('.json')) {
+            try {
+              const configPath = path.join(hashDirPath, file)
+              const config = await fs.readJson(configPath)
+              if (config.mcpId === mcpId) {
+                projects.push(config)
+              }
+            } catch (error) {
+              // 忽略损坏的配置文件
+              logger.warn(`跳过损坏的配置文件: ${file}`)
+            }
           }
-        } catch (error) {
-          // 忽略损坏的配置文件
-          logger.warn(`跳过损坏的配置文件: ${file}`)
         }
+      } catch (error) {
+        // 忽略无法读取的目录
+        logger.warn(`跳过无法读取的目录: ${hashDir}`)
       }
     }
 
@@ -174,7 +194,7 @@ class ProjectManager {
   }
 
   /**
-   * 获取特定项目的所有实例（不同IDE/MCP的绑定）
+   * 获取特定项目的所有实例（不同IDE/MCP的绑定） - 支持Hash目录结构
    * @param {string} projectPath - 项目路径
    * @returns {Promise<Array>} 项目实例数组
    */
@@ -184,29 +204,41 @@ class ProjectManager {
     }
 
     const projectHash = this.generateProjectHash(projectPath)
-    const files = await fs.readdir(this.projectsDir)
-    const instances = []
+    const projectConfigDir = path.join(this.projectsDir, projectHash)
+    
+    // 检查Hash目录是否存在
+    if (!await fs.pathExists(projectConfigDir)) {
+      return []
+    }
 
-    for (const file of files) {
-      // 适配新的四元组格式：包含transport的文件名
-      if (file.includes(`-${projectHash}.json`)) {
-        try {
-          const configPath = path.join(this.projectsDir, file)
-          const config = await fs.readJson(configPath)
-          if (config.projectHash === projectHash) {
-            instances.push(config)
+    const instances = []
+    
+    try {
+      const configFiles = await fs.readdir(projectConfigDir)
+      
+      for (const file of configFiles) {
+        // 查找MCP配置文件
+        if (file.startsWith('mcp-') && file.endsWith('.json')) {
+          try {
+            const configPath = path.join(projectConfigDir, file)
+            const config = await fs.readJson(configPath)
+            if (config.projectHash === projectHash) {
+              instances.push(config)
+            }
+          } catch (error) {
+            logger.warn(`跳过损坏的配置文件: ${file}`)
           }
-        } catch (error) {
-          logger.warn(`跳过损坏的配置文件: ${file}`)
         }
       }
+    } catch (error) {
+      logger.warn(`无法读取项目配置目录: ${projectConfigDir}`)
     }
 
     return instances
   }
 
   /**
-   * 删除项目绑定
+   * 删除项目绑定 - 支持Hash目录结构
    * @param {string} mcpId - MCP进程ID
    * @param {string} ideType - IDE类型
    * @param {string} transport - 传输协议类型
@@ -214,11 +246,27 @@ class ProjectManager {
    * @returns {Promise<boolean>} 是否删除成功
    */
   async removeProject(mcpId, ideType, transport, projectPath) {
+    const projectHash = this.generateProjectHash(projectPath)
+    const projectConfigDir = path.join(this.projectsDir, projectHash)
     const fileName = this.generateConfigFileName(mcpId, ideType, transport, projectPath)
-    const configPath = path.join(this.projectsDir, fileName)
+    const configPath = path.join(projectConfigDir, fileName)
     
     if (await fs.pathExists(configPath)) {
       await fs.remove(configPath)
+      
+      // 🎯 检查Hash目录是否为空，如果为空则删除整个目录
+      try {
+        const remainingFiles = await fs.readdir(projectConfigDir)
+        const mcpConfigFiles = remainingFiles.filter(file => file.startsWith('mcp-') && file.endsWith('.json'))
+        
+        if (mcpConfigFiles.length === 0) {
+          // 没有其他MCP配置文件，删除整个Hash目录
+          await fs.remove(projectConfigDir)
+        }
+      } catch (error) {
+        // 目录可能已经被删除，忽略错误
+      }
+      
       return true
     }
     
@@ -226,7 +274,7 @@ class ProjectManager {
   }
 
   /**
-   * 清理过期的项目配置
+   * 清理过期的项目配置 - 支持Hash目录结构
    * @returns {Promise<number>} 清理的配置文件数量
    */
   async cleanupExpiredProjects() {
@@ -234,27 +282,54 @@ class ProjectManager {
       return 0
     }
 
-    const files = await fs.readdir(this.projectsDir)
+    const hashDirs = await fs.readdir(this.projectsDir)
     let cleanedCount = 0
 
-    for (const file of files) {
-      if (file.endsWith('.json')) {
-        try {
-          const configPath = path.join(this.projectsDir, file)
-          const config = await fs.readJson(configPath)
-          
-          // 检查项目路径是否仍然存在
-          if (!await fs.pathExists(config.projectPath)) {
-            await fs.remove(configPath)
-            cleanedCount++
-            logger.info(`清理过期项目配置: ${file}`)
+    for (const hashDir of hashDirs) {
+      const hashDirPath = path.join(this.projectsDir, hashDir)
+      
+      // 只处理Hash目录
+      if (!(await fs.stat(hashDirPath)).isDirectory()) {
+        continue
+      }
+      
+      try {
+        const configFiles = await fs.readdir(hashDirPath)
+        let hasValidConfig = false
+        
+        for (const file of configFiles) {
+          if (file.startsWith('mcp-') && file.endsWith('.json')) {
+            try {
+              const configPath = path.join(hashDirPath, file)
+              const config = await fs.readJson(configPath)
+              
+              // 检查项目路径是否仍然存在
+              if (!await fs.pathExists(config.projectPath)) {
+                await fs.remove(configPath)
+                cleanedCount++
+                logger.info(`清理过期项目配置: ${file}`)
+              } else {
+                hasValidConfig = true
+              }
+            } catch (error) {
+              // 清理损坏的配置文件
+              await fs.remove(path.join(hashDirPath, file))
+              cleanedCount++
+              logger.info(`清理损坏配置文件: ${file}`)
+            }
           }
-        } catch (error) {
-          // 清理损坏的配置文件
-          await fs.remove(path.join(this.projectsDir, file))
-          cleanedCount++
-          logger.info(`清理损坏配置文件: ${file}`)
         }
+        
+        // 如果Hash目录中没有有效的配置文件，删除整个目录
+        if (!hasValidConfig) {
+          await fs.remove(hashDirPath)
+          logger.info(`清理空的项目Hash目录: ${hashDir}`)
+        }
+      } catch (error) {
+        // 清理无法访问的目录
+        await fs.remove(hashDirPath)
+        cleanedCount++
+        logger.info(`清理无法访问的目录: ${hashDir}`)
       }
     }
 

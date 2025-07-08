@@ -2,6 +2,8 @@ const ResourceProtocol = require('./ResourceProtocol')
 const path = require('path')
 const fs = require('fs').promises
 const { getGlobalProjectPathResolver } = require('../../../utils/ProjectPathResolver')
+const ProjectManager = require('../../../utils/ProjectManager')
+const UserProtocol = require('./UserProtocol')
 
 /**
  * 项目协议实现 - 新架构
@@ -14,6 +16,9 @@ class ProjectProtocol extends ResourceProtocol {
     
     // 🎯 新架构：延迟初始化路径解析器，避免在项目未初始化时创建
     this.pathResolver = null
+    
+    // HTTP模式支持：UserProtocol实例用于路径映射
+    this.userProtocol = new UserProtocol(options)
   }
 
   /**
@@ -95,18 +100,65 @@ class ProjectProtocol extends ResourceProtocol {
 
 
   /**
-   * 解析项目路径 - 新架构：高性能零查找
+   * 解析项目路径 - 新架构：高性能零查找 + HTTP模式支持
    * @param {string} resourcePath - 原始资源路径，如 "src/index.js" 或 ".promptx/resource/..."
    * @param {QueryParams} queryParams - 查询参数
    * @returns {Promise<string>} 解析后的绝对路径
    */
   async resolvePath (resourcePath, queryParams) {
-    // 🚀 新架构：直接使用路径解析器，无需查找.promptx
     try {
-      return this.getPathResolver().resolvePath(resourcePath)
+      // 🎯 检测当前项目的transport模式
+      const currentProject = ProjectManager.getCurrentProject()
+      const { transport } = currentProject
+      
+      if (transport === 'http') {
+        return await this.resolveHttpPath(resourcePath, queryParams, currentProject)
+      } else {
+        return this.resolveLocalPath(resourcePath, queryParams, currentProject)
+      }
     } catch (error) {
       throw new Error(`解析@project://路径失败: ${error.message}`)
     }
+  }
+
+  /**
+   * 本地模式路径解析（原有逻辑）
+   * @param {string} resourcePath - 资源路径
+   * @param {QueryParams} queryParams - 查询参数
+   * @param {Object} currentProject - 当前项目信息
+   * @returns {string} 解析后的绝对路径
+   */
+  resolveLocalPath(resourcePath, queryParams, currentProject) {
+    // 🚀 新架构：直接使用路径解析器，无需查找.promptx
+    return this.getPathResolver().resolvePath(resourcePath)
+  }
+
+  /**
+   * HTTP模式路径解析（映射到用户目录的项目空间）
+   * @param {string} resourcePath - 资源路径
+   * @param {QueryParams} queryParams - 查询参数
+   * @param {Object} currentProject - 当前项目信息
+   * @returns {Promise<string>} 解析后的绝对路径
+   */
+  async resolveHttpPath(resourcePath, queryParams, currentProject) {
+    // 🎯 使用projectHash作为目录名
+    const projectHash = this.generateProjectHash(currentProject.workingDirectory)
+    
+    // 映射路径：@project://path → @user://.promptx/project/{projectHash}/path
+    const mappedPath = `.promptx/project/${projectHash}/${resourcePath}`
+    
+    // 委托给UserProtocol处理
+    return await this.userProtocol.resolvePath(mappedPath, queryParams)
+  }
+
+  /**
+   * 生成项目路径的Hash值（与ProjectManager保持一致）
+   * @param {string} projectPath - 项目路径
+   * @returns {string} 8位Hash值
+   */
+  generateProjectHash(projectPath) {
+    const crypto = require('crypto')
+    return crypto.createHash('md5').update(path.resolve(projectPath)).digest('hex').substr(0, 8)
   }
 
   /**
@@ -116,6 +168,30 @@ class ProjectProtocol extends ResourceProtocol {
    * @returns {Promise<string>} 资源内容
    */
   async loadContent (resolvedPath, queryParams) {
+    try {
+      // 🎯 检测transport模式
+      const currentProject = ProjectManager.getCurrentProject()
+      const { transport } = currentProject
+      
+      if (transport === 'http') {
+        // HTTP模式下，使用UserProtocol的loadContent方法
+        return await this.userProtocol.loadContent(resolvedPath, queryParams)
+      } else {
+        // 本地模式，使用原有逻辑
+        return await this.loadLocalContent(resolvedPath, queryParams)
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  /**
+   * 本地模式加载资源内容（原有逻辑）
+   * @param {string} resolvedPath - 解析后的路径
+   * @param {QueryParams} queryParams - 查询参数
+   * @returns {Promise<string>} 资源内容
+   */
+  async loadLocalContent (resolvedPath, queryParams) {
     try {
       // 检查路径是否存在
       const stats = await fs.stat(resolvedPath)
