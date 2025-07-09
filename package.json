@@ -37,7 +37,13 @@
     "release:beta": "pnpm changeset version --snapshot beta && pnpm changeset publish --tag beta",
     "version:patch": "pnpm changeset add --type patch",
     "version:minor": "pnpm changeset add --type minor",
-    "version:major": "pnpm changeset add --type major"
+    "version:major": "pnpm changeset add --type major",
+    "release:version": "standard-version",
+    "release:version:dry": "standard-version --dry-run",
+    "release:version:minor": "standard-version --release-as minor",
+    "release:version:major": "standard-version --release-as major",
+    "release:version:patch": "standard-version --release-as patch",
+    "prepare": "husky install"
   },
   "files": [
     "src/",
@@ -78,6 +84,8 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.4",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@types/jest": "^29.5.0",
     "eslint": "^8.42.0",
     "eslint-config-standard": "^17.1.0",
@@ -87,6 +95,7 @@
     "jest-environment-node": "^29.5.0",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.0",
+    "standard-version": "^9.5.0",
     "supertest": "^6.3.0",
     "tmp": "^0.2.1"
   },

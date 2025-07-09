@@ -1,0 +1,26 @@
+{
+  "types": [
+    {"type": "feat", "section": "✨ Features"},
+    {"type": "fix", "section": "🐛 Bug Fixes"},
+    {"type": "perf", "section": "⚡ Performance Improvements"},
+    {"type": "revert", "section": "⏪ Reverts"},
+    {"type": "docs", "section": "📝 Documentation", "hidden": false},
+    {"type": "style", "section": "💄 Styles", "hidden": true},
+    {"type": "chore", "section": "🔧 Chores", "hidden": true},
+    {"type": "refactor", "section": "♻️ Code Refactoring", "hidden": false},
+    {"type": "test", "section": "✅ Tests", "hidden": true},
+    {"type": "build", "section": "📦 Build System", "hidden": true},
+    {"type": "ci", "section": "👷 CI", "hidden": true}
+  ],
+  "commitUrlFormat": "https://github.com/Deepractice/PromptX/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/Deepractice/PromptX/compare/{{previousTag}}...{{currentTag}}",
+  "skip": {
+    "bump": false,
+    "changelog": false,
+    "commit": false,
+    "tag": false
+  },
+  "scripts": {
+    "postbump": "echo 'Version bumped to' $(node -p \"require('./package.json').version\")"
+  }
+}

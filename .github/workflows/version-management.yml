@@ -1,0 +1,117 @@
+name: Version Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Target branch to create version PR (test/staging/main)'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+          - test
+          - staging
+          - main
+      release_type:
+        description: 'Release type (auto/patch/minor/major)'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+
+jobs:
+  prepare-version:
+    name: Prepare Version Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Create version branch
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          BRANCH_NAME="chore/release-${TIMESTAMP}"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+      
+      - name: Generate version and changelog
+        run: |
+          if [ "${{ github.event.inputs.release_type }}" = "auto" ]; then
+            pnpm release:version
+          else
+            pnpm release:version:${{ github.event.inputs.release_type }}
+          fi
+      
+      - name: Get new version
+        run: |
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+      
+      - name: Commit version changes
+        run: |
+          git add .
+          git commit -m "chore: release v${{ env.NEW_VERSION }}"
+      
+      - name: Push version branch
+        run: |
+          git push origin ${{ env.BRANCH_NAME }}
+      
+      - name: Create Pull Request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `chore: release v${{ env.NEW_VERSION }}`,
+              head: `${{ env.BRANCH_NAME }}`,
+              base: '${{ github.event.inputs.target_branch }}',
+              body: `## 🚀 Release v${{ env.NEW_VERSION }}
+              
+              This PR was automatically created to release version ${{ env.NEW_VERSION }} to the \`${{ github.event.inputs.target_branch }}\` branch.
+              
+              ### 📋 Release Information
+              - **Version**: ${{ env.NEW_VERSION }}
+              - **Target Branch**: ${{ github.event.inputs.target_branch }}
+              - **Release Type**: ${{ github.event.inputs.release_type }}
+              
+              ### 📝 Changelog
+              Please check the updated CHANGELOG.md file for details.
+              
+              ### ✅ Checklist
+              - [ ] Review CHANGELOG.md
+              - [ ] Verify version number
+              - [ ] Confirm target branch
+              
+              ### 🔄 Next Steps
+              1. Review and approve this PR
+              2. Merge to trigger the release workflow`
+            });
+            
+            console.log(`Created PR #${pr.number}: ${pr.html_url}`);

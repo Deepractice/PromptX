@@ -1,0 +1,104 @@
+name: Test Branch Release
+
+on:
+  push:
+    branches:
+      - test
+    paths:
+      - 'package.json'
+      - 'CHANGELOG.md'
+
+jobs:
+  release-alpha:
+    name: Release Alpha Version
+    runs-on: ubuntu-latest
+    # 只在版本号变更时运行
+    if: |
+      contains(github.event.head_commit.message, 'chore: release') ||
+      contains(github.event.head_commit.message, 'chore(release)')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org/'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Get version info
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+          echo "Publishing version: $PACKAGE_VERSION"
+      
+      - name: Run tests
+        run: pnpm run test:ci
+      
+      - name: Publish alpha version
+        run: |
+          # 发布为alpha版本
+          npm version ${{ env.PACKAGE_VERSION }}-alpha.0 --no-git-tag-version
+          npm publish --tag alpha --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.ORG_NPM_TOKEN }}
+      
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ env.PACKAGE_VERSION }}-alpha" -m "Release v${{ env.PACKAGE_VERSION }}-alpha"
+          git push origin "v${{ env.PACKAGE_VERSION }}-alpha"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ env.PACKAGE_VERSION }}';
+            const comment = `🎉 **Alpha version published!**
+            
+            📦 Version: \`${version}-alpha.0\`
+            🏷️ Tag: \`alpha\`
+            
+            Install with:
+            \`\`\`bash
+            npm install dpml-prompt@alpha
+            # or
+            npm install dpml-prompt@${version}-alpha.0
+            \`\`\``;
+            
+            // Find recent PRs
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              base: 'test',
+              sort: 'updated',
+              direction: 'desc',
+              per_page: 5
+            });
+            
+            // Comment on the most recent merged PR
+            const recentPR = prs.find(pr => pr.merged_at);
+            if (recentPR) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: recentPR.number,
+                body: comment
+              });
+            }
