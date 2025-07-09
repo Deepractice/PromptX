@@ -1,11 +1,12 @@
 name: Snapshot Release
 
 on:
-  push:
-    branches:
-      - develop
-
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Feature branch to create snapshot from'
+        required: true
+        type: string
 
 jobs:
   snapshot:
@@ -15,6 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.branch }}
           fetch-depth: 0
 
       - name: Setup pnpm
@@ -37,73 +39,64 @@ jobs:
 
       - name: Release snapshot version
         run: |
-          # 确保在正确的分支
-          git checkout develop
-          
           # 获取当前时间戳和短commit hash
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SHORT_COMMIT=$(git rev-parse --short HEAD)
+          BRANCH_NAME=$(echo "${{ github.event.inputs.branch }}" | sed 's/[^a-zA-Z0-9]/-/g')
           
-          # 读取当前版本，移除任何现有的snapshot标识
+          # 读取当前版本
           CURRENT_VERSION=$(node -p "require('./package.json').version.split('-')[0]")
           
-          # 生成唯一的snapshot版本号：base-snapshot.timestamp.commit
-          SNAPSHOT_VERSION="${CURRENT_VERSION}-snapshot.${TIMESTAMP}.${SHORT_COMMIT}"
+          # 生成唯一的snapshot版本号
+          SNAPSHOT_VERSION="${CURRENT_VERSION}-snapshot.${BRANCH_NAME}.${TIMESTAMP}"
           
           echo "生成snapshot版本号: $SNAPSHOT_VERSION"
           
-          # 直接设置版本号
+          # 设置版本号
           npm version $SNAPSHOT_VERSION --no-git-tag-version
           
-          # 使用pnpm发布snapshot版本（与DPML项目保持一致）
+          # 发布snapshot版本
           pnpm publish --tag snapshot --no-git-checks
           
-          # 输出版本信息供后续步骤使用
           echo "SNAPSHOT_VERSION=$SNAPSHOT_VERSION" >> $GITHUB_ENV
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.ORG_NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.ORG_NPM_TOKEN }}
 
-      - name: Comment on related PRs
+      - name: Comment on PR
         if: success()
         uses: actions/github-script@v7
         with:
           script: |
-            const { execSync } = require('child_process');
-            
-            // 获取snapshot版本号
             const version = process.env.SNAPSHOT_VERSION;
+            const branch = '${{ github.event.inputs.branch }}';
             
-            // 查找相关的PR
+            // 查找与此分支相关的PR
             const { data: prs } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              base: 'develop'
+              head: `${context.repo.owner}:${branch}`
             });
             
-            const comment = `🚀 **Snapshot版本已发布!**
+            const comment = `📸 **Snapshot版本已发布!**
             
             📦 版本号: \`${version}\`
-            🔗 安装命令: \`npx dpml-prompt@${version} <command>\`
-            或者: \`npx dpml-prompt@snapshot <command>\`
+            🌿 分支: \`${branch}\`
             
-            📚 使用示例:
+            🔗 安装命令:
             \`\`\`bash
-            npx dpml-prompt@${version} hello
-            npx dpml-prompt@${version} init
-            npx dpml-prompt@${version} action <roleId>
+            npx dpml-prompt@${version} <command>
+            # 或
+            npm install dpml-prompt@${version}
             \`\`\`
             
-            💡 你可以使用这个snapshot版本测试最新的develop分支功能。`;
+            💡 此snapshot版本用于测试特定功能分支的代码。`;
             
-            // 为每个相关PR添加评论
-            for (const pr of prs) {
+            if (prs.length > 0) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: pr.number,
+                issue_number: prs[0].number,
                 body: comment
               });
-            } 
+            }
