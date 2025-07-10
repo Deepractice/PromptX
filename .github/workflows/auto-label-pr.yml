@@ -188,7 +188,7 @@ jobs:
             if (result.hasCoreChanges && (result.isDocsOrConfig || labels.includes('documentation'))) {
               const skipRelease = labels.includes('skip-release');
               const comment = `## 📊 变更分析报告
-              
+
 本 PR 包含了**混合类型**的变更：
 - ✅ 核心代码变更
 - 📚 文档/配置变更
