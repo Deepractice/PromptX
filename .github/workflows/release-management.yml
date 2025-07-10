@@ -96,30 +96,32 @@ jobs:
         run: |
           # 获取将要包含的提交
           COMMITS=$(git log origin/${{ github.event.inputs.target-branch }}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          CURRENT_VERSION="${{ steps.preview.outputs.current-version }}"
+          NEW_VERSION="${{ steps.preview.outputs.new-version }}"
+          RELEASE_TYPE="${{ github.event.inputs.release-type }}"
+          TARGET_BRANCH="${{ github.event.inputs.target-branch }}"
           
-          PR_BODY="## 🚀 Release Preview
+          cat > pr-body.md << EOF
+## 🚀 Release Preview
 
 ### Version Change
-\`${{ steps.preview.outputs.current-version }}\` → \`${{ steps.preview.outputs.new-version }}\`
+\`${CURRENT_VERSION}\` → \`${NEW_VERSION}\`
 
 ### Release Type
-${{ github.event.inputs.release-type }}
+${RELEASE_TYPE}
 
 ### Target Branch
-${{ github.event.inputs.target-branch }}
+${TARGET_BRANCH}
 
 ### Included Commits
 ${COMMITS}
 
 ---
 ⚠️ **Note**: Merging this PR will:
-1. Bump the version to \`${{ steps.preview.outputs.new-version }}\`
+1. Bump the version to \`${NEW_VERSION}\`
 2. Generate changelog
 3. Trigger NPM release workflow
-"
-          
-          # 保存 PR body 到文件
-          echo "$PR_BODY" > pr-body.md
+EOF
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6

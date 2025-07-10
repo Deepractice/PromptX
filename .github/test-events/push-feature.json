@@ -1,0 +1,13 @@
+{
+  "push": {
+    "ref": "refs/heads/feature/test-snapshot",
+    "repository": {
+      "name": "PromptX",
+      "full_name": "Deepractice/PromptX"
+    },
+    "head_commit": {
+      "id": "abc123def456",
+      "message": "feat: test snapshot release"
+    }
+  }
+}

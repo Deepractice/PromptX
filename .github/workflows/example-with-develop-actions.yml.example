@@ -1,0 +1,26 @@
+name: Example with Develop Actions
+
+on: push
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      # 方式2：先 checkout develop 分支的 actions 目录
+      - name: Checkout actions from develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          sparse-checkout: |
+            .github/actions
+          sparse-checkout-cone-mode: false
+          path: develop-actions
+
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          path: main-checkout
+
+      # 然后使用 develop 分支的 actions
+      - name: Setup Node environment
+        uses: ./develop-actions/.github/actions/setup-node

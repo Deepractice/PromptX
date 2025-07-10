@@ -1,0 +1,11 @@
+# act 配置文件
+# 使用中等大小的镜像，包含更多工具
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+-P ubuntu-20.04=catthehacker/ubuntu:act-20.04
+
+# 默认使用 .env 文件
+--env-file .env.act
+
+# 使用本地 Docker
+--container-architecture linux/amd64

@@ -8,6 +8,10 @@ on:
       - test
       - staging
       - main
+      - 'feature/**'
+      - 'feat/**'
+      - 'fix/**'
+      - 'hotfix/**'
     paths-ignore:
       - 'docs/**'
       - 'README*.md'
@@ -72,6 +76,9 @@ jobs:
                 ;;
               "main")
                 RELEASE_TYPE="latest"
+                ;;
+              feature/*|feat/*|fix/*|hotfix/*)
+                RELEASE_TYPE="snapshot"
                 ;;
               *)
                 echo "❌ Unknown branch: ${{ github.ref_name }}"

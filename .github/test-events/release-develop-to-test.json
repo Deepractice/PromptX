@@ -1,0 +1,8 @@
+{
+  "workflow_dispatch": {
+    "inputs": {
+      "target-branch": "test",
+      "release-type": "patch"
+    }
+  }
+}
