@@ -66,6 +66,9 @@ Thumbs.db
 tmp/
 temp/
 
+# Act local testing
+.github/.env.act
+
 # Application specific
 /.memory/
 /.promptx/
