@@ -1,0 +1,134 @@
+name: NPM Unified Release
+
+on:
+  # 自动触发：根据分支自动判断发布类型
+  push:
+    branches:
+      - develop
+      - test
+      - staging
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'README*.md'
+      - '.github/**'
+      - '!.github/workflows/npm-unified-release.yml'
+      - '.promptx/**'
+      - '.cursorrules'
+      - 'scripts/**'
+      - '!scripts/release/**'
+      
+  # 手动触发：可以选择任意分支和发布类型
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - dev
+          - alpha
+          - beta
+          - latest
+          - snapshot
+      branch:
+        description: 'Branch name (only for snapshot)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Release to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Determine release type
+        id: release-info
+        run: |
+          # 如果是手动触发，使用用户选择的类型
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RELEASE_TYPE="${{ github.event.inputs.release-type }}"
+            BRANCH_NAME="${{ github.event.inputs.branch }}"
+          else
+            # 自动触发：根据分支判断发布类型
+            case "${{ github.ref_name }}" in
+              "develop")
+                RELEASE_TYPE="dev"
+                ;;
+              "test")
+                RELEASE_TYPE="alpha"
+                ;;
+              "staging")
+                RELEASE_TYPE="beta"
+                ;;
+              "main")
+                RELEASE_TYPE="latest"
+                ;;
+              *)
+                echo "❌ Unknown branch: ${{ github.ref_name }}"
+                exit 1
+                ;;
+            esac
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
+          
+          echo "release-type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          
+          # 输出信息
+          echo "### 🚀 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type**: $RELEASE_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: $BRANCH_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node
+
+      - name: Configure Git
+        uses: ./.github/actions/git-config
+
+      - name: Run tests
+        if: steps.release-info.outputs.release-type != 'dev'
+        run: |
+          pnpm test:unit
+          pnpm test:integration
+          pnpm test:examples
+
+      - name: Check publishing requirements
+        if: steps.release-info.outputs.release-type == 'latest'
+        run: |
+          # 确保 main 分支的发布已经通过所有测试
+          pnpm test:coverage
+          pnpm lint
+
+      - name: Publish to NPM
+        uses: ./.github/actions/npm-publish
+        with:
+          release-type: ${{ steps.release-info.outputs.release-type }}
+          branch-name: ${{ steps.release-info.outputs.branch-name }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create release tag
+        if: steps.release-info.outputs.release-type == 'latest'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Notify release status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### ✅ 发布成功！" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ 发布失败" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,101 @@
+name: 'NPM Publish'
+description: 'Publish package to npm with version management'
+inputs:
+  release-type:
+    description: 'Type of release (dev, alpha, beta, latest, snapshot)'
+    required: true
+  npm-token:
+    description: 'NPM authentication token'
+    required: true
+  branch-name:
+    description: 'Branch name for snapshot releases'
+    required: false
+    default: ''
+  tag:
+    description: 'NPM tag to use for publishing'
+    required: false
+    default: ''
+
+outputs:
+  version:
+    description: 'Published version number'
+    value: ${{ steps.publish.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine version and tag
+      id: version
+      shell: bash
+      run: |
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        BASE_VERSION=${CURRENT_VERSION%%-*}
+        
+        case "${{ inputs.release-type }}" in
+          "dev")
+            TIMESTAMP=$(date +%Y%m%d%H%M%S)
+            COMMIT_SHA=$(git rev-parse --short HEAD)
+            NEW_VERSION="${BASE_VERSION}-dev.${TIMESTAMP}.${COMMIT_SHA}"
+            NPM_TAG="dev"
+            ;;
+          "alpha")
+            # 获取当前最高的 alpha 版本号
+            LATEST_ALPHA=$(npm view . versions --json 2>/dev/null | jq -r '.[]' | grep -E "${BASE_VERSION}-alpha\\.[0-9]+" | sort -V | tail -n1 || echo "")
+            if [ -z "$LATEST_ALPHA" ]; then
+              ALPHA_NUM=1
+            else
+              ALPHA_NUM=$(($(echo $LATEST_ALPHA | grep -oE "alpha\\.[0-9]+" | cut -d. -f2) + 1))
+            fi
+            NEW_VERSION="${BASE_VERSION}-alpha.${ALPHA_NUM}"
+            NPM_TAG="alpha"
+            ;;
+          "beta")
+            # 获取当前最高的 beta 版本号
+            LATEST_BETA=$(npm view . versions --json 2>/dev/null | jq -r '.[]' | grep -E "${BASE_VERSION}-beta\\.[0-9]+" | sort -V | tail -n1 || echo "")
+            if [ -z "$LATEST_BETA" ]; then
+              BETA_NUM=1
+            else
+              BETA_NUM=$(($(echo $LATEST_BETA | grep -oE "beta\\.[0-9]+" | cut -d. -f2) + 1))
+            fi
+            NEW_VERSION="${BASE_VERSION}-beta.${BETA_NUM}"
+            NPM_TAG="beta"
+            ;;
+          "latest")
+            NEW_VERSION="${BASE_VERSION}"
+            NPM_TAG="latest"
+            ;;
+          "snapshot")
+            BRANCH_NAME="${{ inputs.branch-name }}"
+            TIMESTAMP=$(date +%Y%m%d%H%M%S)
+            SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9]/-/g')
+            NEW_VERSION="${BASE_VERSION}-snapshot.${SAFE_BRANCH}.${TIMESTAMP}"
+            NPM_TAG="snapshot"
+            ;;
+        esac
+        
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "tag=$NPM_TAG" >> $GITHUB_OUTPUT
+        
+    - name: Update package version
+      shell: bash
+      run: |
+        npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
+        
+    - name: Publish to npm
+      id: publish
+      shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.npm-token }}
+      run: |
+        TAG="${{ inputs.tag || steps.version.outputs.tag }}"
+        npm publish --tag $TAG --access public
+        echo "version=${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+        
+    - name: Output summary
+      shell: bash
+      run: |
+        echo "### 📦 NPM 发布成功" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **版本**: \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **标签**: \`${{ steps.version.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **类型**: \`${{ inputs.release-type }}\`" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,21 @@
+name: 'Configure Git'
+description: 'Configure Git user for automated commits'
+inputs:
+  user-name:
+    description: 'Git user name'
+    required: false
+    default: 'github-actions[bot]'
+  user-email:
+    description: 'Git user email'
+    required: false
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --global user.name "${{ inputs.user-name }}"
+        git config --global user.email "${{ inputs.user-email }}"
+        git config --global push.autoSetupRemote true

@@ -1,0 +1,75 @@
+name: 'Version Management'
+description: 'Manage version bumps and changelog generation'
+inputs:
+  bump-type:
+    description: 'Type of version bump (patch, minor, major)'
+    required: true
+  commit-message:
+    description: 'Commit message for version bump'
+    required: false
+    default: 'chore: bump version'
+
+outputs:
+  new-version:
+    description: 'New version after bump'
+    value: ${{ steps.bump.outputs.version }}
+  changelog:
+    description: 'Generated changelog content'
+    value: ${{ steps.changelog.outputs.content }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Bump version
+      id: bump
+      shell: bash
+      run: |
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        
+        case "${{ inputs.bump-type }}" in
+          "patch")
+            NEW_VERSION=$(npm version patch --no-git-tag-version)
+            ;;
+          "minor")
+            NEW_VERSION=$(npm version minor --no-git-tag-version)
+            ;;
+          "major")
+            NEW_VERSION=$(npm version major --no-git-tag-version)
+            ;;
+          *)
+            echo "Invalid bump type: ${{ inputs.bump-type }}"
+            exit 1
+            ;;
+        esac
+        
+        echo "version=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
+        
+    - name: Generate changelog
+      id: changelog
+      shell: bash
+      run: |
+        # 简单的 changelog 生成逻辑
+        NEW_VERSION="${{ steps.bump.outputs.version }}"
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        if [ -z "$LAST_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        else
+          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+        fi
+        
+        CHANGELOG="## v${NEW_VERSION} ($(date +%Y-%m-%d))
+
+${COMMITS}"
+        
+        # 保存到文件
+        echo "$CHANGELOG" > CHANGELOG_ENTRY.md
+        echo "content<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Commit changes
+      shell: bash
+      run: |
+        git add package.json
+        git commit -m "${{ inputs.commit-message }} v${{ steps.bump.outputs.version }}"

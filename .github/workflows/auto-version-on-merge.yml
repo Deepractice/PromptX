@@ -3,169 +3,100 @@ name: Auto Version on Merge
 on:
   pull_request:
     types: [closed]
-    branches:
-      - test
-      - staging
-      - main
+    branches: [test, staging, main]
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  auto-version:
+  version-bump:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      
     steps:
-      - name: Check PR labels
-        id: labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const labels = context.payload.pull_request.labels.map(l => l.name);
-            const skipRelease = labels.includes('skip-release') || 
-                               labels.includes('documentation') || 
-                               labels.includes('chore');
-            console.log(`PR Labels: ${labels.join(', ')}`);
-            console.log(`Skip Release: ${skipRelease}`);
-            return { skipRelease };
-            
-      - name: Checkout repository
-        if: steps.labels.outputs.result != 'true'
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT || github.token }}
-          
-      - name: Check for release marker
-        if: steps.labels.outputs.result != 'true'
-        id: check
-        run: |
-          if [ -f ".release-pending.json" ]; then
-            echo "found=true" >> $GITHUB_OUTPUT
-            RELEASE_TYPE=$(jq -r '.release_type' .release-pending.json)
-            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
-            echo "Found release marker with type: $RELEASE_TYPE"
-          else
-            echo "found=false" >> $GITHUB_OUTPUT
-            echo "No release marker found, skipping version upgrade"
-          fi
-          
-      - name: Setup pnpm
-        if: steps.check.outputs.found == 'true'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-          
-      - name: Setup Node.js
-        if: steps.check.outputs.found == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'pnpm'
-          
-      - name: Install dependencies
-        if: steps.check.outputs.found == 'true'
-        run: pnpm install --frozen-lockfile
-        
+
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node
+
       - name: Configure Git
-        if: steps.check.outputs.found == 'true'
+        uses: ./.github/actions/git-config
+
+      - name: Check for release marker
+        id: check-release
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-      - name: Execute version upgrade
-        if: steps.check.outputs.found == 'true'
-        run: |
-          echo "Executing version upgrade with type: ${{ steps.check.outputs.release_type }}"
-          
-          # 删除标记文件
-          rm .release-pending.json
-          git add .release-pending.json
-          git commit -m "chore: remove release marker" || true
-          
-          # 执行版本升级
-          if [ "${{ steps.check.outputs.release_type }}" = "auto" ]; then
-            pnpm release:version
+          if [ -f ".release" ]; then
+            RELEASE_TYPE=$(cat .release)
+            echo "should-release=true" >> $GITHUB_OUTPUT
+            echo "release-type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+            rm .release
           else
-            pnpm release:version:${{ steps.check.outputs.release_type }}
+            echo "should-release=false" >> $GITHUB_OUTPUT
           fi
-          
-          # 获取新版本号
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          
-      - name: Push version changes
-        if: steps.check.outputs.found == 'true'
+
+      - name: Determine version bump type
+        if: steps.check-release.outputs.should-release == 'true'
+        id: version-type
         run: |
-          # 推送更改
-          git push origin ${{ github.event.pull_request.base.ref }}
-          
-          # 创建版本标签
-          git tag -a "v${{ env.NEW_VERSION }}" -m "Release v${{ env.NEW_VERSION }}"
-          git push origin "v${{ env.NEW_VERSION }}"
-          
-      - name: Comment on PR
-        if: steps.check.outputs.found == 'true'
-        uses: actions/github-script@v7
+          case "${{ github.base_ref }}" in
+            "test")
+              BUMP_TYPE="patch"
+              ;;
+            "staging")
+              BUMP_TYPE="minor"
+              ;;
+            "main")
+              BUMP_TYPE="${{ steps.check-release.outputs.release-type }}"
+              ;;
+            *)
+              BUMP_TYPE="patch"
+              ;;
+          esac
+          echo "bump-type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+      - name: Bump version and generate changelog
+        if: steps.check-release.outputs.should-release == 'true'
+        uses: ./.github/actions/version-management
         with:
-          script: |
-            const comment = `✅ **版本升级已完成**
-            
-            - 新版本: \`${{ env.NEW_VERSION }}\`
-            - 版本标签: \`v${{ env.NEW_VERSION }}\`
-            - CHANGELOG已更新
-            
-            发布流程将自动触发...`;
-            
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: comment
-            });
-            
-      - name: Create back-merge PR
-        if: steps.check.outputs.found == 'true' && github.event.pull_request.base.ref == 'test'
-        uses: actions/github-script@v7
+          bump-type: ${{ steps.version-type.outputs.bump-type }}
+          commit-message: "chore: release"
+
+      - name: Push changes
+        if: steps.check-release.outputs.should-release == 'true'
+        run: |
+          git push origin ${{ github.base_ref }}
+
+      - name: Create version tag
+        if: steps.check-release.outputs.should-release == 'true' && github.base_ref == 'main'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Create sync PR
+        if: steps.check-release.outputs.should-release == 'true' && github.base_ref == 'test'
+        uses: peter-evans/create-pull-request@v6
         with:
-          script: |
-            try {
-              // 创建回合并PR
-              const { data: pr } = await github.rest.pulls.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: `chore: sync version ${process.env.NEW_VERSION} back to develop`,
-                head: 'test',
-                base: 'develop',
-                body: `## 🔄 版本同步
-                
-                将 test 分支的版本更新同步回 develop 分支。
-                
-                ### 📦 同步内容
-                - 版本号: \`${process.env.NEW_VERSION}\`
-                - CHANGELOG.md 更新
-                
-                ### ⚡ 自动合并
-                此 PR 将在检查通过后自动合并。
-                
-                ---
-                *由 GitHub Actions 自动创建*`
-              });
-              
-              console.log(`Created back-merge PR #${pr.number}`);
-              
-              // 添加 auto-merge 标签
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                labels: ['auto-merge', 'version-sync']
-              });
-            } catch (error) {
-              if (error.status === 422) {
-                console.log('Back-merge PR already exists or no changes to merge');
-              } else {
-                throw error;
-              }
-            }
+          token: ${{ secrets.GH_PAT || github.token }}
+          branch: chore/sync-test-to-develop
+          base: develop
+          title: "chore: sync version from test to develop"
+          body: |
+            ## 🔄 版本同步
+            
+            自动将 test 分支的版本变更同步回 develop 分支。
+            
+            ### 变更内容
+            - 版本号更新
+            - Changelog 更新
+            
+            ---
+            *此 PR 由 GitHub Actions 自动创建*
+          labels: |
+            auto-merge
+            version-sync
+          delete-branch: true

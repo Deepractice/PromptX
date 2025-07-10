@@ -1,0 +1,210 @@
+name: Auto Label PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Get changed files
+        id: changed-files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const changedFiles = files.map(f => f.filename);
+            console.log('Changed files:', changedFiles);
+            
+            // 添加详细的文件统计
+            const fileStats = {
+              total: changedFiles.length,
+              docs: 0,
+              config: 0,
+              core: 0,
+              prompt: 0,
+              test: 0,
+              other: 0
+            };
+            
+            // 检查是否只包含文档和配置文件
+            const docsAndConfigPaths = [
+              /^README.*\.md$/,
+              /^CHANGELOG\.md$/,
+              /^CONTRIBUTING\.md$/,
+              /^LICENSE/,
+              /^docs\//,
+              /^assets\//,
+              /^\.github\//,
+              /^examples\//,
+              /^\.gitignore$/,
+              /^\.npmignore$/,
+              /^\.editorconfig$/,
+              /^\.(eslintrc|prettierrc|babelrc)/
+            ];
+            
+            const isDocsOrConfig = changedFiles.every(path => 
+              docsAndConfigPaths.some(pattern => pattern.test(path))
+            );
+            
+            // 检查是否包含提示词文件（在 prompt 目录下的 .md 文件）
+            const hasPromptFiles = changedFiles.some(path => 
+              path.startsWith('prompt/') && path.endsWith('.md')
+            );
+            
+            // 检查是否包含核心代码变更
+            const hasCoreChanges = changedFiles.some(path => 
+              path.endsWith('.js') || 
+              path.endsWith('.ts') || 
+              path.endsWith('.json') && !path.includes('.github/') ||
+              path.startsWith('src/') ||
+              path.startsWith('lib/') ||
+              path === 'package.json'
+            );
+            
+            return {
+              isDocsOrConfig,
+              hasPromptFiles,
+              hasCoreChanges,
+              fileCount: changedFiles.length,
+              files: changedFiles
+            };
+            
+      - name: Apply labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PAT || github.token }}
+          script: |
+            const result = ${{ steps.changed-files.outputs.result }};
+            const labels = [];
+            
+            // 输出调试信息
+            console.log('Analysis result:', JSON.stringify(result, null, 2));
+            
+            // 处理不同类型的变更组合
+            if (result.hasCoreChanges) {
+              labels.push('core-changes');
+              // 有核心代码变更时，需要发版
+            }
+            
+            if (result.hasPromptFiles) {
+              labels.push('prompt-update');
+              // 提示词更新需要发版
+            }
+            
+            if (result.isDocsOrConfig && !result.hasPromptFiles) {
+              // 纯文档/配置修改
+              labels.push('documentation');
+              labels.push('skip-release');
+            } else if (!result.hasCoreChanges && !result.hasPromptFiles) {
+              // 既不是纯文档，也没有核心代码和提示词变更
+              // 可能是测试文件等，根据具体情况决定
+              const hasTestChanges = result.files.some(path => 
+                path.includes('test/') || path.includes('__tests__/') || 
+                path.endsWith('.test.js') || path.endsWith('.spec.js')
+              );
+              if (hasTestChanges) {
+                labels.push('test');
+                // 测试文件修改通常不需要发版，除非同时有代码修改
+              }
+            }
+            
+            // 定义文档和配置文件的模式
+            const docsConfigPatterns = [
+              /^README.*\.md$/,
+              /^CHANGELOG\.md$/,
+              /^CONTRIBUTING\.md$/,
+              /^LICENSE/,
+              /^docs\//,
+              /^assets\//,
+              /^\.github\//,
+              /^examples\//,
+              /^\.gitignore$/,
+              /^\.npmignore$/,
+              /^\.editorconfig$/,
+              /^\.(eslintrc|prettierrc|babelrc)/
+            ];
+            
+            // 检查是否有文档/配置文件变更
+            const hasDocsOrConfigChanges = result.files.some(path => 
+              docsConfigPatterns.some(pattern => pattern.test(path))
+            );
+            
+            // 添加混合变更标签
+            if (result.hasCoreChanges && hasDocsOrConfigChanges) {
+              labels.push('mixed-changes');
+              // 混合变更时，以代码变更为准，需要发版
+            }
+            
+            // 根据 PR 标题添加标签
+            const title = context.payload.pull_request.title.toLowerCase();
+            if (title.includes('chore:') || title.includes('chore(')) {
+              labels.push('chore');
+              if (!result.hasCoreChanges) {
+                labels.push('skip-release');
+              }
+            }
+            
+            if (title.includes('docs:') || title.includes('doc:')) {
+              labels.push('documentation');
+              if (!result.hasCoreChanges && !result.hasPromptFiles) {
+                labels.push('skip-release');
+              }
+            }
+            
+            if (title.includes('ci:') || title.includes('workflow:')) {
+              labels.push('ci/cd');
+              if (!result.hasCoreChanges && !result.hasPromptFiles) {
+                labels.push('skip-release');
+              }
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels
+              });
+              console.log(`Applied labels: ${labels.join(', ')}`);
+            }
+            
+            // 对混合变更的 PR 添加说明评论
+            if (result.hasCoreChanges && (result.isDocsOrConfig || labels.includes('documentation'))) {
+              const skipRelease = labels.includes('skip-release');
+              const comment = `## 📊 变更分析报告
+              
+本 PR 包含了**混合类型**的变更：
+- ✅ 核心代码变更
+- 📚 文档/配置变更
+
+**版本发布决策**: ${skipRelease ? '⏭️ 跳过版本发布' : '🚀 将触发版本发布'}
+
+> 💡 提示：如果您只想更新文档而不发版，请将代码和文档变更分开到不同的 PR 中。`;
+              
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: comment
+                });
+              } catch (error) {
+                console.log('Failed to create comment:', error);
+              }
+            }

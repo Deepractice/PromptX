@@ -1,0 +1,135 @@
+name: Release Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-branch:
+        description: 'Target branch for release'
+        required: true
+        type: choice
+        options:
+          - test
+          - staging
+          - main
+      release-type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node
+
+      - name: Configure Git
+        uses: ./.github/actions/git-config
+
+      - name: Determine source branch
+        id: branches
+        run: |
+          case "${{ github.event.inputs.target-branch }}" in
+            "test")
+              SOURCE_BRANCH="develop"
+              ;;
+            "staging")
+              SOURCE_BRANCH="test"
+              ;;
+            "main")
+              SOURCE_BRANCH="staging"
+              ;;
+          esac
+          echo "source-branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create release branch
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          RELEASE_BRANCH="chore/release-${{ github.event.inputs.target-branch }}-${TIMESTAMP}"
+          
+          git checkout -b $RELEASE_BRANCH origin/${{ steps.branches.outputs.source-branch }}
+          
+          # 创建发布标记文件
+          echo "${{ github.event.inputs.release-type }}" > .release
+          git add .release
+          git commit -m "chore: prepare ${{ github.event.inputs.release-type }} release"
+          
+          git push origin $RELEASE_BRANCH
+          echo "release-branch=$RELEASE_BRANCH" >> $GITHUB_ENV
+
+      - name: Preview version change
+        id: preview
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          
+          case "${{ github.event.inputs.release-type }}" in
+            "patch")
+              NEW_VERSION=$(npx semver $CURRENT_VERSION -i patch)
+              ;;
+            "minor")
+              NEW_VERSION=$(npx semver $CURRENT_VERSION -i minor)
+              ;;
+            "major")
+              NEW_VERSION=$(npx semver $CURRENT_VERSION -i major)
+              ;;
+          esac
+          
+          echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate PR body
+        id: pr-body
+        run: |
+          # 获取将要包含的提交
+          COMMITS=$(git log origin/${{ github.event.inputs.target-branch }}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          
+          PR_BODY="## 🚀 Release Preview
+
+### Version Change
+\`${{ steps.preview.outputs.current-version }}\` → \`${{ steps.preview.outputs.new-version }}\`
+
+### Release Type
+${{ github.event.inputs.release-type }}
+
+### Target Branch
+${{ github.event.inputs.target-branch }}
+
+### Included Commits
+${COMMITS}
+
+---
+⚠️ **Note**: Merging this PR will:
+1. Bump the version to \`${{ steps.preview.outputs.new-version }}\`
+2. Generate changelog
+3. Trigger NPM release workflow
+"
+          
+          # 保存 PR body 到文件
+          echo "$PR_BODY" > pr-body.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GH_PAT || github.token }}
+          branch: ${{ env.release-branch }}
+          base: ${{ github.event.inputs.target-branch }}
+          title: "chore: ${{ github.event.inputs.release-type }} release to ${{ github.event.inputs.target-branch }}"
+          body-path: pr-body.md
+          labels: |
+            release
+            ${{ github.event.inputs.release-type }}
+          draft: false

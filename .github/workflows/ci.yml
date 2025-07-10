@@ -1,123 +1,62 @@
 name: CI
-# Test: Workflow sync functionality - 2025-01-10
-# Test: Auto sync trigger
-# Test: Sync mechanism verification - 2025-01-10 14:25
-# Test: Verify sync works correctly - 2025-01-10 14:27
-# Test: Final test after cleanup - 2025-01-10 14:37
 
 on:
   push:
     branches: [main, develop]
     paths-ignore:
-      # GitHub相关配置
-      - '.github/**'
-      # 文档目录
       - 'docs/**'
-      # 根目录的README文件（但不包括prompt/和resource/下的.md文件）
-      - 'README*.md'
-      - 'CHANGELOG.md'
-      - 'TEST_ALPHA.md'
-      # 配置文件
-      - 'LICENSE'
-      - '.gitignore'
-      - '.npmignore'
-      - '.cursorrules'
-      - 'commitlint.config.js'
-      # 资源文件
-      - 'assets/**'
-      # 测试覆盖率报告
-      - 'coverage/**'
+      - '**/*.md'
+      - '.github/**'
+      - '!.github/workflows/ci.yml'
+      - '.promptx/**'
   pull_request:
     branches: [main, develop]
     paths-ignore:
-      # GitHub相关配置
-      - '.github/**'
-      # 文档目录
       - 'docs/**'
-      # 根目录的README文件（但不包括prompt/和resource/下的.md文件）
-      - 'README*.md'
-      - 'CHANGELOG.md'
-      - 'TEST_ALPHA.md'
-      # 配置文件
-      - 'LICENSE'
-      - '.gitignore'
-      - '.npmignore'
-      - '.cursorrules'
-      - 'commitlint.config.js'
-      # 资源文件
-      - 'assets/**'
-      # 测试覆盖率报告
-      - 'coverage/**'
+      - '**/*.md'
+      - '.github/**'
+      - '!.github/workflows/ci.yml'
+      - '.promptx/**'
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    name: Test & Lint
+    name: Test Suite
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
-
+        node-version: [18, 20]
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run linter
-        run: pnpm run lint || echo "Lint completed with warnings/errors - continuing build"
+      - name: Lint code
+        run: pnpm lint
 
       - name: Run unit tests
-        run: pnpm run test:unit || echo "Unit tests completed with issues - continuing"
+        run: pnpm test:unit
 
-      - name: Run integration tests  
-        run: pnpm run test:integration || echo "Integration tests completed with issues - continuing"
+      - name: Run integration tests
+        run: pnpm test:integration
 
-      - name: Generate test coverage
-        run: pnpm run test:coverage || echo "Test coverage generation completed with issues - continuing"
+      - name: Run examples tests
+        run: pnpm test:examples
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Generate coverage report
+        if: matrix.node-version == 20
+        run: pnpm test:coverage
+
+      - name: Upload coverage
+        if: matrix.node-version == 20
+        uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/lcov.info
           fail_ci_if_error: false
-
-  validate:
-    name: CLI Validation
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Test CLI commands
-        run: |
-          node src/bin/promptx.js hello || echo "Hello command completed"
-          node src/bin/promptx.js --help || echo "Help command completed"
