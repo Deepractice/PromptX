@@ -9,7 +9,12 @@
       "Bash(rm:*)",
       "Bash(ls:*)",
       "Bash(find:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "mcp__promptx-local__promptx_init",
+      "mcp__promptx-local__promptx_action",
+      "mcp__promptx-local__promptx_welcome",
+      "mcp__promptx-local__promptx_recall",
+      "mcp__promptx-local__promptx_remember"
     ],
     "deny": []
   }
