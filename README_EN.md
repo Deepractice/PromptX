@@ -284,6 +284,21 @@ Community member **coso** developed an MCP tool based on the PromptX architectur
 - **Outcome**: [mcp-template](https://github.com/wutongci/mcp-template) - A universal MCP development template
 - **Value**: Reduced MCP development time from 40 hours to 30 minutes.
 
+#### 🧠 **feishu-mcp** - Zero-barrier solution for cross-AI tool memory loss
+- **Author**: Community Member
+- **Links**: [Application Sharing](https://mp.weixin.qq.com/s/TTl3joJYR2iZU9_NSI2Hbg) | [NPM](https://www.npmjs.com/package/@larksuiteoapi/lark-mcp)
+- **Highlight**: Seamless memory continuity across different AI tools and platforms.
+
+#### 🎓 **AI Education Expert Team** - Multi-role collaboration generating high-quality systematic educational content
+- **Author**: Community Education Professional
+- **Links**: [Innovation Sharing](https://mp.weixin.qq.com/s/8mAq1r5kqAOJM1bmIWlYbQ)
+- **Highlight**: Leveraging multiple expert roles to create comprehensive, structured educational materials.
+
+#### ⚖️ **AI Mock Trial** - Immersive courtroom experience with 57,000-word professional transcripts and verdict templates
+- **Author**: Community Legal Professional
+- **Links**: [Case Study](https://mp.weixin.qq.com/s/gscpUqiApktaSO3Uio5Iiw) | [GitHub](https://github.com/jiangxia/ai-trial)
+- **Highlight**: Multi-role collaboration creating immersive trial simulations with production-level legal documentation.
+
 > 💡 We welcome community members to share their practical experience with PromptX. Submit a PR to add it here.
 
 ---
