@@ -27,8 +27,8 @@ class MemoryService {
     // 使用 SimpleConsolidator，同时处理长期记忆和语义网络
     this.consolidator = new SimpleConsolidator(this.longTerm, this.semantic);
     
-    // 创建短期记忆，容量设为1实现即时巩固
-    this.shortTerm = new ShortTerm(this.evaluator, this.consolidator, 1);
+    // 创建短期记忆，容量设为0实现立即巩固
+    this.shortTerm = new ShortTerm(this.evaluator, this.consolidator, 0);
     
     // 设置 mindService 的存储路径
     if (config.semanticPath) {
