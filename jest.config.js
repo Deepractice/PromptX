@@ -2,9 +2,19 @@ module.exports = {
   // 测试环境
   testEnvironment: 'node',
   
-  // 测试目录
+  // 支持ES模块
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
+  
+  // 转换配置
+  transform: {},
+  
+  // 测试目录 - 测试文件与源码放在一起
   testMatch: [
-    '<rootDir>/src/tests/**/*.test.js'
+    '<rootDir>/src/**/*.test.js'
   ],
   
   // 覆盖率配置
@@ -37,6 +47,7 @@ module.exports = {
   
   // 模块路径映射
   moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@tests/(.*)$': '<rootDir>/src/tests/$1'
   },

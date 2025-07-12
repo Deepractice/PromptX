@@ -54,6 +54,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
+    "@mermaid-js/parser": "^0.6.1",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@reaxi/node-detect-runtime": "^0.1.0",
     "body-parser": "^1.20.2",
@@ -68,6 +69,7 @@
     "find-up": "^7.0.0",
     "fs-extra": "^11.1.0",
     "glob": "^10.3.0",
+    "graphology": "^0.26.0",
     "inquirer": "^8.2.4",
     "joi": "^17.11.0",
     "nodemailer": "^7.0.3",

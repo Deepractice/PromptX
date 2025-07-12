@@ -1,0 +1,92 @@
+// MemoryService.js - 极简记忆服务
+// 只有 remember 和 recall 两个核心方法
+// 内部自动管理短期记忆和长期记忆的协作
+
+const { ShortTerm } = require('./components/ShortTerm');
+const { LongTerm } = require('./components/LongTerm');
+const { SimpleEvaluator } = require('./formation');
+const SimpleConsolidator = require('./formation/components/SimpleConsolidator');
+const Semantic = require('./components/Semantic.js');
+
+class MemoryService {
+  constructor(config = {}) {
+    this.config = config;
+    
+    // 创建长期记忆（使用配置的存储路径）
+    this.longTerm = new LongTerm({ 
+      inMemoryOnly: process.env.NODE_ENV === 'test',
+      filename: config.longTermPath
+    });
+    
+    // 使用默认评估器
+    this.evaluator = new SimpleEvaluator();
+    
+    // 创建语义内隐记忆
+    this.semantic = new Semantic();
+    
+    // 使用 SimpleConsolidator，同时处理长期记忆和语义网络
+    this.consolidator = new SimpleConsolidator(this.longTerm, this.semantic);
+    
+    // 创建短期记忆，容量设为1实现即时巩固
+    this.shortTerm = new ShortTerm(this.evaluator, this.consolidator, 1);
+    
+    // 设置 mindService 的存储路径
+    if (config.semanticPath) {
+      this.semantic.mindService.setStoragePath(config.semanticPath);
+    }
+  }
+
+  /**
+   * 记住 - 保存新记忆
+   * @param {Engram} engram - 记忆痕迹对象（schema 必须是 Mermaid 格式字符串）
+   */
+  remember(engram) {
+    // 简单地保存到短期记忆
+    // 短期记忆会自动处理溢出和巩固
+    this.shortTerm.remember(engram);
+  }
+
+  /**
+   * 回忆 - 检索记忆
+   * @param {string} cue - 检索线索（可选）
+   * @returns {Array<Engram>} 匹配的记忆列表
+   */
+  async recall(cue) {
+    // 从短期和长期记忆中检索
+    const shortTermResults = this.shortTerm.recall(cue);
+    const longTermResults = await this.longTerm.recall(cue);
+    
+    // 合并结果，去重（基于ID）
+    const allResults = [...shortTermResults, ...longTermResults];
+    const uniqueResults = Array.from(
+      new Map(allResults.map(item => [item.getId(), item])).values()
+    );
+    
+    // 按时间戳排序（最早的在前，保持学习顺序）
+    return uniqueResults.sort((a, b) => {
+      const timeA = a.timestamp || new Date(0);
+      const timeB = b.timestamp || new Date(0);
+      return timeA - timeB;
+    });
+  }
+
+  /**
+   * 启动效应 - 预激活语义网络并返回 Mermaid 表示
+   * @param {string} input - 语义网络名称（可选）
+   * @returns {string} Mermaid mindmap 格式的字符串
+   */
+  async prime(input) {
+    // 调用语义内隐记忆的 prime 方法，直接返回 Mermaid
+    return await this.semantic.prime(input);
+  }
+
+  /**
+   * 获取语义网络
+   * @returns {NetworkSemantic} 当前的语义网络
+   */
+  getSemantic() {
+    return this.semantic.getSemantic();
+  }
+}
+
+module.exports = { MemoryService };

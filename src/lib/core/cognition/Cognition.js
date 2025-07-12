@@ -1,0 +1,75 @@
+// Cognition - 认知中心
+// 认知体系的配置和执行入口
+
+const { MemoryService } = require('./memory');
+const path = require('path');
+
+class Cognition {
+  constructor(config = {}) {
+    // 极简配置 - 只保留必要的存储路径
+    this.config = {
+      // 长期记忆存储路径
+      longTermPath: config.longTermPath || './.cognition/longterm',
+      // 语义网络存储路径
+      semanticPath: config.semanticPath || './.cognition/semantic'
+    };
+    
+    // 创建记忆服务（传入配置）
+    this.memoryService = new MemoryService(this.config);
+  }
+  
+  /**
+   * 记住 - 保存新记忆
+   * @param {Engram} engram - 记忆痕迹对象（schema 必须是 Mermaid 格式字符串）
+   */
+  remember(engram) {
+    return this.memoryService.remember(engram);
+  }
+  
+  /**
+   * 回忆 - 检索记忆
+   * @param {string} cue - 检索线索
+   * @returns {Promise<Array<Engram>>} 匹配的记忆列表
+   */
+  async recall(cue) {
+    return this.memoryService.recall(cue);
+  }
+  
+  /**
+   * 启动效应 - 预激活语义网络并返回 Mermaid 表示
+   * @param {string} input - 语义网络名称（可选）
+   * @returns {string} Mermaid mindmap 格式的字符串
+   */
+  async prime(input) {
+    return this.memoryService.prime(input);
+  }
+  
+  /**
+   * 获取语义网络
+   * @returns {NetworkSemantic} 当前的语义网络
+   */
+  getSemantic() {
+    return this.memoryService.getSemantic();
+  }
+  
+  /**
+   * 获取配置
+   * @returns {Object} 当前配置
+   */
+  getConfig() {
+    return this.config;
+  }
+  
+  /**
+   * 更新配置
+   * @param {Object} newConfig - 新配置（会与现有配置合并）
+   */
+  updateConfig(newConfig) {
+    // 简单合并配置
+    this.config = { ...this.config, ...newConfig };
+    // 重新创建服务
+    this.memoryService = new MemoryService(this.config);
+  }
+}
+
+module.exports = { Cognition };
