@@ -23,16 +23,23 @@ class Cognition {
    * @param {string} content - 记忆内容（自然语言描述）
    * @param {string} schema - 结构化认知（Mermaid mindmap 格式）
    * @param {number} strength - 记忆强度（0-1之间）
+   * @param {string} type - Engram类型（ATOMIC|LINK|PATTERN，默认ATOMIC）
    */
-  remember(content, schema, strength) {
+  async remember(content, schema, strength, type = 'ATOMIC') {
     // 验证参数
     if (typeof strength !== 'number' || strength < 0 || strength > 1) {
       throw new Error('strength 必须是 0-1 之间的数字');
     }
     
+    // 验证type参数
+    const { EngramType } = require('./engram/interfaces/Engram');
+    if (!Object.values(EngramType).includes(type)) {
+      throw new Error(`type 必须是以下值之一: ${Object.values(EngramType).join(', ')}`);
+    }
+    
     // 在内部创建 Engram 对象
     const { Engram } = require('./engram/Engram');
-    const engram = new Engram(content, schema);
+    const engram = new Engram(content, schema, type);
     engram.strength = strength;
     
     return this.memoryService.remember(engram);

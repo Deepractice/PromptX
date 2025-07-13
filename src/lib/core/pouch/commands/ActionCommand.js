@@ -344,6 +344,9 @@ ${result.content}
 
     let content = `🎭 **角色激活完成：\`${roleId}\` (${roleInfo.name})** - 所有技能已自动加载\n`
 
+    // 自动执行 prime 激活语义网络（放在最前面）
+    content += await this.executePrime(roleId)
+
     // 加载思维模式技能（仅包含独立的thought引用）
     if (thoughts.size > 0) {
       content += `# 🧠 思维模式技能 (${thoughts.size}个)\n`

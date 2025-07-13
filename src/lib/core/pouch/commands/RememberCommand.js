@@ -19,22 +19,22 @@ class RememberCommand extends BasePouchCommand {
   }
 
   async getContent (args) {
-    // 解析参数：role content schema strength
-    const { role, content, schema, strength } = this.parseArgs(args)
+    // 解析参数：role 和 engrams数组
+    const { role, engrams } = this.parseArgs(args)
 
-    if (!role || !content || !schema || strength === undefined) {
+    if (!role || !engrams) {
       return this.getUsageHelp()
     }
 
     try {
-      logger.step('🧠 [RememberCommand] 开始记忆保存流程')
-      logger.info(`📝 [RememberCommand] 记忆内容: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`)
+      logger.step('🧠 [RememberCommand] 开始批量记忆保存流程')
+      logger.info(`📝 [RememberCommand] 批量保存 ${engrams.length} 个Engram`)
       
-      // 使用 CognitionManager 保存记忆
-      await this.cognitionManager.remember(role, content, schema, strength)
+      // 使用 CognitionManager 批量保存记忆
+      await this.cognitionManager.remember(role, engrams)
 
-      logger.success('✅ [RememberCommand] 记忆保存完成')
-      return this.formatSaveResponse(content, strength, role)
+      logger.success('✅ [RememberCommand] 批量记忆保存完成')
+      return this.formatBatchSaveResponse(engrams, role)
       
     } catch (error) {
       logger.error(`❌ [RememberCommand] 记忆保存失败: ${error.message}`)
@@ -59,34 +59,27 @@ class RememberCommand extends BasePouchCommand {
    */
   parseArgs(args) {
     let role = ''
-    let content = ''
-    let schema = ''
-    let strength = 0.8
+    let engrams = null
     
     // 第一个参数是role
     if (args.length > 0) {
       role = args[0]
     }
     
-    // 第二个参数是content
+    // 第二个参数是JSON格式的engrams数组
     if (args.length > 1) {
-      content = args[1]
-    }
-    
-    // 第三个参数是schema
-    if (args.length > 2) {
-      schema = args[2]
-    }
-    
-    // 第四个参数是strength
-    if (args.length > 3) {
-      strength = parseFloat(args[3])
-      if (isNaN(strength)) {
-        strength = 0.8
+      try {
+        engrams = JSON.parse(args[1])
+        if (!Array.isArray(engrams)) {
+          throw new Error('engrams必须是数组格式')
+        }
+      } catch (error) {
+        logger.error(`❌ [RememberCommand] 解析engrams参数失败: ${error.message}`)
+        engrams = null
       }
     }
     
-    return { role, content, schema, strength }
+    return { role, engrams }
   }
 
   /**
@@ -112,6 +105,43 @@ class RememberCommand extends BasePouchCommand {
 - 应用实践: 使用 MCP PromptX action 工具在实际场景中运用记忆
 
 📍 当前状态：memory_saved`
+  }
+
+  /**
+   * 格式化批量保存响应
+   */
+  formatBatchSaveResponse (engrams, role) {
+    const typeCount = engrams.reduce((acc, engram) => {
+      acc[engram.type] = (acc[engram.type] || 0) + 1
+      return acc
+    }, {})
+    
+    const avgStrength = (engrams.reduce((sum, engram) => sum + engram.strength, 0) / engrams.length).toFixed(2)
+    
+    const typeStats = Object.entries(typeCount)
+      .map(([type, count]) => `${type}: ${count}个`)
+      .join(', ')
+    
+    return `✅ AI已批量内化 ${engrams.length} 个记忆：
+
+## 📊 批量记忆统计
+- **类型分布**: ${typeStats}
+- **平均强度**: ${avgStrength}
+- **角色**: ${role}
+- **内化时间**: ${new Date().toISOString()}
+
+## 🎯 批量记忆优势
+- ✅ **原子性保持**: 每个概念独立存储，避免混淆
+- ✅ **关联性建立**: 相关概念自动建立语义连接  
+- ✅ **检索精确**: 原子Cue确保精确匹配
+- ✅ **类型分离**: ATOMIC实体、LINK关系、PATTERN模式分别存储
+
+## 🔄 下一步行动：
+- 记忆检索: 使用 MCP PromptX recall 工具验证知识内化效果
+- 语义激活: 使用 MCP PromptX prime 工具激活相关语义网络
+- 应用实践: 使用 MCP PromptX action 工具在实际场景中运用记忆
+
+📍 当前状态：batch_memory_saved`
   }
 
   /**

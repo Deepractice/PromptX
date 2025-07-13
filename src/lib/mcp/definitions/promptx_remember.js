@@ -1,73 +1,45 @@
 module.exports = {
   name: 'promptx_remember',
-  description: `💾 [智能记忆系统] 模拟人类记忆过程，为AI角色保存和组织知识
-基于认知心理学的记忆原理，不仅记住内容，还自动构建知识网络和评估重要性。
+  description: `💾 [认知记忆系统] 基于认知心理学模拟人类记忆编码-存储-检索机制
 
-核心理念:
-🧠 认知记忆：像人脑一样自然地组织和存储知识
-🔗 知识表征：自动识别概念层次，建立语义连接
-💪 记忆强度：根据重要性和使用频率评估记忆牢固度
-🔄 自动记忆：每轮对话后必须调用，通过strength筛选
+## 🔍 语义鸿沟触发机制
+**触发条件**：AI预训练知识(共识)与私有信息(私识)间存在语义鸿沟
+- 个人化信息：身份、偏好、项目细节
+- 专业细节：技术栈、配置、历史决策
+- 上下文特征：对话中的特定概念关系
 
-什么时候记忆？
-- 每轮对话结束后自动执行（必须）
-- 学到AI预训练知识之外的新信息（语义鸿沟）
-- 用户分享个人偏好、项目细节、特定经验
-- 获得领域专业知识、最佳实践、解决方案
-- 任何填补认知空白的有价值信息
+## 🧠 记忆编码规则
+**原子化原则**：基于词性分解为最小语义单位
+- **ATOMIC**：实体词性(名词、形容词、专有名词) → 独立概念
+- **LINK**：关系词性(动词、介词、关系词) → 概念连接
+- **PATTERN**：复合结构(短语、流程、模式) → 复杂模式
 
-记忆工作流程：
-对话结束 → 提取要点 → 构建schema → 评估strength → 调用remember
-不需要决定"是否记忆"，只需要评估"记忆强度"
+**Schema概念层级**：基本层次→上位概念→下位概念的认知结构
+基本概念
+  上位概念
+  下位概念
 
-记忆的三个维度：
-1. **内容（What）**：具体的知识点
-2. **结构（How）**：知识在认知网络中的位置
-3. **强度（Why）**：这个知识的重要程度
+**记忆强度巩固**：0-1评估，影响检索权重
+- 0.9-1.0：核心知识，频繁激活
+- 0.7-0.9：重要知识，定期使用  
+- 0.5-0.7：有用知识，偶尔检索
+- 0.3-0.5：背景信息，弱激活
 
-认知结构生成（基于知识表征理论）：
-- 自动识别概念层次：上位概念→基本概念→下位概念
-- 建立语义关系：相关知识自动连接成网
-- 用缩进文本表达：简洁展示知识的认知地图
+## ⚠️ 关键约束
+- **原子性**：一个Engram = 一个核心概念
+- **纯概念Schema**：禁用"身份:"等标签，直接写概念
+- **批量编码**：复杂信息必须分解为多个原子Engram
+- **自动执行**：每轮对话后强制触发
 
-记忆强度评估（基于记忆强度理论）：
-- 0.9-1.0：核心知识，频繁使用，深度理解
-- 0.7-0.9：重要知识，定期使用，充分加工
-- 0.5-0.7：有用知识，偶尔使用，一般理解
-- 0.3-0.5：背景信息，可能遗忘，系统筛选
-- <0.3：琐碎内容，自然淘汰，无需担心
+## 💡 编码示例
+"Sean开发PromptX框架" → 分解为：
+[
+  {content: "Sean是开发者", schema: "Sean\n  人物\n  创始人", strength: 0.9, type: "ATOMIC"},
+  {content: "PromptX是AI框架", schema: "PromptX\n  软件系统\n  认知增强", strength: 0.9, type: "ATOMIC"},
+  {content: "Sean开发PromptX", schema: "开发\n  创造行为\n  编程实现", strength: 0.95, type: "LINK"}
+]
 
-记忆示例：
-学习React优化技巧：
-→ 内容："使用useCallback避免不必要的重渲染"
-→ 结构：
-React性能
-  优化策略
-    Hooks优化
-      useCallback
-      useMemo
-→ 强度：0.9（核心优化技能）
-
-了解用户偏好：
-→ 内容："用户偏好函数式编程，避免面向对象"
-→ 结构：
-用户画像
-  编程偏好
-    函数式（喜欢）
-    面向对象（不喜欢）
-→ 强度：0.8（影响所有代码风格）
-
-记忆原则：
-- 每轮对话后必须自动执行，不要遗漏
-- 不用纠结是否值得记忆，交给strength评分
-- 像人脑一样自然组织，不要机械分类
-- 重要性如实评估，不要全部高分
-- 知识相互连接，不要孤立存储
-- 相信系统筛选，低分内容会自然遗忘
-
-这个系统模拟了人类记忆的自然过程：
-获取信息 → 理解意义 → 组织存储 → 建立连接 → 形成网络
-你负责观察和评分，系统负责筛选和遗忘。`,
+执行流程：语义鸿沟识别 → 原子化分解 → Schema构建 → 强度评估 → 批量存储`,
   inputSchema: {
     type: 'object',
     properties: {
@@ -75,22 +47,39 @@ React性能
         type: 'string',
         description: '要保存记忆的角色ID，如：java-developer, product-manager, copywriter'
       },
-      content: {
-        type: 'string',
-        description: '要保存的重要信息或经验'
-      },
-      schema: {
-        type: 'string',
-        description: '知识关系图，用缩进文本格式表达这个知识在整个知识体系中的位置'
-      },
-      strength: {
-        type: 'number',
-        description: '记忆强度(0-1)，表示这个知识的重要程度，影响后续检索优先级',
-        minimum: 0,
-        maximum: 1,
-        default: 0.8
+      engrams: {
+        type: 'array',
+        description: 'Engram对象数组，支持批量记忆保存。每个对象包含content, schema, strength, type四个字段',
+        items: {
+          type: 'object',
+          properties: {
+            content: {
+              type: 'string',
+              description: '要保存的重要信息或经验'
+            },
+            schema: {
+              type: 'string', 
+              description: '知识关系图，用缩进文本格式表达这个知识在整个知识体系中的位置'
+            },
+            strength: {
+              type: 'number',
+              description: '记忆强度(0-1)，表示这个知识的重要程度，影响后续检索优先级',
+              minimum: 0,
+              maximum: 1,
+              default: 0.8
+            },
+            type: {
+              type: 'string',
+              description: 'Engram类型，基于词性选择：ATOMIC（实体词性：名词、形容词、专有名词），LINK（关系词性：动词、介词、关系词），PATTERN（复合结构：短语、流程、模式）。ATOMIC和LINK的Cue必须是原子的单一词性',
+              enum: ['ATOMIC', 'LINK', 'PATTERN'],
+              default: 'ATOMIC'
+            }
+          },
+          required: ['content', 'schema', 'strength', 'type']
+        },
+        minItems: 1
       }
     },
-    required: ['role', 'content', 'schema', 'strength']
+    required: ['role', 'engrams']
   }
 };

@@ -45,23 +45,20 @@ const CONVERTERS = {
     if (!args || !args.role) {
       throw new Error('role 参数是必需的');
     }
-    if (!args || !args.content) {
-      throw new Error('content 参数是必需的');
+    if (!args || !args.engrams || !Array.isArray(args.engrams)) {
+      throw new Error('engrams 参数是必需的且必须是数组');
     }
-    if (!args || !args.schema) {
-      throw new Error('schema 参数是必需的');
-    }
-    if (args.strength === undefined) {
-      throw new Error('strength 参数是必需的');
+    if (args.engrams.length === 0) {
+      throw new Error('engrams 数组不能为空');
     }
     
     const result = [];
     
-    // 按顺序添加参数
+    // role作为第一个参数
     result.push(args.role);
-    result.push(args.content);
-    result.push(args.schema);
-    result.push(String(args.strength));
+    
+    // 将engrams数组序列化为JSON字符串作为第二个参数
+    result.push(JSON.stringify(args.engrams));
     
     return result;
   },

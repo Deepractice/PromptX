@@ -77,15 +77,41 @@ class CognitionManager {
   }
 
   /**
-   * 记住 - 为指定角色保存记忆
+   * 记住 - 为指定角色保存记忆（支持批量）
    * @param {string} role - 角色ID
-   * @param {string} content - 记忆内容
-   * @param {string} schema - 结构化认知（Mermaid mindmap 格式）
-   * @param {number} strength - 记忆强度（0-1之间）
+   * @param {Array} engrams - Engram对象数组，每个包含 {content, schema, strength, type}
    */
-  async remember(role, content, schema, strength) {
+  async remember(role, engrams) {
+    // 确保输入是数组
+    if (!Array.isArray(engrams)) {
+      throw new Error('engrams 必须是数组格式');
+    }
+    
+    if (engrams.length === 0) {
+      throw new Error('engrams 数组不能为空');
+    }
+    
     const cognition = await this.getCognition(role);
-    return cognition.remember(content, schema, strength);
+    const results = [];
+    
+    // 循环调用底层的单个remember方法
+    for (let i = 0; i < engrams.length; i++) {
+      const { content, schema, strength, type = 'ATOMIC' } = engrams[i];
+      
+      // 验证必需字段
+      if (!content || !schema || typeof strength !== 'number') {
+        throw new Error(`Engram ${i + 1}: content, schema, strength 是必需字段`);
+      }
+      
+      try {
+        const result = await cognition.remember(content, schema, strength, type);
+        results.push(result);
+      } catch (error) {
+        throw new Error(`Engram ${i + 1}: ${error.message}`);
+      }
+    }
+    
+    return results;
   }
 
   /**
