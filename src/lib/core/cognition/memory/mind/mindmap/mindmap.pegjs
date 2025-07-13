@@ -1,8 +1,8 @@
-// Mermaid Mindmap 语法定义
-// 使用 Peggy (PEG.js) 语法
+// Mermaid Mindmap 语法定义 V2
+// 修复缩进层级处理
 
 {
-  // 辅助函数：构建节点树
+  // 辅助函数：构建节点
   function buildNode(name, children) {
     return {
       name: name,
@@ -10,66 +10,76 @@
     };
   }
   
-  // 辅助函数：扁平化子节点
-  function flattenChildren(first, rest) {
-    const children = [first];
-    if (rest) {
-      rest.forEach(item => {
-        if (item[1]) children.push(item[1]);
-      });
-    }
-    return children;
+  // 辅助函数：根据缩进组织节点
+  function organizeByIndent(nodes) {
+    if (!nodes || nodes.length === 0) return [];
+    
+    const stack = [];
+    const result = [];
+    
+    nodes.forEach(node => {
+      const indent = node.indent || 0;
+      
+      // 移除比当前缩进深的节点
+      while (stack.length > 0 && stack[stack.length - 1].indent >= indent) {
+        stack.pop();
+      }
+      
+      // 如果栈为空，这是顶级节点
+      if (stack.length === 0) {
+        result.push(node);
+      } else {
+        // 否则是栈顶节点的子节点
+        const parent = stack[stack.length - 1];
+        if (!parent.children) parent.children = [];
+        parent.children.push(node);
+      }
+      
+      // 将当前节点加入栈
+      stack.push(node);
+    });
+    
+    return result;
   }
 }
 
 // 主规则
 Mindmap
-  = "mindmap" _ root:RootNode _ {
-      return root;
+  = "mindmap" _ root:RootNode children:ChildrenList? {
+      const rootNode = buildNode(root.name, organizeByIndent(children));
+      return rootNode;
     }
 
 // 根节点
 RootNode
   = CircleNode
-  / SquareNode  
-  / HexagonNode
   / PlainNode
 
 // 圆形节点 ((text))
 CircleNode
-  = "((" _ name:NodeText _ "))" children:Children? {
-      return buildNode(name, children);
-    }
-
-// 方形节点 [[text]]
-SquareNode
-  = "[[" _ name:NodeText _ "]]" children:Children? {
-      return buildNode(name, children);
-    }
-
-// 六边形节点 {{text}}
-HexagonNode
-  = "{{" _ name:NodeText _ "}}" children:Children? {
-      return buildNode(name, children);
+  = "((" _ name:NodeText _ "))" {
+      return { name: name };
     }
 
 // 普通节点
 PlainNode
-  = name:NodeText children:Children? {
-      return buildNode(name, children);
+  = name:NodeText {
+      return { name: name };
     }
 
 // 子节点列表
-Children
-  = nl first:ChildNode rest:(nl node:ChildNode { return node; })* {
-      return rest ? [first].concat(rest) : [first];
+ChildrenList
+  = nodes:(node:IndentedNode { return node; })+ {
+      return nodes;
     }
 
-// 子节点（带缩进）
-ChildNode
-  = indent:Indent node:PlainNode {
-      node.indent = indent.length;
-      return node;
+// 带缩进的节点
+IndentedNode
+  = nl indent:Indent name:NodeText {
+      return {
+        name: name,
+        indent: indent.length
+      };
     }
 
 // 节点文本
@@ -78,13 +88,13 @@ NodeText
       return chars.join('').trim();
     }
 
-// 节点字符（不包括特殊符号）
+// 节点字符（不包括特殊符号和换行）
 NodeChar
   = [^\n\r()[\]{}]
 
 // 缩进
 Indent
-  = spaces:[ \t]+ {
+  = spaces:[ ]+ {
       return spaces;
     }
 
