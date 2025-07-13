@@ -69,9 +69,14 @@ class PeggyMindmap extends MindMap {
       nodeMap.set(node.name, cue);
     }
     
-    // 如果有父节点，建立连接
+    // 如果有父节点，建立单向连接（父->子）
     if (parentCue) {
-      parentCue.connect(cue);
+      // 只建立父到子的连接，不建立双向连接
+      if (!parentCue.getConnections().includes(cue.word)) {
+        parentCue.connections.add(cue.word);
+      }
+      // 同时在 Schema 的内部图中建立连接
+      schema.connectCues(parentCue, cue);
     }
     
     // 递归处理子节点
@@ -116,23 +121,20 @@ class PeggyMindmap extends MindMap {
    */
   buildTree(schema) {
     const cues = schema.getCues();
-    const roots = [];
     const processed = new Set();
     
-    // 找出根节点
-    cues.forEach(cue => {
-      let isRoot = true;
-      cues.forEach(otherCue => {
-        if (otherCue !== cue && otherCue.getConnections().includes(cue.word)) {
-          isRoot = false;
-        }
-      });
-      if (isRoot) {
-        roots.push(this.buildSubtree(cue, cues, processed));
-      }
-    });
+    // 对于 mindmap，根节点是 Schema 名称对应的节点
+    // 如果找不到，就选择第一个节点
+    let rootCue = cues.find(cue => cue.word === schema.name);
+    if (!rootCue && cues.length > 0) {
+      rootCue = cues[0];
+    }
     
-    return roots;
+    if (!rootCue) {
+      return [];
+    }
+    
+    return [this.buildSubtree(rootCue, cues, processed)];
   }
 
   /**

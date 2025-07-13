@@ -7,37 +7,61 @@ const v8 = require('v8');
 const fs = require('fs').promises;
 const path = require('path');
 
-// 持久化 Mixin
-const PersistableMixin = {
-  _storagePath: null,
-  _autoPersist: true,
+// 定义持久化方法
+function addPersistableMethods(instance) {
+  instance._storagePath = null;
+  instance._autoPersist = true;
   
-  setStoragePath(path) {
+  instance.setStoragePath = function(path) {
     this._storagePath = path;
-  },
+  };
   
-  setAutoPersist(enabled) {
+  instance.setAutoPersist = function(enabled) {
     this._autoPersist = enabled;
-  },
+  };
   
-  async persist() {
+  instance.persist = async function() {
     if (!this._storagePath) return;
     
     const filePath = path.join(this._storagePath, `${this.name}.bin`);
-    const buffer = v8.serialize(this);
+    
+    // 创建一个干净的对象用于序列化
+    const cleanObject = {
+      name: this.name,
+      // 将 Map 转换为数组，保存 Cue 的数据
+      cueLayer: Array.from(this.cueLayer.entries()).map(([word, cue]) => ({
+        word: word,
+        connections: cue.getConnections ? cue.getConnections() : []
+      })),
+      // 将 Schema 转换为可序列化的格式
+      schemaLayer: Array.from(this.schemaLayer.entries()).map(([name, schema]) => ({
+        name: name,
+        cues: schema.getCues ? schema.getCues().map(cue => ({
+          word: cue.word,
+          connections: cue.getConnections ? cue.getConnections() : []
+        })) : [],
+        externalConnections: schema.externalConnections ? Array.from(schema.externalConnections) : []
+      })),
+      // 将 Set 转换为数组
+      externalConnections: Array.from(this.externalConnections),
+      _storagePath: this._storagePath,
+      _autoPersist: this._autoPersist
+    };
+    
+    const buffer = v8.serialize(cleanObject);
     
     // 确保目录存在
     await fs.mkdir(this._storagePath, { recursive: true });
     await fs.writeFile(filePath, buffer);
-  },
+  };
   
-  async _triggerPersist() {
+  instance._triggerPersist = async function() {
     if (this._autoPersist) {
       // 异步持久化，不阻塞主流程
       setImmediate(() => this.persist().catch(console.error));
     }
-  }
-};
+  };
+}
 
 class NetworkSemantic extends Semantic {
   /**
@@ -57,8 +81,8 @@ class NetworkSemantic extends Semantic {
     // 外部连接：与其他Semantic的连接关系（认知网络的合并）
     this.externalConnections = new Set();
     
-    // 混入持久化能力
-    Object.assign(this, PersistableMixin);
+    // 添加持久化方法
+    addPersistableMethods(this);
   }
 
 
@@ -190,6 +214,13 @@ class NetworkSemantic extends Semantic {
     }
     
     this.schemaLayer.set(schema.name, schema);
+    
+    // 同步 Schema 中的所有 Cues 到全局 cueLayer
+    if (schema.getCues) {
+      schema.getCues().forEach(cue => {
+        this.cueLayer.set(cue.word, cue);
+      });
+    }
     
     // 触发自动持久化
     this._triggerPersist();
@@ -363,11 +394,52 @@ NetworkSemantic.load = async function(storagePath, semanticName) {
   
   try {
     const buffer = await fs.readFile(filePath);
-    const semantic = v8.deserialize(buffer);
+    const data = v8.deserialize(buffer);
     
-    // 恢复 mixin 方法
-    Object.assign(semantic, PersistableMixin);
+    // 重建 NetworkSemantic 实例
+    const semantic = new NetworkSemantic(data.name);
+    
+    // 恢复 WordCue 对象
+    const { WordCue } = require('./WordCue');
+    const cueMap = new Map();
+    data.cueLayer.forEach(cueData => {
+      const cue = new WordCue(cueData.word);
+      cueData.connections.forEach(conn => {
+        cue.connections.add(conn);
+      });
+      cueMap.set(cueData.word, cue);
+      semantic.cueLayer.set(cueData.word, cue);
+    });
+    
+    // 恢复 GraphSchema 对象
+    const { GraphSchema } = require('./GraphSchema');
+    data.schemaLayer.forEach(schemaData => {
+      const schema = new GraphSchema(schemaData.name);
+      
+      // 添加 Cues 到 Schema
+      schemaData.cues.forEach(cueData => {
+        let cue = cueMap.get(cueData.word);
+        if (!cue) {
+          cue = new WordCue(cueData.word);
+          cueData.connections.forEach(conn => {
+            cue.connections.add(conn);
+          });
+        }
+        schema.addCue(cue);
+      });
+      
+      // 恢复外部连接
+      schema.externalConnections = new Set(schemaData.externalConnections);
+      
+      semantic.schemaLayer.set(schemaData.name, schema);
+    });
+    
+    // 从数组恢复 Set
+    semantic.externalConnections = new Set(data.externalConnections);
+    
+    // 设置存储路径
     semantic.setStoragePath(storagePath);
+    semantic.setAutoPersist(data._autoPersist !== false);
     
     return semantic;
   } catch (error) {
