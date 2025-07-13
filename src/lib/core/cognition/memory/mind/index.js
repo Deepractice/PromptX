@@ -3,7 +3,7 @@ const { MindService } = require('./MindService.js');
 const { WordCue } = require('./components/WordCue.js');
 const { GraphSchema } = require('./components/GraphSchema.js');
 const { NetworkSemantic } = require('./components/NetworkSemantic.js');
-const { MindConverter } = require('./components/MindConverter.js');
+const { PeggyMindmap } = require('./mindmap/PeggyMindmap.js');
 
 // 创建全局单例MindService实例
 const mindService = new MindService();
@@ -22,5 +22,5 @@ module.exports = {
   WordCue,
   GraphSchema,
   NetworkSemantic,
-  MindConverter
+  PeggyMindmap
 };

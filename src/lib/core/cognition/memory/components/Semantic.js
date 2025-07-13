@@ -25,17 +25,8 @@ class Semantic extends ImplicitMemory {
       console.log('[Semantic.remember] Processing engram:', engram.content);
       console.log('[Semantic.remember] Schema:', engram.schema);
       
-      // schema 是 Mermaid 格式字符串，转换为 Schema 对象
-      const schema = this.mindService.converter.convertMermaidToSchema(engram.schema);
-      
-      if (!schema) {
-        throw new Error('Failed to convert schema from engram');
-      }
-      
-      console.log('[Semantic.remember] Converted schema:', schema);
-      
-      // 委托给MindService处理加载、添加、保存的完整流程
-      await this.mindService.addMindToSemantic(schema, 'global-semantic');
+      // schema 是 Mermaid 格式字符串，直接使用 MindService 的 remember 方法
+      await this.mindService.remember(engram.schema);
       
       console.log('[Semantic.remember] Successfully added to semantic network');
     } catch (error) {
@@ -61,7 +52,7 @@ class Semantic extends ImplicitMemory {
    */
   async prime(semanticName) {
     // 委托给MindService处理加载/创建逻辑
-    return await this.mindService.primeSemantic(semanticName || 'global-semantic');
+    return await this.mindService.primeSemantic();
   }
 
 }

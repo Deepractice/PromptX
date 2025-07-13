@@ -129,9 +129,70 @@ class MindService {
       return peggyMindmap.serialize(schemas[0]);
     }
     
-    // 多个 Schema，分别序列化
-    const mindmaps = schemas.map(schema => peggyMindmap.serialize(schema));
-    return mindmaps.join('\n\n');
+    // 多个 Schema，创建统一的 mindmap
+    const lines = ['mindmap'];
+    lines.push(`  ((${semantic.name}))`);
+    
+    // 每个 Schema 作为根节点的子节点
+    schemas.forEach(schema => {
+      lines.push(`    ${schema.name}`);
+      
+      // 获取所有 Cues 并按层级组织
+      const cues = schema.getCues();
+      const rootCues = [];
+      const cueMap = new Map();
+      
+      // 创建 cue 映射
+      cues.forEach(cue => {
+        cueMap.set(cue.word, cue);
+      });
+      
+      // 找出根节点（没有被其他节点连接的节点）
+      const connectedCues = new Set();
+      cues.forEach(cue => {
+        cue.getConnections().forEach(connected => {
+          connectedCues.add(connected);
+        });
+      });
+      
+      cues.forEach(cue => {
+        // 排除与 schema 同名的根节点，避免重复
+        if (!connectedCues.has(cue.word) && cue.word !== schema.name) {
+          rootCues.push(cue);
+        }
+      });
+      
+      // 递归添加节点
+      const addCue = (cue, indent) => {
+        lines.push(`${' '.repeat(indent)}${cue.word}`);
+        cue.getConnections().forEach(childWord => {
+          const childCue = cueMap.get(childWord);
+          if (childCue) {
+            addCue(childCue, indent + 2);
+          }
+        });
+      };
+      
+      // 添加所有根 Cues
+      rootCues.forEach(cue => {
+        addCue(cue, 6);
+      });
+      
+      // 如果没有其他根节点，但有与 schema 同名的节点，则添加其子节点
+      if (rootCues.length === 0) {
+        const schemaCue = cueMap.get(schema.name);
+        if (schemaCue) {
+          schemaCue.getConnections().forEach(childWord => {
+            const childCue = cueMap.get(childWord);
+            if (childCue) {
+              addCue(childCue, 6);
+            }
+          });
+        }
+      }
+    });
+    
+    return lines.join('\n');
   }
 
 
