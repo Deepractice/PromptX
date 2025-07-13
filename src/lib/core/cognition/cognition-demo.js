@@ -36,11 +36,10 @@ async function runDemo() {
     '语义网络存储概念之间的关系'
   ];
 
-  // 记住这些内容
+  // 记住这些内容（使用新的简化接口）
   contents.forEach((content, index) => {
-    // 用户只需要创建简单的 Engram，不需要了解内部结构
-    const engram = new Engram(content, null);
-    cognition.remember(engram);
+    // 用户只需要传入内容字符串即可
+    cognition.remember(content);
     console.log(`   ✓ 记忆 ${index + 1}: "${content.substring(0, 30)}..."`);
   });
   

@@ -11,27 +11,23 @@ class MindConverter {
     if (!mind) {
       throw new Error('Mind is required');
     }
-
-    // 默认转换为mindmap格式，更符合认知结构表达
-    let mermaidText = 'mindmap\n';
     
     // 根据Mind类型进行不同的转换
     const layer = mind.getLayer();
     
     if (layer === 1) {
       // WordCue - 根节点
-      mermaidText += this._convertWordCueToMindmap(mind);
+      return 'mindmap\n' + this._convertWordCueToMindmap(mind);
     } else if (layer === 2) {
       // GraphSchema - 分支结构
-      mermaidText += this._convertGraphSchemaToMindmap(mind);
+      return 'mindmap\n' + this._convertGraphSchemaToMindmap(mind);
     } else if (layer === 3) {
       // NetworkSemantic - 完整思维导图
-      mermaidText += this._convertNetworkSemanticToMindmap(mind);
+      // 特殊处理：可能返回多个 mindmap
+      return this._convertNetworkSemanticToMindmap(mind);
     } else {
       throw new Error(`Unsupported Mind layer: ${layer}`);
     }
-
-    return mermaidText;
   }
 
   /**
@@ -94,6 +90,21 @@ class MindConverter {
    * @private
    */
   _convertNetworkSemanticToMindmap(semantic) {
+    // 检测是否有 getConnectedSchemaGroups 方法
+    if (semantic.getConnectedSchemaGroups) {
+      // 获取所有连接的 Schema 组
+      const schemaGroups = semantic.getConnectedSchemaGroups();
+      
+      // 如果有多个独立的组，分别生成 mindmap
+      if (schemaGroups.length > 1) {
+        return this._convertMultipleGroupsToMindmap(schemaGroups);
+      } else if (schemaGroups.length === 1) {
+        // 只有一个组，生成单个 mindmap
+        return this._convertSchemaGroupToMindmap(schemaGroups[0]);
+      }
+    }
+    
+    // 降级到原有逻辑（向后兼容）
     const semanticName = this._sanitizeNodeName(semantic.name);
     let text = `  root)${semanticName})\n`;
     
@@ -287,6 +298,106 @@ class MindConverter {
   _getIndentLevel(line) {
     const match = line.match(/^(\s*)/);
     return match ? match[1].length : 0;
+  }
+
+  /**
+   * 转换多个独立的 Schema 组为多个 Mermaid mindmap
+   * @param {Array<Array<Schema>>} schemaGroups - Schema 组数组
+   * @returns {string} 多个 Mermaid mindmap 文本
+   * @private
+   */
+  _convertMultipleGroupsToMindmap(schemaGroups) {
+    let result = '';
+    
+    schemaGroups.forEach((group, index) => {
+      if (index > 0) {
+        // 在不同的 mindmap 之间添加空行分隔
+        result += '\n';
+      }
+      result += 'mindmap\n';
+      result += this._convertSchemaGroupToMindmap(group);
+    });
+    
+    return result;
+  }
+
+  /**
+   * 转换单个 Schema 组为 Mermaid mindmap
+   * @param {Array<Schema>} schemas - Schema 数组
+   * @returns {string} Mermaid mindmap 文本片段
+   * @private
+   */
+  _convertSchemaGroupToMindmap(schemas) {
+    let text = '';
+    
+    if (schemas.length === 1) {
+      // 单个 Schema，以 Schema 名称作为根节点
+      const schema = schemas[0];
+      const schemaName = this._sanitizeNodeName(schema.name);
+      text += `  root((${schemaName}))\n`;
+      
+      // 添加 Schema 的内容
+      text += this._addSchemaContent(schema, '    ');
+    } else {
+      // 多个相关联的 Schema，找一个合适的根节点名称
+      // 暂时使用第一个 Schema 的名称，未来可以优化
+      const rootName = this._findCommonRootName(schemas);
+      text += `  root((${rootName}))\n`;
+      
+      // 添加所有 Schema
+      schemas.forEach(schema => {
+        const schemaName = this._sanitizeNodeName(schema.name);
+        text += `    ${schemaName}\n`;
+        text += this._addSchemaContent(schema, '      ');
+      });
+    }
+    
+    return text;
+  }
+
+  /**
+   * 添加 Schema 的内容（Cue 和连接）
+   * @param {Schema} schema - Schema 实例
+   * @param {string} indent - 缩进字符串
+   * @returns {string} Schema 内容的 Mermaid 文本
+   * @private
+   */
+  _addSchemaContent(schema, indent) {
+    let text = '';
+    const cues = schema.getCues();
+    
+    if (cues && cues.length > 0) {
+      cues.forEach(cue => {
+        const cueName = this._sanitizeNodeName(cue.word);
+        text += `${indent}${cueName}\n`;
+        
+        // Cue 的连接
+        const connections = cue.getConnections();
+        if (connections && connections.length > 0) {
+          connections.forEach(targetWord => {
+            const sanitizedTarget = this._sanitizeNodeName(targetWord);
+            text += `${indent}  ${sanitizedTarget}\n`;
+          });
+        }
+      });
+    }
+    
+    return text;
+  }
+
+  /**
+   * 找出多个 Schema 的共同根节点名称
+   * @param {Array<Schema>} schemas - Schema 数组
+   * @returns {string} 根节点名称
+   * @private
+   */
+  _findCommonRootName(schemas) {
+    // 简单实现：返回所有 Schema 名称的组合
+    // 未来可以通过分析共同 Cue 来找出更合适的名称
+    if (schemas.length <= 3) {
+      return schemas.map(s => s.name).join('-');
+    }
+    return `${schemas[0].name}-等${schemas.length}个主题`;
   }
 
 

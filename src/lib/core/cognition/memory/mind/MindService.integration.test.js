@@ -312,4 +312,286 @@ describe('MindService 集成测试', () => {
       expect(await fs.pathExists(path.join(exampleDir, 'FullCognitionExample.json'))).toBe(true);
     });
   });
+
+  describe('多语义网络（Multiple Independent Schemas）测试', () => {
+    test('应该能正确识别和分离独立的Schema组', async () => {
+      // 准备：创建多个独立的知识领域
+      const globalSemantic = new NetworkSemantic('MultiDomainSemantic');
+      
+      // 领域1：烹饪
+      const cookingSchema = new GraphSchema('烹饪');
+      const italianCue = new WordCue('意大利菜');
+      const pastaCue = new WordCue('意大利面');
+      const pizzaCue = new WordCue('披萨');
+      
+      // 领域2：量子物理
+      const quantumSchema = new GraphSchema('量子物理');
+      const waveCue = new WordCue('波粒二象性');
+      const uncertaintyCue = new WordCue('不确定性原理');
+      
+      // 领域3：区块链
+      const blockchainSchema = new GraphSchema('区块链');
+      const cryptoCue = new WordCue('加密货币');
+      const smartContractCue = new WordCue('智能合约');
+      
+      // 构建独立的语义网络
+      await mindService.addMind(cookingSchema, globalSemantic);
+      await mindService.addMind(quantumSchema, globalSemantic);
+      await mindService.addMind(blockchainSchema, globalSemantic);
+      
+      // 添加各领域的 Cue
+      await mindService.connectMinds(italianCue, cookingSchema);
+      await mindService.connectMinds(pastaCue, cookingSchema);
+      await mindService.connectMinds(pizzaCue, cookingSchema);
+      await mindService.connectMinds(italianCue, pastaCue);  // 领域内连接
+      
+      await mindService.connectMinds(waveCue, quantumSchema);
+      await mindService.connectMinds(uncertaintyCue, quantumSchema);
+      
+      await mindService.connectMinds(cryptoCue, blockchainSchema);
+      await mindService.connectMinds(smartContractCue, blockchainSchema);
+      
+      // 验证：获取独立的 Schema 组
+      const schemaGroups = globalSemantic.getConnectedSchemaGroups();
+      expect(schemaGroups).toHaveLength(3);  // 应该有3个独立的组
+      
+      // 验证：每个组包含正确的 Schema
+      const groupNames = schemaGroups.map(group => group.map(s => s.name).sort());
+      expect(groupNames).toContainEqual(['烹饪']);
+      expect(groupNames).toContainEqual(['量子物理']);
+      expect(groupNames).toContainEqual(['区块链']);
+      
+      // 验证：Mermaid 输出包含多个独立的 mindmap
+      const mermaidText = mindService.convertMindToMermaid(globalSemantic);
+      const mindmapCount = (mermaidText.match(/^mindmap$/gm) || []).length;
+      expect(mindmapCount).toBe(3);  // 应该有3个独立的 mindmap
+      
+      // 验证：不包含 global-semantic 根节点
+      expect(mermaidText).not.toContain('global-semantic');
+      expect(mermaidText).not.toContain('MultiDomainSemantic');
+    });
+
+    test('应该能正确识别通过共享Cue连接的Schema组', async () => {
+      // 准备：创建有关联的知识领域
+      const globalSemantic = new NetworkSemantic('ConnectedDomainsSemantic');
+      
+      // 领域1：健康饮食
+      const healthyFoodSchema = new GraphSchema('健康饮食');
+      const vegetableCue = new WordCue('蔬菜');
+      const nutritionCue = new WordCue('营养');
+      const cookingMethodCue = new WordCue('烹饪方法');  // 共享 Cue
+      
+      // 领域2：烹饪技巧
+      const cookingSkillSchema = new GraphSchema('烹饪技巧');
+      const stirFryCue = new WordCue('炒菜');
+      // 重用 cookingMethodCue - 这将连接两个 Schema
+      
+      // 领域3：独立的编程领域
+      const programmingSchema = new GraphSchema('编程');
+      const javascriptCue = new WordCue('JavaScript');
+      const pythonCue = new WordCue('Python');
+      
+      // 构建网络
+      await mindService.addMind(healthyFoodSchema, globalSemantic);
+      await mindService.addMind(cookingSkillSchema, globalSemantic);
+      await mindService.addMind(programmingSchema, globalSemantic);
+      
+      // 添加 Cue 到各自的 Schema
+      await mindService.connectMinds(vegetableCue, healthyFoodSchema);
+      await mindService.connectMinds(nutritionCue, healthyFoodSchema);
+      await mindService.connectMinds(cookingMethodCue, healthyFoodSchema);
+      
+      await mindService.connectMinds(stirFryCue, cookingSkillSchema);
+      await mindService.connectMinds(cookingMethodCue, cookingSkillSchema);  // 共享的 Cue
+      
+      await mindService.connectMinds(javascriptCue, programmingSchema);
+      await mindService.connectMinds(pythonCue, programmingSchema);
+      
+      // 验证：获取连接的 Schema 组
+      const schemaGroups = globalSemantic.getConnectedSchemaGroups();
+      expect(schemaGroups).toHaveLength(2);  // 应该有2个组（健康饮食+烹饪技巧 合并为1组）
+      
+      // 验证：找到包含两个 Schema 的组
+      const connectedGroup = schemaGroups.find(group => group.length === 2);
+      expect(connectedGroup).toBeDefined();
+      const connectedNames = connectedGroup.map(s => s.name).sort();
+      expect(connectedNames).toEqual(['健康饮食', '烹饪技巧']);
+      
+      // 验证：编程领域独立
+      const independentGroup = schemaGroups.find(group => group.length === 1);
+      expect(independentGroup).toBeDefined();
+      expect(independentGroup[0].name).toBe('编程');
+      
+      // 验证：Mermaid 输出
+      const mermaidText = mindService.convertMindToMermaid(globalSemantic);
+      const mindmapCount = (mermaidText.match(/^mindmap$/gm) || []).length;
+      expect(mindmapCount).toBe(2);  // 应该有2个 mindmap
+    });
+
+    test('应该能正确渲染多个独立Schema的Mermaid格式', async () => {
+      // 准备：创建示例语义网络用于文档
+      const exampleSemantic = new NetworkSemantic('DocumentationExample');
+      
+      // 创建三个完全独立的 Schema
+      const schema1 = new GraphSchema('前端开发');
+      const reactCue = new WordCue('React');
+      const vueCue = new WordCue('Vue');
+      
+      const schema2 = new GraphSchema('后端开发');
+      const nodeCue = new WordCue('Node.js');
+      const javaCue = new WordCue('Java');
+      
+      const schema3 = new GraphSchema('数据库');
+      const mysqlCue = new WordCue('MySQL');
+      const mongodbCue = new WordCue('MongoDB');
+      
+      // 构建独立网络
+      await mindService.addMind(schema1, exampleSemantic);
+      await mindService.addMind(schema2, exampleSemantic);
+      await mindService.addMind(schema3, exampleSemantic);
+      
+      await mindService.connectMinds(reactCue, schema1);
+      await mindService.connectMinds(vueCue, schema1);
+      
+      await mindService.connectMinds(nodeCue, schema2);
+      await mindService.connectMinds(javaCue, schema2);
+      
+      await mindService.connectMinds(mysqlCue, schema3);
+      await mindService.connectMinds(mongodbCue, schema3);
+      
+      // 生成 Mermaid 文本
+      const mermaidText = mindService.convertMindToMermaid(exampleSemantic);
+      
+      // 验证：包含所有三个独立的 mindmap
+      expect(mermaidText).toContain('root((前端开发))');
+      expect(mermaidText).toContain('root((后端开发))');
+      expect(mermaidText).toContain('root((数据库))');
+      
+      // 验证：包含所有技术栈
+      expect(mermaidText).toContain('React');
+      expect(mermaidText).toContain('Vue');
+      expect(mermaidText).toContain('Node.js');
+      expect(mermaidText).toContain('Java');
+      expect(mermaidText).toContain('MySQL');
+      expect(mermaidText).toContain('MongoDB');
+      
+      // 保存示例文件
+      const projectRoot = path.resolve(__dirname, '../../../../..');
+      const exampleDir = path.join(projectRoot, 'test-output', 'mind-service', 'multiple-schemas-example');
+      await fs.ensureDir(exampleDir);
+      
+      const exampleService = new MindService();
+      exampleService.setStoragePath(exampleDir);
+      await exampleService.persistSemantic(exampleSemantic);
+      await exampleService.persistMindAsMermaid(exampleSemantic, 'multiple-schemas-example');
+      
+      console.log(`\n✅ 生成了多语义网络示例文件在: ${exampleDir}`);
+      console.log('  - DocumentationExample.json: 多个独立 Schema 的语义网络');
+      console.log('  - multiple-schemas-example.mmd: Mermaid 格式的多个独立 mindmap');
+    });
+
+    test('应该能通过新词桥接原本独立的Schema', async () => {
+      // 准备：创建初始独立的知识领域
+      const globalSemantic = new NetworkSemantic('BridgingSemantic');
+      
+      // 领域1：健康生活
+      const healthSchema = new GraphSchema('健康生活');
+      const exerciseCue = new WordCue('运动');
+      const dietCue = new WordCue('饮食');
+      
+      // 领域2：技术开发
+      const techSchema = new GraphSchema('技术开发');
+      const apiCue = new WordCue('API开发');
+      const databaseCue = new WordCue('数据库设计');
+      
+      // 构建初始的独立网络
+      await mindService.addMind(healthSchema, globalSemantic);
+      await mindService.addMind(techSchema, globalSemantic);
+      
+      await mindService.connectMinds(exerciseCue, healthSchema);
+      await mindService.connectMinds(dietCue, healthSchema);
+      
+      await mindService.connectMinds(apiCue, techSchema);
+      await mindService.connectMinds(databaseCue, techSchema);
+      
+      // 验证初始状态：两个独立的 Schema 组
+      let schemaGroups = globalSemantic.getConnectedSchemaGroups();
+      expect(schemaGroups).toHaveLength(2);
+      
+      // 验证初始 Mermaid 输出：两个独立的 mindmap
+      let mermaidText = mindService.convertMindToMermaid(globalSemantic);
+      let mindmapCount = (mermaidText.match(/^mindmap$/gm) || []).length;
+      expect(mindmapCount).toBe(2);
+      
+      // 场景：添加一个新的 Schema，它与两个原本独立的领域都有关联
+      const appSchema = new GraphSchema('健康管理应用');
+      const healthDataCue = new WordCue('健康数据');  // 连接到健康领域
+      const apiDesignCue = new WordCue('API设计');     // 连接到技术领域
+      
+      // 添加新 Schema
+      await mindService.addMind(appSchema, globalSemantic);
+      
+      // 建立桥接连接
+      await mindService.connectMinds(healthDataCue, appSchema);
+      await mindService.connectMinds(apiDesignCue, appSchema);
+      
+      // 关键：将桥接词汇连接到原有的领域
+      await mindService.connectMinds(healthDataCue, healthSchema);  // 连接到健康生活
+      await mindService.connectMinds(apiDesignCue, techSchema);     // 连接到技术开发
+      
+      // 重要：还需要连接新 Schema 的 Cue 到原有领域的 Cue，形成真正的桥接
+      await mindService.connectMinds(healthDataCue, dietCue);       // 健康数据与饮食相关
+      await mindService.connectMinds(apiDesignCue, apiCue);         // API设计与API开发相关
+      
+      // 验证连接后的状态：应该合并为一个大的 Schema 组
+      schemaGroups = globalSemantic.getConnectedSchemaGroups();
+      expect(schemaGroups).toHaveLength(1);  // 三个 Schema 通过桥接词汇连成一个组
+      
+      // 验证合并后的组包含所有三个 Schema
+      const mergedGroup = schemaGroups[0];
+      expect(mergedGroup).toHaveLength(3);
+      const schemaNames = mergedGroup.map(s => s.name).sort();
+      expect(schemaNames).toEqual(['健康生活', '健康管理应用', '技术开发']);
+      
+      // 验证 Mermaid 输出：现在应该只有一个 mindmap
+      mermaidText = mindService.convertMindToMermaid(globalSemantic);
+      mindmapCount = (mermaidText.match(/^mindmap$/gm) || []).length;
+      expect(mindmapCount).toBe(1);
+      
+      // 验证合并后的 mindmap 包含所有元素
+      expect(mermaidText).toContain('健康生活');
+      expect(mermaidText).toContain('技术开发');
+      expect(mermaidText).toContain('健康管理应用');
+      expect(mermaidText).toContain('健康数据');
+      expect(mermaidText).toContain('API设计');
+      
+      // 验证根节点包含所有三个 Schema 的名称
+      expect(mermaidText).toMatch(/root\(\(.*健康生活.*健康管理应用.*技术开发.*\)\)/s);
+      
+      // 保存演示文件
+      const projectRoot = path.resolve(__dirname, '../../../../..');
+      const bridgeDir = path.join(projectRoot, 'test-output', 'mind-service', 'bridging-example');
+      await fs.ensureDir(bridgeDir);
+      
+      const bridgeService = new MindService();
+      bridgeService.setStoragePath(bridgeDir);
+      
+      // 保存桥接前的状态（模拟）
+      const beforeBridgeSemantic = new NetworkSemantic('BeforeBridge');
+      const health1 = new GraphSchema('健康生活');
+      const tech1 = new GraphSchema('技术开发');
+      await bridgeService.addMind(health1, beforeBridgeSemantic);
+      await bridgeService.addMind(tech1, beforeBridgeSemantic);
+      await bridgeService.persistMindAsMermaid(beforeBridgeSemantic, 'before-bridge');
+      
+      // 保存桥接后的状态
+      await bridgeService.persistSemantic(globalSemantic);
+      await bridgeService.persistMindAsMermaid(globalSemantic, 'after-bridge');
+      
+      console.log(`\n✅ 生成了桥接示例文件在: ${bridgeDir}`);
+      console.log('  - before-bridge.mmd: 桥接前的两个独立 mindmap');
+      console.log('  - after-bridge.mmd: 桥接后合并为一个 mindmap');
+      console.log('  - BridgingSemantic.json: 完整的桥接后语义网络');
+    });
+  });
 });

@@ -27,6 +27,10 @@ class Engram {
   getStrength() {
     throw new Error('Engram.getStrength() must be implemented');
   }
+
+  getSchema() {
+    throw new Error('Engram.getSchema() must be implemented');
+  }
 }
 
 module.exports = { Engram, EngramType };

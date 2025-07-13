@@ -20,9 +20,20 @@ class Cognition {
   
   /**
    * 记住 - 保存新记忆
-   * @param {Engram} engram - 记忆痕迹对象（schema 必须是 Mermaid 格式字符串）
+   * @param {string} content - 记忆内容（自然语言描述）
+   * @param {string} schema - 结构化认知（Mermaid mindmap 格式，可选）
+   * @param {number} strength - 记忆强度（0-1之间，默认1.0）
    */
-  remember(engram) {
+  remember(content, schema = null, strength = 1.0) {
+    // 在内部创建 Engram 对象
+    const { Engram } = require('./engram/Engram');
+    const engram = new Engram(content, schema);
+    
+    // 设置强度
+    if (strength >= 0 && strength <= 1) {
+      engram.strength = strength;
+    }
+    
     return this.memoryService.remember(engram);
   }
   

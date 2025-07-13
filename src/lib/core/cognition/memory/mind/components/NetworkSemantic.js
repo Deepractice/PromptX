@@ -208,6 +208,60 @@ class NetworkSemantic extends Semantic {
   }
 
   /**
+   * 获取连接的 Schema 组
+   * 通过共享 Cue 或直接连接关系来判断 Schema 是否相连
+   * @returns {Array<Array<Schema>>} Schema 组数组，每个组内的 Schema 相互连接
+   */
+  getConnectedSchemaGroups() {
+    const schemas = this.getAllSchemas();
+    const groups = [];
+    const visited = new Set();
+    
+    schemas.forEach(schema => {
+      if (!visited.has(schema.name)) {
+        // 深度优先搜索找出所有连接的 schema
+        const connectedGroup = this._findConnectedSchemas(schema, visited);
+        groups.push(connectedGroup);
+      }
+    });
+    
+    return groups;
+  }
+
+  /**
+   * 深度优先搜索找出与给定 Schema 连接的所有 Schema
+   * @param {Schema} startSchema - 起始 Schema
+   * @param {Set} visited - 已访问的 Schema 名称集合
+   * @returns {Array<Schema>} 连接的 Schema 数组
+   * @private
+   */
+  _findConnectedSchemas(startSchema, visited) {
+    const group = [startSchema];
+    visited.add(startSchema.name);
+    
+    // 获取起始 Schema 的所有 Cue
+    const startCues = new Set(startSchema.getCues().map(cue => cue.word));
+    
+    this.getAllSchemas().forEach(otherSchema => {
+      if (!visited.has(otherSchema.name)) {
+        // 检查是否有共同的 Cue
+        const otherCues = otherSchema.getCues();
+        const hasSharedCue = otherCues.some(cue => startCues.has(cue.word));
+        
+        // 检查是否有直接连接（通过 externalConnections）
+        const hasDirectConnection = startSchema.isConnectedTo && startSchema.isConnectedTo(otherSchema);
+        
+        if (hasSharedCue || hasDirectConnection) {
+          // 递归查找连接的 Schema
+          group.push(...this._findConnectedSchemas(otherSchema, visited));
+        }
+      }
+    });
+    
+    return group;
+  }
+
+  /**
    * 检查是否与另一个Semantic相等
    * @param {Semantic} other - 对比的Semantic
    * @returns {boolean} 是否相等

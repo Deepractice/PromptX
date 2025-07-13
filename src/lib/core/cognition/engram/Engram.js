@@ -32,6 +32,10 @@ class Engram {
   getStrength() {
     return this.strength;
   }
+
+  getSchema() {
+    return this.schema;
+  }
 }
 
 module.exports = { Engram, EngramType };

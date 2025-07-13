@@ -87,10 +87,9 @@ async function testPrimeFunction() {
       }
     ]
 
-    // 记住这些带有 schema 的内容
+    // 记住这些带有 schema 的内容（使用新的简化接口）
     memoriesWithSchema.forEach((memory, index) => {
-      const engram = new Engram(memory.content, memory.schema)
-      cognition.remember(engram)
+      cognition.remember(memory.content, memory.schema)
       console.log(`✅ 记忆 ${index + 1}: "${memory.content}"`)
     })
     console.log('\n')
@@ -156,8 +155,7 @@ async function testPrimeFunction() {
     ]
     
     additionalMemories.forEach((memory) => {
-      const engram = new Engram(memory.content, memory.schema)
-      cognition.remember(engram)
+      cognition.remember(memory.content, memory.schema)
       console.log(`✅ 添加额外记忆: "${memory.content}"`)
     })
     
