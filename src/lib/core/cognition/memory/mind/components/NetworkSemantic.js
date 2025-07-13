@@ -23,7 +23,7 @@ function addPersistableMethods(instance) {
   instance.persist = async function() {
     if (!this._storagePath) return;
     
-    const filePath = path.join(this._storagePath, `${this.name}.bin`);
+    const filePath = path.join(this._storagePath, 'semantic.bin');
     
     // 创建一个干净的对象用于序列化
     const cleanObject = {
@@ -390,7 +390,7 @@ class NetworkSemantic extends Semantic {
 
 // 静态加载方法
 NetworkSemantic.load = async function(storagePath, semanticName) {
-  const filePath = path.join(storagePath, `${semanticName}.bin`);
+  const filePath = path.join(storagePath, 'semantic.bin');
   
   try {
     const buffer = await fs.readFile(filePath);

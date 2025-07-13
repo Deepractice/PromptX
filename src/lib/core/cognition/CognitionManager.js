@@ -65,7 +65,7 @@ class CognitionManager {
     // 配置认知实例
     const config = {
       longTermPath: path.join(cognitionDir, 'longterm.db'),
-      semanticPath: path.join(cognitionDir, 'semantic')
+      semanticPath: cognitionDir  // 直接使用认知目录，不再创建子目录
     };
     
     // 创建认知实例

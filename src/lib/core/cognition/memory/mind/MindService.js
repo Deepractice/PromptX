@@ -81,12 +81,20 @@ class MindService {
     }
     const semantic = this.currentSemantic;
     
-    // 2. 解析 mindmap 为 Schema
-    const newSchema = peggyMindmap.parse(mindmapText);
+    // 2. 规范化 mindmap 格式
+    let normalizedMindmap = mindmapText.trim();
+    if (!normalizedMindmap.startsWith('mindmap')) {
+      console.log('[MindService.remember] Auto-fixing mindmap format: adding "mindmap" prefix');
+      normalizedMindmap = `mindmap\n${normalizedMindmap}`;
+    }
+    
+    // 3. 解析 mindmap 为 Schema
+    const newSchema = peggyMindmap.parse(normalizedMindmap);
     console.log('[MindService.remember] Parsed schema:', newSchema.name);
     
-    // 3. 处理 Schema 合并
-    const existingSchema = semantic.findSchema(newSchema.name);
+    // 4. 语义等价性检测和 Schema 合并
+    const semanticEquivalents = this._findSemanticEquivalents(semantic, newSchema.name);
+    const existingSchema = semantic.findSchema(newSchema.name) || semanticEquivalents[0];
     if (existingSchema) {
       // 使用 Mind 接口的 connect 方法进行合并
       console.log('[MindService.remember] Merging with existing schema using connect');
@@ -230,6 +238,47 @@ class MindService {
     await this.addMind(mind, semantic);
     
     // NetworkSemantic 会自动持久化
+  }
+
+  /**
+   * 查找语义等价的Schema
+   * @param {NetworkSemantic} semantic - 语义网络
+   * @param {string} schemaName - 待查找的Schema名称
+   * @returns {Array<GraphSchema>} 语义等价的Schema列表
+   * @private
+   */
+  _findSemanticEquivalents(semantic, schemaName) {
+    // 简单的语义映射表 - 后续可以升级为更智能的方案
+    const semanticMappings = {
+      '个人生活': ['personal-life', 'personal-lifestyle', 'life-style'],
+      'personal-life': ['个人生活', 'personal-lifestyle', 'life-style'],
+      '饮食偏好': ['food-preferences', 'dietary-preferences'],
+      'food-preferences': ['饮食偏好', 'dietary-preferences'],
+      '蔬菜': ['vegetables', 'veggies'],
+      'vegetables': ['蔬菜', 'veggies'],
+      '西红柿': ['tomato', 'tomatoes'],
+      'tomato': ['西红柿', 'tomatoes']
+    };
+
+    console.log(`[MindService.remember] Checking semantic equivalents for: ${schemaName}`);
+    console.log(`[MindService.remember] Available schemas in semantic:`, semantic.getAllSchemas().map(s => s.name));
+    
+    const equivalentNames = semanticMappings[schemaName] || [];
+    console.log(`[MindService.remember] Equivalent names to check:`, equivalentNames);
+    
+    const equivalentSchemas = [];
+
+    for (const name of equivalentNames) {
+      const schema = semantic.findSchema(name);
+      if (schema) {
+        console.log(`[MindService.remember] Found semantic equivalent: ${schemaName} ≈ ${name}`);
+        equivalentSchemas.push(schema);
+      } else {
+        console.log(`[MindService.remember] No schema found for equivalent name: ${name}`);
+      }
+    }
+
+    return equivalentSchemas;
   }
 
 }
