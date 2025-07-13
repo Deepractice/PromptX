@@ -64,7 +64,7 @@ class CognitionManager {
     
     // 配置认知实例
     const config = {
-      longTermPath: path.join(cognitionDir, 'longterm'),
+      longTermPath: path.join(cognitionDir, 'longterm.db'),
       semanticPath: path.join(cognitionDir, 'semantic')
     };
     

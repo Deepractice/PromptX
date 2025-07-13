@@ -15,14 +15,14 @@ class MemoryService {
     // 创建长期记忆（使用配置的存储路径）
     this.longTerm = new LongTerm({ 
       inMemoryOnly: process.env.NODE_ENV === 'test',
-      filename: config.longTermPath
+      dbPath: config.longTermPath
     });
     
     // 使用默认评估器
     this.evaluator = new SimpleEvaluator();
     
-    // 创建语义内隐记忆
-    this.semantic = new Semantic();
+    // 创建语义内隐记忆（传入语义存储路径配置）
+    this.semantic = new Semantic(config.semanticPath);
     
     // 使用 SimpleConsolidator，同时处理长期记忆和语义网络
     this.consolidator = new SimpleConsolidator(this.longTerm, this.semantic);
@@ -40,10 +40,17 @@ class MemoryService {
    * 记住 - 保存新记忆
    * @param {Engram} engram - 记忆痕迹对象（schema 必须是 Mermaid 格式字符串）
    */
-  remember(engram) {
-    // 简单地保存到短期记忆
-    // 短期记忆会自动处理溢出和巩固
-    this.shortTerm.remember(engram);
+  async remember(engram) {
+    try {
+      console.log('[MemoryService.remember] Processing engram:', engram.content);
+      // 简单地保存到短期记忆
+      // 短期记忆会自动处理溢出和巩固
+      await this.shortTerm.remember(engram);
+      console.log('[MemoryService.remember] Successfully saved to memory');
+    } catch (error) {
+      console.error('[MemoryService.remember] Error:', error);
+      throw error;
+    }
   }
 
   /**
@@ -80,13 +87,6 @@ class MemoryService {
     return await this.semantic.prime(input);
   }
 
-  /**
-   * 获取语义网络
-   * @returns {NetworkSemantic} 当前的语义网络
-   */
-  getSemantic() {
-    return this.semantic.getSemantic();
-  }
 }
 
 module.exports = { MemoryService };

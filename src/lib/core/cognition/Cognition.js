@@ -55,13 +55,6 @@ class Cognition {
     return this.memoryService.prime();
   }
   
-  /**
-   * 获取语义网络
-   * @returns {NetworkSemantic} 当前的语义网络
-   */
-  getSemantic() {
-    return this.memoryService.getSemantic();
-  }
   
   /**
    * 获取配置

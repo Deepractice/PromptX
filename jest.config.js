@@ -52,6 +52,14 @@ module.exports = {
     '^@tests/(.*)$': '<rootDir>/src/tests/$1'
   },
   
+  // 确保能解析node_modules
+  moduleDirectories: ['node_modules', 'src'],
+  
+  // 转换忽略node_modules（除了chevrotain）
+  transformIgnorePatterns: [
+    'node_modules/(?!(chevrotain)/)'
+  ],
+  
   // 详细输出
   verbose: false,  // 减少输出噪音
   

@@ -13,14 +13,14 @@ class ShortTerm extends ShortTermMemory {
     this.consolidator = consolidator; // 巩固器：执行巩固过程
   }
 
-  remember(engram) {
+  async remember(engram) {
     // 新记忆入队
     this.queue.push(engram);
     
     // 检查容量，超过容量则触发巩固流程
     // 保持 > 逻辑，为未来的 pull 模式预留设计空间
     if (this.queue.length > this.capacity) {
-      this.processOldestMemory();
+      await this.processOldestMemory();
     }
   }
 
@@ -39,14 +39,21 @@ class ShortTerm extends ShortTermMemory {
   /**
    * 处理最老的记忆：评估 -> 巩固或丢弃
    */
-  processOldestMemory() {
+  async processOldestMemory() {
     const oldestEngram = this.queue.shift(); // FIFO出队
     
-    if (this.evaluator.evaluate(oldestEngram)) {
-      // 值得巩固：交给Consolidator处理
-      this.consolidator.consolidate(oldestEngram);
+    try {
+      if (this.evaluator.evaluate(oldestEngram)) {
+        // 值得巩固：交给Consolidator处理
+        await this.consolidator.consolidate(oldestEngram);
+        console.log('[ShortTerm.processOldestMemory] Consolidated engram');
+      } else {
+        console.log('[ShortTerm.processOldestMemory] Engram not worth consolidating, discarded');
+      }
+    } catch (error) {
+      console.error('[ShortTerm.processOldestMemory] Error during consolidation:', error);
+      throw error;
     }
-    // 不值得巩固：直接丢弃（什么都不做）
   }
 
   /**

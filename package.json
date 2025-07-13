@@ -54,12 +54,12 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@mermaid-js/parser": "^0.6.1",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@reaxi/node-detect-runtime": "^0.1.0",
     "body-parser": "^1.20.2",
     "boxen": "^5.1.2",
     "chalk": "^4.1.2",
+    "chevrotain": "^10.5.0",
     "commander": "^11.0.0",
     "cors": "^2.8.5",
     "env-paths": "2.2.1",
@@ -74,6 +74,7 @@
     "joi": "^17.11.0",
     "nodemailer": "^7.0.3",
     "ora": "^5.4.1",
+    "peggy": "^5.0.5",
     "pkg-dir": "^8.0.0",
     "pnpm": "^10.12.4",
     "resolve": "^1.22.10",

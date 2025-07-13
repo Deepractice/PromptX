@@ -418,36 +418,41 @@ ${result.content}
     
     content += `💡 **现在可以立即开始以 \`${roleId}\` (${roleInfo.name}) 身份提供专业服务！**\n`
 
-    // 自动执行 recall 命令
-    content += await this.executeRecall(roleId)
+    // 自动执行 prime 激活语义网络
+    content += await this.executePrime(roleId)
 
     return content
   }
 
   /**
-   * 自动执行 recall 命令
+   * 自动执行 prime 激活语义网络
    */
-  async executeRecall (roleId) {
+  async executePrime (roleId) {
     try {
-      // 懒加载 RecallCommand
-      const RecallCommand = require('./RecallCommand')
-      const recallCommand = new RecallCommand()
+      // 导入 CognitionManager
+      const { CognitionManager } = require('../../cognition/CognitionManager')
+      const cognitionManager = new CognitionManager(this.resourceManager)
       
-      // 执行 recall，获取所有记忆（传入角色ID参数）
-      const recallContent = await recallCommand.getContent([roleId])
+      // 获取角色的认知实例并激活语义网络
+      const cognition = await cognitionManager.getCognition(roleId)
+      const semanticMermaid = await cognition.prime()
+      
+      if (!semanticMermaid || semanticMermaid.trim() === '') {
+        // 语义网络为空，静默处理
+        return ''
+      }
       
       return `---
-## 🧠 自动记忆检索结果
-${recallContent}
-⚠️ **重要**: recall已自动执行完成，以上记忆将作为角色工作的重要参考依据
+## 🧠 语义网络激活
+\`\`\`mermaid
+${semanticMermaid}
+\`\`\`
+💡 **语义网络已激活**：相关概念和知识已预热，AI现在处于最佳认知状态
 `
     } catch (error) {
-      logger.error('Auto recall error:', error)
-      return `---
-## 🧠 自动记忆检索结果
-⚠️ **记忆检索出现问题**: ${error.message}
-💡 **建议**: 可使用 MCP PromptX 工具的 recall 功能来检索相关记忆
-`
+      logger.error('Auto prime error:', error)
+      // Prime失败不影响角色激活，静默处理
+      return ''
     }
   }
 
@@ -473,12 +478,12 @@ ${recallContent}
     }
 
     return {
-      currentState: 'role_activated_with_memory',
-      availableTransitions: ['welcome', 'remember', 'learn'],
+      currentState: 'role_activated',
+      availableTransitions: ['welcome', 'remember', 'learn', 'recall'],
       nextActions: [
         {
           name: '开始专业服务',
-          description: '角色已激活并完成记忆检索，可直接提供专业服务',
+          description: '角色已激活，语义网络已预热，可直接提供专业服务',
           method: '开始对话',
           priority: 'high'
         },

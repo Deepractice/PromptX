@@ -1,16 +1,19 @@
 const { ImplicitMemory } = require('../interfaces/ImplicitMemory.js');
-const { mindService, NetworkSemantic } = require('../mind/index.js');
+const { MindService, NetworkSemantic } = require('../mind/index.js');
 
 /**
  * 语义内隐记忆 - 管理语义网络
  * @implements {ImplicitMemory}
  */
 class Semantic extends ImplicitMemory {
-  constructor() {
+  constructor(semanticPath) {
     super();
-    this.mindService = mindService;
-    // 创建一个全局的语义网络实例
-    this.semantic = new NetworkSemantic('global-semantic');
+    // 创建独立的MindService实例并设置存储路径
+    this.mindService = new MindService();
+    if (semanticPath) {
+      this.mindService.setStoragePath(semanticPath);
+    }
+    // 不再直接创建NetworkSemantic，信任调用时序（prime先执行）
   }
 
   /**
@@ -18,12 +21,26 @@ class Semantic extends ImplicitMemory {
    * @param {import('../../engram/Engram.js').Engram} engram - 记忆痕迹
    */
   async remember(engram) {
-    // schema 是 Mermaid 格式字符串，转换为 Schema 对象
-    const schema = this.mindService.converter.convertMermaidToSchema(engram.schema);
-    
-    // 只有成功转换的 schema 才添加到语义网络
-    if (schema) {
-      await this.mindService.addMind(schema, this.semantic);
+    try {
+      console.log('[Semantic.remember] Processing engram:', engram.content);
+      console.log('[Semantic.remember] Schema:', engram.schema);
+      
+      // schema 是 Mermaid 格式字符串，转换为 Schema 对象
+      const schema = this.mindService.converter.convertMermaidToSchema(engram.schema);
+      
+      if (!schema) {
+        throw new Error('Failed to convert schema from engram');
+      }
+      
+      console.log('[Semantic.remember] Converted schema:', schema);
+      
+      // 委托给MindService处理加载、添加、保存的完整流程
+      await this.mindService.addMindToSemantic(schema, 'global-semantic');
+      
+      console.log('[Semantic.remember] Successfully added to semantic network');
+    } catch (error) {
+      console.error('[Semantic.remember] Error:', error);
+      throw error; // 重新抛出错误，让调用者处理
     }
   }
 
@@ -38,35 +55,15 @@ class Semantic extends ImplicitMemory {
   }
 
   /**
-   * 启动效应 - 返回当前语义网络的 Mermaid 表示
-   * @param {string} semanticName - 语义网络名称（可选，如果提供则先加载）
+   * 启动效应 - 加载或创建语义网络并返回 Mermaid 表示
+   * @param {string} semanticName - 语义网络名称（可选）
    * @returns {string} Mermaid mindmap 格式的字符串
    */
   async prime(semanticName) {
-    // 如果提供了名称，先尝试加载
-    if (semanticName) {
-      try {
-        const loadedSemantic = await this.mindService.loadSemantic(semanticName);
-        if (loadedSemantic) {
-          this.semantic = loadedSemantic;
-        }
-      } catch (error) {
-        // 加载失败也继续，返回当前的语义网络
-        console.warn(`Failed to load semantic: ${error.message}`);
-      }
-    }
-    
-    // 返回当前语义网络的 Mermaid 表示
-    return this.mindService.convertMindToMermaid(this.semantic);
+    // 委托给MindService处理加载/创建逻辑
+    return await this.mindService.primeSemantic(semanticName || 'global-semantic');
   }
 
-  /**
-   * 获取当前的语义网络
-   * @returns {NetworkSemantic}
-   */
-  getSemantic() {
-    return this.semantic;
-  }
 }
 
 module.exports = Semantic;

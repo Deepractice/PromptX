@@ -3,6 +3,41 @@
 
 const { Semantic } = require('../interfaces/Semantic.js');
 const Graph = require('graphology');
+const v8 = require('v8');
+const fs = require('fs').promises;
+const path = require('path');
+
+// 持久化 Mixin
+const PersistableMixin = {
+  _storagePath: null,
+  _autoPersist: true,
+  
+  setStoragePath(path) {
+    this._storagePath = path;
+  },
+  
+  setAutoPersist(enabled) {
+    this._autoPersist = enabled;
+  },
+  
+  async persist() {
+    if (!this._storagePath) return;
+    
+    const filePath = path.join(this._storagePath, `${this.name}.bin`);
+    const buffer = v8.serialize(this);
+    
+    // 确保目录存在
+    await fs.mkdir(this._storagePath, { recursive: true });
+    await fs.writeFile(filePath, buffer);
+  },
+  
+  async _triggerPersist() {
+    if (this._autoPersist) {
+      // 异步持久化，不阻塞主流程
+      setImmediate(() => this.persist().catch(console.error));
+    }
+  }
+};
 
 class NetworkSemantic extends Semantic {
   /**
@@ -21,6 +56,9 @@ class NetworkSemantic extends Semantic {
     
     // 外部连接：与其他Semantic的连接关系（认知网络的合并）
     this.externalConnections = new Set();
+    
+    // 混入持久化能力
+    Object.assign(this, PersistableMixin);
   }
 
 
@@ -112,6 +150,10 @@ class NetworkSemantic extends Semantic {
     
     // 添加到快速查找映射
     this.cueLayer.set(cue.word, cue);
+    
+    // 触发自动持久化
+    this._triggerPersist();
+    
     return this;
   }
 
@@ -148,6 +190,10 @@ class NetworkSemantic extends Semantic {
     }
     
     this.schemaLayer.set(schema.name, schema);
+    
+    // 触发自动持久化
+    this._triggerPersist();
+    
     return this;
   }
 
@@ -310,5 +356,26 @@ class NetworkSemantic extends Semantic {
     return this.schemaLayer.get(name) || null;
   }
 }
+
+// 静态加载方法
+NetworkSemantic.load = async function(storagePath, semanticName) {
+  const filePath = path.join(storagePath, `${semanticName}.bin`);
+  
+  try {
+    const buffer = await fs.readFile(filePath);
+    const semantic = v8.deserialize(buffer);
+    
+    // 恢复 mixin 方法
+    Object.assign(semantic, PersistableMixin);
+    semantic.setStoragePath(storagePath);
+    
+    return semantic;
+  } catch (error) {
+    // 文件不存在，创建新的
+    const semantic = new NetworkSemantic(semanticName);
+    semantic.setStoragePath(storagePath);
+    return semantic;
+  }
+};
 
 module.exports = { NetworkSemantic };
