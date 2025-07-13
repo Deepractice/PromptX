@@ -88,14 +88,12 @@ class MindService {
     // 3. 处理 Schema 合并
     const existingSchema = semantic.findSchema(newSchema.name);
     if (existingSchema) {
-      // 合并 Cues
-      console.log('[MindService.remember] Merging with existing schema');
-      newSchema.getCues().forEach(cue => {
-        if (!existingSchema.hasCue(cue)) {
-          existingSchema.addCue(cue);
-          // 同步新的 Cue 到全局 cueLayer
-          semantic.cueLayer.set(cue.word, cue);
-        }
+      // 使用 Mind 接口的 connect 方法进行合并
+      console.log('[MindService.remember] Merging with existing schema using connect');
+      existingSchema.connect(newSchema);
+      // 同步合并后的 Cues 到全局 cueLayer
+      existingSchema.getCues().forEach(cue => {
+        semantic.cueLayer.set(cue.word, cue);
       });
     } else {
       // 添加新 Schema

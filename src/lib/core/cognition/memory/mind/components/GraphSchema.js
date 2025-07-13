@@ -43,10 +43,35 @@ class GraphSchema extends Schema {
       this.addCue(other);
       return this;
     } else if (otherLayer === 2) {
-      // 同级Schema连接：建立事件间的关联关系
+      // 同级Schema连接：合并内容
       if (other instanceof GraphSchema) {
-        this.externalConnections.add(other.name);
-        other.externalConnections.add(this.name);
+        // 如果是同名 Schema，进行内容合并
+        if (this.name === other.name) {
+          // 合并所有 Cues
+          other.getCues().forEach(cue => {
+            if (!this.hasCue(cue)) {
+              this.addCue(cue);
+            }
+          });
+          
+          // 合并内部连接关系
+          other.getCueConnections().forEach(({ source, target }) => {
+            const sourceCue = this.cueMap.get(source);
+            const targetCue = this.cueMap.get(target);
+            if (sourceCue && targetCue) {
+              this.connectCues(sourceCue, targetCue);
+            }
+          });
+          
+          // 合并外部连接
+          other.externalConnections.forEach(connection => {
+            this.externalConnections.add(connection);
+          });
+        } else {
+          // 不同名 Schema，只建立外部连接
+          this.externalConnections.add(other.name);
+          other.externalConnections.add(this.name);
+        }
       }
       return this;
     } else if (otherLayer === 3) {
@@ -199,6 +224,7 @@ class GraphSchema extends Schema {
     }
     return this.internalGraph.degree(cue.word);
   }
+
 
   /**
    * 检查是否与另一个Schema连接
