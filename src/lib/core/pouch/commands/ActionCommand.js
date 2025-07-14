@@ -435,13 +435,26 @@ ${result.content}
         return ''
       }
       
-      return `---
+      let output = `---
 ## 🧠 语义网络激活
 \`\`\`mermaid
 ${semanticMermaid}
 \`\`\`
 💡 **语义网络已激活**：相关概念和知识已预热，AI现在处于最佳认知状态
 `
+      
+      // 尝试激活程序性记忆
+      try {
+        const proceduralPatterns = await cognition.primeProcedural()
+        if (proceduralPatterns) {
+          output += '\n' + proceduralPatterns
+        }
+      } catch (error) {
+        // 程序性记忆激活失败不影响主流程
+        logger.debug('Procedural prime failed:', error)
+      }
+      
+      return output
     } catch (error) {
       logger.error('Auto prime error:', error)
       // Prime失败不影响角色激活，静默处理

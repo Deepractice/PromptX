@@ -5,10 +5,11 @@ const Consolidator = require('../interfaces/Consolidator.js');
  * @implements {Consolidator}
  */
 class SimpleConsolidator extends Consolidator {
-  constructor(longTerm, semantic) {
+  constructor(longTerm, semantic, procedural) {
     super();
     this.longTerm = longTerm;
     this.semantic = semantic;
+    this.procedural = procedural;
   }
 
   /**
@@ -31,6 +32,12 @@ class SimpleConsolidator extends Consolidator {
         console.log('[SimpleConsolidator.consolidate] Added to semantic network');
       } else {
         console.warn('[SimpleConsolidator.consolidate] No semantic memory available');
+      }
+      
+      // 3. 如果是PATTERN类型，也存入程序性记忆
+      if (this.procedural && engram.getType() === 'PATTERN') {
+        await this.procedural.remember(engram);
+        console.log('[SimpleConsolidator.consolidate] Added to procedural memory');
       }
       
       return engram;

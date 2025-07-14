@@ -7,6 +7,7 @@ const { LongTerm } = require('./components/LongTerm');
 const { SimpleEvaluator } = require('./formation');
 const SimpleConsolidator = require('./formation/components/SimpleConsolidator');
 const Semantic = require('./components/Semantic.js');
+const Procedural = require('./components/Procedural.js');
 
 class MemoryService {
   constructor(config = {}) {
@@ -24,8 +25,11 @@ class MemoryService {
     // 创建语义内隐记忆（传入语义存储路径配置）
     this.semantic = new Semantic(config.semanticPath);
     
-    // 使用 SimpleConsolidator，同时处理长期记忆和语义网络
-    this.consolidator = new SimpleConsolidator(this.longTerm, this.semantic);
+    // 创建程序性内隐记忆（传入程序性存储路径配置）
+    this.procedural = new Procedural(config.proceduralPath);
+    
+    // 使用 SimpleConsolidator，同时处理长期记忆、语义网络和程序性记忆
+    this.consolidator = new SimpleConsolidator(this.longTerm, this.semantic, this.procedural);
     
     // 创建短期记忆，容量设为0实现立即巩固
     this.shortTerm = new ShortTerm(this.evaluator, this.consolidator, 0);
@@ -85,6 +89,14 @@ class MemoryService {
   async prime(input) {
     // 调用语义内隐记忆的 prime 方法，直接返回 Mermaid
     return await this.semantic.prime(input);
+  }
+
+  /**
+   * 启动程序性记忆 - 激活行为模式
+   * @returns {string} 格式化的行为模式列表
+   */
+  async primeProcedural() {
+    return await this.procedural.prime();
   }
 
 }

@@ -11,7 +11,9 @@ class Cognition {
       // 长期记忆存储路径
       longTermPath: config.longTermPath || './.cognition/longterm',
       // 语义网络存储路径
-      semanticPath: config.semanticPath || './.cognition/semantic'
+      semanticPath: config.semanticPath || './.cognition/semantic',
+      // 程序性记忆存储路径
+      proceduralPath: config.proceduralPath || './.cognition/procedural'
     };
     
     // 创建记忆服务（传入配置）
@@ -60,6 +62,14 @@ class Cognition {
    */
   async prime() {
     return this.memoryService.prime();
+  }
+  
+  /**
+   * 启动程序性记忆 - 激活行为模式
+   * @returns {string} 格式化的行为模式列表
+   */
+  async primeProcedural() {
+    return this.memoryService.primeProcedural();
   }
   
   
