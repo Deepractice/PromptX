@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/deepractice-promptx-badge.png)](https://mseep.ai/app/deepractice-promptx)
+
 <div align="center">
   <img src="assets/logo/Creative PromptX Duck Logo 4.svg" alt="PromptX Logo" width="120" height="120"/>
   <h1>PromptX · 领先的AI上下文工程平台</h1>
