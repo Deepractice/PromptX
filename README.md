@@ -154,19 +154,17 @@
 
 > **💡 提示：** 配置中特意指定了官方镜像源 `registry.npmjs.org`，这可以避免因使用非官方镜像导致的安装问题。如果您发现安装很慢，建议使用代理工具加速，而不是切换到其他镜像源。
 
-### ✅ **安装成功确认**
+### 📖 **详细安装指南**
 
-配置完成并重启AI应用后，当你看到以下MCP工具出现时，即代表PromptX安装成功：
+| 客户端 | 安装教程 | 平台 |
+|--------|----------|------|
+| **Claude Code** | [Mac/Linux 安装指南](https://x.deepractice.ai/topic/32/%E5%A6%82%E4%BD%95%E5%9C%A8-claude-code-%E4%B8%AD%E5%AE%89%E8%A3%85-promptx-mcp) | Mac/Linux |
+| **Claude Code (Windows)** | [Windows 特殊配置](https://x.deepractice.ai/topic/24/windows-claude-code%E5%AE%89%E8%A3%85promptx%E7%9A%84%E6%96%B9%E6%B3%95) | Windows |
+| **Cursor** | [安装配置教程](https://x.deepractice.ai/topic/30/%E5%A6%82%E4%BD%95%E5%9C%A8cursor%E4%B8%AD%E5%AE%89%E8%A3%85promptx-mcp) | 全平台 |
+| **Cline** | [快速安装指南](https://x.deepractice.ai/topic/33/%E5%A6%82%E4%BD%95%E5%9C%A8cline%E4%B8%AD%E5%AE%89%E8%A3%85promptx-mcp) | VS Code |
+| **Augment** | [安装使用教程](https://x.deepractice.ai/topic/31/%E5%A6%82%E4%BD%95%E5%9C%A8augment%E4%B8%AD%E5%AE%89%E8%A3%85promptx-mcp) | 全平台 |
 
-<img src="assets/install-success.jpg" alt="PromptX MCP工具安装成功示意图" width="80%">
-
-看到这些工具说明PromptX已成功连接！现在就可以开始使用"Chat is All you Need"的体验了。
-
-📖 **[完整安装配置指南](https://github.com/Deepractice/PromptX/wiki/PromptX-MCP-Install)** - 包含各种客户端的详细配置方法和故障排除
-
-### 不知道MCP是什么？ [点击查看 MCP幼儿园教程 BiliBili](https://www.bilibili.com/video/BV1HFd6YhErb)
-
-目前所有支持 MCP 协议的 AI 客户端都可以使用 PromptX。主要包括：**Claude Desktop**、**Cursor**、**Windsurf**、**Cline**、**Zed**、**Continue** 等主流 AI 编程工具，以及更多正在接入中的应用。
+更多客户端安装方法请访问：**[PromptX 安装文档中心](https://x.deepractice.ai/category/8/promptx)**
 
 ---
 
