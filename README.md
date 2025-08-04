@@ -2,7 +2,7 @@
   <img src="assets/logo/Creative PromptX Duck Logo 4.svg" alt="PromptX Logo" width="120" height="120"/>
   <h1>PromptX · 领先的AI上下文工程平台</h1>
   <h2>✨ Chat is all you need - 革命性交互设计，让AI Agent秒变行业专家</h2>
-  <p><strong>核心功能模块：</strong><a href="https://github.com/Deepractice/dpml">提示词结构化协议</a> | <a href="https://github.com/Deepractice/PATEOAS">AI状态化协议</a> | 记忆系统 | 女娲角色工坊 | 鲁班工具工坊</p>
+  <p><strong>核心功能模块：</strong><a href="https://github.com/Deepractice/dpml">提示词结构化协议</a> | <a href="https://github.com/Deepractice/PATEOAS">AI状态化协议</a> | <a href="https://github.com/Deepractice/Monogent">AI个体认知系统</a> | 女娲角色工坊 | 鲁班工具工坊</p>
   <p>基于MCP协议，一行命令为Claude、Cursor等AI应用注入专业能力</p>
 
   <!-- Badges -->
