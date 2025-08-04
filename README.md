@@ -721,8 +721,16 @@ AI不仅仅是技术工具，更是重新定义生活方式的革命力量。我
 
 ### 🤝 **加入我们**
 
+#### 📱 **加入社区微信群**
+扫描下方二维码，添加开发者微信，邀请你加入技术交流群：
+
 <div align="center">
-  <img src="assets/qrcode.jpg" alt="Deepractice深度实践社区" width="200">
+  <img src="assets/qrcode.jpg" alt="添加开发者微信" width="200">
 </div>
+
+#### 💬 **加入社区讨论**
+访问我们的在线社区，参与技术讨论和经验分享：
+
+🔗 **[Deepractice 社区论坛](https://x.deepractice.ai)**
 
 
