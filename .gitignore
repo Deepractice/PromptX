@@ -92,6 +92,7 @@ temp/
 /.promptx/*.bin
 /.promptx/*.json
 /.promptx/*.log
+/.promptx/resource/project.registry.json
 
 /.idea/
 /.vscode/
