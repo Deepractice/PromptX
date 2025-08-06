@@ -27,13 +27,28 @@ class WelcomeCommand extends BasePouchCommand {
    * 动态加载角色注册表 - 使用新的RegistryData架构
    */
   async loadRoleRegistry () {
+    logger.info('[WelcomeCommand] Loading role registry...')
+    
     // 确保ResourceManager已初始化
     if (!this.resourceManager.initialized) {
+      logger.info('[WelcomeCommand] ResourceManager not initialized, initializing now...')
       await this.resourceManager.initializeWithNewArchitecture()
     }
     
     // 直接使用ResourceManager的注册表，无需重复处理
-    return this.resourceManager.registryData.getResourcesByProtocol('role')
+    const roles = this.resourceManager.registryData.getResourcesByProtocol('role')
+    
+    // 记录加载的角色信息
+    logger.info('[WelcomeCommand] Loaded roles:', {
+      count: roles.length,
+      roleList: roles.map(r => ({
+        id: r.id,
+        source: r.source,
+        reference: r.reference
+      }))
+    })
+    
+    return roles
   }
 
   /**

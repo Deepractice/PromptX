@@ -299,23 +299,36 @@ class PackageDiscovery extends FilePatternDiscovery {
    */
   async _isDevelopmentMode() {
     try {
+      // 首先检查环境变量
+      if (process.env.PROMPTX_ENV === 'development' || process.env.PROMPTX_DEV_MODE === 'true') {
+        logger.info('[PackageDiscovery] Development mode detected via environment variable')
+        return true
+      }
+      
       const context = {
         startDir: process.cwd(),
         platform: process.platform,
         avoidUserHome: true
       }
       const projectRoot = await this.directoryService.getProjectRoot(context)
+      logger.info(`[PackageDiscovery] Checking development mode at: ${projectRoot}`)
       
       const hasCliScript = await fs.pathExists(path.join(projectRoot, 'src', 'bin', 'promptx.js'))
       const hasPackageJson = await fs.pathExists(path.join(projectRoot, 'package.json'))
+      
+      logger.info(`[PackageDiscovery] Has CLI script: ${hasCliScript}, Has package.json: ${hasPackageJson}`)
       
       if (!hasCliScript || !hasPackageJson) {
         return false
       }
 
       const packageJson = await fs.readJSON(path.join(projectRoot, 'package.json'))
-      return packageJson.name === 'dpml-prompt'
+      logger.info(`[PackageDiscovery] Package name: ${packageJson.name}`)
+      
+      // 支持两个包名：旧版 dpml-prompt 和新版 @promptx/cli
+      return packageJson.name === 'dpml-prompt' || packageJson.name === '@promptx/cli'
     } catch (error) {
+      logger.error(`[PackageDiscovery] Error checking development mode: ${error.message}`)
       return false
     }
   }
@@ -364,25 +377,32 @@ class PackageDiscovery extends FilePatternDiscovery {
     const cacheKey = 'packageRoot'
     const cached = this.getFromCache(cacheKey)
     if (cached) {
+      logger.info(`[PackageDiscovery] Using cached package root: ${cached}`)
       return cached
     }
 
     const environment = await this._detectExecutionEnvironment()
+    logger.info(`[PackageDiscovery] Detected environment: ${environment}`)
+    
     let packageRoot = null
 
     switch (environment) {
       case 'development':
         packageRoot = await this._findDevelopmentRoot()
+        logger.info(`[PackageDiscovery] Development root: ${packageRoot}`)
         break
       case 'npx':
       case 'local':
         packageRoot = await this._findInstalledRoot()
+        logger.info(`[PackageDiscovery] Installed root: ${packageRoot}`)
         break
       default:
         packageRoot = await this._findFallbackRoot()
+        logger.info(`[PackageDiscovery] Fallback root: ${packageRoot}`)
     }
 
     if (!packageRoot) {
+      logger.error('[PackageDiscovery] Package root not found, environment checks failed')
       throw new Error('Package root not found')
     }
 
@@ -397,17 +417,31 @@ class PackageDiscovery extends FilePatternDiscovery {
   async _findDevelopmentRoot() {
     // 策略1：检查当前工作目录
     const cwd = process.cwd()
+    logger.info(`[PackageDiscovery] Checking CWD as development root: ${cwd}`)
     if (await this._isValidDevelopmentRoot(cwd)) {
+      logger.info(`[PackageDiscovery] CWD is valid development root`)
       return fs.realpathSync(cwd)
     }
 
-    // 策略2：检查启动脚本的目录（适用于通过脚本启动的情况）
+    // 策略2：如果有环境变量指定的源码根目录
+    if (process.env.PROMPTX_SOURCE_ROOT) {
+      const sourceRoot = process.env.PROMPTX_SOURCE_ROOT
+      logger.info(`[PackageDiscovery] Checking PROMPTX_SOURCE_ROOT: ${sourceRoot}`)
+      if (await this._isValidDevelopmentRoot(sourceRoot)) {
+        logger.info(`[PackageDiscovery] PROMPTX_SOURCE_ROOT is valid development root`)
+        return fs.realpathSync(sourceRoot)
+      }
+    }
+
+    // 策略3：检查启动脚本的目录（适用于通过脚本启动的情况）
     const scriptDir = path.dirname(process.argv[1])
     let searchDir = scriptDir
+    logger.info(`[PackageDiscovery] Searching from script dir: ${scriptDir}`)
     
     // 向上查找最多5级目录
     for (let i = 0; i < 5; i++) {
       if (await this._isValidDevelopmentRoot(searchDir)) {
+        logger.info(`[PackageDiscovery] Found valid development root: ${searchDir}`)
         return fs.realpathSync(searchDir)
       }
       
@@ -415,7 +449,8 @@ class PackageDiscovery extends FilePatternDiscovery {
       if (parentDir === searchDir) break // 已到根目录
       searchDir = parentDir
     }
-
+    
+    logger.warn('[PackageDiscovery] No valid development root found')
     return null
   }
 
@@ -435,7 +470,8 @@ class PackageDiscovery extends FilePatternDiscovery {
 
     try {
       const packageJson = await fs.readJSON(path.join(dir, 'package.json'))
-      return packageJson.name === 'dpml-prompt'
+      // 支持两个包名：旧版 dpml-prompt 和新版 @promptx/cli
+      return packageJson.name === 'dpml-prompt' || packageJson.name === '@promptx/cli'
     } catch (error) {
       return false
     }
