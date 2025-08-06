@@ -72,7 +72,27 @@ temp/
 
 # Application specific
 /.memory/
-/.promptx/
+
+# PromptX resources - selective ignore
+# Keep role definitions (public resources)
+!/.promptx/
+!/.promptx/resource/
+!/.promptx/resource/role/
+!/.promptx/resource/role/**/*.md
+!/.promptx/resource/thought/
+!/.promptx/resource/thought/**/*.md
+!/.promptx/resource/execution/
+!/.promptx/resource/execution/**/*.md
+!/.promptx/resource/knowledge/
+!/.promptx/resource/knowledge/**/*.md
+
+# Ignore private/runtime data
+/.promptx/memory/
+/.promptx/config/
+/.promptx/*.bin
+/.promptx/*.json
+/.promptx/*.log
+
 /.idea/
 /.vscode/
 
