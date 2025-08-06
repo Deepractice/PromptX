@@ -314,14 +314,15 @@ gitGraph
     commit id: "Initial"
     branch develop
     checkout develop
-    commit id: "Feature A"
+    commit id: "Base"
     
     branch feature/issue-1
     checkout feature/issue-1
     commit id: "Implementation"
     
     checkout develop
-    merge feature/issue-1 tag: "v1.1.0"
+    merge feature/issue-1 tag: "PR merged"
+    commit id: "v1.1.0"
     
     branch test
     checkout test

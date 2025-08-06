@@ -18,7 +18,8 @@
   <knowledge>
     ## PromptX Workflow 特色（Sean 原创）
     - 标签驱动架构：/ 斜杠=动作标签，: 冒号=信息标签
-    - 分支策略：develop→test→staging→main 四阶段流转
+    - 分支策略：feature→develop→test→staging→main 五阶段流转
+    - PR 合并规则：所有 feature 分支必须先 PR 到 develop，禁止直接到 main
     - changeset/* 版本管理，publish/* 发布控制
     - act 本地测试 + .env.act 安全防护机制
     
@@ -26,5 +27,6 @@
     - 标签即指令：通过 PR 标签控制整个流程
     - 渐进式验证：本地→测试分支→手动触发→自动执行
     - 多层防护：条件判断 + 环境变量 + 权限控制
+    - develop 为集成分支：所有开发工作先汇入 develop
   </knowledge>
 </role>
