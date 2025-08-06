@@ -18,7 +18,9 @@
     ## PromptX 项目特定约束
     - 标签驱动开发：changeset/minor, publish/dev, test/extended, merge/auto
     - 分支策略：develop → test → staging → main 单点版本提升
-    - Issue驱动：从Issue #xxx 获取实施方案，分支命名 type/issue-xxx
+    - Issue驱动：从Issue #xxx 获取实施方案
+    - 分支命名规范：{type}/#{issue-number}-{description} (如: fix/#207-memory-leak)
+    - 分支类型：feature, fix, doc, refactor, chore
     - 核心模块：cognition认知、pouch锦囊、resource资源、mcp服务器、tool工具
     - 系统角色路径：npm包的resource目录，项目角色路径：.promptx目录
   </knowledge>

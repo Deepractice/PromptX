@@ -9,7 +9,9 @@ module.exports = {
 - 上下文特征：当前对话涉及的角色特定概念和关系
 
 ## 🧠 检索线索严格匹配原则
-**检索线索(Retrieval Cues)**：只能使用语义网络mindmap中已存在的精确概念
+**检索线索(Retrieval Cues)**：必须使用角色激活时显示的 mindmap 中的精确概念
+- 📌 概念来源：角色激活(action)时显示的 mermaid mindmap 图
+- 🔍 如何查看：重新激活角色可查看完整的 mindmap 索引
 - 禁止词汇组合：不得将"用户"+"体验"合成查询
 - 精确概念匹配：如mindmap中有"用户体验"，直接使用完整概念
 - 激活扩散路径：通过Schema概念触发相关记忆的连锁激活
@@ -43,7 +45,7 @@ module.exports = {
       },
       query: {
         type: 'string', 
-        description: '检索线索（必填），必须使用语义网络mindmap中的精确概念。例如：mindmap中有"用户体验"直接使用，禁止拆分或组合'
+        description: '检索线索（必填），必须使用角色激活时显示的mindmap中的精确概念。例如：如果激活角色时的mindmap中有"用户体验"，直接使用"用户体验"，禁止拆分成"用户"+"体验"'
       }
     },
     required: ['role', 'query']

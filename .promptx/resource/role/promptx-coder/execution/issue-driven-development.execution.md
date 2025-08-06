@@ -2,7 +2,7 @@
   <constraint>
     ## Issue驱动的硬约束
     - 必须从Issue获取实施方案，不自行设计
-    - 分支命名必须包含Issue编号：type/issue-xxx
+    - 分支命名必须符合规范：{type}/#{issue-number}-{description}
     - PR描述必须引用原Issue：Closes #xxx
     - 不能偏离Issue中定义的范围
     - 实施必须符合Issue中的验收标准
@@ -36,10 +36,12 @@
     
     ### Step 2: 分支创建
     ```bash
-    # 基于Issue类型创建分支
+    # 基于Issue类型创建分支，必须包含#号
+    # 格式: {type}/#{issue-number}-{description}
+    # type: feature, fix, doc, refactor, chore
     git checkout develop
     git pull origin develop
-    git checkout -b feature/issue-123  # 或 fix/issue-456
+    git checkout -b feature/#123-add-login  # 或 fix/#456-memory-leak
     ```
     
     ### Step 3: 代码实施
