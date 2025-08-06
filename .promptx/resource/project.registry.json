@@ -1,0 +1,276 @@
+{
+  "version": "2.0.0",
+  "source": "project",
+  "metadata": {
+    "version": "2.0.0",
+    "description": "project 级资源注册表",
+    "createdAt": "2025-08-06T05:42:40.422Z",
+    "updatedAt": "2025-08-06T05:42:40.429Z",
+    "resourceCount": 18
+  },
+  "resources": [
+    {
+      "id": "cognition",
+      "source": "project",
+      "protocol": "role",
+      "name": "Cognition 角色",
+      "description": "专业角色，提供特定领域的专业能力",
+      "reference": "@project://.promptx/resource/role/cognition/cognition.role.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.424Z",
+        "updatedAt": "2025-08-06T05:42:40.424Z",
+        "scannedAt": "2025-08-06T05:42:40.424Z",
+        "path": "role/cognition/cognition.role.md"
+      }
+    },
+    {
+      "id": "memory-system",
+      "source": "project",
+      "protocol": "execution",
+      "name": "Memory System 执行模式",
+      "description": "执行模式，定义具体的行为模式",
+      "reference": "@project://.promptx/resource/role/cognition/execution/memory-system.execution.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.424Z",
+        "updatedAt": "2025-08-06T05:42:40.424Z",
+        "scannedAt": "2025-08-06T05:42:40.424Z",
+        "path": "role/cognition/execution/memory-system.execution.md"
+      }
+    },
+    {
+      "id": "cognitive-memory",
+      "source": "project",
+      "protocol": "thought",
+      "name": "Cognitive Memory 思维模式",
+      "description": "思维模式，指导AI的思考方式",
+      "reference": "@project://.promptx/resource/role/cognition/thought/cognitive-memory.thought.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.424Z",
+        "updatedAt": "2025-08-06T05:42:40.424Z",
+        "scannedAt": "2025-08-06T05:42:40.424Z",
+        "path": "role/cognition/thought/cognitive-memory.thought.md"
+      }
+    },
+    {
+      "id": "darp",
+      "source": "project",
+      "protocol": "role",
+      "name": "Darp 角色",
+      "description": "专业角色，提供特定领域的专业能力",
+      "reference": "@project://.promptx/resource/role/darp/darp.role.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.425Z",
+        "updatedAt": "2025-08-06T05:42:40.425Z",
+        "scannedAt": "2025-08-06T05:42:40.425Z",
+        "path": "role/darp/darp.role.md"
+      }
+    },
+    {
+      "id": "darp-workflow",
+      "source": "project",
+      "protocol": "execution",
+      "name": "Darp Workflow 执行模式",
+      "description": "执行模式，定义具体的行为模式",
+      "reference": "@project://.promptx/resource/role/darp/execution/darp-workflow.execution.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.425Z",
+        "updatedAt": "2025-08-06T05:42:40.425Z",
+        "scannedAt": "2025-08-06T05:42:40.425Z",
+        "path": "role/darp/execution/darp-workflow.execution.md"
+      }
+    },
+    {
+      "id": "protocol-thinking",
+      "source": "project",
+      "protocol": "thought",
+      "name": "Protocol Thinking 思维模式",
+      "description": "思维模式，指导AI的思考方式",
+      "reference": "@project://.promptx/resource/role/darp/thought/protocol-thinking.thought.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.426Z",
+        "updatedAt": "2025-08-06T05:42:40.426Z",
+        "scannedAt": "2025-08-06T05:42:40.426Z",
+        "path": "role/darp/thought/protocol-thinking.thought.md"
+      }
+    },
+    {
+      "id": "dpml",
+      "source": "project",
+      "protocol": "role",
+      "name": "Dpml 角色",
+      "description": "专业角色，提供特定领域的专业能力",
+      "reference": "@project://.promptx/resource/role/dpml/dpml.role.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.426Z",
+        "updatedAt": "2025-08-06T05:42:40.426Z",
+        "scannedAt": "2025-08-06T05:42:40.426Z",
+        "path": "role/dpml/dpml.role.md"
+      }
+    },
+    {
+      "id": "dpml-philosophy",
+      "source": "project",
+      "protocol": "execution",
+      "name": "Dpml Philosophy 执行模式",
+      "description": "执行模式，定义具体的行为模式",
+      "reference": "@project://.promptx/resource/role/dpml/execution/dpml-philosophy.execution.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.426Z",
+        "updatedAt": "2025-08-06T05:42:40.426Z",
+        "scannedAt": "2025-08-06T05:42:40.426Z",
+        "path": "role/dpml/execution/dpml-philosophy.execution.md"
+      }
+    },
+    {
+      "id": "consensus-thinking",
+      "source": "project",
+      "protocol": "thought",
+      "name": "Consensus Thinking 思维模式",
+      "description": "思维模式，指导AI的思考方式",
+      "reference": "@project://.promptx/resource/role/dpml/thought/consensus-thinking.thought.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.427Z",
+        "updatedAt": "2025-08-06T05:42:40.427Z",
+        "scannedAt": "2025-08-06T05:42:40.427Z",
+        "path": "role/dpml/thought/consensus-thinking.thought.md"
+      }
+    },
+    {
+      "id": "mcp-development-workflow",
+      "source": "project",
+      "protocol": "execution",
+      "name": "Mcp Development Workflow 执行模式",
+      "description": "执行模式，定义具体的行为模式",
+      "reference": "@project://.promptx/resource/role/mcp-architect/execution/mcp-development-workflow.execution.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.427Z",
+        "updatedAt": "2025-08-06T05:42:40.427Z",
+        "scannedAt": "2025-08-06T05:42:40.427Z",
+        "path": "role/mcp-architect/execution/mcp-development-workflow.execution.md"
+      }
+    },
+    {
+      "id": "mcp-architect",
+      "source": "project",
+      "protocol": "role",
+      "name": "Mcp Architect 角色",
+      "description": "专业角色，提供特定领域的专业能力",
+      "reference": "@project://.promptx/resource/role/mcp-architect/mcp-architect.role.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.427Z",
+        "updatedAt": "2025-08-06T05:42:40.427Z",
+        "scannedAt": "2025-08-06T05:42:40.427Z",
+        "path": "role/mcp-architect/mcp-architect.role.md"
+      }
+    },
+    {
+      "id": "mcp-design-thinking",
+      "source": "project",
+      "protocol": "thought",
+      "name": "Mcp Design Thinking 思维模式",
+      "description": "思维模式，指导AI的思考方式",
+      "reference": "@project://.promptx/resource/role/mcp-architect/thought/mcp-design-thinking.thought.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.428Z",
+        "updatedAt": "2025-08-06T05:42:40.428Z",
+        "scannedAt": "2025-08-06T05:42:40.428Z",
+        "path": "role/mcp-architect/thought/mcp-design-thinking.thought.md"
+      }
+    },
+    {
+      "id": "pateoas-workflow",
+      "source": "project",
+      "protocol": "execution",
+      "name": "Pateoas Workflow 执行模式",
+      "description": "执行模式，定义具体的行为模式",
+      "reference": "@project://.promptx/resource/role/pateoas/execution/pateoas-workflow.execution.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.428Z",
+        "updatedAt": "2025-08-06T05:42:40.428Z",
+        "scannedAt": "2025-08-06T05:42:40.428Z",
+        "path": "role/pateoas/execution/pateoas-workflow.execution.md"
+      }
+    },
+    {
+      "id": "pateoas",
+      "source": "project",
+      "protocol": "role",
+      "name": "Pateoas 角色",
+      "description": "专业角色，提供特定领域的专业能力",
+      "reference": "@project://.promptx/resource/role/pateoas/pateoas.role.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.428Z",
+        "updatedAt": "2025-08-06T05:42:40.428Z",
+        "scannedAt": "2025-08-06T05:42:40.428Z",
+        "path": "role/pateoas/pateoas.role.md"
+      }
+    },
+    {
+      "id": "state-navigation",
+      "source": "project",
+      "protocol": "thought",
+      "name": "State Navigation 思维模式",
+      "description": "思维模式，指导AI的思考方式",
+      "reference": "@project://.promptx/resource/role/pateoas/thought/state-navigation.thought.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.428Z",
+        "updatedAt": "2025-08-06T05:42:40.428Z",
+        "scannedAt": "2025-08-06T05:42:40.428Z",
+        "path": "role/pateoas/thought/state-navigation.thought.md"
+      }
+    },
+    {
+      "id": "toolsandbox-workflow",
+      "source": "project",
+      "protocol": "execution",
+      "name": "Toolsandbox Workflow 执行模式",
+      "description": "执行模式，定义具体的行为模式",
+      "reference": "@project://.promptx/resource/role/toolsandbox-architect/execution/toolsandbox-workflow.execution.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.428Z",
+        "updatedAt": "2025-08-06T05:42:40.428Z",
+        "scannedAt": "2025-08-06T05:42:40.428Z",
+        "path": "role/toolsandbox-architect/execution/toolsandbox-workflow.execution.md"
+      }
+    },
+    {
+      "id": "toolsandbox-thinking",
+      "source": "project",
+      "protocol": "thought",
+      "name": "Toolsandbox Thinking 思维模式",
+      "description": "思维模式，指导AI的思考方式",
+      "reference": "@project://.promptx/resource/role/toolsandbox-architect/thought/toolsandbox-thinking.thought.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.429Z",
+        "updatedAt": "2025-08-06T05:42:40.429Z",
+        "scannedAt": "2025-08-06T05:42:40.429Z",
+        "path": "role/toolsandbox-architect/thought/toolsandbox-thinking.thought.md"
+      }
+    },
+    {
+      "id": "toolsandbox-architect",
+      "source": "project",
+      "protocol": "role",
+      "name": "Toolsandbox Architect 角色",
+      "description": "专业角色，提供特定领域的专业能力",
+      "reference": "@project://.promptx/resource/role/toolsandbox-architect/toolsandbox-architect.role.md",
+      "metadata": {
+        "createdAt": "2025-08-06T05:42:40.429Z",
+        "updatedAt": "2025-08-06T05:42:40.429Z",
+        "scannedAt": "2025-08-06T05:42:40.429Z",
+        "path": "role/toolsandbox-architect/toolsandbox-architect.role.md"
+      }
+    }
+  ],
+  "stats": {
+    "totalResources": 18,
+    "byProtocol": {
+      "role": 6,
+      "execution": 6,
+      "thought": 6
+    },
+    "bySource": {
+      "project": 18
+    }
+  }
+}
