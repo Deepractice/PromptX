@@ -122,7 +122,8 @@ class BasePouchCommand {
 ║                                                                               ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝`
 
-        return `
+        return `${globalRules}
+
 ${divider}
 🎯 锦囊目的：${purpose}
 ${divider}
@@ -134,8 +135,7 @@ ${content}
 ${nextSteps}
 
 📍 当前状态：${pateoas.currentState}
-${divider}
-${globalRules}`
+${divider}`
       }
     }
   }
