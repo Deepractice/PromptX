@@ -568,43 +568,26 @@ ${semanticMermaid}
    * 格式化带有项目检查的输出
    */
   formatOutputWithProjectCheck(purpose, content, pateoas, projectPrompt) {
-    const output = {
-      purpose,
-      content,
-      pateoas,
-      context: this.context,
-      format: this.outputFormat,
-      projectPrompt
-    }
-
+    // 先调用父类的 formatOutput 获取标准格式
+    const baseOutput = super.formatOutput(purpose, content, pateoas)
+    
+    // 如果是 JSON 格式，添加 projectPrompt
     if (this.outputFormat === 'json') {
-      return output
+      return {
+        ...baseOutput,
+        projectPrompt
+      }
     }
-
-    // 人类可读格式
+    
+    // 人类可读格式：在基础输出前加上项目提示
     return {
-      ...output,
-      toString () {
-        const divider = '='.repeat(60)
-        const nextSteps = (pateoas.nextActions || [])
-          .map(action => `  - ${action.name}: ${action.description}\n    方式: ${action.method || action.command || '通过MCP工具'}`)
-          .join('\n')
-
+      ...baseOutput,
+      toString() {
+        const baseString = baseOutput.toString()
+        // 在基础输出前插入项目提示
         return `${projectPrompt}
 
-${divider}
-🎯 锦囊目的：${purpose}
-${divider}
-
-📜 锦囊内容：
-${content}
-
-🔄 下一步行动：
-${nextSteps}
-
-📍 当前状态：${pateoas.currentState}
-${divider}
-`
+${baseString}`
       }
     }
   }
