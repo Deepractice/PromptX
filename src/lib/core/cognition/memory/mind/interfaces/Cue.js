@@ -22,13 +22,17 @@ class Cue extends Mind {
   /**
    * 构造词汇节点
    * @param {string} word - 词汇内容
+   * @param {number} initialStrength - 初始强度（可选）
    */
-  constructor(word) {
+  constructor(word, initialStrength = 0.5) {
     super();
     if (!word || typeof word !== 'string') {
       throw new Error('Cue requires a valid word string');
     }
     this.word = word.trim();
+    
+    // 新增：强度字段，用于记忆权重管理
+    this.strength = initialStrength;
   }
 
   /**

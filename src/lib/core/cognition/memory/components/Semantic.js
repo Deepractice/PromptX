@@ -55,6 +55,15 @@ class Semantic extends ImplicitMemory {
     return await this.mindService.primeSemantic();
   }
 
+  /**
+   * 通知节点被访问（用于更新权重）
+   * @param {string} cue - 被访问的概念
+   */
+  async notifyAccess(cue) {
+    // 委托给MindService处理
+    return await this.mindService.notifyAccess(cue);
+  }
+
 }
 
 module.exports = Semantic;

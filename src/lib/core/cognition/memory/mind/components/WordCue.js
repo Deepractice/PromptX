@@ -6,8 +6,8 @@ const { Cue } = require('../interfaces/Cue.js');
 // const Graph = require('graphology');
 
 class WordCue extends Cue {
-  constructor(word) {
-    super(word);
+  constructor(word, initialStrength) {
+    super(word, initialStrength);
     // 临时使用简单的 Set 来存储连接关系
     // 待集成 graphology 后替换
     this.connections = new Set();

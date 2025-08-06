@@ -150,6 +150,7 @@ class PeggyMindmap extends MindMap {
     
     const node = {
       name: cue.word,
+      strength: cue.strength,  // 保存 strength 信息
       children: []
     };
     
@@ -173,7 +174,9 @@ class PeggyMindmap extends MindMap {
    */
   serializeTree(nodes, lines, indentSize, level) {
     nodes.forEach(node => {
-      lines.push(' '.repeat(indentSize * level) + node.name);
+      // 添加 strength 信息 (如果存在)
+      const strengthInfo = node.strength !== undefined ? ` [${node.strength.toFixed(2)}]` : '';
+      lines.push(' '.repeat(indentSize * level) + node.name + strengthInfo);
       if (node.children.length > 0) {
         this.serializeTree(node.children, lines, indentSize, level + 1);
       }

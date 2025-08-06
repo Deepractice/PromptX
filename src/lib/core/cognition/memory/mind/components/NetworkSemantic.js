@@ -6,6 +6,7 @@ const Graph = require('graphology');
 const v8 = require('v8');
 const fs = require('fs').promises;
 const path = require('path');
+const { WeightedSemanticInterceptor } = require('../interceptors/WeightedSemanticInterceptor.js');
 
 // 定义持久化方法
 function addPersistableMethods(instance) {
@@ -25,16 +26,32 @@ function addPersistableMethods(instance) {
     
     const filePath = path.join(this._storagePath, 'semantic.bin');
     
+    // 准备数据
+    let data = {
+      name: this.name,
+      cueLayer: Array.from(this.cueLayer.entries()),
+      schemaLayer: Array.from(this.schemaLayer.entries()),
+      externalConnections: Array.from(this.externalConnections),
+      _storagePath: this._storagePath,
+      _autoPersist: this._autoPersist
+    };
+    
+    // 应用拦截器的 beforePersist
+    if (this.interceptor) {
+      data = this.interceptor.beforePersist(data);
+    }
+    
     // 创建一个干净的对象用于序列化
     const cleanObject = {
-      name: this.name,
-      // 将 Map 转换为数组，保存 Cue 的数据
-      cueLayer: Array.from(this.cueLayer.entries()).map(([word, cue]) => ({
+      name: data.name,
+      // 处理排序后的 cueLayer
+      cueLayer: data.cueLayer.map(([word, cue]) => ({
         word: word,
-        connections: cue.getConnections ? cue.getConnections() : []
+        connections: cue.getConnections ? cue.getConnections() : [],
+        strength: cue.strength || 0.5
       })),
-      // 将 Schema 转换为可序列化的格式
-      schemaLayer: Array.from(this.schemaLayer.entries()).map(([name, schema]) => ({
+      // 处理排序后的 schemaLayer
+      schemaLayer: data.schemaLayer.map(([name, schema]) => ({
         name: name,
         cues: schema.getCues ? schema.getCues().map(cue => ({
           word: cue.word,
@@ -83,6 +100,9 @@ class NetworkSemantic extends Semantic {
     
     // 添加持久化方法
     addPersistableMethods(this);
+    
+    // 创建权重拦截器实例
+    this.interceptor = new WeightedSemanticInterceptor();
   }
 
 
@@ -155,11 +175,29 @@ class NetworkSemantic extends Semantic {
   /**
    * 添加WordCue到全局认知网络
    * @param {WordCue} cue - 要添加的WordCue
+   * @param {Object} engram - 可选的engram，用于初始化强度
    * @returns {Semantic} 返回自身，支持链式调用
    */
-  addCue(cue) {
+  addCue(cue, engram = null) {
     if (!cue || !cue.word) {
       throw new Error('Invalid cue provided');
+    }
+    
+    // 检查是否已存在
+    if (this.cueLayer.has(cue.word)) {
+      const existingCue = this.cueLayer.get(cue.word);
+      
+      // 调用拦截器的合并策略
+      if (this.interceptor && engram) {
+        this.interceptor.onAddNode(existingCue, { merge: true, engram });
+      }
+      
+      return this; // 返回已存在的情况
+    }
+    
+    // 新 Cue：设置初始强度
+    if (this.interceptor) {
+      this.interceptor.onCreate(cue, { engram });
     }
     
     // 添加到全局图中
@@ -403,7 +441,7 @@ NetworkSemantic.load = async function(storagePath, semanticName) {
     const { WordCue } = require('./WordCue');
     const cueMap = new Map();
     data.cueLayer.forEach(cueData => {
-      const cue = new WordCue(cueData.word);
+      const cue = new WordCue(cueData.word, cueData.strength || 0.5);
       cueData.connections.forEach(conn => {
         cue.connections.add(conn);
       });
@@ -420,7 +458,7 @@ NetworkSemantic.load = async function(storagePath, semanticName) {
       schemaData.cues.forEach(cueData => {
         let cue = cueMap.get(cueData.word);
         if (!cue) {
-          cue = new WordCue(cueData.word);
+          cue = new WordCue(cueData.word, cueData.strength || 0.5);
           cueData.connections.forEach(conn => {
             cue.connections.add(conn);
           });

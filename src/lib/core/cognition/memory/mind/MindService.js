@@ -8,6 +8,7 @@ const { WordCue } = require('./components/WordCue.js');
 const { GraphSchema } = require('./components/GraphSchema.js');
 const { NetworkSemantic } = require('./components/NetworkSemantic.js');
 const { peggyMindmap } = require('./mindmap/PeggyMindmap.js');
+const logger = require('../../../../utils/logger');
 
 class MindService {
   constructor() {
@@ -114,6 +115,46 @@ class MindService {
   }
 
   /**
+   * 通知节点被访问（用于更新权重）
+   * @param {string} cue - 被访问的概念
+   * @param {string} semanticName - 语义网络名称
+   */
+  async notifyAccess(cue, semanticName = 'global-semantic') {
+    if (!cue) return;
+    
+    logger.info(`[MindService.notifyAccess] Notifying access for cue: "${cue}"`);
+    
+    // 使用缓存的实例或加载新的
+    if (!this.currentSemantic || this.currentSemantic.name !== semanticName) {
+      logger.info('[MindService.notifyAccess] Loading semantic network from storage');
+      this.currentSemantic = await NetworkSemantic.load(this.storagePath, semanticName);
+    }
+    const semantic = this.currentSemantic;
+    
+    // 直接从全局 cueLayer 查找节点（避免重复处理）
+    const cueNode = semantic.cueLayer.get(cue);
+    
+    if (cueNode) {
+      logger.info(`[MindService.notifyAccess] Found cue "${cue}" with strength: ${cueNode.strength}`);
+      
+      // 触发 onAccess
+      if (semantic.interceptor && semantic.interceptor.onAccess) {
+        logger.info('[MindService.notifyAccess] Calling interceptor.onAccess');
+        semantic.interceptor.onAccess(cueNode, 'recall');
+        logger.info(`[MindService.notifyAccess] After onAccess, strength: ${cueNode.strength}`);
+      } else {
+        logger.warn('[MindService.notifyAccess] No interceptor or onAccess method found');
+      }
+    } else {
+      logger.info(`[MindService.notifyAccess] Cue "${cue}" not found in semantic network`);
+    }
+    
+    // 保存更新
+    logger.info('[MindService.notifyAccess] Persisting semantic network');
+    await semantic.persist();
+  }
+
+  /**
    * 导出语义网络为 mindmap - 用于可视化或调试
    * @param {string} semanticName - 语义网络名称
    * @returns {Promise<string>} Mermaid mindmap 格式的文本
@@ -132,7 +173,12 @@ class MindService {
     
     // 如果只有一个 Schema，直接序列化
     if (schemas.length === 1) {
-      return peggyMindmap.serialize(schemas[0]);
+      let mindmap = peggyMindmap.serialize(schemas[0]);
+      // 应用拦截器的 onPrime 处理
+      if (semantic.interceptor && semantic.interceptor.onPrime) {
+        mindmap = semantic.interceptor.onPrime(mindmap);
+      }
+      return mindmap;
     }
     
     // 多个 Schema，创建统一的 mindmap
@@ -170,7 +216,9 @@ class MindService {
       
       // 递归添加节点
       const addCue = (cue, indent) => {
-        lines.push(`${' '.repeat(indent)}${cue.word}`);
+        // 添加 strength 信息 (如果存在)
+        const strengthInfo = cue.strength !== undefined ? ` [${cue.strength.toFixed(2)}]` : '';
+        lines.push(`${' '.repeat(indent)}${cue.word}${strengthInfo}`);
         cue.getConnections().forEach(childWord => {
           const childCue = cueMap.get(childWord);
           if (childCue) {
@@ -198,7 +246,15 @@ class MindService {
       }
     });
     
-    return lines.join('\n');
+    // 生成最终的 mindmap 字符串
+    let mindmap = lines.join('\n');
+    
+    // 应用拦截器的 onPrime 处理
+    if (semantic.interceptor && semantic.interceptor.onPrime) {
+      mindmap = semantic.interceptor.onPrime(mindmap);
+    }
+    
+    return mindmap;
   }
 
 
@@ -212,8 +268,13 @@ class MindService {
   async primeSemantic(semanticName = 'global-semantic') {
     console.log('[MindService.primeSemantic] Loading semantic:', semanticName);
     
-    // 加载语义网络到内存（如果不存在会自动创建）
-    this.currentSemantic = await NetworkSemantic.load(this.storagePath, semanticName);
+    // 优先使用缓存的实例，只有在没有缓存或名称不同时才重新加载
+    if (!this.currentSemantic || this.currentSemantic.name !== semanticName) {
+      logger.info('[MindService.primeSemantic] Loading from storage');
+      this.currentSemantic = await NetworkSemantic.load(this.storagePath, semanticName);
+    } else {
+      logger.info('[MindService.primeSemantic] Using cached semantic network');
+    }
     
     // 转换为 mindmap
     return this.exportToMindmap(semanticName);

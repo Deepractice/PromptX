@@ -73,6 +73,11 @@ class MemoryService {
       new Map(allResults.map(item => [item.getId(), item])).values()
     );
     
+    // 如果有检索线索，通知语义网络更新权重
+    if (cue && this.semantic) {
+      await this.semantic.notifyAccess(cue);
+    }
+    
     // 按时间戳排序（最早的在前，保持学习顺序）
     return uniqueResults.sort((a, b) => {
       const timeA = a.timestamp || new Date(0);
