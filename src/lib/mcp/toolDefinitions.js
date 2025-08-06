@@ -116,7 +116,11 @@ function loadToolDefinitions() {
   const definitions = [];
   
   // 读取所有 JS 文件
-  const files = fs.readdirSync(definitionsDir).filter(file => file.endsWith('.js'));
+  // 暂时禁用 promptx_think 工具，避免与 promptx_action 功能重叠造成用户困惑
+  // Issue #201: 保留代码，仅禁用注册，便于后续重新启用或重新设计
+  const files = fs.readdirSync(definitionsDir)
+    .filter(file => file.endsWith('.js'))
+    .filter(file => file !== 'promptx_think.js'); // 暂时禁用 think 工具
   
   for (const file of files) {
     const filePath = path.join(definitionsDir, file);
