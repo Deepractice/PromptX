@@ -1,6 +1,6 @@
 {
   "name": "@promptx/cli",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "DPML-powered AI prompt framework - Revolutionary AI-First CLI system based on Deepractice Prompt Markup Language. Build sophisticated AI agents with structured prompts, memory systems, and execution frameworks.",
   "main": "src/lib/index.js",
   "bin": {

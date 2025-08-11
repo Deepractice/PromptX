@@ -51,7 +51,7 @@ const TOOL_INTERFACE = {
       description: '获取工具包信息（可选，用于依赖管理）',
       returns: {
         directory: 'string - 工具目录路径',
-        dependencies: 'Array<string> - 依赖列表',
+        dependencies: 'Object - 依赖对象，格式：{包名: 版本}',
         packageJson: 'Object - package.json内容（可选）'
       }
     },
@@ -163,6 +163,14 @@ class ExampleTool {
     const result = \`处理结果: \${input}\`;
     
     return result;
+  }
+
+  // 可选：声明依赖（新格式：对象）
+  getDependencies() {
+    return {
+      'lodash': '^4.17.21',
+      'axios': '^1.6.0'
+    };
   }
 
   // 可选：自定义参数验证

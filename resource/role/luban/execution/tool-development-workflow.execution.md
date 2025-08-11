@@ -14,7 +14,7 @@
 ## 开发强制规则
 - **文件命名规范**：工具代码必须命名为`{tool-name}.tool.js`，手册必须命名为`{tool-name}.manual.md`
 - **接口完整性**：必须实现所有必要的接口方法
-- **依赖声明**：所有外部依赖必须在getDependencies()中明确声明
+- **依赖声明**：所有外部依赖必须在getDependencies()中以对象格式声明（包名:版本）
 - **参数验证**：必须实现validate()方法验证输入参数
 - **错误处理**：必须有完善的异常处理机制
 - **安全第一**：禁止执行危险操作，确保沙箱安全
@@ -110,7 +110,9 @@ flowchart TD
 // 标准工具接口模板
 module.exports = {
   getDependencies() {
-    return ['package@version']; // 声明依赖
+    return {
+      'package-name': '^1.0.0'  // 对象格式：包名作为key，版本作为value
+    };
   },
   
   getMetadata() {
@@ -263,11 +265,11 @@ flowchart LR
 **Step 2.3: 依赖管理实现**
 ```javascript
 getDependencies() {
-  return [
-    'lodash@^4.17.21',     // 工具函数库
-    'axios@^1.6.0',       // HTTP请求
-    'validator@^13.11.0'  // 数据验证
-  ];
+  return {
+    'lodash': '^4.17.21',      // 工具函数库
+    'axios': '^1.6.0',         // HTTP请求  
+    'validator': '^13.11.0'    // 数据验证
+  };
 }
 ```
 
@@ -439,16 +441,16 @@ flowchart LR
 ```javascript
 getDependencies() {
   // 按需声明，避免冗余
-  const dependencies = [];
+  const dependencies = {};
   
   // 基础功能依赖
   if (this.needsUtilities()) {
-    dependencies.push('lodash@^4.17.21');
+    dependencies['lodash'] = '^4.17.21';
   }
   
   // 网络功能依赖
   if (this.needsHttp()) {
-    dependencies.push('axios@^1.6.0');
+    dependencies['axios'] = '^1.6.0';
   }
   
   return dependencies;

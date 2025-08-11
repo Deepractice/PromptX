@@ -54,9 +54,18 @@ class SandboxErrorManager {
     // 依赖缺失错误 - 最常见的问题
     if (message.includes('cannot find module')) {
       const missingModule = this.extractModuleName(error.message);
-      const isDeclaredDependency = context.dependencies?.some(dep => 
-        dep.split('@')[0] === missingModule
-      );
+      
+      // 兼容新旧格式
+      let isDeclaredDependency = false;
+      if (Array.isArray(context.dependencies)) {
+        // 旧格式：数组
+        isDeclaredDependency = context.dependencies.some(dep => 
+          dep.split('@')[0] === missingModule
+        );
+      } else if (typeof context.dependencies === 'object' && context.dependencies) {
+        // 新格式：对象
+        isDeclaredDependency = Object.keys(context.dependencies).includes(missingModule);
+      }
       
       if (isDeclaredDependency) {
         return 'DEPENDENCY_MISSING';
@@ -117,7 +126,7 @@ class SandboxErrorManager {
           retryParameters: { forceReinstall: true }
         };
         
-      case 'UNDECLARED_DEPENDENCY':
+      case 'UNDECLARED_DEPENDENCY': {
         const missingModule = this.extractModuleName(originalError.message);
         return {
           action: 'REPORT_MISSING_DEPENDENCY',
@@ -127,14 +136,20 @@ class SandboxErrorManager {
           userMessage: `❌ 工具缺少依赖声明
 
 🔧 需要在工具的 getDependencies() 方法中添加：
-   "${missingModule}@latest"
+   '${missingModule}': 'latest'
 
-📝 完整示例：
+📝 完整示例（新格式）：
    getDependencies() {
-     return [${context.dependencies?.map(d => `"${d}"`).join(', ')}, "${missingModule}@latest"];
+     return {
+       ${context.dependencies && typeof context.dependencies === 'object' && !Array.isArray(context.dependencies) 
+         ? Object.entries(context.dependencies).map(([k, v]) => `'${k}': '${v}'`).join(',\n       ') + ','
+         : '// 其他依赖...'}
+       '${missingModule}': 'latest'
+     };
    }`,
-          developerAction: `在 ${context.toolId}.tool.js 中添加 ${missingModule} 到依赖列表`
+          developerAction: `在 ${context.toolId}.tool.js 的 getDependencies() 中添加 '${missingModule}': 'latest'`
         };
+      }
         
       case 'DEPENDENCY_INSTALL_FAILED':
         return {

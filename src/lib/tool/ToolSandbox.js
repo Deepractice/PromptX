@@ -298,15 +298,15 @@ class ToolSandbox {
     // 提取依赖
     if (typeof toolInstance.getDependencies === 'function') {
       try {
-        this.dependencies = toolInstance.getDependencies() || [];
+        this.dependencies = toolInstance.getDependencies() || {};
         logger.debug(`[ToolSandbox] Extracted dependencies: ${JSON.stringify(this.dependencies)}`);
       } catch (error) {
         logger.warn(`[ToolSandbox] Failed to get dependencies for ${this.toolId}: ${error.message}`);
-        this.dependencies = [];
+        this.dependencies = {};
       }
     } else {
       logger.debug(`[ToolSandbox] Tool does not have getDependencies method`);
-      this.dependencies = [];
+      this.dependencies = {};
     }
     
     this.toolInstance = toolInstance;
@@ -494,15 +494,29 @@ class ToolSandbox {
       dependencies: {}
     };
     
-    // 解析依赖格式 ["validator@^13.11.0", "lodash"]
-    logger.debug(`[ToolSandbox] Processing dependency list: ${JSON.stringify(this.dependencies)}`);
-    for (const dep of this.dependencies) {
-      if (dep.includes('@')) {
-        const [name, version] = dep.split('@');
-        logger.debug(`[ToolSandbox] Parsing dependency "${dep}" => name="${name}", version="${version}"`);
-        packageJson.dependencies[name] = version;
-      } else {
-        packageJson.dependencies[dep] = 'latest';
+    // 直接使用 getDependencies 返回的对象格式 {"package-name": "version"}
+    logger.debug(`[ToolSandbox] Processing dependencies: ${JSON.stringify(this.dependencies)}`);
+    if (typeof this.dependencies === 'object' && !Array.isArray(this.dependencies)) {
+      // 新格式：直接使用对象
+      packageJson.dependencies = this.dependencies;
+    } else if (Array.isArray(this.dependencies)) {
+      // 兼容旧格式（数组），但应该逐步废弃
+      logger.warn(`[ToolSandbox] Tool ${this.toolId} is using deprecated array format for dependencies. Please update to object format.`);
+      for (const dep of this.dependencies) {
+        if (dep.includes('@')) {
+          const lastAtIndex = dep.lastIndexOf('@');
+          if (lastAtIndex > 0) {
+            const name = dep.substring(0, lastAtIndex);
+            const version = dep.substring(lastAtIndex + 1);
+            logger.debug(`[ToolSandbox] Parsing dependency "${dep}" => name="${name}", version="${version}"`);
+            packageJson.dependencies[name] = version;
+          } else {
+            // 只有 @ 开头，没有版本号的情况（如 @scope/package）
+            packageJson.dependencies[dep] = 'latest';
+          }
+        } else {
+          packageJson.dependencies[dep] = 'latest';
+        }
       }
     }
     

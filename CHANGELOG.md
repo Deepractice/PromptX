@@ -1,5 +1,151 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- [#237](https://github.com/Deepractice/PromptX/pull/237) [`3b7ec16`](https://github.com/Deepractice/PromptX/commit/3b7ec16acbf06d689d781d3ade7ee84d2191fcd2) Thanks [@deepracticexs](https://github.com/deepracticexs)! - fix: 修复 ToolSandbox 对 scoped npm 包的解析问题 (#236)
+
+  ## 📋 Summary
+
+  修复了 ToolSandbox 在解析 scoped npm 包（如 `@modelcontextprotocol/server-filesystem@^2025.7.29`）时因使用 `split('@')` 导致的包名错误分割问题。
+
+  ## 🔄 Changes
+
+  ### 核心改动
+
+  将 `getDependencies()` 方法从返回数组格式改为返回对象格式，直接与 package.json 的 dependencies 格式保持一致，从根本上避免了字符串解析问题。
+
+  ### 文件变更
+
+  - **src/lib/tool/ToolSandbox.js**
+
+    - 新增对象格式支持（优先）
+    - 保留数组格式兼容性（带弃用警告）
+    - 使用 `lastIndexOf('@')` 解析旧格式
+
+  - **src/lib/tool/ToolInterface.js**
+
+    - 更新示例代码使用新的对象格式
+    - 文档说明新格式规范
+
+  - **src/lib/tool/SandboxErrorManager.js**
+
+    - 兼容两种格式的错误处理
+    - 更新错误提示使用新格式
+
+  - **resource/role/luban/**
+    - 更新工具开发相关文档
+    - 所有示例改用新的对象格式
+
+  ### 新增测试工具
+
+  - 创建 `tool-tester` 工具用于回归测试
+  - 专门测试 scoped 包的支持情况
+  - 可用于后续 ToolSandbox 功能验证
+
+  ## 🧪 Testing
+
+  - ✅ 创建 tool-tester 测试工具
+  - ✅ Scoped 包识别测试通过
+  - ✅ 依赖格式验证通过
+  - ✅ 向后兼容性确认
+
+  ## 💥 Breaking Changes
+
+  ⚠️ `getDependencies()` 方法现在应返回对象格式而非数组格式：
+
+  **旧格式**（已弃用，但仍支持）：
+
+  ```javascript
+  getDependencies() {
+    return [
+      'lodash@^4.17.21',
+      '@sindresorhus/is@^6.0.0'
+    ];
+  }
+  ```
+
+  **新格式**（推荐）：
+
+  ```javascript
+  getDependencies() {
+    return {
+      'lodash': '^4.17.21',
+      '@sindresorhus/is': '^6.0.0'
+    };
+  }
+  ```
+
+  ## 🔗 Related
+
+  - Fixes #236
+
+  🤖 Generated with [Claude Code](https://claude.ai/code)
+
+## 0.2.3
+
+### Patch Changes
+
+- [#235](https://github.com/Deepractice/PromptX/pull/235) [`17a1116`](https://github.com/Deepractice/PromptX/commit/17a111661728f160eb82a796f87942ade7bc137b) Thanks [@deepracticexs](https://github.com/deepracticexs)! - fix: 提升 ToolSandbox 工作目录到~/.promptx 层级 (#232)
+
+  ## 概述
+
+  解决 #232 - ToolSandbox 工作目录被硬编码限制的问题
+
+  ## User Impact
+
+  工具现在可以访问整个`.promptx`目录下的资源文件，不再被限制在狭小的 toolbox 子目录中。这让工具能够读取项目配置、访问资源文件、执行更复杂的文件操作。
+
+  ## 问题描述
+
+  之前 ToolSandbox 将所有工具的工作目录硬编码为`~/.promptx/toolbox/[tool-id]`，导致工具无法访问项目级资源文件。
+
+  ## 解决方案
+
+  1. **新增 ToolDirectoryManager 类**：基于协议系统统一管理工具相关目录
+  2. **工作目录提升**：将 process.cwd()从 toolbox 子目录提升到`~/.promptx`
+  3. **保持依赖隔离**：node_modules 仍然安装在独立的 toolbox 目录
+
+  ## 主要改动
+
+  - ✅ 创建`src/lib/tool/ToolDirectoryManager.js` - 目录管理器
+  - ✅ 修改`src/lib/tool/ToolSandbox.js` - 使用新的目录管理器
+  - ✅ 更新`src/lib/tool/SandboxIsolationManager.js` - 适配新的工作目录
+
+  ## 测试验证
+
+  开发了三个测试工具验证改动效果：
+
+  ### 1. filesystem 工具
+
+  - 验证 process.cwd()返回`~/.promptx`
+  - 测试文件系统访问能力
+
+  ### 2. project-scanner 工具
+
+  - 验证能扫描 resource 目录
+  - 测试跨目录访问能力
+
+  ### 3. resource-manager 工具
+
+  - 测试 CRUD 操作
+  - 验证文件创建、读取、更新、删除功能
+
+  所有测试均通过 ✅
+
+  ## 影响范围
+
+  - 工具可以访问整个`.promptx`目录下的资源
+  - 保持向后兼容，现有工具无需修改
+  - 依赖隔离机制不变，安全性得到保证
+
+  ## 相关 Issue
+
+  Closes #232
+
+  🤖 Generated with [Claude Code](https://claude.ai/code)
+
 ## 0.2.2
 
 ### Patch Changes
