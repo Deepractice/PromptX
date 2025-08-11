@@ -5,6 +5,7 @@ const vm = require('vm');
 const SandboxIsolationManager = require('./SandboxIsolationManager');
 const SandboxErrorManager = require('./SandboxErrorManager');
 const ToolDirectoryManager = require('./ToolDirectoryManager');
+const ESModuleRequireSupport = require('./ESModuleRequireSupport');
 const logger = require('../utils/logger');
 
 /**
@@ -29,6 +30,7 @@ class ToolSandbox {
     this.sandboxContext = null;          // VM沙箱上下文
     this.isolationManager = null;        // 沙箱隔离管理器
     this.errorManager = new SandboxErrorManager(); // 智能错误管理器
+    this.esModuleSupport = null;         // ES Module 支持器
     
     // 状态标志
     this.isAnalyzed = false;
@@ -169,8 +171,15 @@ class ToolSandbox {
       await this.ensureSandboxDirectory();
       
       // 2. 如果有依赖，安装它们
-      if (this.dependencies.length > 0) {
+      const hasDependencies = typeof this.dependencies === 'object' && !Array.isArray(this.dependencies) 
+        ? Object.keys(this.dependencies).length > 0
+        : this.dependencies.length > 0;
+        
+      if (hasDependencies) {
         await this.installDependencies();
+        
+        // 2.1 检测 ES Module 依赖
+        await this.detectAndHandleESModules();
       }
       
       // 3. 创建执行沙箱环境
@@ -418,7 +427,12 @@ class ToolSandbox {
    * 安装依赖
    */
   async installDependencies() {
-    if (this.dependencies.length === 0) {
+    // 检查依赖是否为空（支持对象和数组格式）
+    const hasDependencies = typeof this.dependencies === 'object' && !Array.isArray(this.dependencies) 
+      ? Object.keys(this.dependencies).length > 0
+      : this.dependencies.length > 0;
+      
+    if (!hasDependencies) {
       return;
     }
 
@@ -443,13 +457,25 @@ class ToolSandbox {
       const existingDeps = existingPackageJson.dependencies || {};
       
       // 构建新的依赖对象
-      const newDeps = {};
-      for (const dep of this.dependencies) {
-        if (dep.includes('@')) {
-          const [name, version] = dep.split('@');
-          newDeps[name] = version;
-        } else {
-          newDeps[dep] = 'latest';
+      let newDeps = {};
+      if (typeof this.dependencies === 'object' && !Array.isArray(this.dependencies)) {
+        // 新格式：直接使用对象
+        newDeps = this.dependencies;
+      } else if (Array.isArray(this.dependencies)) {
+        // 兼容旧格式（数组）
+        for (const dep of this.dependencies) {
+          if (dep.includes('@')) {
+            const lastAtIndex = dep.lastIndexOf('@');
+            if (lastAtIndex > 0) {
+              const name = dep.substring(0, lastAtIndex);
+              const version = dep.substring(lastAtIndex + 1);
+              newDeps[name] = version;
+            } else {
+              newDeps[dep] = 'latest';
+            }
+          } else {
+            newDeps[dep] = 'latest';
+          }
         }
       }
       
@@ -563,6 +589,33 @@ class ToolSandbox {
   }
 
   /**
+   * 检测和处理 ES Module 依赖
+   */
+  async detectAndHandleESModules() {
+    // 初始化 ES Module 支持器
+    if (!this.esModuleSupport) {
+      this.esModuleSupport = new ESModuleRequireSupport(this.directoryManager.getToolboxPath());
+    }
+
+    // 检测依赖类型
+    const dependencyTypes = await this.esModuleSupport.detectDependenciesTypes(this.dependencies);
+    
+    if (dependencyTypes.esmodule.length > 0) {
+      logger.warn(`[ToolSandbox] 检测到 ES Module 依赖：`, dependencyTypes.esmodule.map(d => d.name).join(', '));
+      logger.info(`[ToolSandbox] ES Module 包需要使用动态 import() 加载，工具可能需要相应调整`);
+      
+      // 存储 ES Module 信息供后续使用
+      this.esModuleDependencies = dependencyTypes.esmodule;
+    }
+
+    if (dependencyTypes.unknown.length > 0) {
+      logger.debug(`[ToolSandbox] 无法检测的依赖类型：`, dependencyTypes.unknown.map(d => d.name).join(', '));
+    }
+
+    return dependencyTypes;
+  }
+
+  /**
    * 创建执行沙箱环境
    */
   async createExecutionSandbox() {
@@ -574,6 +627,48 @@ class ToolSandbox {
     });
     
     this.sandboxContext = this.isolationManager.createIsolatedContext();
+    
+    // 添加 ES Module 动态加载支持
+    // 始终提供 importModule 函数，以支持工具动态加载 ES Module
+    if (!this.esModuleSupport) {
+      this.esModuleSupport = new ESModuleRequireSupport(this.directoryManager.getToolboxPath());
+    }
+    
+    // 统一的模块加载函数 - 自动检测并加载
+    this.sandboxContext.loadModule = async (moduleName) => {
+      const moduleType = await this.esModuleSupport.detectModuleType(moduleName);
+      if (moduleType === 'esm') {
+        return await this.esModuleSupport.loadESModule(moduleName);
+      } else {
+        return this.sandboxContext.require(moduleName);
+      }
+    };
+    
+    // 保留 importModule 作为别名（向后兼容）
+    this.sandboxContext.importModule = this.sandboxContext.loadModule;
+    
+    // 增强 require - 添加智能错误提示
+    const originalRequire = this.sandboxContext.require;
+    this.sandboxContext.require = (moduleName) => {
+      try {
+        return originalRequire(moduleName);
+      } catch (error) {
+        if (error.code === 'ERR_REQUIRE_ESM') {
+          // 友好的错误提示
+          throw new Error(
+            `❌ "${moduleName}" 是 ES Module 包，请使用 await loadModule('${moduleName}') 代替 require('${moduleName}')\n` +
+            `💡 提示：loadModule 会自动检测包类型并正确加载`
+          );
+        }
+        throw error;
+      }
+    };
+    
+    if (this.esModuleDependencies && this.esModuleDependencies.length > 0) {
+      logger.debug(`[ToolSandbox] 已为工具 ${this.toolId} 启用 ES Module 支持，检测到 ${this.esModuleDependencies.length} 个 ES Module 依赖`);
+    } else {
+      logger.debug(`[ToolSandbox] 已为工具 ${this.toolId} 启用 importModule 函数`);
+    }
     
     // 在完全隔离的沙箱中重新加载工具
     const script = new vm.Script(this.toolContent, { filename: `${this.toolId}.js` });
@@ -695,9 +790,16 @@ class ToolSandbox {
       this.isolationManager = null;
     }
     
+    // 清理 ES Module 支持器
+    if (this.esModuleSupport) {
+      this.esModuleSupport.clearCache();
+      this.esModuleSupport = null;
+    }
+    
     // 清理其他资源
     this.sandboxContext = null;
     this.toolInstance = null;
+    this.esModuleDependencies = null;
   }
 
   /**
