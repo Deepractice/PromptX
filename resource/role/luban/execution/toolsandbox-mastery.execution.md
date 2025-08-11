@@ -14,7 +14,7 @@
 <rule>
 ## ToolSandbox使用规则
 - **三阶段必须**：analyze → prepareDependencies → execute顺序执行
-- **依赖声明强制**：getDependencies()返回的依赖必须准确
+- **依赖声明强制**：getDependencies()返回的依赖对象必须准确（格式：{包名: 版本}）
 - **错误处理必须**：每个阶段都要有完善的错误处理
 - **资源清理**：使用完毕后必须调用cleanup()
 - **状态检查**：执行前必须检查isPrepared状态
@@ -81,7 +81,7 @@ const analysisResult = await sandbox.analyze();
 // 返回结果包含：
 {
   toolId: 'text-analyzer',
-  dependencies: ['lodash@^4.17.21'],
+  dependencies: {'lodash': '^4.17.21'},  // 对象格式
   sandboxPath: '/Users/sean/.promptx/toolbox/text-analyzer',
   hasMetadata: true,
   hasSchema: true
@@ -95,7 +95,7 @@ const prepResult = await sandbox.prepareDependencies();
 
 // 内部执行步骤：
 // 1. ensureSandboxDirectory() - 创建沙箱目录
-// 2. createPackageJson() - 生成package.json
+// 2. createPackageJson() - 生成package.json（直接使用getDependencies返回的对象）
 // 3. runPnpmInstall() - 执行pnpm install
 // 4. createExecutionSandbox() - 创建执行环境
 ```
