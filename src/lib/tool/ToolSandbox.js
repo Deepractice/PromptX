@@ -4,6 +4,7 @@ const { spawn } = require('child_process');
 const vm = require('vm');
 const SandboxIsolationManager = require('./SandboxIsolationManager');
 const SandboxErrorManager = require('./SandboxErrorManager');
+const ToolDirectoryManager = require('./ToolDirectoryManager');
 const logger = require('../utils/logger');
 
 /**
@@ -23,7 +24,8 @@ class ToolSandbox {
     this.toolContent = null;             // 工具文件内容
     this.toolInstance = null;            // 工具实例
     this.dependencies = [];              // 依赖列表
-    this.sandboxPath = null;             // 沙箱目录路径
+    this.directoryManager = null;        // 目录管理器（新增）
+    this.sandboxPath = null;             // 沙箱目录路径（保留用于兼容）
     this.sandboxContext = null;          // VM沙箱上下文
     this.isolationManager = null;        // 沙箱隔离管理器
     this.errorManager = new SandboxErrorManager(); // 智能错误管理器
@@ -65,13 +67,11 @@ class ToolSandbox {
     this.sandboxContext = null;
     
     // 如果需要，删除沙箱目录
-    if (deleteDirectory && this.sandboxPath && await this.sandboxExists()) {
+    if (deleteDirectory && this.directoryManager) {
       try {
-        const { rmdir } = require('fs').promises;
-        await rmdir(this.sandboxPath, { recursive: true });
-        logger.debug(`[ToolSandbox] Deleted sandbox directory: ${this.sandboxPath}`);
+        await this.directoryManager.deleteToolbox();
       } catch (error) {
-        logger.debug(`[ToolSandbox] Error deleting sandbox directory (can be ignored): ${error.message}`);
+        logger.debug(`[ToolSandbox] Error deleting toolbox directory (can be ignored): ${error.message}`);
       }
     }
   }
@@ -113,10 +113,15 @@ class ToolSandbox {
       // 调试：检查加载的工具内容
       logger.debug(`[ToolSandbox] Loaded tool content first 200 chars:`, this.toolContent.substring(0, 200));
       
-      // 3. 设置沙箱路径（工具专用沙箱）
-      this.sandboxPath = await this.resolveSandboxPath();
+      // 3. 初始化目录管理器
+      this.directoryManager = new ToolDirectoryManager(this.toolId, this.resourceManager);
+      await this.directoryManager.initialize();
+      await this.directoryManager.ensureDirectories();
       
-      // 4. 在基础沙箱中分析工具
+      // 4. 设置 sandboxPath 用于兼容
+      this.sandboxPath = this.directoryManager.getWorkingPath();
+      
+      // 5. 在基础沙箱中分析工具
       await this.analyzeToolInSandbox();
       
       this.isAnalyzed = true;
@@ -136,6 +141,10 @@ class ToolSandbox {
     if (this.options.rebuild) {
       logger.debug(`[ToolSandbox] Manually triggering sandbox rebuild`);
       await this.clearSandbox(true);
+      // 重新初始化目录管理器
+      if (this.directoryManager) {
+        await this.directoryManager.initialize();
+      }
     }
     
     // 分析工具（如果需要）
@@ -170,7 +179,8 @@ class ToolSandbox {
       this.isPrepared = true;
       return { 
         success: true, 
-        sandboxPath: this.sandboxPath,
+        sandboxPath: this.directoryManager.getWorkingPath(),
+        toolboxPath: this.directoryManager.getToolboxPath(),
         dependencies: this.dependencies 
       };
       
@@ -201,7 +211,8 @@ class ToolSandbox {
         data: result,
         metadata: {
           toolId: this.toolId,
-          sandboxPath: this.sandboxPath,
+          sandboxPath: this.directoryManager.getWorkingPath(),
+          toolboxPath: this.directoryManager.getToolboxPath(),
           executionTime: Date.now()
         }
       };
@@ -211,7 +222,8 @@ class ToolSandbox {
       const intelligentError = this.errorManager.analyzeError(error, {
         toolId: this.toolId,
         dependencies: this.dependencies,
-        sandboxPath: this.sandboxPath,
+        sandboxPath: this.directoryManager?.getWorkingPath(),
+        toolboxPath: this.directoryManager?.getToolboxPath(),
         phase: 'execute'
       });
       
@@ -236,35 +248,13 @@ class ToolSandbox {
     return match[1];
   }
 
-  /**
-   * 解析沙箱路径
-   * @returns {Promise<string>} 沙箱绝对路径
-   */
-  async resolveSandboxPath() {
-    // 使用 @user://.promptx/toolbox/{toolId} 作为沙箱路径  
-    const userDataReference = `@user://.promptx/toolbox/${this.toolId}`;
-    const result = await this.resourceManager.resolveProtocolReference(userDataReference);
-    
-    if (!result.success) {
-      throw new Error(`Failed to resolve sandbox path: ${result.error}`);
-    }
-    
-    // 通过UserProtocol解析实际路径
-    const userProtocol = this.resourceManager.protocols.get('user');
-    const sandboxPath = await userProtocol.resolvePath(
-      `.promptx/toolbox/${this.toolId}`, 
-      new Map()
-    );
-    
-    return sandboxPath;
-  }
 
   /**
    * 在基础沙箱中分析工具
    */
   async analyzeToolInSandbox() {
-    // 创建分析阶段的隔离管理器
-    this.isolationManager = new SandboxIsolationManager(this.sandboxPath, {
+    // 创建分析阶段的隔离管理器，使用工作目录
+    this.isolationManager = new SandboxIsolationManager(this.directoryManager.getWorkingPath(), {
       enableDependencyLoading: false,
       analysisMode: true
     });
@@ -408,26 +398,19 @@ class ToolSandbox {
    * @returns {Promise<boolean>}
    */
   async sandboxExists() {
-    try {
-      await fs.access(this.sandboxPath);
-      return true;
-    } catch (error) {
+    if (!this.directoryManager) {
       return false;
     }
+    return await this.directoryManager.toolboxExists();
   }
 
   /**
    * 确保沙箱目录存在
    */
   async ensureSandboxDirectory() {
-    try {
-      await fs.access(this.sandboxPath);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        await fs.mkdir(this.sandboxPath, { recursive: true });
-      } else {
-        throw error;
-      }
+    // 委托给 directoryManager 处理
+    if (this.directoryManager) {
+      await this.directoryManager.ensureDirectories();
     }
   }
 
@@ -451,7 +434,7 @@ class ToolSandbox {
    * @returns {Promise<boolean>} true表示需要更新
    */
   async checkDependenciesNeedUpdate() {
-    const packageJsonPath = path.join(this.sandboxPath, 'package.json');
+    const packageJsonPath = this.directoryManager.getPackageJsonPath();
     
     try {
       // 读取现有的package.json
@@ -501,7 +484,7 @@ class ToolSandbox {
    * 创建package.json
    */
   async createPackageJson() {
-    const packageJsonPath = path.join(this.sandboxPath, 'package.json');
+    const packageJsonPath = this.directoryManager.getPackageJsonPath();
     
     const packageJson = {
       name: `toolbox-${this.toolId}`,
@@ -536,7 +519,7 @@ class ToolSandbox {
       const pnpmBinPath = path.join(path.dirname(pnpmModulePath), 'bin', 'pnpm.cjs');
       
       const pnpm = spawn('node', [pnpmBinPath, 'install'], {
-        cwd: this.sandboxPath,
+        cwd: this.directoryManager.getToolboxPath(),  // 使用 toolbox 路径安装依赖
         stdio: 'pipe'
       });
       
@@ -569,10 +552,11 @@ class ToolSandbox {
    * 创建执行沙箱环境
    */
   async createExecutionSandbox() {
-    // 创建执行阶段的隔离管理器
-    this.isolationManager = new SandboxIsolationManager(this.sandboxPath, {
+    // 创建执行阶段的隔离管理器，使用工作目录
+    this.isolationManager = new SandboxIsolationManager(this.directoryManager.getWorkingPath(), {
       enableDependencyLoading: true,
-      analysisMode: false
+      analysisMode: false,
+      toolboxPath: this.directoryManager.getToolboxPath()  // 传递 toolbox 路径用于依赖加载
     });
     
     this.sandboxContext = this.isolationManager.createIsolatedContext();
@@ -680,7 +664,8 @@ class ToolSandbox {
     return {
       toolId: this.toolId,
       dependencies: this.dependencies,
-      sandboxPath: this.sandboxPath,
+      sandboxPath: this.directoryManager?.getWorkingPath(),
+      toolboxPath: this.directoryManager?.getToolboxPath(),
       hasMetadata: typeof this.toolInstance?.getMetadata === 'function',
       hasSchema: typeof this.toolInstance?.getSchema === 'function'
     };
