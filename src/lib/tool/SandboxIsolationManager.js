@@ -11,8 +11,10 @@ const logger = require('../utils/logger');
  * - 提供安全、一致的沙箱执行上下文
  */
 class SandboxIsolationManager {
-  constructor(sandboxPath, options = {}) {
-    this.sandboxPath = sandboxPath;
+  constructor(workingPath, options = {}) {
+    this.workingPath = workingPath;  // 工作目录（~/.promptx）
+    this.toolboxPath = options.toolboxPath || workingPath;  // 工具箱目录（用于依赖加载）
+    this.sandboxPath = workingPath;  // 向后兼容
     this.options = {
       enableDependencyLoading: true,
       enableBuiltinModules: true,
@@ -44,8 +46,8 @@ class SandboxIsolationManager {
       ...this.createIsolatedGlobals(),
       
       // 4. 路径相关隔离
-      __dirname: this.sandboxPath,
-      __filename: path.join(this.sandboxPath, 'sandbox.js')
+      __dirname: this.workingPath,
+      __filename: path.join(this.workingPath, 'sandbox.js')
     };
 
     return this.isolatedContext;
@@ -56,16 +58,16 @@ class SandboxIsolationManager {
    * @returns {Function} 隔离的require函数
    */
   createIsolatedRequire() {
-    // 关键：使用Module.createRequire创建绑定到沙箱路径的require
-    const contextFile = path.join(this.sandboxPath, 'package.json');
+    // 关键：使用Module.createRequire创建绑定到toolbox路径的require
+    const contextFile = path.join(this.toolboxPath, 'package.json');
     let sandboxRequire;
     
     try {
-      // 创建绑定到沙箱上下文的require
+      // 创建绑定到toolbox上下文的require（依赖在这里）
       sandboxRequire = Module.createRequire(contextFile);
     } catch (error) {
       // fallback: 如果package.json不存在，使用虚拟路径
-      const virtualContextFile = path.join(this.sandboxPath, 'virtual-context.js');
+      const virtualContextFile = path.join(this.toolboxPath, 'virtual-context.js');
       sandboxRequire = Module.createRequire(virtualContextFile);
     }
 
@@ -143,8 +145,8 @@ class SandboxIsolationManager {
       // 环境变量（浅拷贝，避免污染）
       env: { ...process.env },
       
-      // 工作目录隔离
-      cwd: () => this.sandboxPath,
+      // 工作目录返回 workingPath（~/.promptx）
+      cwd: () => this.workingPath,
       
       // 安全的只读属性
       version: process.version,
