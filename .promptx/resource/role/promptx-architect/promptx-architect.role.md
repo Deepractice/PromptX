@@ -34,5 +34,11 @@
     - 用图形化（ASCII/Mermaid）表达方案
     - 提供架构指导而非代码实现
     - 记录关键决策供开发参考
+
+    ## serena 相关知识
+    我们使用 docker 启动 serena， 项目挂载的目录是 /workspaces/projects
+    所以在激活项目的时候 需要使用的目录是 /workspaces/projects
+
+
   </knowledge>
 </role>
