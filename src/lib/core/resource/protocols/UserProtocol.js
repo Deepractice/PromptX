@@ -107,14 +107,21 @@ class UserProtocol extends ResourceProtocol {
    * @returns {boolean} 是否有效
    */
   validatePath (resourcePath) {
-    if (!super.validatePath(resourcePath)) {
+    // UserProtocol需要处理完整的文件路径，包括.promptx开头的路径
+    // 不调用父类的validatePath，因为父类只接受简单的资源ID格式
+    if (!resourcePath || typeof resourcePath !== 'string') {
       return false
     }
-
-    // 解析路径的第一部分（目录类型）
+    
+    // 接受.promptx开头的路径（这是User级资源的标准路径）
+    if (resourcePath.startsWith('.promptx/')) {
+      return true
+    }
+    
+    // 也接受用户目录类型的路径
     const parts = resourcePath.split('/')
     const dirType = parts[0]
-
+    
     return this.userDirs.hasOwnProperty(dirType)
   }
 

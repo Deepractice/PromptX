@@ -113,11 +113,16 @@ class ResourceManager {
         if (typeof discovery.getRegistryData === 'function') {
           const registryData = await discovery.getRegistryData()
           if (registryData && registryData.resources) {
-            const resourceCount = registryData.resources.size || 0
+            const resourceCount = registryData.size || 0
             logger.info(`[ResourceManager] Found ${resourceCount} resources from ${discovery.source}`)
             
             // 合并资源到主注册表
             this.registryData.merge(registryData, true) // 允许覆盖
+            
+            // 调试：打印合并的资源
+            if (discovery.source === 'USER' && registryData.resources) {
+              logger.debug(`[ResourceManager] USER resources to merge:`, registryData.resources.map(r => `${r.protocol}://${r.id}`))
+            }
             
             // 记录合并后的状态
             logger.info(`[ResourceManager] After merging ${discovery.source}, total: ${this.registryData.size}`)
@@ -222,10 +227,16 @@ class ResourceManager {
         }
         
         // 对于逻辑协议，从RegistryData查找资源
+        logger.debug(`[ResourceManager] Finding resource: protocol=${parsed.protocol}, id=${parsed.path}`)
         const resourceData = this.registryData.findResourceById(parsed.path, parsed.protocol)
         if (!resourceData) {
+          // 打印所有可用的资源以便调试
+          const availableResources = this.registryData.getResourcesByProtocol(parsed.protocol)
+          logger.error(`[ResourceManager] Resource not found: ${parsed.protocol}:${parsed.path}`)
+          logger.error(`[ResourceManager] Available ${parsed.protocol} resources:`, availableResources.map(r => `${r.id} (${r.source})`))
           throw new Error(`Resource not found: ${parsed.protocol}:${parsed.path}`)
         }
+        logger.debug(`[ResourceManager] Found resource: ${resourceData.id} from ${resourceData.source}`)
         
         // 通过协议解析加载内容
         const content = await this.loadResourceByProtocol(resourceData.reference)

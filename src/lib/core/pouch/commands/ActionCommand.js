@@ -144,6 +144,11 @@ class ActionCommand extends BasePouchCommand {
         const projectProtocol = this.resourceManager.protocols.get('project')
         const relativePath = filePath.replace('@project://', '')
         filePath = await projectProtocol.resolvePath(relativePath)
+      } else if (filePath.startsWith('@user://')) {
+        // 处理User级资源路径
+        const userProtocol = this.resourceManager.protocols.get('user')
+        const relativePath = filePath.replace('@user://', '')
+        filePath = await userProtocol.resolvePath(relativePath)
       }
 
       // 读取角色文件内容
