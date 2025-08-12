@@ -118,6 +118,10 @@
         D --> F[{specific}.execution.md]
     ```
     
+    **文件生成方式**：
+    - 使用filesystem工具创建文件（具体方法见@!execution://role-creation-filesystem）
+    - 不再直接操作本地文件系统
+    
     **三组件快速填充**：
     ```mermaid
     flowchart LR
@@ -151,6 +155,9 @@
     .promptx/resource/role/{roleId}/
     ├── {roleId}.role.md
     └── [扩展文件...]
+    
+    🔄 正在刷新资源注册表...
+    [执行 promptx_welcome 工具]
     
     💡 重要：把AI当人，不是软件
     现在您可以直接和[角色名称]对话，就像和真人专家聊天一样自然。
