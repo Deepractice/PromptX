@@ -655,19 +655,51 @@ class ToolSandbox {
     // 保留 importModule 作为别名（向后兼容）
     this.sandboxContext.importModule = this.sandboxContext.loadModule;
     
-    // 增强 require - 添加智能错误提示
+    // 增强 require - 主动检测 ES Module 并阻止加载
     const originalRequire = this.sandboxContext.require;
-    this.sandboxContext.require = (moduleName) => {
+    const esModuleSupport = this.esModuleSupport;  // 捕获引用用于闭包
+    
+    this.sandboxContext.require = function(moduleName) {
+      // 主动检测是否是 ES Module（使用同步方法避免 async）
       try {
-        return originalRequire(moduleName);
-      } catch (error) {
-        if (error.code === 'ERR_REQUIRE_ESM') {
-          // 友好的错误提示
-          throw new Error(
+        const packageJsonPath = require.resolve(`${moduleName}/package.json`, {
+          paths: [esModuleSupport.toolboxPath]
+        });
+        const packageJson = require(packageJsonPath);
+        
+        if (packageJson.type === 'module') {
+          // 是 ES Module，主动抛出错误
+          const error = new Error(
             `❌ "${moduleName}" 是 ES Module 包，请使用 await loadModule('${moduleName}') 代替 require('${moduleName}')\n` +
             `💡 提示：loadModule 会自动检测包类型并正确加载`
           );
+          error.code = 'ERR_REQUIRE_ESM';
+          throw error;
         }
+      } catch (checkError) {
+        // 如果检测失败（比如包不存在），让原始 require 处理
+        if (checkError.code === 'ERR_REQUIRE_ESM') {
+          throw checkError;  // 重新抛出我们的错误
+        }
+      }
+      
+      // 不是 ES Module 或检测失败，使用原始 require
+      try {
+        const result = originalRequire(moduleName);
+        
+        // 额外检查：如果返回对象有 __esModule 和 default，说明是被包装的 ES Module
+        if (result && result.__esModule && result.default && !result.default.__esModule) {
+          // 这是 createRequire 包装的 ES Module，应该报错
+          const error = new Error(
+            `❌ "${moduleName}" 是 ES Module 包，请使用 await loadModule('${moduleName}') 代替 require('${moduleName}')\n` +
+            `💡 提示：loadModule 会自动检测包类型并正确加载`
+          );
+          error.code = 'ERR_REQUIRE_ESM';
+          throw error;
+        }
+        
+        return result;
+      } catch (error) {
         throw error;
       }
     };
