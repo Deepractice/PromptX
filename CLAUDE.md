@@ -8,3 +8,5 @@
 
 - promptx 的日志打印需要使用utils中的 logger 而不是 console
 - promptx 项目的运行日志在 ~/.promptx/logs
+
+- 使用 pnpm 管理项目
