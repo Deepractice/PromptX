@@ -107,9 +107,8 @@ class InitCommand extends BasePouchCommand {
       totalResources: 0 
     }
 
-    // 4. 最后步骤：刷新全局 ResourceManager
-    // 确保所有依赖项目状态的组件都已正确初始化后，再初始化 ResourceManager
-    await this.refreshGlobalResourceManager()
+    // 4. ResourceManager 的刷新现在由 WelcomeCommand 负责
+    // init 只负责项目环境初始化，不负责资源发现
 
     // 生成配置文件名
     const configFileName = this.projectManager.generateConfigFileName(projectConfig.mcpId, ideType, projectConfig.transport, projectPath)

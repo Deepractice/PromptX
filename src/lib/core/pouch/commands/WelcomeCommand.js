@@ -27,6 +27,25 @@ class WelcomeCommand extends BasePouchCommand {
   }
 
   /**
+   * 刷新所有资源（注册表文件 + ResourceManager）
+   * 这是 welcome 命令的核心功能，确保能发现所有最新的资源
+   */
+  async refreshAllResources() {
+    try {
+      // 1. 刷新注册表文件
+      await this.refreshAllRegistries()
+      
+      // 2. 刷新 ResourceManager，重新加载所有资源
+      logger.info('[WelcomeCommand] Refreshing ResourceManager to discover new resources...')
+      await this.resourceManager.initializeWithNewArchitecture()
+      
+    } catch (error) {
+      logger.warn('[WelcomeCommand] 资源刷新失败:', error.message)
+      // 不抛出错误，确保 welcome 命令能继续执行
+    }
+  }
+
+  /**
    * 刷新所有注册表
    * 在加载资源前先刷新注册表，确保显示最新的资源
    */
@@ -67,16 +86,8 @@ class WelcomeCommand extends BasePouchCommand {
   async loadRoleRegistry () {
     logger.info('[WelcomeCommand] Loading role registry...')
     
-    // 新增：刷新所有注册表
-    await this.refreshAllRegistries()
-    
-    // 确保ResourceManager已初始化
-    if (!this.resourceManager.initialized) {
-      logger.info('[WelcomeCommand] ResourceManager not initialized, initializing now...')
-      await this.resourceManager.initializeWithNewArchitecture()
-    }
-    
-    // 直接使用ResourceManager的注册表，无需重复处理
+    // 资源刷新已经在 getContent 中的 refreshAllResources 完成
+    // 这里直接使用ResourceManager的注册表
     const roles = this.resourceManager.registryData.getResourcesByProtocol('role')
     
     // 记录加载的角色信息
@@ -96,10 +107,8 @@ class WelcomeCommand extends BasePouchCommand {
    * 动态加载工具注册表
    */
   async loadToolRegistry () {
-    // 确保ResourceManager已初始化
-    if (!this.resourceManager.initialized) {
-      await this.resourceManager.initializeWithNewArchitecture()
-    }
+    // 资源刷新已经在 getContent 中的 refreshAllResources 完成
+    // 这里直接使用ResourceManager的注册表
     
     // 获取tool和manual资源
     const tools = this.resourceManager.registryData.getResourcesByProtocol('tool')
@@ -221,6 +230,9 @@ class WelcomeCommand extends BasePouchCommand {
   }
 
   async getContent (args) {
+    // 首先刷新所有资源，确保发现最新的角色和工具
+    await this.refreshAllResources()
+    
     const roleRegistry = await this.loadRoleRegistry()
     const toolRegistry = await this.loadToolRegistry()
     const allRoles = Object.values(roleRegistry)
