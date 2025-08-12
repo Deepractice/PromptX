@@ -10,3 +10,5 @@
 - promptx 项目的运行日志在 ~/.promptx/logs
 
 - 使用 pnpm 管理项目
+
+- Claude Code 的项目日志在 ~/.claude/projects/ 目录
