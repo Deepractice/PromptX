@@ -153,12 +153,22 @@ flowchart LR
     E --> F[错误处理]
 ```
 
-**Step 2.1: 工具文件创建**
-```bash
-# 标准文件路径
-.promptx/resource/tool/{tool-name}/
-├── {tool-name}.tool.js      # 给计算机的执行代码
-└── {tool-name}.manual.md    # 给AI的使用说明书
+**Step 2.1: 工具文件创建（使用filesystem工具）**
+
+⚠️ **重要变更**：所有文件创建必须通过filesystem工具完成，详见 @!execution://tool-creation-filesystem
+
+```javascript
+// 使用filesystem工具创建文件（必须先学习@manual://filesystem）
+// 1. 创建工具目录
+await filesystem.create_directory({
+  path: `resource/tool/${toolName}`
+});
+
+// 2. 创建工具文件和手册
+// 文件结构（自动限制在~/.promptx/内）
+// resource/tool/{tool-name}/
+// ├── {tool-name}.tool.js      # 给计算机的执行代码
+// └── {tool-name}.manual.md    # 给AI的使用说明书
 ```
 
 **Step 2.2: 工具说明书编写**
@@ -393,19 +403,25 @@ flowchart LR
 
 **Step 4.2: 注册表刷新与验证**
 
-🔄 **刷新项目级资源注册表**
+🔄 **刷新资源注册表（架构变更）**
 
-**在MCP环境中使用init工具**：
-- 使用MCP PromptX的`promptx_init`工具刷新项目级注册表
-- 该工具会重新扫描`.promptx/resource/`目录并更新资源注册表
+**使用welcome工具刷新**：
+- 使用MCP PromptX的`promptx_welcome`工具刷新所有层级注册表
+- 该工具会自动调用ResourceManager刷新，重新发现User/Project/Package三层资源
 - 注意：tool和manual会作为两个独立的资源被发现
 - 调用后工具立即可用，无需重启MCP服务器
 
 **调用方式**：
 ```
-工具名称: promptx_init  
-参数: {"workingDirectory": "/current/project/path"}
+工具名称: promptx_welcome
+参数: {} （无需参数）
+效果: 自动刷新三层资源架构的所有资源
 ```
+
+⚠️ **重要变更说明**：
+- `promptx_init`：现在只负责项目环境初始化，不再负责资源刷新
+- `promptx_welcome`：负责资源发现和刷新，创建新工具后必须调用
+- 架构升级：支持User > Project > Package三层资源优先级
 
 🔍 **验证工具注册成功**
 
