@@ -4,7 +4,7 @@
 @tool://tool-tester
 
 ## 简介
-PromptX 工具系统回归测试器，全面验证 ToolSandbox 各项功能，特别是新的 getDependencies 对象格式对 scoped 包的支持
+PromptX 工具系统回归测试器，全面验证 ToolSandbox 各项功能，包括统一的模块加载接口 loadModule()、ES Module 支持、智能错误提示等
 </identity>
 
 <purpose>
@@ -27,7 +27,7 @@ PromptX 工具系统回归测试器，全面验证 ToolSandbox 各项功能，�
 - ✅ **适用场景**：
   - ToolSandbox 代码修改后的回归测试
   - 新工具开发前的环境验证
-  - 依赖管理机制升级后的兼容性测试
+  - 依赖管理机制升级后的兼容性测试3
   - 定期的系统健康检查
   
 - ❌ **不适用场景**：

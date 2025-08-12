@@ -1,5 +1,91 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- [#239](https://github.com/Deepractice/PromptX/pull/239) [`1801695`](https://github.com/Deepractice/PromptX/commit/1801695d8330028f51c73c598ae74614438a94d0) Thanks [@deepracticexs](https://github.com/deepracticexs)! - feat: 添加 ES Module 支持和统一的模块加载接口 (#238)
+
+  ## 概述
+
+  实现了 ToolSandbox 对 ES Module 包的完整支持，通过统一的 `loadModule()` 接口自动处理不同模块类型，解决了 Issue #238 提出的问题。
+
+  ## 主要变更
+
+  ### ✨ 新功能
+
+  - 🎯 新增 `loadModule()` 统一接口，自动检测包类型（CommonJS/ES Module）
+  - 📦 新增 `ESModuleRequireSupport` 类处理 ES Module 检测和加载
+  - 🛡️ 增强 `require()` 错误提示，引导用户使用正确的加载方式
+
+  ### 🔧 改进
+
+  - 修复依赖检测逻辑，支持对象格式的 `getDependencies()`
+  - 处理 Node.js `createRequire` 对 ES Module 的兼容性包装
+  - 主动检测并阻止 `require` 加载 ES Module 包
+
+  ### 📚 文档
+
+  - 新增 `docs/toolsandbox.md` 完整使用指南
+  - 更新鲁班角色知识体系，包含 ES Module 和 `loadModule` 内容
+
+  ## 解决的问题
+
+  - ✅ 解决 Issue #238：支持 `@modelcontextprotocol/server-filesystem` 等 ES Module 包
+  - ✅ 用户无需关心包的模块类型，使用统一接口即可
+  - ✅ 自动处理 CommonJS 和 ES Module 的互操作性
+  - ✅ 提供友好的错误提示和使用引导
+
+  ## 测试结果
+
+  ```
+  ES Module 测试：100% 通过（8/8）
+  - ✅ ES Module 包声明
+  - ✅ 沙箱统一模块加载支持
+  - ✅ loadModule 加载 CommonJS
+  - ✅ loadModule 加载 ES Module
+  - ✅ ES Module 功能测试
+  - ✅ 统一接口批量加载
+  - ✅ CommonJS require ES Module（正确报错）
+  - ✅ require 智能错误提示
+  ```
+
+  ## 使用示例
+
+  ```javascript
+  async execute(params) {
+    // 不需要关心包的类型，loadModule 会自动处理
+    const lodash = await loadModule('lodash');      // CommonJS
+    const chalk = await loadModule('chalk');        // ES Module
+    const nanoid = await loadModule('nanoid');      // ES Module
+
+    // 所有包都能正常工作
+    const id = nanoid.nanoid();
+    const colored = chalk.green('Success\!');
+    const merged = lodash.merge({}, params);
+  }
+  ```
+
+  ## 向后兼容
+
+  - ✅ `importModule()` 作为 `loadModule()` 的别名保留
+  - ✅ CommonJS 包仍可直接使用 `require()`
+  - ✅ 现有工具无需修改
+
+  ## 相关 Issue
+
+  Closes #238
+
+  ## Changeset
+
+  需要添加 `changeset/minor` 标签，因为这是新功能。
+
+  ***
+
+  🤖 Generated with [Claude Code](https://claude.ai/code)
+
+  Co-Authored-By: Claude <noreply@anthropic.com>
+
 ## 1.0.0
 
 ### Major Changes

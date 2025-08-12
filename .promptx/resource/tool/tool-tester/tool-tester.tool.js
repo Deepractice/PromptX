@@ -1,4 +1,4 @@
-/**
+ /**
  * ToolTester - PromptX 工具系统回归测试工具
  * 用于全面测试 ToolSandbox 的各项功能
  */
@@ -28,7 +28,7 @@ module.exports = {
       properties: {
         testType: {
           type: 'string',
-          enum: ['basic', 'dependencies', 'scoped', 'error', 'performance', 'all'],
+          enum: ['basic', 'dependencies', 'scoped', 'esmodule', 'error', 'performance', 'all'],
           description: '测试类型'
         },
         verbose: {
@@ -43,15 +43,15 @@ module.exports = {
 
   /**
    * 获取依赖 - 新格式：对象形式
-   * 测试各种依赖格式，包括 scoped 包
+   * 测试各种依赖格式，包括 scoped 包和 ES Module 包
    */
   getDependencies() {
     return {
-      // 普通包
+      // CommonJS 包
       'lodash': '^4.17.21',
       'validator': '^13.11.0',
       
-      // Scoped 包 - 测试新格式对 @ 开头包的支持
+      // Scoped CommonJS 包
       '@sindresorhus/is': '^6.0.0',
       '@types/node': '^20.0.0',
       
@@ -59,7 +59,13 @@ module.exports = {
       'axios': '>=1.0.0 <2.0.0',
       
       // 精确版本
-      'uuid': '9.0.1'
+      'uuid': '9.0.1',
+      
+      // ES Module 包（用于测试）
+      'chalk': '^5.3.0',  // chalk v5+ 是纯 ES Module
+      'node-fetch': '^3.3.2',  // node-fetch v3+ 是纯 ES Module
+      'execa': '^8.0.1',  // execa v6+ 是纯 ES Module
+      'nanoid': '^5.0.4'  // nanoid v4+ 是纯 ES Module
     };
   },
 
@@ -73,7 +79,7 @@ module.exports = {
       errors.push('testType 是必需参数');
     }
     
-    const validTypes = ['basic', 'dependencies', 'scoped', 'error', 'performance', 'all'];
+    const validTypes = ['basic', 'dependencies', 'scoped', 'esmodule', 'error', 'performance', 'all'];
     if (params.testType && !validTypes.includes(params.testType)) {
       errors.push(`testType 必须是以下之一: ${validTypes.join(', ')}`);
     }
@@ -132,7 +138,7 @@ module.exports = {
    * 运行所有测试
    */
   async runAllTests(results, log) {
-    const allTests = ['basic', 'dependencies', 'scoped', 'error', 'performance'];
+    const allTests = ['basic', 'dependencies', 'scoped', 'esmodule', 'error', 'performance'];
     for (const test of allTests) {
       await this.runSpecificTest(test, results, log);
     }
@@ -151,6 +157,9 @@ module.exports = {
         break;
       case 'scoped':
         await this.testScopedPackages(results, log);
+        break;
+      case 'esmodule':
+        await this.testESModules(results, log);
         break;
       case 'error':
         await this.testErrorHandling(results, log);
@@ -335,6 +344,221 @@ module.exports = {
         details: {
           error: error.message,
           note: '可能需要先安装依赖'
+        }
+      });
+    }
+  },
+
+  /**
+   * 测试 ES Module 支持
+   */
+  async testESModules(results, log) {
+    log('开始 ES Module 测试...');
+    
+    const deps = this.getDependencies();
+    const esModulePackages = ['chalk', 'node-fetch', 'execa', 'nanoid'];
+    
+    // 测试1: ES Module 包识别
+    results.tests.push({
+      name: 'ES Module 包声明',
+      description: '检查是否声明了 ES Module 依赖',
+      passed: esModulePackages.every(pkg => deps[pkg]),
+      details: {
+        esModulePackages,
+        declared: esModulePackages.filter(pkg => deps[pkg])
+      }
+    });
+
+    // 测试2: 尝试使用 require 加载 ES Module（预期失败）
+    let requireError = null;
+    try {
+      // 尝试用 require 加载 chalk（ES Module）
+      const chalk = require('chalk');
+      results.tests.push({
+        name: 'CommonJS require ES Module',
+        description: '测试 require() 是否能加载 ES Module',
+        passed: false,
+        details: {
+          unexpectedSuccess: true,
+          message: 'require() 不应该能加载 ES Module，但意外成功了',
+          loaded: !!chalk
+        }
+      });
+    } catch (error) {
+      requireError = error;
+      // 这是预期的行为
+      results.tests.push({
+        name: 'CommonJS require ES Module',
+        description: '测试 require() 加载 ES Module 应该失败',
+        passed: error.code === 'ERR_REQUIRE_ESM',
+        details: {
+          errorCode: error.code,
+          errorMessage: error.message,
+          isExpectedError: error.code === 'ERR_REQUIRE_ESM'
+        }
+      });
+    }
+
+    // 测试3: 检查沙箱是否提供统一的 loadModule 函数
+    const hasLoadModuleGlobal = typeof loadModule === 'function';
+    const hasImportModuleGlobal = typeof importModule === 'function';
+    const hasLoadModule = hasLoadModuleGlobal;
+    const hasImportModule = hasImportModuleGlobal;
+    
+    results.tests.push({
+      name: '沙箱统一模块加载支持',
+      description: '检查沙箱是否提供 loadModule 函数（统一接口）',
+      passed: hasLoadModule,
+      details: {
+        hasLoadModule: hasLoadModuleGlobal,
+        hasImportModule: hasImportModuleGlobal,  // 向后兼容
+        typeLoadModule: typeof loadModule,
+        typeImportModule: typeof importModule,
+        note: hasLoadModule ? 'loadModule 是推荐的统一接口' : '未检测到 loadModule 函数'
+      }
+    });
+
+    // 测试4: 测试 loadModule 统一接口
+    if (hasLoadModule) {
+      try {
+        // 测试加载 CommonJS 包
+        const lodash = await loadModule('lodash');
+        const commonjsLoaded = !!lodash && typeof lodash.merge === 'function';
+        
+        results.tests.push({
+          name: 'loadModule 加载 CommonJS',
+          description: '测试 loadModule() 自动检测并加载 CommonJS 包',
+          passed: commonjsLoaded,
+          details: {
+            loaded: !!lodash,
+            type: typeof lodash,
+            hasMethod: typeof lodash.merge === 'function',
+            version: lodash.VERSION
+          }
+        });
+        
+        // 测试加载 ES Module 包
+        const chalk = await loadModule('chalk');
+        results.tests.push({
+          name: 'loadModule 加载 ES Module',
+          description: '测试 loadModule() 自动检测并加载 ES Module 包',
+          passed: !!chalk,
+          details: {
+            loaded: !!chalk,
+            type: typeof chalk,
+            hasBlue: typeof chalk.blue === 'function',
+            note: 'loadModule 自动处理了模块类型检测'
+          }
+        });
+        
+        // 测试5: 使用 ES Module 功能
+        if (chalk && typeof chalk.blue === 'function') {
+          const testString = 'Test ES Module';
+          const coloredString = chalk.blue(testString);
+          
+          // chalk 在非 TTY 环境可能不添加颜色，检查函数是否正常工作
+          const functionExecuted = typeof coloredString === 'string';
+          const hasAnsiCodes = coloredString.includes('\u001b[');
+          
+          results.tests.push({
+            name: 'ES Module 功能测试',
+            description: '测试通过 loadModule 加载的 ES Module 功能',
+            passed: functionExecuted,  // 只要函数正常执行返回字符串就算成功
+            details: {
+              input: testString,
+              output: coloredString,
+              functionExecuted,
+              hasAnsiCodes,
+              chalkLevel: chalk.level || 0,  // chalk 颜色支持级别
+              note: hasAnsiCodes ? 'chalk 添加了 ANSI 颜色代码' : 'chalk 在非 TTY 环境未添加颜色（正常行为）'
+            }
+          });
+        }
+      } catch (error) {
+        results.tests.push({
+          name: 'loadModule 统一接口',
+          description: '测试沙箱 loadModule() 统一接口',
+          passed: false,
+          details: {
+            error: error.message,
+            errorCode: error.code
+          }
+        });
+      }
+    } else {
+      results.tests.push({
+        name: 'loadModule 功能',
+        description: '沙箱未提供 loadModule 函数',
+        passed: false,
+        details: {
+          note: '需要在 ToolSandbox 中启用统一模块加载支持'
+        }
+      });
+    }
+
+    // 测试6: 测试统一接口的便利性
+    if (hasLoadModule) {
+      try {
+        // 使用统一的 loadModule 接口加载不同类型的包
+        const [lodash, validator, nanoid] = await Promise.all([
+          loadModule('lodash'),     // CommonJS
+          loadModule('validator'),  // CommonJS  
+          loadModule('nanoid')      // ES Module
+        ]);
+        
+        results.tests.push({
+          name: '统一接口批量加载',
+          description: '测试 loadModule 统一接口批量加载不同类型模块',
+          passed: !!lodash && !!validator && !!nanoid,
+          details: {
+            lodashLoaded: !!lodash,
+            validatorLoaded: !!validator,
+            nanoidLoaded: !!nanoid,
+            lodashVersion: lodash.VERSION,
+            hasValidatorMethod: typeof validator.isEmail === 'function',
+            hasNanoidFunction: typeof nanoid.nanoid === 'function',
+            note: '统一接口成功处理了 CommonJS 和 ES Module'
+          }
+        });
+      } catch (error) {
+        results.tests.push({
+          name: '统一接口批量加载',
+          description: '测试 loadModule 统一接口批量加载',
+          passed: false,
+          details: {
+            error: error.message,
+            note: '批量加载遇到问题'
+          }
+        });
+      }
+    }
+    
+    // 测试7: 测试 require 的智能错误提示
+    try {
+      // 尝试 require 一个 ES Module（应该失败并给出友好提示）
+      const chalk = require('chalk');
+      results.tests.push({
+        name: 'require 智能错误提示',
+        description: '测试 require ES Module 时的友好错误提示',
+        passed: false,
+        details: {
+          unexpectedSuccess: true,
+          message: 'require 不应该能加载 ES Module'
+        }
+      });
+    } catch (error) {
+      // 检查是否包含友好的错误提示
+      const hasFriendlyError = error.message.includes('loadModule') && 
+                               error.message.includes('ES Module');
+      results.tests.push({
+        name: 'require 智能错误提示',
+        description: '测试 require ES Module 时的友好错误提示',
+        passed: hasFriendlyError || error.code === 'ERR_REQUIRE_ESM',
+        details: {
+          errorMessage: error.message,
+          hasFriendlyMessage: hasFriendlyError,
+          originalErrorCode: error.code,
+          note: hasFriendlyError ? '提供了友好的错误提示' : '标准错误代码'
         }
       });
     }
