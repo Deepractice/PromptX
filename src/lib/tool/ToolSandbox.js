@@ -638,7 +638,15 @@ class ToolSandbox {
     this.sandboxContext.loadModule = async (moduleName) => {
       const moduleType = await this.esModuleSupport.detectModuleType(moduleName);
       if (moduleType === 'esm') {
-        return await this.esModuleSupport.loadESModule(moduleName);
+        // ES Module - 尝试动态 import
+        try {
+          return await this.esModuleSupport.loadESModule(moduleName);
+        } catch (error) {
+          // 如果动态 import 失败，尝试通过 require 加载并提取 default
+          const module = this.sandboxContext.require(moduleName);
+          // Node.js 的 createRequire 会将 ES Module 包装，真正的导出在 default 中
+          return module.default || module;
+        }
       } else {
         return this.sandboxContext.require(moduleName);
       }
