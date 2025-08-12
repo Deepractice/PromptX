@@ -4,9 +4,9 @@
   "metadata": {
     "version": "2.0.0",
     "description": "package 级资源注册表",
-    "createdAt": "2025-08-12T07:56:34.265Z",
-    "updatedAt": "2025-08-12T07:56:34.276Z",
-    "resourceCount": 33
+    "createdAt": "2025-08-12T08:59:43.026Z",
+    "updatedAt": "2025-08-12T08:59:43.037Z",
+    "resourceCount": 34
   },
   "resources": [
     {
@@ -17,10 +17,10 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/assistant/assistant.role.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.268Z",
-        "updatedAt": "2025-08-12T07:56:34.268Z",
-        "scannedAt": "2025-08-12T07:56:34.268Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/assistant/assistant.role.md",
+        "createdAt": "2025-08-12T08:59:43.029Z",
+        "updatedAt": "2025-08-12T08:59:43.029Z",
+        "scannedAt": "2025-08-12T08:59:43.029Z",
+        "path": "role/assistant/assistant.role.md",
         "fileType": "role"
       }
     },
@@ -32,10 +32,10 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/luban/luban.role.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.268Z",
-        "updatedAt": "2025-08-12T07:56:34.268Z",
-        "scannedAt": "2025-08-12T07:56:34.268Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/luban.role.md",
+        "createdAt": "2025-08-12T08:59:43.029Z",
+        "updatedAt": "2025-08-12T08:59:43.029Z",
+        "scannedAt": "2025-08-12T08:59:43.029Z",
+        "path": "role/luban/luban.role.md",
         "fileType": "role"
       }
     },
@@ -47,10 +47,10 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/noface/noface.role.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.269Z",
-        "updatedAt": "2025-08-12T07:56:34.269Z",
-        "scannedAt": "2025-08-12T07:56:34.269Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/noface/noface.role.md",
+        "createdAt": "2025-08-12T08:59:43.029Z",
+        "updatedAt": "2025-08-12T08:59:43.029Z",
+        "scannedAt": "2025-08-12T08:59:43.029Z",
+        "path": "role/noface/noface.role.md",
         "fileType": "role"
       }
     },
@@ -62,10 +62,10 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/nuwa/nuwa.role.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.269Z",
-        "updatedAt": "2025-08-12T07:56:34.269Z",
-        "scannedAt": "2025-08-12T07:56:34.269Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/nuwa.role.md",
+        "createdAt": "2025-08-12T08:59:43.029Z",
+        "updatedAt": "2025-08-12T08:59:43.029Z",
+        "scannedAt": "2025-08-12T08:59:43.029Z",
+        "path": "role/nuwa/nuwa.role.md",
         "fileType": "role"
       }
     },
@@ -77,10 +77,10 @@
       "description": "专业角色，提供特定领域的专业能力",
       "reference": "@package://resource/role/sean/sean.role.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.269Z",
-        "updatedAt": "2025-08-12T07:56:34.269Z",
-        "scannedAt": "2025-08-12T07:56:34.269Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/sean.role.md",
+        "createdAt": "2025-08-12T08:59:43.030Z",
+        "updatedAt": "2025-08-12T08:59:43.030Z",
+        "scannedAt": "2025-08-12T08:59:43.030Z",
+        "path": "role/sean/sean.role.md",
         "fileType": "role"
       }
     },
@@ -92,10 +92,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/assistant/thought/assistant.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.270Z",
-        "updatedAt": "2025-08-12T07:56:34.270Z",
-        "scannedAt": "2025-08-12T07:56:34.270Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/assistant/thought/assistant.thought.md",
+        "createdAt": "2025-08-12T08:59:43.030Z",
+        "updatedAt": "2025-08-12T08:59:43.030Z",
+        "scannedAt": "2025-08-12T08:59:43.030Z",
+        "path": "role/assistant/thought/assistant.thought.md",
         "fileType": "thought"
       }
     },
@@ -107,10 +107,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/design.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.270Z",
-        "updatedAt": "2025-08-12T07:56:34.270Z",
-        "scannedAt": "2025-08-12T07:56:34.270Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/design.thought.md",
+        "createdAt": "2025-08-12T08:59:43.030Z",
+        "updatedAt": "2025-08-12T08:59:43.030Z",
+        "scannedAt": "2025-08-12T08:59:43.030Z",
+        "path": "role/luban/thought/design.thought.md",
         "fileType": "thought"
       }
     },
@@ -122,10 +122,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/engineering.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.270Z",
-        "updatedAt": "2025-08-12T07:56:34.270Z",
-        "scannedAt": "2025-08-12T07:56:34.270Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/engineering.thought.md",
+        "createdAt": "2025-08-12T08:59:43.031Z",
+        "updatedAt": "2025-08-12T08:59:43.031Z",
+        "scannedAt": "2025-08-12T08:59:43.031Z",
+        "path": "role/luban/thought/engineering.thought.md",
         "fileType": "thought"
       }
     },
@@ -137,10 +137,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/requirements.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.271Z",
-        "updatedAt": "2025-08-12T07:56:34.271Z",
-        "scannedAt": "2025-08-12T07:56:34.271Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/requirements.thought.md",
+        "createdAt": "2025-08-12T08:59:43.031Z",
+        "updatedAt": "2025-08-12T08:59:43.031Z",
+        "scannedAt": "2025-08-12T08:59:43.031Z",
+        "path": "role/luban/thought/requirements.thought.md",
         "fileType": "thought"
       }
     },
@@ -152,10 +152,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/luban/thought/validation.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.271Z",
-        "updatedAt": "2025-08-12T07:56:34.271Z",
-        "scannedAt": "2025-08-12T07:56:34.271Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/thought/validation.thought.md",
+        "createdAt": "2025-08-12T08:59:43.031Z",
+        "updatedAt": "2025-08-12T08:59:43.031Z",
+        "scannedAt": "2025-08-12T08:59:43.031Z",
+        "path": "role/luban/thought/validation.thought.md",
         "fileType": "thought"
       }
     },
@@ -167,10 +167,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/nuwa/thought/role-creation.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.271Z",
-        "updatedAt": "2025-08-12T07:56:34.271Z",
-        "scannedAt": "2025-08-12T07:56:34.271Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/thought/role-creation.thought.md",
+        "createdAt": "2025-08-12T08:59:43.032Z",
+        "updatedAt": "2025-08-12T08:59:43.032Z",
+        "scannedAt": "2025-08-12T08:59:43.032Z",
+        "path": "role/nuwa/thought/role-creation.thought.md",
         "fileType": "thought"
       }
     },
@@ -182,10 +182,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/sean/thought/contradiction-methodology.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.271Z",
-        "updatedAt": "2025-08-12T07:56:34.271Z",
-        "scannedAt": "2025-08-12T07:56:34.271Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/thought/contradiction-methodology.thought.md",
+        "createdAt": "2025-08-12T08:59:43.032Z",
+        "updatedAt": "2025-08-12T08:59:43.032Z",
+        "scannedAt": "2025-08-12T08:59:43.032Z",
+        "path": "role/sean/thought/contradiction-methodology.thought.md",
         "fileType": "thought"
       }
     },
@@ -197,10 +197,10 @@
       "description": "思维模式，指导AI的思考方式",
       "reference": "@package://resource/role/sean/thought/sean.thought.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.271Z",
-        "updatedAt": "2025-08-12T07:56:34.271Z",
-        "scannedAt": "2025-08-12T07:56:34.271Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/thought/sean.thought.md",
+        "createdAt": "2025-08-12T08:59:43.032Z",
+        "updatedAt": "2025-08-12T08:59:43.032Z",
+        "scannedAt": "2025-08-12T08:59:43.032Z",
+        "path": "role/sean/thought/sean.thought.md",
         "fileType": "thought"
       }
     },
@@ -212,10 +212,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/assistant/execution/assistant.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.272Z",
-        "updatedAt": "2025-08-12T07:56:34.272Z",
-        "scannedAt": "2025-08-12T07:56:34.272Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/assistant/execution/assistant.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/assistant/execution/assistant.execution.md",
         "fileType": "execution"
       }
     },
@@ -227,10 +227,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/luban/execution/tool-development-workflow.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.272Z",
-        "updatedAt": "2025-08-12T07:56:34.272Z",
-        "scannedAt": "2025-08-12T07:56:34.272Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/execution/tool-development-workflow.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/luban/execution/tool-development-workflow.execution.md",
         "fileType": "execution"
       }
     },
@@ -242,10 +242,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/luban/execution/toolsandbox-mastery.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.272Z",
-        "updatedAt": "2025-08-12T07:56:34.272Z",
-        "scannedAt": "2025-08-12T07:56:34.272Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/execution/toolsandbox-mastery.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/luban/execution/toolsandbox-mastery.execution.md",
         "fileType": "execution"
       }
     },
@@ -257,10 +257,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/noface/execution/adaptive-learning.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/noface/execution/adaptive-learning.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/noface/execution/adaptive-learning.execution.md",
         "fileType": "execution"
       }
     },
@@ -272,10 +272,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/noface/execution/content-preservation.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/noface/execution/content-preservation.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/noface/execution/content-preservation.execution.md",
         "fileType": "execution"
       }
     },
@@ -287,10 +287,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/dpml-authoring.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/dpml-authoring.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/nuwa/execution/dpml-authoring.execution.md",
         "fileType": "execution"
       }
     },
@@ -302,10 +302,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/role-creation-filesystem.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/role-creation-filesystem.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/nuwa/execution/role-creation-filesystem.execution.md",
         "fileType": "execution"
       }
     },
@@ -317,10 +317,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/role-design-patterns.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/role-design-patterns.execution.md",
+        "createdAt": "2025-08-12T08:59:43.033Z",
+        "updatedAt": "2025-08-12T08:59:43.033Z",
+        "scannedAt": "2025-08-12T08:59:43.033Z",
+        "path": "role/nuwa/execution/role-design-patterns.execution.md",
         "fileType": "execution"
       }
     },
@@ -332,10 +332,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/role-generation.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/role-generation.execution.md",
+        "createdAt": "2025-08-12T08:59:43.034Z",
+        "updatedAt": "2025-08-12T08:59:43.034Z",
+        "scannedAt": "2025-08-12T08:59:43.034Z",
+        "path": "role/nuwa/execution/role-generation.execution.md",
         "fileType": "execution"
       }
     },
@@ -347,10 +347,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/nuwa/execution/visualization-enhancement.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/nuwa/execution/visualization-enhancement.execution.md",
+        "createdAt": "2025-08-12T08:59:43.034Z",
+        "updatedAt": "2025-08-12T08:59:43.034Z",
+        "scannedAt": "2025-08-12T08:59:43.034Z",
+        "path": "role/nuwa/execution/visualization-enhancement.execution.md",
         "fileType": "execution"
       }
     },
@@ -362,10 +362,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/sean/execution/contradiction-analysis.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/execution/contradiction-analysis.execution.md",
+        "createdAt": "2025-08-12T08:59:43.034Z",
+        "updatedAt": "2025-08-12T08:59:43.034Z",
+        "scannedAt": "2025-08-12T08:59:43.034Z",
+        "path": "role/sean/execution/contradiction-analysis.execution.md",
         "fileType": "execution"
       }
     },
@@ -377,10 +377,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/sean/execution/contradiction-management-methodology.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/execution/contradiction-management-methodology.execution.md",
+        "createdAt": "2025-08-12T08:59:43.034Z",
+        "updatedAt": "2025-08-12T08:59:43.034Z",
+        "scannedAt": "2025-08-12T08:59:43.034Z",
+        "path": "role/sean/execution/contradiction-management-methodology.execution.md",
         "fileType": "execution"
       }
     },
@@ -392,10 +392,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/sean/execution/sean-decision-framework.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/execution/sean-decision-framework.execution.md",
+        "createdAt": "2025-08-12T08:59:43.034Z",
+        "updatedAt": "2025-08-12T08:59:43.034Z",
+        "scannedAt": "2025-08-12T08:59:43.034Z",
+        "path": "role/sean/execution/sean-decision-framework.execution.md",
         "fileType": "execution"
       }
     },
@@ -407,10 +407,10 @@
       "description": "执行模式，定义具体的行为模式",
       "reference": "@package://resource/role/sean/execution/template-adherence.execution.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.273Z",
-        "updatedAt": "2025-08-12T07:56:34.273Z",
-        "scannedAt": "2025-08-12T07:56:34.273Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/execution/template-adherence.execution.md",
+        "createdAt": "2025-08-12T08:59:43.034Z",
+        "updatedAt": "2025-08-12T08:59:43.034Z",
+        "scannedAt": "2025-08-12T08:59:43.034Z",
+        "path": "role/sean/execution/template-adherence.execution.md",
         "fileType": "execution"
       }
     },
@@ -422,10 +422,10 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/luban/knowledge/dpml-tool-tagging.knowledge.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.274Z",
-        "updatedAt": "2025-08-12T07:56:34.274Z",
-        "scannedAt": "2025-08-12T07:56:34.274Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/knowledge/dpml-tool-tagging.knowledge.md",
+        "createdAt": "2025-08-12T08:59:43.035Z",
+        "updatedAt": "2025-08-12T08:59:43.035Z",
+        "scannedAt": "2025-08-12T08:59:43.035Z",
+        "path": "role/luban/knowledge/dpml-tool-tagging.knowledge.md",
         "fileType": "knowledge"
       }
     },
@@ -437,10 +437,10 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.274Z",
-        "updatedAt": "2025-08-12T07:56:34.274Z",
-        "scannedAt": "2025-08-12T07:56:34.274Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
+        "createdAt": "2025-08-12T08:59:43.035Z",
+        "updatedAt": "2025-08-12T08:59:43.035Z",
+        "scannedAt": "2025-08-12T08:59:43.035Z",
+        "path": "role/luban/knowledge/promptx-tool-architecture.knowledge.md",
         "fileType": "knowledge"
       }
     },
@@ -452,10 +452,10 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/sean/knowledge/contradiction-methodology.knowledge.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.274Z",
-        "updatedAt": "2025-08-12T07:56:34.274Z",
-        "scannedAt": "2025-08-12T07:56:34.274Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/knowledge/contradiction-methodology.knowledge.md",
+        "createdAt": "2025-08-12T08:59:43.035Z",
+        "updatedAt": "2025-08-12T08:59:43.035Z",
+        "scannedAt": "2025-08-12T08:59:43.035Z",
+        "path": "role/sean/knowledge/contradiction-methodology.knowledge.md",
         "fileType": "knowledge"
       }
     },
@@ -467,10 +467,10 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/sean/knowledge/product-philosophy.knowledge.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.275Z",
-        "updatedAt": "2025-08-12T07:56:34.275Z",
-        "scannedAt": "2025-08-12T07:56:34.275Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/knowledge/product-philosophy.knowledge.md",
+        "createdAt": "2025-08-12T08:59:43.036Z",
+        "updatedAt": "2025-08-12T08:59:43.036Z",
+        "scannedAt": "2025-08-12T08:59:43.036Z",
+        "path": "role/sean/knowledge/product-philosophy.knowledge.md",
         "fileType": "knowledge"
       }
     },
@@ -482,10 +482,10 @@
       "description": "知识库，提供专业知识和信息",
       "reference": "@package://resource/role/sean/knowledge/promptx-evolution.knowledge.md",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.275Z",
-        "updatedAt": "2025-08-12T07:56:34.275Z",
-        "scannedAt": "2025-08-12T07:56:34.275Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/role/sean/knowledge/promptx-evolution.knowledge.md",
+        "createdAt": "2025-08-12T08:59:43.036Z",
+        "updatedAt": "2025-08-12T08:59:43.036Z",
+        "scannedAt": "2025-08-12T08:59:43.036Z",
+        "path": "role/sean/knowledge/promptx-evolution.knowledge.md",
         "fileType": "knowledge"
       }
     },
@@ -497,25 +497,41 @@
       "description": "tool类型的资源",
       "reference": "@package://resource/tool/filesystem/filesystem.tool.js",
       "metadata": {
-        "createdAt": "2025-08-12T07:56:34.276Z",
-        "updatedAt": "2025-08-12T07:56:34.276Z",
-        "scannedAt": "2025-08-12T07:56:34.276Z",
-        "filePath": "/Users/sean/Management/ContradictionManagement/projects/PromptX/resource/tool/filesystem/filesystem.tool.js",
+        "createdAt": "2025-08-12T08:59:43.036Z",
+        "updatedAt": "2025-08-12T08:59:43.036Z",
+        "scannedAt": "2025-08-12T08:59:43.036Z",
+        "path": "tool/filesystem/filesystem.tool.js",
         "fileType": "tool"
+      }
+    },
+    {
+      "id": "filesystem",
+      "source": "package",
+      "protocol": "manual",
+      "name": "Filesystem manual",
+      "description": "manual类型的资源",
+      "reference": "@package://resource/tool/filesystem/filesystem.manual.md",
+      "metadata": {
+        "createdAt": "2025-08-12T08:59:43.037Z",
+        "updatedAt": "2025-08-12T08:59:43.037Z",
+        "scannedAt": "2025-08-12T08:59:43.037Z",
+        "path": "tool/filesystem/filesystem.manual.md",
+        "fileType": "manual"
       }
     }
   ],
   "stats": {
-    "totalResources": 33,
+    "totalResources": 34,
     "byProtocol": {
       "role": 5,
       "thought": 8,
       "execution": 14,
       "knowledge": 5,
-      "tool": 1
+      "tool": 1,
+      "manual": 1
     },
     "bySource": {
-      "package": 33
+      "package": 34
     }
   }
 }

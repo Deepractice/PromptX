@@ -44,6 +44,10 @@ class FilePatternDiscovery extends BaseDiscovery {
       'tool': {
         extensions: ['.tool.js'],
         validator: this._validateToolFile.bind(this)
+      },
+      'manual': {
+        extensions: ['.manual.md'],
+        validator: this._validateManualFile.bind(this)
       }
     }
   }
@@ -156,7 +160,7 @@ class FilePatternDiscovery extends BaseDiscovery {
         reference: reference,
         metadata: {
           scannedAt: new Date().toISOString(),
-          filePath: filePath,
+          path: path.relative(baseDirectory, filePath).replace(/\\/g, '/'),
           fileType: resourceType
         }
       })
@@ -322,6 +326,27 @@ class FilePatternDiscovery extends BaseDiscovery {
       
       return hasRequiredMethods
       
+    } catch (error) {
+      return false
+    }
+  }
+
+  /**
+   * 验证Manual文件
+   * @param {string} filePath - 文件路径
+   * @returns {Promise<boolean>} 是否有效
+   */
+  async _validateManualFile(filePath) {
+    try {
+      const content = await fs.readFile(filePath, 'utf8')
+      const trimmedContent = content.trim()
+      
+      if (trimmedContent.length === 0) {
+        return false
+      }
+
+      // Manual文件应该包含<manual>标签或者至少有一定的内容
+      return trimmedContent.includes('<manual>') || trimmedContent.length > 50
     } catch (error) {
       return false
     }
