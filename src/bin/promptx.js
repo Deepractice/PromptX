@@ -170,10 +170,10 @@ program
 program
   .command('mcp-server')
   .description('🔌 启动MCP Server，支持Claude Desktop等AI应用接入')
-  .option('-t, --transport <type>', '传输类型 (stdio|http|sse)', 'stdio')
-  .option('-p, --port <number>', 'HTTP端口号 (仅http/sse传输)', '3000')
-  .option('--host <address>', '绑定地址 (仅http/sse传输)', 'localhost')
-  .option('--cors', '启用CORS (仅http/sse传输)', false)
+  .option('-t, --transport <type>', '传输类型 (stdio|http)', 'stdio')
+  .option('-p, --port <number>', 'HTTP端口号 (仅http传输)', '3000')
+  .option('--host <address>', '绑定地址 (仅http传输)', 'localhost')
+  .option('--cors', '启用CORS (仅http传输)', false)
   .option('--debug', '启用调试模式', false)
   .action(async (options) => {
     try {
@@ -186,19 +186,18 @@ program
       if (options.transport === 'stdio') {
         const mcpServer = new MCPServerStdioCommand();
         await mcpServer.execute();
-      } else if (options.transport === 'http' || options.transport === 'sse') {
+      } else if (options.transport === 'http') {
         const mcpHttpServer = new MCPServerHttpCommand();
         const serverOptions = {
-          transport: options.transport,
           port: parseInt(options.port),
           host: options.host,
           cors: options.cors
         };
         
-        logger.info(chalk.green(`🚀 启动 ${options.transport.toUpperCase()} MCP Server 在 ${options.host}:${options.port}...`));
+        logger.info(chalk.green(`🚀 启动 HTTP MCP Server 在 ${options.host}:${options.port}...`));
         await mcpHttpServer.execute(serverOptions);
       } else {
-        throw new Error(`不支持的传输类型: ${options.transport}。支持的类型: stdio, http, sse`);
+        throw new Error(`不支持的传输类型: ${options.transport}。支持的类型: stdio, http`);
       }
     } catch (error) {
       // 输出到stderr，不污染MCP的stdout通信
@@ -257,8 +256,7 @@ ${chalk.cyan('示例:')}
 
   ${chalk.gray('# 8️⃣ 启动MCP服务')}
   promptx mcp-server                    # stdio传输(默认)
-  promptx mcp-server -t http -p 3000    # HTTP传输
-  promptx mcp-server -t sse -p 3001     # SSE传输
+  promptx mcp-server -t http -p 3000    # HTTP传输(Streamable HTTP)
 
 ${chalk.cyan('🔄 PATEOAS状态机:')}
   每个锦囊输出都包含 PATEOAS 导航，引导 AI 发现下一步操作
