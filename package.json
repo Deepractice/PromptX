@@ -44,7 +44,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.1",
+    "@modelcontextprotocol/sdk": "^1.17.2",
     "@reaxi/node-detect-runtime": "^0.1.0",
     "body-parser": "^1.20.3",
     "boxen": "^5.1.2",

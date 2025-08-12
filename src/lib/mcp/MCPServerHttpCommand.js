@@ -2,7 +2,6 @@ const express = require('express');
 const { randomUUID } = require('node:crypto');
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
-const { SSEServerTransport } = require('@modelcontextprotocol/sdk/server/sse.js');
 const { isInitializeRequest } = require('@modelcontextprotocol/sdk/types.js');
 const { cli } = require('../core/pouch');
 const { MCPOutputAdapter } = require('../mcp/MCPOutputAdapter');
@@ -35,29 +34,20 @@ class MCPServerHttpCommand {
    */
   async execute(options = {}) {
     const { 
-      transport = 'http', 
       port = 3000, 
       host = 'localhost' 
     } = options;
 
     // 🚀 初始化ServerEnvironment - 在所有逻辑之前装配服务环境
     const serverEnv = getGlobalServerEnvironment();
-    serverEnv.initialize({ transport, host, port });
-
-    // 验证传输类型
-    if (!['http', 'sse'].includes(transport)) {
-      throw new Error(`Unsupported transport: ${transport}`);
-    }
+    serverEnv.initialize({ transport: 'http', host, port });
 
     // 验证配置
     this.validatePort(port);
     this.validateHost(host);
 
-    if (transport === 'http') {
-      return this.startStreamableHttpServer(port, host);
-    } else if (transport === 'sse') {
-      return this.startSSEServer(port, host);
-    }
+    // 统一使用Streamable HTTP
+    return this.startStreamableHttpServer(port, host);
   }
 
   /**
@@ -82,16 +72,17 @@ class MCPServerHttpCommand {
       });
     });
 
-    // OAuth 支持端点 (简化实现)
+    // OAuth 支持端点 (简化的mock实现，避免客户端报错)
+    // TODO: 未来根据需要实现真实的OAuth认证
     app.get('/.well-known/oauth-authorization-server', this.handleOAuthMetadata.bind(this));
     app.get('/.well-known/openid-configuration', this.handleOAuthMetadata.bind(this));
     app.post('/register', this.handleDynamicRegistration.bind(this));
     app.get('/authorize', this.handleAuthorize.bind(this));
     app.post('/token', this.handleToken.bind(this));
 
-    // MCP 端点
+    // MCP 统一端点 - 支持所有请求类型
     app.post('/mcp', this.handleMCPPostRequest.bind(this));
-    app.get('/mcp', this.handleMCPGetRequest.bind(this));
+    app.get('/mcp', this.handleStreamConnection.bind(this));
     app.delete('/mcp', this.handleMCPDeleteRequest.bind(this));
 
     // 错误处理中间件
@@ -101,7 +92,7 @@ class MCPServerHttpCommand {
       const server = app.listen(port, host, () => {
         // 显示启动 Banner
         displayCompactBanner({
-          mode: transport === 'sse' ? 'sse' : 'http',
+          mode: 'http',
           workingDir: process.cwd(),
           host: host,
           port: port,
@@ -163,104 +154,6 @@ class MCPServerHttpCommand {
     }
   }
 
-  /**
-   * 启动 SSE 服务器
-   */
-  async startSSEServer(port, host) {
-    const app = express();
-    app.use(express.json());
-
-    this.log(`🚀 启动 SSE MCP Server...`);
-    
-    // 健康检查端点
-    app.get('/health', (req, res) => {
-      res.json({ status: 'ok', name: this.name, version: this.version, transport: 'sse' });
-    });
-
-    // SSE 端点 - 建立事件流
-    app.get('/mcp', async (req, res) => {
-      await this.handleSSEConnection(req, res);
-    });
-
-    // 消息端点 - 接收客户端 JSON-RPC 消息
-    app.post('/messages', async (req, res) => {
-      await this.handleSSEMessage(req, res);
-    });
-
-    return new Promise((resolve, reject) => {
-      const server = app.listen(port, host, () => {
-        this.log(`✅ SSE MCP Server 运行在 http://${host}:${port}`);
-        resolve(server);
-      });
-
-      server.on('error', reject);
-      this.server = server;
-    });
-  }
-
-  /**
-   * 处理 SSE 连接建立
-   */
-  async handleSSEConnection(req, res) {
-    this.log('建立 SSE 连接');
-    
-    try {
-      // 创建 SSE 传输
-      const transport = new SSEServerTransport('/messages', res);
-      const sessionId = transport.sessionId;
-      
-      // 存储传输
-      this.transports[sessionId] = transport;
-      
-      // 设置关闭处理程序
-      transport.onclose = () => {
-        this.log(`SSE 传输关闭: ${sessionId}`);
-        delete this.transports[sessionId];
-      };
-
-      // 连接到 MCP 服务器
-      const server = this.setupMCPServer();
-      await server.connect(transport);
-      
-      this.log(`SSE 流已建立，会话ID: ${sessionId}`);
-    } catch (error) {
-      this.log('建立 SSE 连接错误:', error);
-      if (!res.headersSent) {
-        res.status(500).send('Error establishing SSE connection');
-      }
-    }
-  }
-
-  /**
-   * 处理 SSE 消息
-   */
-  async handleSSEMessage(req, res) {
-    this.log('收到 SSE 消息:', req.body);
-
-    try {
-      // 从查询参数获取会话ID
-      const sessionId = req.query.sessionId;
-      
-      if (!sessionId) {
-        res.status(400).send('Missing sessionId parameter');
-        return;
-      }
-
-      const transport = this.transports[sessionId];
-      if (!transport) {
-        res.status(404).send('Session not found');
-        return;
-      }
-
-      // 处理消息
-      await transport.handlePostMessage(req, res, req.body);
-    } catch (error) {
-      this.log('处理 SSE 消息错误:', error);
-      if (!res.headersSent) {
-        res.status(500).send('Error handling request');
-      }
-    }
-  }
 
   /**
    * 设置 MCP 服务器 - 使用与 stdio 模式完全相同的低级 API
@@ -426,9 +319,10 @@ class MCPServerHttpCommand {
   }
 
   /**
-   * 处理 MCP GET 请求（SSE）
+   * 处理 GET 请求 - 建立流式连接
+   * 注意：StreamableHTTPServerTransport内部会使用SSE技术进行流式响应
    */
-  async handleMCPGetRequest(req, res) {
+  async handleStreamConnection(req, res) {
     const sessionId = req.headers['mcp-session-id'];
     if (!sessionId || !this.transports[sessionId]) {
       return res.status(400).json({
@@ -436,7 +330,7 @@ class MCPServerHttpCommand {
       });
     }
 
-    this.log(`建立 SSE 流: ${sessionId}`);
+    this.log(`建立流式连接: ${sessionId}`);
     const transport = this.transports[sessionId];
     await transport.handleRequest(req, res);
   }
@@ -553,7 +447,8 @@ class MCPServerHttpCommand {
   }
 
   /**
-   * OAuth 元数据端点 - 简化实现
+   * OAuth 元数据端点 - Mock实现
+   * 仅用于避免客户端连接时报错，不提供实际认证功能
    */
   handleOAuthMetadata(req, res) {
     const baseUrl = `http://${req.get('host')}`;
