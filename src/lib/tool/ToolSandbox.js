@@ -684,24 +684,20 @@ class ToolSandbox {
       }
       
       // 不是 ES Module 或检测失败，使用原始 require
-      try {
-        const result = originalRequire(moduleName);
-        
-        // 额外检查：如果返回对象有 __esModule 和 default，说明是被包装的 ES Module
-        if (result && result.__esModule && result.default && !result.default.__esModule) {
-          // 这是 createRequire 包装的 ES Module，应该报错
-          const error = new Error(
-            `❌ "${moduleName}" 是 ES Module 包，请使用 await loadModule('${moduleName}') 代替 require('${moduleName}')\n` +
-            `💡 提示：loadModule 会自动检测包类型并正确加载`
-          );
-          error.code = 'ERR_REQUIRE_ESM';
-          throw error;
-        }
-        
-        return result;
-      } catch (error) {
+      const result = originalRequire(moduleName);
+      
+      // 额外检查：如果返回对象有 __esModule 和 default，说明是被包装的 ES Module
+      if (result && result.__esModule && result.default && !result.default.__esModule) {
+        // 这是 createRequire 包装的 ES Module，应该报错
+        const error = new Error(
+          `❌ "${moduleName}" 是 ES Module 包，请使用 await loadModule('${moduleName}') 代替 require('${moduleName}')\n` +
+          `💡 提示：loadModule 会自动检测包类型并正确加载`
+        );
+        error.code = 'ERR_REQUIRE_ESM';
         throw error;
       }
+      
+      return result;
     };
     
     if (this.esModuleDependencies && this.esModuleDependencies.length > 0) {
