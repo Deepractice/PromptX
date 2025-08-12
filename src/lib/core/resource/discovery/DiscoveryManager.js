@@ -1,5 +1,6 @@
 const PackageDiscovery = require('./PackageDiscovery')
 const ProjectDiscovery = require('./ProjectDiscovery')
+const UserDiscovery = require('./UserDiscovery')
 const logger = require('../../../utils/logger')
 
 /**
@@ -20,10 +21,11 @@ class DiscoveryManager {
     if (discoveries) {
       this.discoveries = [...discoveries]
     } else {
-      // 默认发现器配置：只包含包级和项目级发现
+      // 默认发现器配置：包含包级、项目级和用户级发现
       this.discoveries = [
         new PackageDiscovery(),  // 优先级: 1
-        new ProjectDiscovery()   // 优先级: 2
+        new ProjectDiscovery(),  // 优先级: 2
+        new UserDiscovery()      // 优先级: 3 (最高)
       ]
     }
 

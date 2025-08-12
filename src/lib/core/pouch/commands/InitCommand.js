@@ -99,8 +99,13 @@ class InitCommand extends BasePouchCommand {
     // 2. 基础环境准备 - 现在可以安全使用项目路径
     await this.ensurePromptXDirectory(projectPath)
 
-    // 3. 生成项目级资源注册表 - 现在 ProjectDiscovery 可以正确获取项目路径
-    const registryStats = await this.generateProjectRegistry(projectPath)
+    // 3. 项目级注册表现在由 WelcomeCommand 在需要时生成
+    const registryStats = { 
+      message: `✅ 项目资源目录已准备就绪
+   📂 目录: .promptx/resource
+   💾 注册表将在首次查看资源时自动生成`,
+      totalResources: 0 
+    }
 
     // 4. 最后步骤：刷新全局 ResourceManager
     // 确保所有依赖项目状态的组件都已正确初始化后，再初始化 ResourceManager
