@@ -36,21 +36,44 @@ class ToolCommand extends BasePouchCommand {
     try {
       // 处理参数：如果是数组格式，需要转换为对象格式
       let toolArgs;
+      logger.info('[ToolCommand] getContent 接收到的 args:', args);
+      logger.info('[ToolCommand] args 类型:', Array.isArray(args) ? 'Array' : typeof args);
+      
       if (Array.isArray(args)) {
         // 从CLI调用时，args是数组：[tool_resource, parameters, ...options]
+        logger.info('[ToolCommand] 数组参数长度:', args.length);
+        logger.info('[ToolCommand] args[0]:', args[0]);
+        logger.info('[ToolCommand] args[1] 类型:', typeof args[1]);
+        logger.info('[ToolCommand] args[1] 值:', args[1]);
+        
         if (args.length >= 2) {
+          // 如果 parameters 是 JSON 字符串，解析它
+          let parameters = args[1];
+          if (typeof parameters === 'string') {
+            logger.info('[ToolCommand] 尝试解析 JSON 字符串参数');
+            try {
+              parameters = JSON.parse(parameters);
+              logger.info('[ToolCommand] JSON 解析成功:', parameters);
+            } catch (e) {
+              logger.warn('[ToolCommand] JSON 解析失败，保持原样:', e.message);
+              // 如果解析失败，保持原样（可能是其他格式的字符串参数）
+            }
+          }
+          
           toolArgs = {
             tool_resource: args[0],
-            parameters: args[1],
+            parameters: parameters,
             rebuild: args.includes('--rebuild'),
             timeout: this.extractTimeout(args)
           };
+          logger.info('[ToolCommand] 构建的 toolArgs:', toolArgs);
         } else {
           throw new Error('Invalid arguments: expected [tool_resource, parameters]');
         }
       } else {
         // 从其他方式调用时，args已经是对象格式
         toolArgs = args;
+        logger.info('[ToolCommand] 直接使用对象格式参数:', toolArgs);
       }
       
       // 执行工具调用
@@ -134,11 +157,15 @@ ${JSON.stringify(actualToolResult, null, 2)}
     let sandbox = null
     
     try {
+      logger.info('[ToolCommand] executeToolInternal 接收到的 args:', JSON.stringify(args, null, 2))
+      
       // 1. 参数验证
       this.validateArguments(args)
       
       const { tool_resource, parameters, rebuild = false, timeout = 30000 } = args
       
+      logger.info('[ToolCommand] 解构后的 parameters:', JSON.stringify(parameters, null, 2))
+      logger.info('[ToolCommand] parameters 类型:', typeof parameters)
       logger.debug(`[PromptXTool] 开始执行工具: ${tool_resource}`)
       
       // 2. 构建沙箱选项并创建ToolSandbox实例
@@ -158,6 +185,8 @@ ${JSON.stringify(actualToolResult, null, 2)}
       await sandbox.prepareDependencies()
       
       logger.debug(`[PromptXTool] Phase 3: 执行工具`)
+      logger.info('[ToolCommand] 传递给 sandbox.execute 的 parameters:', JSON.stringify(parameters, null, 2))
+      logger.info('[ToolCommand] parameters 的类型:', typeof parameters)
       const result = await sandbox.execute(parameters)
       
       // 5. 格式化成功结果 

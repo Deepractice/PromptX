@@ -1,30 +1,21 @@
-const express = require('express');
-const { randomUUID } = require('node:crypto');
-const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
-const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
-const { isInitializeRequest } = require('@modelcontextprotocol/sdk/types.js');
+const { FastMCP } = require('fastmcp');
+const { z } = require('zod');
+const { getToolDefinitions } = require('../mcp/toolDefinitions');
 const { cli } = require('../core/pouch');
 const { MCPOutputAdapter } = require('../mcp/MCPOutputAdapter');
-const { getToolDefinitions, getToolDefinition, getToolCliConverter } = require('../mcp/toolDefinitions');
-const ProjectManager = require('../utils/ProjectManager');
-const { getGlobalProjectManager } = require('../utils/ProjectManager');
 const { getGlobalServerEnvironment } = require('../utils/ServerEnvironment');
 const logger = require('../utils/logger');
 const { displayCompactBanner } = require('../utils/banner');
 
 /**
- * MCP HTTP Server Command
- * 实现基于 HTTP 协议的 MCP 服务器
- * 支持 Streamable HTTP 和 SSE 两种传输方式
+ * MCP HTTP Server Command - 使用 FastMCP 重写
+ * 解决 Issue #248: 统一使用 StreamableHTTP 传输层
  */
 class MCPServerHttpCommand {
   constructor() {
     this.name = 'promptx-mcp-streamable-http-server';
     this.version = '1.0.0';
-    this.transport = 'http';
-    this.port = 3000;
-    this.host = 'localhost';
-    this.transports = {}; // 存储会话传输
+    this.server = null;
     this.outputAdapter = new MCPOutputAdapter();
     this.debug = process.env.MCP_DEBUG === 'true';
   }
@@ -35,169 +26,233 @@ class MCPServerHttpCommand {
   async execute(options = {}) {
     const { 
       port = 3000, 
-      host = 'localhost' 
+      host = 'localhost',
+      stateless = false 
     } = options;
 
-    // 🚀 初始化ServerEnvironment - 在所有逻辑之前装配服务环境
+    // 显示启动 banner
+    displayCompactBanner('MCP HTTP Server (FastMCP)');
+    
+    // 初始化 ServerEnvironment
     const serverEnv = getGlobalServerEnvironment();
     serverEnv.initialize({ transport: 'http', host, port });
 
-    // 验证配置
-    this.validatePort(port);
-    this.validateHost(host);
+    try {
+      // 创建 FastMCP 实例
+      this.server = new FastMCP({
+        name: this.name,
+        version: this.version,
+        instructions: 'PromptX MCP Server - AI-powered command execution framework with cognition capabilities',
+        // 自定义日志器
+        logger: this.debug ? logger : undefined
+      });
 
-    // 统一使用Streamable HTTP
-    return this.startStreamableHttpServer(port, host);
+      // 注册所有 PromptX 工具
+      await this.registerPromptXTools();
+      
+      // 启动服务器
+      await this.server.start({
+        transportType: 'httpStream',
+        httpStream: {
+          port,
+          endpoint: '/mcp',
+          stateless,
+          // 启用 JSON 响应用于健康检查
+          enableJsonResponse: true
+        }
+      });
+
+      logger.info(`✅ MCP HTTP Server (FastMCP) started`);
+      logger.info(`📍 Endpoint: http://${host}:${port}/mcp`);
+      logger.info(`📊 Mode: ${stateless ? 'Stateless' : 'Stateful'}`);
+      logger.info(`🔧 Tools: ${this.getToolDefinitions().length} registered`);
+      
+      if (this.debug) {
+        logger.debug('Debug mode enabled - verbose logging active');
+      }
+
+      // 保持进程运行
+      process.on('SIGINT', async () => {
+        logger.info('\n🛑 Shutting down MCP server...');
+        await this.stop();
+        process.exit(0);
+      });
+
+      process.on('SIGTERM', async () => {
+        await this.stop();
+        process.exit(0);
+      });
+
+      return { success: true, port, host };
+    } catch (error) {
+      logger.error('Failed to start MCP HTTP server:', error);
+      throw error;
+    }
   }
 
   /**
-   * 启动 Streamable HTTP 服务器
+   * 注册 PromptX 工具到 FastMCP
    */
-  async startStreamableHttpServer(port, host) {
-    this.log(`🚀 启动 Streamable HTTP MCP Server...`);
+  async registerPromptXTools() {
+    const tools = this.getToolDefinitions();
     
-    const app = express();
-    
-    // 中间件设置
-    app.use(express.json());
-    app.use(this.corsMiddleware.bind(this));
+    for (const tool of tools) {
+      try {
+        // 转换工具定义为 FastMCP 格式
+        const fastMCPTool = {
+          name: tool.name,
+          description: tool.description,
+          // 将 inputSchema 转换为 Zod schema
+          parameters: this.convertToZodSchema(tool.inputSchema),
+          execute: async (args, context) => {
+            return await this.executePromptXTool(tool.name, args, context);
+          }
+        };
 
-    // 健康检查端点
-    app.get('/health', (req, res) => {
-      res.json({ 
-        status: 'ok', 
-        name: this.name, 
-        version: this.version, 
-        transport: 'http' 
-      });
-    });
-
-    // OAuth 支持端点 (简化的mock实现，避免客户端报错)
-    // TODO: 未来根据需要实现真实的OAuth认证
-    app.get('/.well-known/oauth-authorization-server', this.handleOAuthMetadata.bind(this));
-    app.get('/.well-known/openid-configuration', this.handleOAuthMetadata.bind(this));
-    app.post('/register', this.handleDynamicRegistration.bind(this));
-    app.get('/authorize', this.handleAuthorize.bind(this));
-    app.post('/token', this.handleToken.bind(this));
-
-    // MCP 统一端点 - 支持所有请求类型
-    app.post('/mcp', this.handleMCPPostRequest.bind(this));
-    app.get('/mcp', this.handleStreamConnection.bind(this));
-    app.delete('/mcp', this.handleMCPDeleteRequest.bind(this));
-
-    // 错误处理中间件
-    app.use(this.errorHandler.bind(this));
-
-    return new Promise((resolve, reject) => {
-      const server = app.listen(port, host, () => {
-        // 显示启动 Banner
-        displayCompactBanner({
-          mode: 'http',
-          workingDir: process.cwd(),
-          host: host,
-          port: port,
-          mcpId: getGlobalServerEnvironment().getMcpId()
-        });
+        this.server.addTool(fastMCPTool);
         
-        this.log(`Streamable HTTP MCP Server running at http://${host}:${port}`);
-        this.server = server;
-        resolve(server);
-      });
-
-      server.on('error', reject);
-    });
-  }
-
-  /**
-   * CORS 中间件
-   */
-  corsMiddleware(req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, mcp-session-id');
-    
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-      return;
+        if (this.debug) {
+          logger.debug(`Registered tool: ${tool.name}`);
+        }
+      } catch (error) {
+        logger.error(`Failed to register tool ${tool.name}:`, error);
+      }
     }
-    
-    next();
   }
 
   /**
-   * 错误处理中间件
+   * 执行 PromptX 工具
    */
-  errorHandler(error, req, res, next) {
-    this.log('Express 错误处理:', error);
-    
-    if (!res.headersSent) {
-      // 检查是否是JSON解析错误
-      if (error.type === 'entity.parse.failed' || error.message?.includes('JSON')) {
-        res.status(400).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32700,
-            message: 'Parse error: Invalid JSON'
-          },
-          id: null
-        });
+  async executePromptXTool(toolName, args, context) {
+    try {
+      // 记录工具调用
+      if (context?.log) {
+        context.log.info(`Executing PromptX tool: ${toolName}`, args);
+      }
+
+      // 查找工具定义
+      const tool = this.getToolDefinitions().find(t => t.name === toolName);
+      if (!tool) {
+        throw new Error(`Tool not found: ${toolName}`);
+      }
+
+      // 执行工具
+      let result;
+      if (tool.handler) {
+        // 直接调用处理器
+        result = await tool.handler(args);
+      } else if (tool.command) {
+        // 通过 CLI 执行
+        const cliArgs = this.convertToCliArgs(tool.command, args);
+        result = await cli.execute(cliArgs);
       } else {
-        res.status(500).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32603,
-            message: 'Internal server error'
-          },
-          id: null
-        });
+        throw new Error(`Tool ${toolName} has no handler or command`);
       }
+
+      // 格式化输出
+      return this.outputAdapter.format(result);
+    } catch (error) {
+      logger.error(`Tool execution failed for ${toolName}:`, error);
+      
+      // FastMCP 的错误处理
+      if (error.message?.includes('User')) {
+        // 用户错误，直接抛出
+        throw error;
+      }
+      
+      // 系统错误，包装后抛出
+      throw new Error(`Tool execution failed: ${error.message}`);
     }
   }
 
-
   /**
-   * 设置 MCP 服务器 - 使用与 stdio 模式完全相同的低级 API
+   * 转换 JSON Schema 到 Zod Schema
    */
-  setupMCPServer() {
-    const server = new Server({
-      name: this.name,
-      version: this.version
-    }, {
-      capabilities: {
-        tools: {}
+  convertToZodSchema(jsonSchema) {
+    if (!jsonSchema) {
+      return z.object({});
+    }
+
+    // 基础转换逻辑
+    if (jsonSchema.type === 'object') {
+      const shape = {};
+      
+      if (jsonSchema.properties) {
+        for (const [key, prop] of Object.entries(jsonSchema.properties)) {
+          shape[key] = this.convertPropertyToZod(prop);
+          
+          // 处理必需字段
+          if (!jsonSchema.required?.includes(key)) {
+            shape[key] = shape[key].optional();
+          }
+        }
       }
-    });
-
-    // ✨ 使用与 stdio 模式相同的低级 API 注册处理器
-    this.setupMCPHandlers(server);
-
-    return server;
+      
+      return z.object(shape);
+    }
+    
+    // 默认返回空对象 schema
+    return z.object({});
   }
 
   /**
-   * 设置 MCP 处理器 - 与 stdio 模式完全一致的实现
+   * 转换单个属性到 Zod
    */
-  setupMCPHandlers(server) {
-    const { 
-      ListToolsRequestSchema, 
-      CallToolRequestSchema 
-    } = require('@modelcontextprotocol/sdk/types.js');
+  convertPropertyToZod(prop) {
+    switch (prop.type) {
+      case 'string': {
+        let schema = z.string();
+        if (prop.description) {
+          schema = schema.describe(prop.description);
+        }
+        if (prop.enum) {
+          schema = z.enum(prop.enum);
+        }
+        return schema;
+      }
+        
+      case 'number':
+      case 'integer':
+        return z.number().describe(prop.description || '');
+        
+      case 'boolean':
+        return z.boolean().describe(prop.description || '');
+        
+      case 'array':
+        if (prop.items) {
+          return z.array(this.convertPropertyToZod(prop.items));
+        }
+        return z.array(z.any());
+        
+      case 'object':
+        return this.convertToZodSchema(prop);
+        
+      default:
+        return z.any();
+    }
+  }
+
+  /**
+   * 转换参数为 CLI 格式
+   */
+  convertToCliArgs(command, args) {
+    const cliArgs = [command];
     
-    // 注册工具列表处理程序 - 与 stdio 模式完全相同
-    server.setRequestHandler(ListToolsRequestSchema, async () => {
-      this.log('📋 收到工具列表请求');
-      return {
-        tools: this.getToolDefinitions()  // ✅ 直接返回完整工具定义
-      };
-    });
+    for (const [key, value] of Object.entries(args)) {
+      if (typeof value === 'boolean') {
+        if (value) {
+          cliArgs.push(`--${key}`);
+        }
+      } else if (Array.isArray(value)) {
+        value.forEach(v => {
+          cliArgs.push(`--${key}`, String(v));
+        });
+      } else if (value !== null && value !== undefined) {
+        cliArgs.push(`--${key}`, String(value));
+      }
+    }
     
-    // 注册工具调用处理程序 - 与 stdio 模式完全相同
-    server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-      this.log(`🔧 调用工具: ${name} 参数: ${JSON.stringify(args)}`);
-      logger.debug(`[MCP HTTP] Tool: ${name} args: ${JSON.stringify(args)}`);
-      return await this.callTool(name, args || {});
-    });
+    return cliArgs;
   }
 
   /**
@@ -208,312 +263,27 @@ class MCPServerHttpCommand {
   }
 
   /**
-   * 处理 MCP POST 请求
+   * 停止服务器
    */
-  async handleMCPPostRequest(req, res) {
-    this.log('收到 MCP 请求:', req.body);
-
-    try {
-      // 检查现有会话 ID
-      const sessionId = req.headers['mcp-session-id'];
-      let transport;
-
-      if (sessionId && this.transports[sessionId]) {
-        // 复用现有传输
-        transport = this.transports[sessionId];
-      } else if (!sessionId && isInitializeRequest(req.body)) {
-        // 新的初始化请求
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-          enableJsonResponse: true,
-          onsessioninitialized: (sessionId) => {
-            this.log(`会话初始化: ${sessionId}`);
-            this.transports[sessionId] = transport;
-          }
-        });
-
-        // 设置关闭处理程序
-        transport.onclose = () => {
-          const sid = transport.sessionId;
-          if (sid && this.transports[sid]) {
-            this.log(`传输关闭: ${sid}`);
-            delete this.transports[sid];
-          }
-        };
-
-        // 连接到 MCP 服务器
-        const server = this.setupMCPServer();
-        await server.connect(transport);
-        await transport.handleRequest(req, res, req.body);
-        return;
-      } else if (!sessionId && this.isStatelessRequest(req.body)) {
-        // 无状态请求（如 tools/list, prompts/list 等）- 使用官方推荐方式
-        logger.debug(`[MCP HTTP] Stateless request: ${req.body.method}`);
-        
-        try {
-          const server = this.setupMCPServer();
-          const transport = new StreamableHTTPServerTransport({
-            sessionIdGenerator: undefined, // 无状态模式
-            enableJsonResponse: true
-          });
-          
-          // 请求结束时清理资源
-          res.on('close', () => {
-            logger.debug('[MCP HTTP] Cleaning up stateless request resources');
-            transport.close && transport.close();
-            server.close && server.close();
-          });
-          
-          await server.connect(transport);
-          await transport.handleRequest(req, res, req.body);
-          return;
-        } catch (error) {
-          logger.error('[MCP HTTP] Stateless request processing error:', error);
-          throw error;
-        }
-      } else if (sessionId && !this.transports[sessionId] && this.isStatelessRequest(req.body)) {
-        // 🔧 修复：sessionId已失效但是无状态请求，可以处理
-        logger.debug(`[MCP HTTP] Session expired, switching to stateless handling: ${req.body.method}`);
-        
-        try {
-          const server = this.setupMCPServer();
-          const transport = new StreamableHTTPServerTransport({
-            sessionIdGenerator: undefined, // 无状态模式
-            enableJsonResponse: true
-          });
-          
-          await server.connect(transport);
-          await transport.handleRequest(req, res, req.body);
-          return;
-        } catch (error) {
-          logger.error('[MCP HTTP] Session recovery mode processing error:', error);
-          throw error;
-        }
-      } else {
-        // 无效请求 - 只有真正无法处理的情况才报错
-        return res.status(400).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32000,
-            message: `Bad Request: ${sessionId ? 'Invalid session ID' : 'No valid session ID provided'}. Method: ${req.body?.method || 'unknown'}`
-          },
-          id: req.body?.id || null
-        });
-      }
-
-      // 处理现有传输的请求
-      await transport.handleRequest(req, res, req.body);
-    } catch (error) {
-      this.log('处理 MCP 请求错误:', error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32603,
-            message: 'Internal server error'
-          },
-          id: req.body?.id || null
-        });
+  async stop() {
+    if (this.server) {
+      try {
+        await this.server.stop();
+        logger.info('MCP HTTP server stopped');
+      } catch (error) {
+        logger.error('Error stopping server:', error);
       }
     }
   }
 
   /**
-   * 处理 GET 请求 - 建立流式连接
-   * 注意：StreamableHTTPServerTransport内部会使用SSE技术进行流式响应
+   * 输出日志
    */
-  async handleStreamConnection(req, res) {
-    const sessionId = req.headers['mcp-session-id'];
-    if (!sessionId || !this.transports[sessionId]) {
-      return res.status(400).json({
-        error: 'Invalid or missing session ID'
-      });
-    }
-
-    this.log(`建立流式连接: ${sessionId}`);
-    const transport = this.transports[sessionId];
-    await transport.handleRequest(req, res);
-  }
-
-  /**
-   * 处理 MCP DELETE 请求（会话终止）
-   */
-  async handleMCPDeleteRequest(req, res) {
-    const sessionId = req.headers['mcp-session-id'];
-    if (!sessionId || !this.transports[sessionId]) {
-      return res.status(400).json({
-        error: 'Invalid or missing session ID'
-      });
-    }
-
-    this.log(`终止会话: ${sessionId}`);
-    try {
-      const transport = this.transports[sessionId];
-      await transport.handleRequest(req, res);
-    } catch (error) {
-      this.log('处理会话终止错误:', error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          error: 'Error processing session termination'
-        });
-      }
-    }
-  }
-
-  /**
-   * 调用工具
-   */
-  async callTool(toolName, args) {
-    try {
-      // 将 MCP 参数转换为 CLI 函数调用参数
-      logger.debug(`[MCP HTTP] Received MCP args: ${JSON.stringify(args)}`);
-      const cliArgs = this.convertMCPToCliParams(toolName, args);
-      logger.debug(`[MCP HTTP] Converted CLI args: ${JSON.stringify(cliArgs)}`);
-      this.log(`🎯 CLI调用: ${toolName} -> ${JSON.stringify(cliArgs)}`);
-      
-      // 直接调用 PromptX CLI 函数
-      this.log(`🎯 传递给CLI的参数: ${JSON.stringify(cliArgs)}`);
-      const result = await cli.execute(toolName.replace('promptx_', ''), cliArgs, true);
-      this.log(`✅ CLI执行完成: ${toolName}`);
-      
-      // 使用输出适配器转换为MCP响应格式（与stdio模式保持一致）
-      return this.outputAdapter.convertToMCPFormat(result);
-      
-    } catch (error) {
-      this.log(`❌ 工具调用失败: ${toolName} - ${error.message}`);
-      return this.outputAdapter.handleError(error);
-    }
-  }
-
-  /**
-   * 转换 MCP 参数为 CLI 函数调用参数 - 使用统一转换逻辑
-   */
-  convertMCPToCliParams(toolName, mcpArgs) {
-    const converter = getToolCliConverter(toolName);
-    if (!converter) {
-      throw new Error(`未知工具: ${toolName}`);
-    }
-    
-    return converter(mcpArgs || {});
-  }
-
-  /**
-   * 调试日志
-   */
-  log(message, ...args) {
+  log(message) {
     if (this.debug) {
-      logger.debug(`[MCP DEBUG] ${message}`, ...args);
+      logger.debug(`[MCP HTTP] ${message}`);
     }
-  }
-
-  /**
-   * 验证端口号
-   */
-  validatePort(port) {
-    if (typeof port !== 'number') {
-      throw new Error('Port must be a number');
-    }
-    if (port < 1 || port > 65535) {
-      throw new Error('Port must be between 1 and 65535');
-    }
-  }
-
-  /**
-   * 验证主机地址
-   */
-  validateHost(host) {
-    if (!host || typeof host !== 'string' || host.trim() === '') {
-      throw new Error('Host cannot be empty');
-    }
-  }
-
-  /**
-   * 判断是否为无状态请求（不需要会话ID）
-   */
-  isStatelessRequest(requestBody) {
-    if (!requestBody || !requestBody.method) {
-      return false;
-    }
-
-    // 这些方法可以无状态处理 - 按照官方标准扩展支持所有工具调用
-    const statelessMethods = [
-      'tools/list',
-      'prompts/list', 
-      'resources/list',
-      'tools/call'  // ✨ 添加工具调用支持无状态模式
-    ];
-
-    return statelessMethods.includes(requestBody.method);
-  }
-
-  /**
-   * OAuth 元数据端点 - Mock实现
-   * 仅用于避免客户端连接时报错，不提供实际认证功能
-   */
-  handleOAuthMetadata(req, res) {
-    const baseUrl = `http://${req.get('host')}`;
-    
-    res.json({
-      issuer: baseUrl,
-      authorization_endpoint: `${baseUrl}/authorize`,
-      token_endpoint: `${baseUrl}/token`,
-      registration_endpoint: `${baseUrl}/register`,
-      response_types_supported: ["code"],
-      grant_types_supported: ["authorization_code"],
-      code_challenge_methods_supported: ["S256"],
-      client_registration_types_supported: ["dynamic"]
-    });
-  }
-
-  /**
-   * 动态客户端注册 - 简化实现
-   */
-  handleDynamicRegistration(req, res) {
-    // 简化实现：直接返回一个客户端ID
-    const clientId = `promptx-client-${Date.now()}`;
-    const baseUrl = `http://${req.get('host')}`;
-    
-    res.json({
-      client_id: clientId,
-      client_secret: "not-required", // 简化实现
-      registration_access_token: `reg-token-${Date.now()}`,
-      registration_client_uri: `${baseUrl}/register/${clientId}`,
-      client_id_issued_at: Math.floor(Date.now() / 1000),
-      client_secret_expires_at: 0, // 永不过期
-      redirect_uris: [
-        `${baseUrl}/callback`,
-        "urn:ietf:wg:oauth:2.0:oob"
-      ],
-      response_types: ["code"],
-      grant_types: ["authorization_code"],
-      token_endpoint_auth_method: "none"
-    });
-  }
-
-  /**
-   * OAuth 授权端点 - 简化实现
-   */
-  handleAuthorize(req, res) {
-    // 简化实现：直接返回授权码
-    const code = `auth-code-${Date.now()}`;
-    const baseUrl = `http://${req.get('host')}`;
-    const redirectUri = req.query.redirect_uri || `${baseUrl}/callback`;
-    
-    res.redirect(`${redirectUri}?code=${code}&state=${req.query.state || ''}`);
-  }
-
-  /**
-   * OAuth 令牌端点 - 简化实现
-   */
-  handleToken(req, res) {
-    // 简化实现：直接返回访问令牌
-    res.json({
-      access_token: `access-token-${Date.now()}`,
-      token_type: "Bearer",
-      expires_in: 3600,
-      scope: "mcp"
-    });
   }
 }
 
-module.exports = { MCPServerHttpCommand };
+module.exports = MCPServerHttpCommand;

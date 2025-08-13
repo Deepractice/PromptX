@@ -17,9 +17,9 @@ const { displayBanner, displayCompactBanner } = require('../lib/utils/banner')
 
 // 导入锦囊框架
 const { cli } = require('../lib/core/pouch')
-// 导入MCP Server命令
-const { MCPServerStdioCommand } = require('../lib/mcp/MCPServerStdioCommand')
-const { MCPServerHttpCommand } = require('../lib/mcp/MCPServerHttpCommand')
+// 导入新的 MCP Server 实现
+const FastMCPStdioServer = require('../lib/mcp/server/FastMCPStdioServer')
+const MCPServerHttpCommand = require('../lib/mcp/MCPServerHttpCommand')
 
 // CLI模式默认初始化 ServerEnvironment
 const { getGlobalServerEnvironment } = require('../lib/utils/ServerEnvironment')
@@ -170,7 +170,7 @@ program
 program
   .command('mcp-server')
   .description('🔌 启动MCP Server，支持Claude Desktop等AI应用接入')
-  .option('-t, --transport <type>', '传输类型 (stdio|http)', 'stdio')
+  .option('-t, --transport <type>', '传输类型 (stdio|http|simple-http)', 'stdio')
   .option('-p, --port <number>', 'HTTP端口号 (仅http传输)', '3000')
   .option('--host <address>', '绑定地址 (仅http传输)', 'localhost')
   .option('--cors', '启用CORS (仅http传输)', false)
@@ -184,8 +184,15 @@ program
 
       // 根据传输类型选择命令
       if (options.transport === 'stdio') {
-        const mcpServer = new MCPServerStdioCommand();
-        await mcpServer.execute();
+        const mcpServer = new FastMCPStdioServer({
+          debug: options.debug,
+          name: 'promptx-mcp-stdio-server',
+          version: packageJson.version
+        });
+        await mcpServer.start();
+        
+        // 保持进程运行
+        await new Promise(() => {}); // 永远不会resolve，保持进程运行
       } else if (options.transport === 'http') {
         const mcpHttpServer = new MCPServerHttpCommand();
         const serverOptions = {
@@ -196,8 +203,18 @@ program
         
         logger.info(chalk.green(`🚀 启动 HTTP MCP Server 在 ${options.host}:${options.port}...`));
         await mcpHttpServer.execute(serverOptions);
+      } else if (options.transport === 'simple-http') {
+        const MCPServerSimpleHttpCommand = require('../lib/mcp/MCPServerSimpleHttpCommand');
+        const simpleHttpServer = new MCPServerSimpleHttpCommand();
+        const serverOptions = {
+          port: parseInt(options.port),
+          host: options.host
+        };
+        
+        logger.info(chalk.green(`🚀 启动 Simple HTTP MCP Server 在 ${options.host}:${options.port}...`));
+        await simpleHttpServer.execute(serverOptions);
       } else {
-        throw new Error(`不支持的传输类型: ${options.transport}。支持的类型: stdio, http`);
+        throw new Error(`不支持的传输类型: ${options.transport}。支持的类型: stdio, http, simple-http`);
       }
     } catch (error) {
       // 输出到stderr，不污染MCP的stdout通信

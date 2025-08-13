@@ -55,6 +55,7 @@
     "env-paths": "2.2.1",
     "eta": "^3.5.0",
     "express": "^5.1.0",
+    "fastmcp": "^3.14.4",
     "find-monorepo-root": "^1.0.3",
     "find-pkg-dir": "^2.0.0",
     "find-up": "^7.0.0",
