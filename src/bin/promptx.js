@@ -19,7 +19,7 @@ const { displayBanner, displayCompactBanner } = require('../lib/utils/banner')
 const { cli } = require('../lib/core/pouch')
 // 导入新的 MCP Server 实现
 const FastMCPStdioServer = require('../lib/mcp/server/FastMCPStdioServer')
-const MCPServerHttpCommand = require('../lib/mcp/MCPServerHttpCommand')
+const FastMCPHttpServer = require('../lib/mcp/server/FastMCPHttpServer')
 
 // CLI模式默认初始化 ServerEnvironment
 const { getGlobalServerEnvironment } = require('../lib/utils/ServerEnvironment')
@@ -194,15 +194,18 @@ program
         // 保持进程运行
         await new Promise(() => {}); // 永远不会resolve，保持进程运行
       } else if (options.transport === 'http') {
-        const mcpHttpServer = new MCPServerHttpCommand();
-        const serverOptions = {
+        const mcpHttpServer = new FastMCPHttpServer({
+          debug: options.debug,
+          name: 'promptx-mcp-http-server',
+          version: packageJson.version,
           port: parseInt(options.port),
           host: options.host,
-          cors: options.cors
-        };
+          cors: options.cors,
+          stateless: options.stateless || false
+        });
         
         logger.info(chalk.green(`🚀 启动 HTTP MCP Server 在 ${options.host}:${options.port}...`));
-        await mcpHttpServer.execute(serverOptions);
+        await mcpHttpServer.start();
       } else if (options.transport === 'simple-http') {
         const MCPServerSimpleHttpCommand = require('../lib/mcp/MCPServerSimpleHttpCommand');
         const simpleHttpServer = new MCPServerSimpleHttpCommand();
