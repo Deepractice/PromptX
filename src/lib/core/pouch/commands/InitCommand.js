@@ -43,16 +43,23 @@ class InitCommand extends BasePouchCommand {
     }
     
     if (!workingDirectory) {
-      return `🎯 PromptX需要知道当前项目的工作目录。
+      // 没有提供项目路径时，返回简单说明
+      return `📁 PromptX 项目配置工具
 
-请在调用此工具时提供参数：
-📍 **必需参数**：
-- workingDirectory: "/Users/sean/WorkSpaces/DeepracticeProjects/PromptX"
+当前状态：**全局模式**（未绑定特定项目）
 
-🎯 **可选参数**：
-- ideType: "cursor" | "vscode" | "claude" 等（不提供则自动检测为unknown）
+✅ **所有功能均可正常使用**，包括：
+- 角色激活 (action)
+- 资源学习 (learn)  
+- 记忆管理 (recall/remember)
+- 工具执行 (tool)
 
-💡 你当前工作在哪个项目目录？请提供完整的绝对路径。`
+💡 **仅在以下情况需要项目配置**：
+- 需要多项目隔离
+- 需要项目级配置
+- 需要项目特定资源
+
+如需绑定项目，请提供 workingDirectory 参数。`
     }
     
     // 解码中文路径并解析

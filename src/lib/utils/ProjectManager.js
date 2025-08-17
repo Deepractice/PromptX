@@ -347,16 +347,8 @@ class ProjectManager {
     const projects = await this.getProjectsByMcpId(mcpId)
     
     if (projects.length === 0) {
-      // 未注册任何项目
-      return `🛑 **项目环境未初始化** 🛑
-⚠️ **当前MCP实例(${mcpId})尚未绑定任何项目**
-
-💢 **立即执行**：
-1. 调用 \`promptx_init\` 工具注册当前项目
-2. 提供正确的 workingDirectory 参数
-3. 确认项目绑定后重新开始
-
-⛔ **严禁继续**：未初始化环境中的任何操作都可能失败！`
+      // 未绑定项目，但这是正常的，不需要特别提示
+      return ''
     }
     
     if (projects.length === 1) {
