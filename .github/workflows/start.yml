@@ -337,27 +337,12 @@ jobs:
             BRANCHES=$(git branch -r | sed 's/origin\///' | sed 's/^[[:space:]]*//' | grep -v HEAD)
             
             # Determine target based on source branch type
-            if [[ "$SOURCE" == feature/* ]]; then
-              # Features go to develop/dev/main
+            # 统一的分支策略：所有类型分支都PR到develop，实现标准化流程
+            if [[ "$SOURCE" == feature/* ]] || [[ "$SOURCE" == bug/* ]] || 
+               [[ "$SOURCE" == fix/* ]] || [[ "$SOURCE" == hotfix/* ]] || 
+               [[ "$SOURCE" == docs/* ]] || [[ "$SOURCE" == chore/* ]]; then
+              # 所有分支类型都走 develop → main 的标准发布流程
               for CANDIDATE in develop dev main master; do
-                if echo "$BRANCHES" | grep -qx "$CANDIDATE"; then
-                  TARGET="$CANDIDATE"
-                  echo "Selected target branch: $TARGET"
-                  break
-                fi
-              done
-            elif [[ "$SOURCE" == fix/* ]] || [[ "$SOURCE" == hotfix/* ]]; then
-              # Fixes go to main/master
-              for CANDIDATE in main master; do
-                if echo "$BRANCHES" | grep -qx "$CANDIDATE"; then
-                  TARGET="$CANDIDATE"
-                  echo "Selected target branch: $TARGET"
-                  break
-                fi
-              done
-            elif [[ "$SOURCE" == docs/* ]] || [[ "$SOURCE" == chore/* ]]; then
-              # Docs and chores go to main/master
-              for CANDIDATE in main master; do
                 if echo "$BRANCHES" | grep -qx "$CANDIDATE"; then
                   TARGET="$CANDIDATE"
                   echo "Selected target branch: $TARGET"
