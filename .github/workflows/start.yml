@@ -293,6 +293,7 @@ jobs:
             PATTERNS=(
               "feature/#${ISSUE_NUMBER}-issue"
               "fix/#${ISSUE_NUMBER}-issue"
+              "bug/#${ISSUE_NUMBER}-issue"
               "docs/#${ISSUE_NUMBER}-issue"
               "chore/#${ISSUE_NUMBER}-issue"
             )
