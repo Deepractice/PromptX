@@ -168,9 +168,11 @@ jobs:
       - name: Post validation error
         if: steps.permissions.outputs.result == 'true' && steps.validate.outputs.valid == 'false'
         uses: actions/github-script@v7
+        env:
+          VALIDATION_ERROR: ${{ steps.validate.outputs.error }}
         with:
           script: |
-            const error = `${{ steps.validate.outputs.error }}`;
+            const error = process.env.VALIDATION_ERROR;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

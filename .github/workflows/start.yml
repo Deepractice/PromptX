@@ -377,15 +377,23 @@ jobs:
       - name: Generate PR content
         id: content
         uses: actions/github-script@v7
+        env:
+          SOURCE_BRANCH: ${{ steps.source.outputs.source }}
+          TARGET_BRANCH: ${{ steps.target.outputs.target }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          ISSUE_TITLE: ${{ steps.issue.outputs.title }}
+          ISSUE_BODY: ${{ steps.issue.outputs.body }}
+          CUSTOM_TITLE: ${{ steps.parse.outputs.title }}
+          CUSTOM_CONTENT: ${{ steps.parse.outputs.content }}
         with:
           script: |
-            const source = '${{ steps.source.outputs.source }}';
-            const target = '${{ steps.target.outputs.target }}';
-            const issueNumber = '${{ steps.issue.outputs.number }}';
-            const issueTitle = `${{ steps.issue.outputs.title }}`;
-            const issueBody = `${{ steps.issue.outputs.body }}`;
-            const customTitle = `${{ steps.parse.outputs.title }}`;
-            const customContent = `${{ steps.parse.outputs.content }}`;
+            const source = process.env.SOURCE_BRANCH;
+            const target = process.env.TARGET_BRANCH;
+            const issueNumber = process.env.ISSUE_NUMBER;
+            const issueTitle = process.env.ISSUE_TITLE;
+            const issueBody = process.env.ISSUE_BODY;
+            const customTitle = process.env.CUSTOM_TITLE;
+            const customContent = process.env.CUSTOM_CONTENT;
             
             // Generate PR title
             let prTitle = customTitle;
@@ -437,16 +445,24 @@ jobs:
       - name: Create pull request
         id: pr
         uses: actions/github-script@v7
+        env:
+          SOURCE_BRANCH: ${{ steps.source.outputs.source }}
+          TARGET_BRANCH: ${{ steps.target.outputs.target }}
+          PR_TITLE: ${{ steps.content.outputs.title }}
+          PR_BODY: ${{ steps.content.outputs.body }}
+          IS_DRAFT: ${{ steps.parse.outputs.draft }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          ISSUE_LABELS: ${{ steps.issue.outputs.labels }}
         with:
           github-token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
-            const source = '${{ steps.source.outputs.source }}';
-            const target = '${{ steps.target.outputs.target }}';
-            const title = `${{ steps.content.outputs.title }}`;
-            const body = `${{ steps.content.outputs.body }}`;
-            const draft = '${{ steps.parse.outputs.draft }}' === 'true';
-            const issueNumber = '${{ steps.issue.outputs.number }}';
-            const labels = '${{ steps.issue.outputs.labels }}'.split(',').filter(l => l);
+            const source = process.env.SOURCE_BRANCH;
+            const target = process.env.TARGET_BRANCH;
+            const title = process.env.PR_TITLE;
+            const body = process.env.PR_BODY;
+            const draft = process.env.IS_DRAFT === 'true';
+            const issueNumber = process.env.ISSUE_NUMBER;
+            const labels = process.env.ISSUE_LABELS.split(',').filter(l => l);
             
             try {
               // Check if PR already exists

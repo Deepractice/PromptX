@@ -300,12 +300,18 @@ jobs:
       - name: Post results
         if: always()
         uses: actions/github-script@v7
+        env:
+          TEST_TYPE: ${{ steps.parse.outputs.test_type }}
+          TEST_STATUS: ${{ steps.test.outputs.status }}
+          TEST_FRAMEWORK: ${{ steps.detect.outputs.framework }}
+          TEST_CMD: ${{ steps.detect.outputs.test_cmd }}
+          TEST_SUMMARY: ${{ steps.test.outputs.summary }}
         with:
           script: |
-            const testType = '${{ steps.parse.outputs.test_type }}';
-            const status = '${{ steps.test.outputs.status }}';
-            const framework = '${{ steps.detect.outputs.framework }}';
-            const testCmd = '${{ steps.detect.outputs.test_cmd }}';
+            const testType = process.env.TEST_TYPE;
+            const status = process.env.TEST_STATUS;
+            const framework = process.env.TEST_FRAMEWORK;
+            const testCmd = process.env.TEST_CMD;
             
             const icon = status === 'success' ? '✅' : '❌';
             const statusText = status === 'success' ? 'PASSED' : 'FAILED';
@@ -316,7 +322,7 @@ jobs:
             message += `**Command:** \`${testCmd}\`\n\n`;
             
             // Add test summary
-            const summary = `${{ steps.test.outputs.summary }}`;
+            const summary = process.env.TEST_SUMMARY;
             if (summary) {
               message += `<details>\n<summary>Test Output (last 50 lines)</summary>\n\n`;
               message += '```\n' + summary + '\n```\n';

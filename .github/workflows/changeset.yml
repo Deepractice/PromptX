@@ -330,11 +330,18 @@ jobs:
           steps.permissions.outputs.allowed == 'true' &&
           steps.parse.outputs.valid == 'true'
         uses: actions/github-script@v7
+        env:
+          PARSE_MODE: ${{ steps.parse.outputs.mode }}
+          ANALYZE_TYPE: ${{ steps.analyze.outputs.type }}
+          PARSE_TYPE: ${{ steps.parse.outputs.type }}
+          CHECK_EXISTS: ${{ steps.check.outputs.exists }}
+          REMOVED_FILES: ${{ steps.check.outputs.removed_files }}
+          ANALYZE_CHANGES: ${{ steps.analyze.outputs.changes }}
         with:
           script: |
-            const mode = '${{ steps.parse.outputs.mode }}';
-            const type = mode === 'auto' ? '${{ steps.analyze.outputs.type }}' : '${{ steps.parse.outputs.type }}';
-            const existed = '${{ steps.check.outputs.exists }}' === 'true';
+            const mode = process.env.PARSE_MODE;
+            const type = mode === 'auto' ? process.env.ANALYZE_TYPE : process.env.PARSE_TYPE;
+            const existed = process.env.CHECK_EXISTS === 'true';
             const emoji = {
               'patch': '🩹',
               'minor': '✨',
@@ -345,7 +352,7 @@ jobs:
             let message = `${emoji} **${action} ${type} changeset**\n\n`;
             
             if (existed) {
-              const removedFiles = '${{ steps.check.outputs.removed_files }}';
+              const removedFiles = process.env.REMOVED_FILES;
               if (removedFiles) {
                 message += `📝 **Replaced previous changeset(s):** ${removedFiles}\n\n`;
               }
@@ -353,7 +360,7 @@ jobs:
             
             if (mode === 'auto') {
               message += `🤖 **Auto-detected version type based on commit analysis**\n\n`;
-              const changes = `${{ steps.analyze.outputs.changes }}`;
+              const changes = process.env.ANALYZE_CHANGES;
               if (changes) {
                 message += `**Detected changes:**\n${changes}\n\n`;
               }
