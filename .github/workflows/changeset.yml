@@ -200,25 +200,60 @@ jobs:
           while IFS= read -r commit; do
             echo "Analyzing: $commit"
             
-            # Check for breaking changes
+            # Check for breaking changes (major)
             if echo "$commit" | grep -qE "(BREAKING CHANGE:|!:)"; then
               VERSION_TYPE="major"
               CHANGES="${CHANGES}\n💥 Breaking: ${commit}"
-            # Check for features
-            elif echo "$commit" | grep -qE "^[a-f0-9]+ feat(\(.+?\))?:"; then
-              if [ "$VERSION_TYPE" != "major" ]; then
-                VERSION_TYPE="minor"
-              fi
-              CHANGES="${CHANGES}\n✨ Feature: ${commit}"
-            # Check for fixes
-            elif echo "$commit" | grep -qE "^[a-f0-9]+ fix(\(.+?\))?:"; then
-              CHANGES="${CHANGES}\n🐛 Fix: ${commit}"
-            # Check for performance improvements
-            elif echo "$commit" | grep -qE "^[a-f0-9]+ perf(\(.+?\))?:"; then
-              if [ "$VERSION_TYPE" == "patch" ]; then
-                VERSION_TYPE="minor"
-              fi
-              CHANGES="${CHANGES}\n⚡ Performance: ${commit}"
+              continue
+            fi
+            
+            # Extract commit type using unified regex
+            COMMIT_TYPE=$(echo "$commit" | sed -nE 's/^[a-f0-9]+ (feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert|enhance)(\(.+?\))?:.*/\1/p')
+            
+            if [ -n "$COMMIT_TYPE" ]; then
+              case "$COMMIT_TYPE" in
+                # Minor version bumps
+                feat|enhance)
+                  if [ "$VERSION_TYPE" != "major" ]; then
+                    VERSION_TYPE="minor"
+                  fi
+                  EMOJI="✨"
+                  [ "$COMMIT_TYPE" == "enhance" ] && EMOJI="🎨"
+                  CHANGES="${CHANGES}\n${EMOJI} ${COMMIT_TYPE^}: ${commit}"
+                  ;;
+                
+                # Patch version bumps  
+                fix)
+                  CHANGES="${CHANGES}\n🐛 Fix: ${commit}"
+                  ;;
+                perf)
+                  CHANGES="${CHANGES}\n⚡ Performance: ${commit}"
+                  ;;
+                refactor)
+                  CHANGES="${CHANGES}\n♻️ Refactor: ${commit}"
+                  ;;
+                docs)
+                  CHANGES="${CHANGES}\n📝 Docs: ${commit}"
+                  ;;
+                style)
+                  CHANGES="${CHANGES}\n💄 Style: ${commit}"
+                  ;;
+                test)
+                  CHANGES="${CHANGES}\n✅ Test: ${commit}"
+                  ;;
+                chore)
+                  CHANGES="${CHANGES}\n🔧 Chore: ${commit}"
+                  ;;
+                build)
+                  CHANGES="${CHANGES}\n📦 Build: ${commit}"
+                  ;;
+                ci)
+                  CHANGES="${CHANGES}\n👷 CI: ${commit}"
+                  ;;
+                revert)
+                  CHANGES="${CHANGES}\n⏪ Revert: ${commit}"
+                  ;;
+              esac
             fi
           done <<< "$COMMITS"
           
