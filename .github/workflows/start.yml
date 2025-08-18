@@ -292,8 +292,10 @@ jobs:
             # Match exact pattern: type/#number-issue
             PATTERNS=(
               "feature/#${ISSUE_NUMBER}-issue"
+              "enhancement/#${ISSUE_NUMBER}-issue"
               "fix/#${ISSUE_NUMBER}-issue"
               "bug/#${ISSUE_NUMBER}-issue"
+              "refactor/#${ISSUE_NUMBER}-issue"
               "docs/#${ISSUE_NUMBER}-issue"
               "chore/#${ISSUE_NUMBER}-issue"
             )
@@ -338,9 +340,8 @@ jobs:
             
             # Determine target based on source branch type
             # 统一的分支策略：所有类型分支都PR到develop，实现标准化流程
-            if [[ "$SOURCE" == feature/* ]] || [[ "$SOURCE" == bug/* ]] || 
-               [[ "$SOURCE" == fix/* ]] || [[ "$SOURCE" == hotfix/* ]] || 
-               [[ "$SOURCE" == docs/* ]] || [[ "$SOURCE" == chore/* ]]; then
+            # 使用模式匹配检测标准分支格式: type/#number-issue
+            if [[ "$SOURCE" =~ ^[a-z]+/#[0-9]+-issue$ ]]; then
               # 所有分支类型都走 develop → main 的标准发布流程
               for CANDIDATE in develop dev main master; do
                 if echo "$BRANCHES" | grep -qx "$CANDIDATE"; then
