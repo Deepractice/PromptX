@@ -9,7 +9,6 @@ const ProjectManager = require('../../../utils/ProjectManager')
 const { getGlobalProjectManager } = require('../../../utils/ProjectManager')
 const { getGlobalServerEnvironment } = require('../../../utils/ServerEnvironment')
 const logger = require('../../../utils/logger')
-const CognitionCycleGuide = require('../../cognition/CognitionCycleGuide')
 
 /**
  * 角色激活锦囊命令
@@ -415,9 +414,6 @@ ${result.content}
     }
     
     content += `💡 **现在可以立即开始以 \`${roleId}\` (${roleInfo.name}) 身份提供专业服务！**\n`
-    
-    // 使用 CognitionCycleGuide 添加认知循环引导
-    content += CognitionCycleGuide.getActionGuide()
 
     return content
   }

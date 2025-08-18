@@ -2,7 +2,6 @@ const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
 const { CognitionManager } = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
-const CognitionCycleGuide = require('../../cognition/CognitionCycleGuide')
 
 /**
  * 记忆保存锦囊命令 - 基于认知体系
@@ -116,7 +115,7 @@ class RememberCommand extends BasePouchCommand {
       .map(([type, count]) => `${type}: ${count}个`)
       .join(', ')
     
-    return `✅ AI已批量内化 ${engrams.length} 个记忆：
+    let output = `✅ AI已批量内化 ${engrams.length} 个记忆：
 
 ## 📊 批量记忆统计
 - **类型分布**: ${typeStats}
@@ -129,9 +128,6 @@ class RememberCommand extends BasePouchCommand {
 - ✅ **关联性建立**: 相关概念自动建立语义连接  
 - ✅ **检索精确**: 原子Cue确保精确匹配
 - ✅ **类型分离**: ATOMIC实体、LINK关系、PATTERN模式分别存储`
-    
-    // 使用 CognitionCycleGuide 添加循环完成庆祝
-    output += CognitionCycleGuide.getRememberGuide()
     
     return output
   }

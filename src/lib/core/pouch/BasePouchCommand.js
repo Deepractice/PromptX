@@ -1,3 +1,5 @@
+const CognitionCycleGuide = require('../cognition/CognitionCycleGuide')
+
 /**
  * 基础锦囊命令抽象类
  * 所有锦囊命令都需要继承此类
@@ -89,6 +91,9 @@ class BasePouchCommand {
       return output
     }
 
+    // 保存命令名称到闭包
+    const commandName = this.constructor.name
+    
     // 人类可读格式
     return {
       ...output,
@@ -98,12 +103,28 @@ class BasePouchCommand {
           .map(action => `  - ${action.name}: ${action.description}\n    方式: ${action.method || action.command || '通过MCP工具'}`)
           .join('\n')
 
+        // 根据当前状态和命令类型添加认知循环引导
+        let cycleGuide = ''
+        const currentState = pateoas.currentState || ''
+        
+        // 简单粗暴的判断 - Linus style: if语句就够了！
+        if (commandName === 'ActionCommand' && currentState.includes('role_activated')) {
+          // 角色激活时 - 循环开始
+          cycleGuide = CognitionCycleGuide.getActionGuide()
+        } else if (commandName === 'RecallCommand') {
+          // Recall 命令 - 吸气完成（无论成功还是失败）
+          cycleGuide = CognitionCycleGuide.getRecallGuide()
+        } else if (commandName === 'RememberCommand' && currentState.includes('memory_saved')) {
+          // Remember 之后 - 呼气完成，循环结束
+          cycleGuide = CognitionCycleGuide.getRememberGuide()
+        }
+
         return `${divider}
 🎯 锦囊目的：${purpose}
 ${divider}
 
 📜 锦囊内容：
-${content}
+${content}${cycleGuide ? '\n' + divider + cycleGuide : ''}
 
 🔄 下一步行动：
 ${nextSteps}

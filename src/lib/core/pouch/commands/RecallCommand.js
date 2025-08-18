@@ -2,7 +2,6 @@ const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
 const { CognitionManager } = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
-const CognitionCycleGuide = require('../../cognition/CognitionCycleGuide')
 
 /**
  * 记忆检索锦囊命令 - 基于认知体系
@@ -194,10 +193,6 @@ ${formattedMemories}
       return result + '\n---'
     }).join('\n')
     
-    // 使用 CognitionCycleGuide 添加认知循环提醒
-    if (engrams.length > 0) {
-      formattedEngrams += CognitionCycleGuide.getRecallGuide()
-    }
     
     return formattedEngrams
   }
