@@ -9,6 +9,7 @@ const ProjectManager = require('../../../utils/ProjectManager')
 const { getGlobalProjectManager } = require('../../../utils/ProjectManager')
 const { getGlobalServerEnvironment } = require('../../../utils/ServerEnvironment')
 const logger = require('../../../utils/logger')
+const CognitionCycleGuide = require('../../cognition/CognitionCycleGuide')
 
 /**
  * 角色激活锦囊命令
@@ -415,15 +416,8 @@ ${result.content}
     
     content += `💡 **现在可以立即开始以 \`${roleId}\` (${roleInfo.name}) 身份提供专业服务！**\n`
     
-    // 添加认知工作流温和提醒
-    content += `\n---\n`
-    content += `🧠 认知工作流提醒：\n`
-    content += `你已经激活了专业角色，获得了强大的能力。\n`
-    content += `记住认知三步循环，让记忆像呼吸一样自然：\n\n`
-    content += `1️⃣ 开始任务前 → Recall 相关经验\n`
-    content += `2️⃣ 执行任务中 → 应用已有知识\n`
-    content += `3️⃣ 任务完成后 → Remember 新的学习\n\n`
-    content += `💡 下一步：如果要开始任务，先 recall 相关概念激活记忆网络。\n`
+    // 使用 CognitionCycleGuide 添加认知循环引导
+    content += CognitionCycleGuide.getActionGuide()
 
     return content
   }

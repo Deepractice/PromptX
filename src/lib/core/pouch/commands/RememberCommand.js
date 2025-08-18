@@ -2,6 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
 const { CognitionManager } = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
+const CognitionCycleGuide = require('../../cognition/CognitionCycleGuide')
 
 /**
  * 记忆保存锦囊命令 - 基于认知体系
@@ -127,18 +128,12 @@ class RememberCommand extends BasePouchCommand {
 - ✅ **原子性保持**: 每个概念独立存储，避免混淆
 - ✅ **关联性建立**: 相关概念自动建立语义连接  
 - ✅ **检索精确**: 原子Cue确保精确匹配
-- ✅ **类型分离**: ATOMIC实体、LINK关系、PATTERN模式分别存储
-
----
-🎉 认知循环完成！
-你已经完成了 Remember（呼气），新知识已被保存。
-
-这次循环让你：
-✅ 避免了重复错误
-✅ 积累了新经验
-✅ 为未来的任务做好准备
-
-💡 下次任务：记得先 Recall，让记忆帮助你更好地完成。`
+- ✅ **类型分离**: ATOMIC实体、LINK关系、PATTERN模式分别存储`
+    
+    // 使用 CognitionCycleGuide 添加循环完成庆祝
+    output += CognitionCycleGuide.getRememberGuide()
+    
+    return output
   }
 
   /**
