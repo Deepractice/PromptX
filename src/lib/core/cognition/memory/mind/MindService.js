@@ -176,25 +176,52 @@ class MindService {
       schemaLayerSize: semantic.schemaLayer?.size || 0
     });
     
+    // 统一使用 'mind' 作为虚拟根节点
+    const rootNodeName = 'mind';
+    
     if (schemas.length === 0) {
       logger.warn('[MindService.exportToMindmap] No schemas found, returning empty mindmap');
-      return `mindmap\n  ((${semantic.name}))`;
+      return `mindmap\n  ((${rootNodeName}))`;
     }
     
-    // 如果只有一个 Schema，直接序列化
+    // 始终创建统一的 mindmap 结构，即使只有一个 Schema
+    const lines = ['mindmap'];
+    lines.push(`  ((${rootNodeName}))`);
+    
+    // 如果只有一个 Schema，特殊处理以保持层级结构
     if (schemas.length === 1) {
-      let mindmap = peggyMindmap.serialize(schemas[0]);
+      const schema = schemas[0];
+      lines.push(`    ${schema.name}`);
+      
+      // 从 PeggyMindmap 序列化获取子节点
+      const serialized = peggyMindmap.serialize(schema);
+      const serializedLines = serialized.split('\n');
+      
+      // 跳过 mindmap 声明和根节点，只保留子节点
+      let inContent = false;
+      serializedLines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed === 'mindmap') return;
+        if (trimmed.startsWith('((') && trimmed.endsWith('))')) {
+          inContent = true;
+          return;
+        }
+        if (inContent && trimmed) {
+          // 增加缩进层级
+          const leadingSpaces = line.match(/^(\s*)/)[1].length;
+          lines.push(`      ${line.substring(leadingSpaces)}`);
+        }
+      });
+      
       // 应用拦截器的 onPrime 处理
+      let mindmap = lines.join('\n');
       if (semantic.interceptor && semantic.interceptor.onPrime) {
         mindmap = semantic.interceptor.onPrime(mindmap);
       }
       return mindmap;
     }
     
-    // 多个 Schema，创建统一的 mindmap
-    const lines = ['mindmap'];
-    lines.push(`  ((${semantic.name}))`);
-    
+    // 多个 Schema 时的处理
     // 每个 Schema 作为根节点的子节点
     schemas.forEach(schema => {
       lines.push(`    ${schema.name}`);
