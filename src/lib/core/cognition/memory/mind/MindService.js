@@ -160,6 +160,8 @@ class MindService {
    * @returns {Promise<string>} Mermaid mindmap 格式的文本
    */
   async exportToMindmap(semanticName = 'global-semantic') {
+    logger.info('[MindService.exportToMindmap] Starting export:', { semanticName });
+    
     // 使用当前实例或加载新的
     if (!this.currentSemantic || this.currentSemantic.name !== semanticName) {
       this.currentSemantic = await NetworkSemantic.load(this.storagePath, semanticName);
@@ -167,7 +169,15 @@ class MindService {
     const semantic = this.currentSemantic;
     
     const schemas = semantic.getAllSchemas();
+    logger.info('[MindService.exportToMindmap] Schemas found:', {
+      count: schemas.length,
+      names: schemas.map(s => s.name),
+      cueLayerSize: semantic.cueLayer?.size || 0,
+      schemaLayerSize: semantic.schemaLayer?.size || 0
+    });
+    
     if (schemas.length === 0) {
+      logger.warn('[MindService.exportToMindmap] No schemas found, returning empty mindmap');
       return `mindmap\n  ((${semantic.name}))`;
     }
     
@@ -267,17 +277,34 @@ class MindService {
    */
   async primeSemantic(semanticName = 'global-semantic') {
     console.log('[MindService.primeSemantic] Loading semantic:', semanticName);
+    logger.info('[MindService.primeSemantic] Starting prime for:', { 
+      semanticName, 
+      storagePath: this.storagePath,
+      hasCached: !!this.currentSemantic,
+      cachedName: this.currentSemantic?.name 
+    });
     
     // 优先使用缓存的实例，只有在没有缓存或名称不同时才重新加载
     if (!this.currentSemantic || this.currentSemantic.name !== semanticName) {
       logger.info('[MindService.primeSemantic] Loading from storage');
       this.currentSemantic = await NetworkSemantic.load(this.storagePath, semanticName);
+      logger.info('[MindService.primeSemantic] Loaded semantic:', {
+        name: this.currentSemantic.name,
+        schemasCount: this.currentSemantic.getAllSchemas().length,
+        cueLayerSize: this.currentSemantic.cueLayer?.size || 0,
+        schemaLayerSize: this.currentSemantic.schemaLayer?.size || 0
+      });
     } else {
       logger.info('[MindService.primeSemantic] Using cached semantic network');
     }
     
     // 转换为 mindmap
-    return this.exportToMindmap(semanticName);
+    const mindmap = await this.exportToMindmap(semanticName);
+    logger.info('[MindService.primeSemantic] Generated mindmap:', {
+      length: mindmap.length,
+      preview: mindmap.substring(0, 200)
+    });
+    return mindmap;
   }
 
   /**
