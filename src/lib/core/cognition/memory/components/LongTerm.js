@@ -4,6 +4,8 @@
 const { LongTermMemory } = require('../interfaces/LongTermMemory.js');
 const path = require('path');
 const fs = require('fs-extra');
+const logger = require('../../../../utils/logger');
+const { peggyMindmap } = require('../mind/mindmap/PeggyMindmap.js');
 
 // 临时的内存实现，等nedb安装后替换
 class InMemoryDatastore {
@@ -12,18 +14,31 @@ class InMemoryDatastore {
     this.data = new Map();
     this.indexes = new Map();
     
+    logger.info('[InMemoryDatastore] Initializing, file path:', this.filename);
+    
     // 如果有文件，尝试加载
     if (this.filename && fs.existsSync(this.filename)) {
       try {
         const content = fs.readFileSync(this.filename, 'utf8');
         const lines = content.split('\n').filter(line => line.trim());
-        lines.forEach(line => {
+        logger.info('[InMemoryDatastore] Loading data from file, lines:', lines.length);
+        
+        lines.forEach((line, index) => {
           const doc = JSON.parse(line);
           this.data.set(doc._id, doc);
+          logger.debug(`[InMemoryDatastore] Loaded record ${index + 1}:`, {
+            id: doc._id,
+            type: doc.type,
+            cues: doc.cues?.slice(0, 3) // 只显示前3个cues
+          });
         });
+        
+        logger.info('[InMemoryDatastore] Data loaded, total records:', this.data.size);
       } catch (e) {
-        // 忽略加载错误
+        logger.error('[InMemoryDatastore] Failed to load data:', e.message);
       }
+    } else {
+      logger.info('[InMemoryDatastore] File not exists or path is empty, using empty database');
     }
   }
   
@@ -43,19 +58,26 @@ class InMemoryDatastore {
   
   find(query) {
     const self = this;
+    logger.info('[InMemoryDatastore.find] Query:', JSON.stringify(query));
+    logger.info('[InMemoryDatastore.find] Current data size:', self.data.size);
+    
     const result = {
       sort() { return this; },
       exec(callback) {
         let docs = Array.from(self.data.values());
+        logger.info('[InMemoryDatastore.find.exec] Total docs before filter:', docs.length);
         
         // 简单查询实现
         if (query.cues && query.cues.$in) {
           const searchCues = query.cues.$in;
+          logger.info('[InMemoryDatastore.find.exec] Searching with cues:', searchCues);
           docs = docs.filter(doc => 
             doc.cues.some(cue => searchCues.includes(cue))
           );
+          logger.info('[InMemoryDatastore.find.exec] Docs after cues filter:', docs.length);
         }
         
+        logger.info('[InMemoryDatastore.find.exec] Returning docs:', docs.length);
         callback(null, docs);
       }
     };
@@ -77,7 +99,7 @@ class InMemoryDatastore {
         fs.writeFileSync(this.filename, lines);
       } catch (e) {
         // 忽略持久化错误，继续在内存中运行
-        console.warn('Failed to persist memory:', e.message);
+        logger.warn('[InMemoryDatastore] Failed to persist memory:', e.message);
       }
     }
   }
@@ -120,6 +142,12 @@ class LongTerm extends LongTermMemory {
 
   remember(engram) {
     return new Promise((resolve, reject) => {
+      logger.info('[LongTerm.remember] Storing engram:', {
+        id: engram.getId(),
+        type: engram.getType(),
+        content: engram.getContent()?.substring(0, 50) + '...'
+      });
+      
       const doc = {
         _id: engram.getId(),
         content: engram.getContent(),
@@ -130,14 +158,21 @@ class LongTerm extends LongTermMemory {
         engram: this.serializeEngram(engram)       // 序列化的完整对象
       };
       
+      logger.info('[LongTerm.remember] Extracted cues:', doc.cues);
+      
       // 使用upsert确保不重复
       this.db.update(
         { _id: doc._id },
         doc,
         { upsert: true },
         (err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            logger.error('[LongTerm.remember] Failed to store:', err.message);
+            reject(err);
+          } else {
+            logger.success('[LongTerm.remember] Successfully stored engram:', doc._id);
+            resolve();
+          }
         }
       );
     });
@@ -145,26 +180,53 @@ class LongTerm extends LongTermMemory {
 
   recall(cue) {
     return new Promise((resolve) => {
+      logger.info('[LongTerm.recall] Starting recall with cue:', cue);
+      
       if (!cue || typeof cue !== 'string') {
+        logger.info('[LongTerm.recall] No cue provided, returning all memories');
         // 无线索时返回所有记忆
         this.db.find({}).sort({ timestamp: -1 }).exec((err, docs) => {
           if (err) {
+            logger.error('[LongTerm.recall] Error finding all docs:', err.message);
             resolve([]);
           } else {
+            logger.info('[LongTerm.recall] Found all docs:', docs.length);
             resolve(docs.map(doc => this.deserializeEngram(doc.engram)));
           }
         });
       } else {
         // 基于cue查询：在cues数组中查找（不区分大小写）
         const lowercaseCue = cue.toLowerCase();
+        logger.info('[LongTerm.recall] Searching with lowercase cue:', lowercaseCue);
+        
         this.db.find({}).exec((err, docs) => {
           if (err) {
+            logger.error('[LongTerm.recall] Error finding docs:', err.message);
             resolve([]);
           } else {
+            logger.info('[LongTerm.recall] Total docs found:', docs.length);
+            
             // 手动过滤，因为我们的内存实现的查询功能有限
             const filtered = docs.filter(doc => {
-              return doc.cues && doc.cues.some(c => c.toLowerCase().includes(lowercaseCue));
+              const hasCues = doc.cues && Array.isArray(doc.cues);
+              if (!hasCues) {
+                logger.debug('[LongTerm.recall] Doc missing cues:', doc._id);
+                return false;
+              }
+              
+              const matches = doc.cues.some(c => {
+                const cueStr = String(c).toLowerCase();
+                const isMatch = cueStr.includes(lowercaseCue);
+                if (isMatch) {
+                  logger.debug('[LongTerm.recall] Match found - cue:', c, 'search:', lowercaseCue);
+                }
+                return isMatch;
+              });
+              
+              return matches;
             });
+            
+            logger.info('[LongTerm.recall] Filtered results:', filtered.length);
             
             // 按strength和timestamp排序
             filtered.sort((a, b) => {
@@ -176,7 +238,9 @@ class LongTerm extends LongTermMemory {
               return new Date(b.timestamp) - new Date(a.timestamp);
             });
             
-            resolve(filtered.map(doc => this.deserializeEngram(doc.engram)));
+            const engrams = filtered.map(doc => this.deserializeEngram(doc.engram));
+            logger.info('[LongTerm.recall] Returning engrams:', engrams.length);
+            resolve(engrams);
           }
         });
       }
@@ -190,27 +254,83 @@ class LongTerm extends LongTermMemory {
   extractCuesFromEngram(engram) {
     const cues = new Set();
     
-    // 1. 从content中提取关键词（简单分词）
+    // 1. 保留完整content作为cue（用于精确匹配）
     if (engram.getContent()) {
-      const words = engram.getContent()
-        .toLowerCase()
-        .split(/[\s,，。.!！?？;；:：、]+/)  // 更完善的分词
-        .filter(word => word.length > 1);     // 过滤掉单字符
+      const content = engram.getContent();
+      // 添加完整内容
+      cues.add(content.toLowerCase());
       
+      // 基础分词作为补充（用于模糊匹配）
+      const words = content
+        .toLowerCase()
+        .split(/[\s,，。.!！?？;；:：、]+/)
+        .filter(word => word.length > 1);
       words.forEach(word => cues.add(word));
     }
     
-    // 2. 从Schema中提取Cue（schema 是 Mermaid 格式字符串）
+    // 2. 使用 PeggyMindmap 解析 schema，提取每个节点作为完整的cue
     if (engram.schema) {
-      // 简单提取 Mermaid 中的词汇
-      const mermaidWords = engram.schema
-        .split(/[\n\s]+/)
-        .filter(word => word && !word.startsWith('mindmap') && word.length > 1)
-        .map(word => word.replace(/[)(}\]{[]/g, '').toLowerCase());
-      mermaidWords.forEach(word => cues.add(word));
+      try {
+        // 规范化 mindmap 格式
+        let normalizedSchema = engram.schema.trim();
+        if (!normalizedSchema.startsWith('mindmap')) {
+          normalizedSchema = `mindmap\n${normalizedSchema}`;
+        }
+        
+        // 解析得到 GraphSchema 对象
+        const schema = peggyMindmap.parse(normalizedSchema);
+        
+        // 从 GraphSchema 提取所有节点
+        if (schema.name) {
+          cues.add(schema.name.toLowerCase());
+        }
+        
+        // 从 internalGraph 提取所有节点
+        if (schema.internalGraph && schema.internalGraph.nodes) {
+          schema.internalGraph.nodes.forEach(node => {
+            if (node.key) {
+              cues.add(node.key.toLowerCase());
+            }
+          });
+        }
+        
+        logger.debug('[LongTerm.extractCues] Extracted nodes from schema:', Array.from(cues).slice(-5));
+        
+      } catch (e) {
+        // 如果解析失败，降级到简单处理
+        logger.warn('[LongTerm.extractCues] Failed to parse schema, using fallback:', e.message);
+        // 改进的降级方案：每行都是一个完整的节点
+        const lines = engram.schema.split('\n');
+        lines.forEach(line => {
+          // 保留原始行，只移除前后空格
+          const trimmedLine = line.trim();
+          
+          // 跳过空行和 mindmap 声明
+          if (!trimmedLine || trimmedLine === 'mindmap') {
+            return;
+          }
+          
+          // 处理 root((xxx)) 格式
+          if (trimmedLine.includes('root((')) {
+            const match = trimmedLine.match(/root\(\((.+?)\)\)/);
+            if (match) {
+              cues.add(match[1].toLowerCase());
+            }
+            // 不 return，root 行本身也可能包含其他信息
+          }
+          
+          // 整行作为一个节点（移除缩进但保留内容）
+          const nodeContent = trimmedLine.replace(/^[\s\t]+/, '');
+          if (nodeContent && nodeContent.length > 1 && !nodeContent.startsWith('root((')) {
+            cues.add(nodeContent.toLowerCase());
+          }
+        });
+      }
     }
     
-    return Array.from(cues);
+    const cuesArray = Array.from(cues);
+    logger.info('[LongTerm.extractCues] Total cues extracted:', cuesArray.length, 'Sample:', cuesArray.slice(0, 5));
+    return cuesArray;
   }
 
   /**
