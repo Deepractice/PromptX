@@ -609,7 +609,7 @@ jobs:
           }
           EOF
             
-            git add "$LOCK_FILE"
+            git add -f "$LOCK_FILE"  # Use -f to bypass .gitignore
             git diff --cached --quiet || git commit -m "chore: update version lock to $VERSION"
             git push
           fi
@@ -649,7 +649,7 @@ jobs:
           git checkout develop
           if [ -f ".changeset/prerelease.lock" ]; then
             rm ".changeset/prerelease.lock"
-            git add .changeset/prerelease.lock
+            git add -f .changeset/prerelease.lock  # Use -f to bypass .gitignore
             git commit -m "chore: remove prerelease.lock after release"
             git push origin develop
           fi
