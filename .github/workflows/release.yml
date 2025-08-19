@@ -92,9 +92,19 @@ jobs:
               
               branch = pr.data.base.ref;  // Target branch (e.g., main)
               sourceBranch = pr.data.head.ref;  // Source branch (e.g., release/1.2.0)
+              
+              // If PR is merged, use the target branch for checkout
+              if (pr.data.merged) {
+                console.log(`PR is merged, will checkout from target branch: ${branch}`);
+                core.setOutput('source_branch', branch);
+                core.setOutput('pr_merged', 'true');
+              } else {
+                core.setOutput('source_branch', sourceBranch);
+                core.setOutput('pr_merged', 'false');
+              }
+              
               core.setOutput('is_pr', 'true');
               core.setOutput('pr_number', context.issue.number);
-              core.setOutput('source_branch', sourceBranch);
             } else {
               // Issue comment - use default branch
               branch = context.payload.repository.default_branch;
