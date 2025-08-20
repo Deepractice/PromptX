@@ -337,9 +337,6 @@ ${errorMessage}
       ...output,
       toString () {
         const divider = '='.repeat(60)
-        const nextSteps = (pateoas.nextActions || [])
-          .map(action => `  - ${action.name}: ${action.description}\n    方式: ${action.method || action.command || '通过MCP工具'}`)
-          .join('\n')
 
         return `${projectPrompt}
 
@@ -349,9 +346,6 @@ ${divider}
 
 📜 锦囊内容：
 ${content}
-
-🔄 下一步行动：
-${nextSteps}
 
 📍 当前状态：${pateoas.currentState}
 ${divider}

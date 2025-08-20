@@ -99,10 +99,7 @@ class BasePouchCommand {
       ...output,
       toString () {
         const divider = '='.repeat(60)
-        const nextSteps = (pateoas.nextActions || [])
-          .map(action => `  - ${action.name}: ${action.description}\n    方式: ${action.method || action.command || '通过MCP工具'}`)
-          .join('\n')
-
+        
         // 根据当前状态和命令类型添加认知循环引导
         let cycleGuide = ''
         const currentState = pateoas.currentState || ''
@@ -125,9 +122,6 @@ ${divider}
 
 📜 锦囊内容：
 ${content}${cycleGuide ? '\n' + divider + cycleGuide : ''}
-
-🔄 下一步行动：
-${nextSteps}
 
 📍 当前状态：${pateoas.currentState}
 ${divider}`
