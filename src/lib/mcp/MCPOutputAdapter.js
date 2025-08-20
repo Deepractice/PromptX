@@ -8,9 +8,12 @@
  * - 提供统一的错误处理机制
  * - 在输出末尾添加简单的Token统计
  */
+const { getVersion } = require('../utils/version');
+
 class MCPOutputAdapter {
   constructor() {
     this.version = '1.0.0';
+    this.promptxVersion = getVersion();
   }
   
   /**
@@ -53,7 +56,7 @@ class MCPOutputAdapter {
       const tokenCount = this.estimateTokens(sanitizedText);
       
       // 添加token统计信息
-      const finalText = sanitizedText + `\n\n---\n📊 Token usage: ~${tokenCount} tokens`;
+      const finalText = sanitizedText + `\n\n---\n📊 Token usage: ~${tokenCount} tokens\nPowered by PromptX v${this.promptxVersion} | deepractice.ai`;
       
       return {
         content: [
