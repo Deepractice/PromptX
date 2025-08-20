@@ -1,4 +1,6 @@
 const BasePouchCommand = require('../BasePouchCommand')
+const InitArea = require('../areas/init/InitArea')
+const StateArea = require('../areas/common/StateArea')
 const { getGlobalResourceManager } = require('../../resource')
 const { COMMANDS, PACKAGE_NAMES } = require('../../../../constants')
 const RegistryData = require('../../resource/RegistryData')
@@ -10,8 +12,9 @@ const path = require('path')
 const fs = require('fs-extra')
 
 /**
- * 初始化锦囊命令
+ * 初始化命令
  * 负责准备工作环境和传达系统协议
+ * 使用Area架构组装输出
  */
 class InitCommand extends BasePouchCommand {
   constructor () {
@@ -22,11 +25,10 @@ class InitCommand extends BasePouchCommand {
     this.projectManager = null
   }
 
-  getPurpose () {
-    return '初始化PromptX工作环境，创建必要的配置目录和文件，生成项目级资源注册表'
-  }
-
-  async getContent (args) {
+  /**
+   * 组装Areas
+   */
+  async assembleAreas(args) {
     // 获取参数，支持两种格式：
     // 1. 来自MCP的对象格式：{ workingDirectory: "path", ideType: "cursor" }
     // 2. 来自CLI的字符串格式：["path"]
@@ -43,23 +45,13 @@ class InitCommand extends BasePouchCommand {
     }
     
     if (!workingDirectory) {
-      // 没有提供项目路径时，返回简单说明
-      return `📁 PromptX 项目配置工具
-
-当前状态：**全局模式**（未绑定特定项目）
-
-✅ **所有功能均可正常使用**，包括：
-- 角色激活 (action)
-- 资源学习 (learn)  
-- 记忆管理 (recall/remember)
-- 工具执行 (tool)
-
-💡 **仅在以下情况需要项目配置**：
-- 需要多项目隔离
-- 需要项目级配置
-- 需要项目特定资源
-
-如需绑定项目，请提供 workingDirectory 参数。`
+      // 没有提供项目路径时，全局模式
+      const initArea = new InitArea({ isProjectMode: false })
+      this.registerArea(initArea)
+      
+      const stateArea = new StateArea('global_mode')
+      this.registerArea(stateArea)
+      return
     }
     
     // 解码中文路径并解析
@@ -120,22 +112,21 @@ class InitCommand extends BasePouchCommand {
     // 生成配置文件名
     const configFileName = this.projectManager.generateConfigFileName(projectConfig.mcpId, ideType, projectConfig.transport, projectPath)
 
-    return `🎯 PromptX 初始化完成！
-
-## 📦 版本信息
-✅ **PromptX v${version}** - AI专业能力增强框架
-
-## 🏗️ 多项目环境准备
-✅ 创建了 \`.promptx\` 配置目录
-✅ 项目已注册到MCP实例: **${projectConfig.mcpId}** (${ideType})
-✅ 项目路径: ${projectConfig.projectPath}
-✅ 配置文件: ${configFileName}
-
-## 📋 项目资源注册表
-${registryStats.message}
-
-💡 **多项目支持**: 现在支持同时在多个项目中使用PromptX，项目间完全隔离！
-💡 **提示**: ${registryStats.totalResources > 0 ? '项目资源已优化为注册表模式，性能大幅提升！' : '现在可以开始创建项目级资源了！'}`
+    // 组装Areas
+    const initInfo = {
+      version,
+      projectConfig,
+      registryStats,
+      configFileName,
+      ideType,
+      isProjectMode: true
+    }
+    
+    const initArea = new InitArea(initInfo)
+    this.registerArea(initArea)
+    
+    const stateArea = new StateArea('initialized')
+    this.registerArea(stateArea)
   }
 
   /**
@@ -316,35 +307,6 @@ ${registryStats.message}
 
     return 'unknown'
   }
-
-
-  async getPATEOAS (args) {
-    const version = await this.getVersionInfo()
-    return {
-      currentState: 'initialized',
-      availableTransitions: ['welcome', 'action', 'learn', 'recall', 'remember'],
-      nextActions: [
-        {
-          name: '发现专业角色',
-          description: '查看所有可用的AI专业角色',
-          method: 'MCP PromptX welcome 工具',
-          priority: 'recommended'
-        },
-        {
-          name: '激活专业角色',
-          description: '直接激活特定专业角色（如果已知角色ID）',
-          method: 'MCP PromptX action 工具',
-          priority: 'optional'
-        }
-      ],
-      metadata: {
-        timestamp: new Date().toISOString(),
-        version: version,
-        description: 'PromptX专业能力增强系统已就绪'
-      }
-    }
-  }
-
 
 }
 

@@ -1,11 +1,16 @@
-const CognitionCycleGuide = require('../cognition/CognitionCycleGuide')
+const BaseArea = require('./areas/BaseArea')
+const LegacyArea = require('./areas/common/LegacyArea')
 
 /**
- * 基础锦囊命令抽象类
- * 所有锦囊命令都需要继承此类
+ * BasePouchCommand - 基于Area架构的命令基类
+ * 
+ * 架构设计：
+ * - Command负责组装Areas
+ * - 每个Area自治管理自己的渲染
+ * - 统一的渲染管道处理所有Areas
  */
 class BasePouchCommand {
-  constructor () {
+  constructor() {
     this.context = {
       currentPouch: '',
       history: [],
@@ -14,26 +19,138 @@ class BasePouchCommand {
       domainContext: {}
     }
     this.outputFormat = 'human'
+    this.areas = []
   }
 
   /**
-   * 执行锦囊命令
-   * @param {Array} args - 命令参数
-   * @returns {Promise<PouchOutput>} 锦囊输出
+   * 注册一个Area
+   * @param {BaseArea} area - Area实例
    */
-  async execute (args = []) {
-    const purpose = this.getPurpose()
-    const content = await this.getContent(args)
-    const pateoas = await this.getPATEOAS(args)
+  registerArea(area) {
+    if (!(area instanceof BaseArea)) {
+      throw new Error('Area must extend BaseArea')
+    }
+    
+    // 检查名称唯一性
+    if (this.areas.some(a => a.getName() === area.getName())) {
+      throw new Error(`Area with name '${area.getName()}' already registered`)
+    }
+    
+    this.areas.push(area)
+  }
 
-    return this.formatOutput(purpose, content, pateoas)
+  /**
+   * 清空所有Areas
+   */
+  clearAreas() {
+    this.areas = []
+  }
+
+  /**
+   * 组装Areas（子类可重写）
+   * @param {Array} args - 命令参数
+   * @returns {Promise<void>}
+   */
+  async assembleAreas(args) {
+    // 检查是否有旧的getPurpose/getContent方法
+    if (typeof this.getPurpose === 'function' && typeof this.getContent === 'function') {
+      // 兼容模式：使用LegacyArea包装旧命令
+      const purpose = this.getPurpose()
+      const content = await this.getContent(args)
+      const pateoas = typeof this.getPATEOAS === 'function' ? this.getPATEOAS(args) : null
+      
+      const legacyArea = new LegacyArea(purpose, content, pateoas)
+      this.registerArea(legacyArea)
+    } else {
+      // 新架构的命令必须自己实现assembleAreas
+      throw new Error('Subclass must implement assembleAreas() or provide getPurpose()/getContent()')
+    }
+  }
+
+  /**
+   * 验证所有Areas
+   * @returns {boolean}
+   */
+  validateAreas() {
+    return this.areas.every(area => area.validate())
+  }
+
+  /**
+   * 渲染所有Areas
+   * @returns {Promise<string>}
+   */
+  async renderAreas() {
+    const contents = []
+    
+    for (const area of this.areas) {
+      const content = await area.render()
+      if (content) {
+        contents.push(area.format(content))
+      }
+    }
+    
+    return contents.join('')
+  }
+
+  /**
+   * 执行命令
+   * @param {Array} args - 命令参数
+   * @returns {Promise<Object|string>}
+   */
+  async execute(args = []) {
+    // 清空之前的Areas
+    this.clearAreas()
+    
+    // 组装Areas
+    await this.assembleAreas(args)
+    
+    // 验证Areas
+    if (!this.validateAreas()) {
+      throw new Error('Area validation failed')
+    }
+    
+    // 渲染Areas
+    const content = await this.renderAreas()
+    
+    // 格式化输出
+    return this.formatOutput(content)
+  }
+
+  /**
+   * 格式化最终输出
+   * @param {string} content - 渲染的内容
+   * @returns {Object|string}
+   */
+  formatOutput(content) {
+    if (this.outputFormat === 'json') {
+      return {
+        content,
+        areas: this.areas.map(a => a.getMetadata()),
+        context: this.context,
+        format: this.outputFormat
+      }
+    }
+    
+    // 人类可读格式
+    const output = {
+      content,
+      context: this.context,
+      format: this.outputFormat
+    }
+    
+    return {
+      ...output,
+      toString() {
+        return content
+      }
+    }
   }
 
   /**
    * 设置状态上下文
-   * @param {StateContext} context - 状态上下文
+   * @param {Object} context - 状态上下文
    */
-  setContext (context) {
+  setContext(context) {
     this.context = { ...this.context, ...context }
   }
 
@@ -41,92 +158,8 @@ class BasePouchCommand {
    * 设置输出格式
    * @param {'human'|'json'} format - 输出格式
    */
-  setOutputFormat (format) {
+  setOutputFormat(format) {
     this.outputFormat = format
-  }
-
-  /**
-   * 获取锦囊目的说明（子类必须实现）
-   * @returns {string} 目的说明
-   */
-  getPurpose () {
-    throw new Error('子类必须实现 getPurpose 方法')
-  }
-
-  /**
-   * 获取锦囊内容（子类必须实现）
-   * @param {Array} args - 命令参数
-   * @returns {Promise<string>} 锦囊内容
-   */
-  async getContent (args) {
-    throw new Error('子类必须实现 getContent 方法')
-  }
-
-  /**
-   * 获取PATEOAS导航信息（子类必须实现）
-   * @param {Array} args - 命令参数
-   * @returns {PATEOASNavigation} PATEOAS导航
-   */
-  getPATEOAS (args) {
-    throw new Error('子类必须实现 getPATEOAS 方法')
-  }
-
-  /**
-   * 格式化输出
-   * @param {string} purpose - 目的说明
-   * @param {string} content - 内容
-   * @param {PATEOASNavigation} pateoas - PATEOAS导航
-   * @returns {PouchOutput} 格式化的输出
-   */
-  formatOutput (purpose, content, pateoas) {
-    const output = {
-      purpose,
-      content,
-      pateoas,
-      context: this.context,
-      format: this.outputFormat
-    }
-
-    if (this.outputFormat === 'json') {
-      return output
-    }
-
-    // 保存命令名称到闭包
-    const commandName = this.constructor.name
-    
-    // 人类可读格式
-    return {
-      ...output,
-      toString () {
-        const divider = '='.repeat(60)
-        
-        // 根据当前状态和命令类型添加认知循环引导
-        let cycleGuide = ''
-        const currentState = pateoas.currentState || ''
-        
-        // 简单粗暴的判断 - Linus style: if语句就够了！
-        if (commandName === 'ActionCommand' && currentState.includes('role_activated')) {
-          // 角色激活时 - 循环开始
-          cycleGuide = CognitionCycleGuide.getActionGuide()
-        } else if (commandName === 'RecallCommand') {
-          // Recall 命令 - 吸气完成（无论成功还是失败）
-          cycleGuide = CognitionCycleGuide.getRecallGuide()
-        } else if (commandName === 'RememberCommand' && currentState.includes('memory_saved')) {
-          // Remember 之后 - 呼气完成，循环结束
-          cycleGuide = CognitionCycleGuide.getRememberGuide()
-        }
-
-        return `${divider}
-🎯 锦囊目的：${purpose}
-${divider}
-
-📜 锦囊内容：
-${content}${cycleGuide ? '\n' + divider + cycleGuide : ''}
-
-📍 当前状态：${pateoas.currentState}
-${divider}`
-      }
-    }
   }
 }
 
