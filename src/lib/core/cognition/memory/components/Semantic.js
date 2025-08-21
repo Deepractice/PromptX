@@ -25,8 +25,8 @@ class Semantic extends ImplicitMemory {
       console.log('[Semantic.remember] Processing engram:', engram.content);
       console.log('[Semantic.remember] Schema:', engram.schema);
       
-      // schema 是 Mermaid 格式字符串，直接使用 MindService 的 remember 方法
-      await this.mindService.remember(engram.schema);
+      // 传递整个engram给MindService，以保留强度值等信息
+      await this.mindService.remember(engram.schema, 'global-semantic', engram);
       
       console.log('[Semantic.remember] Successfully added to semantic network');
     } catch (error) {

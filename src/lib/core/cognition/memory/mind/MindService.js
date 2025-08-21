@@ -67,9 +67,10 @@ class MindService {
    * 记忆新内容 - 解析 mindmap 并添加到语义网络
    * @param {string} mindmapText - Mermaid mindmap 格式的文本
    * @param {string} semanticName - 目标语义网络名称
+   * @param {Object} engram - 可选的engram对象，包含强度值等元信息
    * @returns {Promise<NetworkSemantic>} 更新后的语义网络
    */
-  async remember(mindmapText, semanticName = 'global-semantic') {
+  async remember(mindmapText, semanticName = 'global-semantic', engram = null) {
     if (!mindmapText || typeof mindmapText !== 'string') {
       throw new Error('Invalid mindmap text provided');
     }
@@ -92,6 +93,14 @@ class MindService {
     // 3. 解析 mindmap 为 Schema
     const newSchema = peggyMindmap.parse(normalizedMindmap);
     console.log('[MindService.remember] Parsed schema:', newSchema.name);
+    
+    // 3.5 如果有engram，将强度值应用到所有Cue
+    if (engram && engram.strength !== undefined) {
+      console.log('[MindService.remember] Applying engram strength:', engram.strength);
+      newSchema.getCues().forEach(cue => {
+        cue.strength = engram.strength;
+      });
+    }
     
     // 4. 语义等价性检测和 Schema 合并
     const semanticEquivalents = this._findSemanticEquivalents(semantic, newSchema.name);
@@ -254,6 +263,7 @@ class MindService {
       // 递归添加节点
       const addCue = (cue, indent) => {
         // 添加 strength 信息 (如果存在)
+        logger.info(`[MindService.exportToMindmap] Processing cue: ${cue.word}, strength: ${cue.strength}, type: ${typeof cue.strength}`);
         const strengthInfo = cue.strength !== undefined ? ` [${cue.strength.toFixed(2)}]` : '';
         lines.push(`${' '.repeat(indent)}${cue.word}${strengthInfo}`);
         cue.getConnections().forEach(childWord => {

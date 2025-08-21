@@ -284,16 +284,25 @@ class ActionCommand extends BasePouchCommand {
       for (let i = 0; i <= level; i++) {
         if (!stack[i]) continue
         
-        if (!current[stack[i]]) {
-          current[stack[i]] = {
-            strength: i === level ? strength : 0.5,
-            children: {}
-          }
-        }
-        
         if (i === level) {
-          current[stack[i]].strength = strength
+          // 当前层级：创建或更新节点
+          if (!current[stack[i]]) {
+            current[stack[i]] = {
+              strength: strength,
+              children: {}
+            }
+          } else {
+            // 更新强度值（如果节点已存在）
+            current[stack[i]].strength = strength
+          }
         } else {
+          // 父层级：确保节点存在但不修改strength
+          if (!current[stack[i]]) {
+            current[stack[i]] = {
+              strength: 0.5,  // 默认值，将被后续正确的值覆盖
+              children: {}
+            }
+          }
           current = current[stack[i]].children
         }
       }

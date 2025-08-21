@@ -45,17 +45,22 @@ function addPersistableMethods(instance) {
     const cleanObject = {
       name: data.name,
       // 处理排序后的 cueLayer
-      cueLayer: data.cueLayer.map(([word, cue]) => ({
-        word: word,
-        connections: cue.getConnections ? cue.getConnections() : [],
-        strength: cue.strength || 0.5
-      })),
+      cueLayer: data.cueLayer.map(([word, cue]) => {
+        const logger = require('../../../../../utils/logger');
+        logger.info(`[NetworkSemantic.persist] Saving cue: ${word}, strength: ${cue.strength}`);
+        return {
+          word: word,
+          connections: cue.getConnections ? cue.getConnections() : [],
+          strength: cue.strength || 0.5
+        };
+      }),
       // 处理排序后的 schemaLayer
       schemaLayer: data.schemaLayer.map(([name, schema]) => ({
         name: name,
         cues: schema.getCues ? schema.getCues().map(cue => ({
           word: cue.word,
-          connections: cue.getConnections ? cue.getConnections() : []
+          connections: cue.getConnections ? cue.getConnections() : [],
+          strength: cue.strength || 0.5
         })) : [],
         externalConnections: schema.externalConnections ? Array.from(schema.externalConnections) : []
       })),
@@ -256,7 +261,13 @@ class NetworkSemantic extends Semantic {
     // 同步 Schema 中的所有 Cues 到全局 cueLayer
     if (schema.getCues) {
       schema.getCues().forEach(cue => {
-        this.cueLayer.set(cue.word, cue);
+        // 如果cue已存在且新cue有更高强度，更新强度
+        const existingCue = this.cueLayer.get(cue.word);
+        if (existingCue && cue.strength > existingCue.strength) {
+          existingCue.strength = cue.strength;
+        } else if (!existingCue) {
+          this.cueLayer.set(cue.word, cue);
+        }
       });
     }
     
@@ -439,9 +450,13 @@ NetworkSemantic.load = async function(storagePath, semanticName) {
     
     // 恢复 WordCue 对象
     const { WordCue } = require('./WordCue');
+    const logger = require('../../../../../utils/logger');
     const cueMap = new Map();
+    logger.info(`[NetworkSemantic.load] Loading ${data.cueLayer.length} cues from storage`);
     data.cueLayer.forEach(cueData => {
+      logger.info(`[NetworkSemantic.load] Loading cue: ${cueData.word}, strength from data: ${cueData.strength}`);
       const cue = new WordCue(cueData.word, cueData.strength || 0.5);
+      logger.info(`[NetworkSemantic.load] Created WordCue: ${cue.word}, strength: ${cue.strength}`);
       cueData.connections.forEach(conn => {
         cue.connections.add(conn);
       });
