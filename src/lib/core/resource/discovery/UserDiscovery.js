@@ -179,6 +179,9 @@ class UserDiscovery extends BaseDiscovery {
     let protocol = null
     let resourceId = null
     
+    // 🔍 Knuth调试日志：追踪文件处理
+    logger.debug(`[UserDiscovery._processFile] Processing: ${relativePath} (file: ${fileName})`)
+    
     // 根据文件名后缀识别资源类型
     if (fileName.endsWith('.role.md')) {
       protocol = 'role'
@@ -201,6 +204,9 @@ class UserDiscovery extends BaseDiscovery {
     }
     
     if (protocol && resourceId) {
+      // 🔍 Knuth调试：发现资源类型
+      logger.info(`[UserDiscovery._processFile] Found ${protocol} resource: ${resourceId}`)
+      
       // 验证文件内容
       if (await this._validateResourceFile(filePath, protocol)) {
         const reference = `@user://.promptx/resource/${relativePath}`
@@ -219,7 +225,7 @@ class UserDiscovery extends BaseDiscovery {
         })
         
         registryData.addResource(resourceData)
-        logger.debug(`[UserDiscovery] 发现${protocol}资源: ${resourceId} at ${relativePath}`)
+        logger.info(`[UserDiscovery] ✅ 成功添加${protocol}资源: ${resourceId} at ${relativePath}`)
       }
     }
   }
