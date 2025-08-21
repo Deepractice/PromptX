@@ -640,7 +640,8 @@ class FastMCPHttpServer {
         if (!args || !args.engrams || !Array.isArray(args.engrams)) {
           throw new Error('engrams 参数是必需的且必须是数组');
         }
-        return [args.role, JSON.stringify(args.engrams)];
+        // 保持对象格式，RememberCommand.parseArgs期望接收对象
+        return [args];
       
       case 'promptx_tool': {
         if (!args || !args.tool_resource || !args.parameters) {
