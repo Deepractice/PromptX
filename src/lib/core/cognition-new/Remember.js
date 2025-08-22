@@ -1,76 +1,217 @@
+const logger = require('../../utils/logger');
+
 /**
  * Remember - 记忆写入执行器
  * 
- * 负责将Schema（时间性综合的Cue序列）写入Network。
- * 这是从外部经验到内部记忆网络的关键转换点。
+ * ## 设计理念
  * 
- * 康德哲学映射：
- * - Schema作为时间性综合（temporal synthesis）进入
- * - 通过图式论（schematism）建立Cue之间的连接
- * - 更新Network中的持久结构
+ * Remember是记忆系统的写入端，负责将Schema（概念序列）写入Network。
+ * 采用纯执行器模式，不包含任何计算逻辑，所有计算委托给Strategy。
+ * 
+ * 类比生物记忆：
+ * - Schema = 体验的序列（如"看到-理解-记住"）
+ * - Remember = 海马体的编码过程
+ * - 连接权重 = 突触强度
+ * 
+ * ## 为什么这样设计
+ * 
+ * 1. **职责单一**
+ *    - Remember只负责执行流程，不负责算法
+ *    - 便于测试和维护
+ *    - 可以轻松切换不同的权重策略
+ * 
+ * 2. **批处理优化**
+ *    - 同一批Schema使用相同时间戳
+ *    - 保证批次内的一致性
+ *    - 避免时间戳漂移
+ * 
+ * 3. **覆盖而非累加**
+ *    - 新的记忆覆盖旧的（用户决定）
+ *    - 简化模型，避免权重爆炸
+ *    - 符合"遗忘即学习"的认知规律
+ * 
+ * ## 执行流程
+ * 
+ * ```
+ * Schema: ["认知", "模型", "训练", "效果"]
+ * 
+ * Phase 1: 确保Cue存在
+ *   - 创建/获取 "认知" Cue
+ *   - 创建/获取 "模型" Cue
+ *   - 创建/获取 "训练" Cue
+ *   - 创建/获取 "效果" Cue
+ * 
+ * Phase 2: 建立连接
+ *   - "认知" -> "模型" (position=0)
+ *   - "模型" -> "训练" (position=1)
+ *   - "训练" -> "效果" (position=2)
+ * ```
+ * 
+ * ## 设计决策
+ * 
+ * Q: 为什么不在Remember中计算权重？
+ * A: 策略模式，算法可独立演化，Remember保持稳定。
+ * 
+ * Q: 为什么要两个Phase？
+ * A: 
+ * - Phase 1确保所有节点存在，避免边创建时找不到节点
+ * - Phase 2专注于边的创建，逻辑清晰
+ * 
+ * Q: 为什么返回connections数组？
+ * A: 便于调试、日志记录和可视化展示。
  * 
  * @class Remember
  */
 class Remember {
   /**
+   * 创建Remember实例
+   * 
    * @param {Network} network - 全局认知网络
+   * @param {WeightStrategy} strategy - 权重计算策略
    */
-  constructor(network) {
+  constructor(network, options = {}) {
+    /**
+     * 认知网络引用
+     * @type {Network}
+     */
     this.network = network;
+    
+    /**
+     * 权重策略
+     * @type {WeightStrategy}
+     */
+    this.strategy = options.strategy || null;
+    
+    if (this.strategy) {
+      logger.debug('[Remember] Initialized with strategy', { 
+        strategy: this.strategy.constructor.name 
+      });
+    } else {
+      logger.warn('[Remember] No strategy provided');
+    }
   }
 
   /**
    * 执行记忆写入
    * 
-   * 将Schema（Cue序列）写入Network，建立或强化连接。
-   * Schema格式：[cue1, cue2, cue3, ...]
-   * 
-   * 处理逻辑：
-   * 1. 确保所有Cue在Network中存在
-   * 2. 建立序列中相邻Cue的连接
-   * 3. 更新连接权重和元信息
+   * 将Schema序列写入Network，建立Cue之间的连接。
    * 
    * @param {Array<string>} schema - Cue词的有序序列
-   * @param {Object} options - 可选参数
-   * @param {number} options.baseWeight - 基础权重（默认1.0）
-   * @param {number} options.decay - 衰减因子（默认0.9）
+   * @returns {Object} 执行结果
+   * @returns {number} returns.processed - 处理的节点数
+   * @returns {Array} returns.connections - 创建的连接列表
    */
-  execute(schema, options = {}) {
-    const { baseWeight = 1.0, decay = 0.9 } = options;
+  execute(schema) {
+    // 参数验证
+    if (!schema || !Array.isArray(schema)) {
+      logger.warn('[Remember] Invalid schema provided', { schema });
+      return {
+        processed: 0,
+        connections: []
+      };
+    }
     
-    // 确保所有Cue存在于Network中
+    if (schema.length < 2) {
+      logger.debug('[Remember] Schema too short, no connections to create', { 
+        length: schema.length 
+      });
+      return {
+        processed: schema.length,
+        connections: []
+      };
+    }
+    
+    logger.debug('[Remember] Processing schema', { 
+      length: schema.length,
+      preview: schema.slice(0, 5).join(' -> ') + (schema.length > 5 ? '...' : '')
+    });
+    
+    // Phase 1: 确保所有Cue存在
+    logger.debug('[Remember] Phase 1: Ensuring all Cues exist');
+    const createdCues = [];
     for (const word of schema) {
+      // 使用Network的getOrCreateCue方法，它会创建FrequencyCue
       if (!this.network.cues.has(word)) {
-        const Cue = require('./Cue');
-        this.network.cues.set(word, new Cue(word));
+        createdCues.push(word);
+      }
+      this.network.getOrCreateCue(word);
+    }
+    
+    if (createdCues.length > 0) {
+      logger.debug('[Remember] Created new Cues', { 
+        count: createdCues.length,
+        cues: createdCues.slice(0, 10)  // 只显示前10个
+      });
+    }
+    
+    // Phase 2: 建立连接结构（先用临时权重）
+    logger.debug('[Remember] Phase 2: Building connection structure');
+    const Context = require('./Context');
+    const connections = [];
+    const timestamp = Date.now();  // 同批次使用相同时间戳
+    
+    // 2.1 先建立所有连接（用临时权重0）
+    for (let i = 0; i < schema.length - 1; i++) {
+      const sourceWord = schema[i];
+      const targetWord = schema[i + 1];
+      const sourceCue = this.network.cues.get(sourceWord);
+      
+      // 检查是否已有连接
+      const existingWeight = sourceCue.connections.get(targetWord);
+      if (!existingWeight) {
+        // 新连接，先用0占位
+        sourceCue.connections.set(targetWord, 0);
       }
     }
     
-    // 建立序列连接（时间性因果）
+    // 2.2 现在计算并更新权重（此时出度已正确）
+    logger.debug('[Remember] Phase 2.2: Calculating and updating weights');
     for (let i = 0; i < schema.length - 1; i++) {
-      const fromCue = this.network.cues.get(schema[i]);
-      const toWord = schema[i + 1];
+      const sourceWord = schema[i];
+      const targetWord = schema[i + 1];
+      const sourceCue = this.network.cues.get(sourceWord);
       
-      // 获取或创建连接
-      let connection = fromCue.connections.get(toWord);
-      if (!connection) {
-        connection = {
-          weight: 0,
-          count: 0,
-          lastUsed: Date.now()
-        };
-        fromCue.connections.set(toWord, connection);
-      }
+      // 构建上下文（现在sourceOutDegree是正确的）
+      const context = new Context({
+        sourceCue: sourceCue,
+        targetWord: targetWord,
+        position: i,
+        timestamp: timestamp
+      });
       
-      // 更新连接（STDP原理：时序决定因果）
-      connection.weight += baseWeight * Math.pow(decay, i);
-      connection.count += 1;
-      connection.lastUsed = Date.now();
+      // 委托策略计算权重
+      const weight = this.strategy.calculate(context);
+      
+      logger.debug('[Remember] Weight calculation', {
+        from: sourceWord,
+        to: targetWord,
+        position: i,
+        outDegree: context.sourceOutDegree,
+        weight: weight
+      });
+      
+      // 更新权重（覆盖）
+      sourceCue.connections.set(targetWord, weight);
+      
+      // 记录本次更新
+      connections.push({
+        source: sourceWord,
+        target: targetWord,
+        weight: weight,
+        position: i
+      });
     }
+    
+    logger.info('[Remember] Schema processed successfully', {
+      nodes: schema.length,
+      connections: connections.length,
+      timestamp: new Date(timestamp).toISOString()
+    });
     
     return {
       processed: schema.length,
-      connections: schema.length - 1
+      connections: connections,
+      timestamp: timestamp
     };
   }
 }

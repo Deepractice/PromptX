@@ -16,10 +16,29 @@ const Cue = require('./Cue');
 const Network = require('./Network');
 const Mind = require('./Mind');
 const Remember = require('./Remember');
+const Recall = require('./Recall');
+const Prime = require('./Prime');
+const Context = require('./Context');
+const CognitionSystem = require('./CognitionSystem');
+const { WeightStrategy, SimpleWeightStrategy, TimeBasedWeightStrategy } = require('./WeightStrategy');
 
 module.exports = {
+  // 核心数据结构
   Cue,
   Network,
   Mind,
-  Remember
+  Context,
+  
+  // 操作类
+  Remember,
+  Recall,
+  Prime,
+  
+  // 策略
+  WeightStrategy,
+  SimpleWeightStrategy,
+  TimeBasedWeightStrategy,
+  
+  // 系统
+  CognitionSystem
 };
