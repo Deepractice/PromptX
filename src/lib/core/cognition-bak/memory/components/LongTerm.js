@@ -4,7 +4,7 @@
 const { LongTermMemory } = require('../interfaces/LongTermMemory.js');
 const path = require('path');
 const fs = require('fs-extra');
-const logger = require('../../../../utils/logger');
+const logger = require('../../../../utils/logger.js');
 const { peggyMindmap } = require('../mind/mindmap/PeggyMindmap.js');
 
 // 临时的内存实现，等nedb安装后替换
@@ -355,7 +355,7 @@ class LongTerm extends LongTermMemory {
    */
   deserializeEngram(data) {
     // 重建真正的 Engram 实例
-    const { Engram } = require('../../engram/Engram');
+    const { Engram } = require('../../engram/Engram.js');
     const engram = new Engram(data.content, data.schema, data.type);
     
     // 恢复其他属性

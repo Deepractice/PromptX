@@ -2,10 +2,10 @@
 // 只有 remember 和 recall 两个核心方法
 // 内部自动管理短期记忆和长期记忆的协作
 
-const { ShortTerm } = require('./components/ShortTerm');
-const { LongTerm } = require('./components/LongTerm');
-const { SimpleEvaluator } = require('./formation');
-const SimpleConsolidator = require('./formation/components/SimpleConsolidator');
+const { ShortTerm } = require('./components/ShortTerm.js');
+const { LongTerm } = require('./components/LongTerm.js');
+const { SimpleEvaluator } = require('./formation/index.js');
+const SimpleConsolidator = require('./formation/components/SimpleConsolidator.js');
 const Semantic = require('./components/Semantic.js');
 const Procedural = require('./components/Procedural.js');
 

@@ -1,5 +1,5 @@
 const BaseArea = require('../BaseArea')
-const CognitionCycleGuide = require('../../../cognition/CognitionCycleGuide')
+const CognitionCycleGuide = require('../../../cognition-bak/CognitionCycleGuide')
 
 /**
  * CognitionArea - 认知区域

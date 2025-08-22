@@ -1,29 +1,44 @@
-// Cognition System - 认知体系
-// 认知 = 记忆(Memory)系统 + 配置管理
+/**
+ * 认知系统核心结构（极简版）
+ * 
+ * 三个基础结构：
+ * - Cue: 认知网络的节点，自管理连接
+ * - Network: 所有 Cue 的容器
+ * - Mind: 以某个 Cue 为中心的激活子图
+ * 
+ * 设计原则：
+ * - 只定义数据结构，不定义算法
+ * - Cue 管理自己的连接（去中心化）
+ * - 不存储原始内容（让大模型理解）
+ */
 
-const { Cognition } = require('./Cognition');
-const { CognitionManager } = require('./CognitionManager');
-const { memoryService } = require('./memory');
-
-// 创建默认的认知实例
-const cognition = new Cognition();
+const Cue = require('./Cue');
+const Network = require('./Network');
+const Mind = require('./Mind');
+const Remember = require('./Remember');
+const Recall = require('./Recall');
+const Prime = require('./Prime');
+const Context = require('./Context');
+const CognitionSystem = require('./CognitionSystem');
+const { WeightStrategy, SimpleWeightStrategy, TimeBasedWeightStrategy } = require('./WeightStrategy');
 
 module.exports = {
-  // 认知类（用于创建自定义配置的实例）
-  Cognition,
+  // 核心数据结构
+  Cue,
+  Network,
+  Mind,
+  Context,
   
-  // 认知管理器（管理角色与认知的关系）
-  CognitionManager,
+  // 操作类
+  Remember,
+  Recall,
+  Prime,
   
-  // 默认认知实例
-  cognition,
+  // 策略
+  WeightStrategy,
+  SimpleWeightStrategy,
+  TimeBasedWeightStrategy,
   
-  // 直接访问内部服务（向后兼容）
-  memoryService,
-  
-  // 导出记忆系统组件
-  ...require('./memory'),
-  
-  // Engram
-  Engram: require('./engram/Engram')
+  // 系统
+  CognitionSystem
 };

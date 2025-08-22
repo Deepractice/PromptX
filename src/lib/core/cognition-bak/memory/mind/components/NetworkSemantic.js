@@ -46,7 +46,7 @@ function addPersistableMethods(instance) {
       name: data.name,
       // 处理排序后的 cueLayer
       cueLayer: data.cueLayer.map(([word, cue]) => {
-        const logger = require('../../../../../utils/logger');
+        const logger = require('../../../../../utils/logger.js');
         logger.info(`[NetworkSemantic.persist] Saving cue: ${word}, strength: ${cue.strength}`);
         return {
           word: word,
@@ -449,8 +449,8 @@ NetworkSemantic.load = async function(storagePath, semanticName) {
     const semantic = new NetworkSemantic(data.name);
     
     // 恢复 WordCue 对象
-    const { WordCue } = require('./WordCue');
-    const logger = require('../../../../../utils/logger');
+    const { WordCue } = require('./WordCue.js');
+    const logger = require('../../../../../utils/logger.js');
     const cueMap = new Map();
     logger.info(`[NetworkSemantic.load] Loading ${data.cueLayer.length} cues from storage`);
     data.cueLayer.forEach(cueData => {
@@ -465,7 +465,7 @@ NetworkSemantic.load = async function(storagePath, semanticName) {
     });
     
     // 恢复 GraphSchema 对象
-    const { GraphSchema } = require('./GraphSchema');
+    const { GraphSchema } = require('./GraphSchema.js');
     data.schemaLayer.forEach(schemaData => {
       const schema = new GraphSchema(schemaData.name);
       

@@ -8,7 +8,7 @@ const { WordCue } = require('./components/WordCue.js');
 const { GraphSchema } = require('./components/GraphSchema.js');
 const { NetworkSemantic } = require('./components/NetworkSemantic.js');
 const { peggyMindmap } = require('./mindmap/PeggyMindmap.js');
-const logger = require('../../../../utils/logger');
+const logger = require('../../../../utils/logger.js');
 
 class MindService {
   constructor() {
