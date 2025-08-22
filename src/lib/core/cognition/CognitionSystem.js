@@ -213,22 +213,19 @@ class CognitionSystem {
       cues: this.network.size()
     });
     
-    // 使用Prime选择起始点
+    // 使用Prime执行启动，Prime.execute()已经包含了选择启动词和执行recall的逻辑
     const prime = new Prime(this.network);
-    const startWord = prime.execute();
+    const mind = prime.execute();
     
-    if (!startWord) {
-      logger.warn('[CognitionSystem] Prime found no suitable starting point');
+    if (!mind) {
+      logger.warn('[CognitionSystem] Prime found no suitable starting point or recall failed');
       return null;
     }
     
-    logger.info('[CognitionSystem] Prime selected starting point', {
-      word: startWord
+    logger.info('[CognitionSystem] Prime completed', {
+      activatedNodes: mind.activatedCues?.size || 0,
+      connections: mind.connections?.length || 0
     });
-    
-    // 执行预热recall（不更新频率）
-    const recall = this.getRecallEngine();
-    const mind = recall.execute(startWord);
     
     // Prime时不更新频率，因为这是系统自动触发的
     
