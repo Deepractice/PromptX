@@ -65,8 +65,11 @@ class Prime extends Recall {
   /**
    * 获取默认的启动词
    * 
-   * 策略：选择整个网络中"最重要"的节点
-   * 暂时实现：选择被指向最多（权重最高）的词
+   * 策略优先级：
+   * 1. 选择根节点（入度为0的节点）- 认知网络的起点
+   * 2. 选择hub节点（出度最高的节点）- 认知网络的中心
+   * 3. 选择被指向最多的节点 - 重要概念
+   * 4. 返回第一个节点 - 兜底策略
    * 
    * @returns {string|null} 启动词
    */
@@ -80,42 +83,116 @@ class Prime extends Recall {
       totalCues: this.network.cues.size
     });
     
-    // 统计每个词被指向的总权重（入度权重）
-    const inWeights = this.network.calculateInWeights();
-    
-    // 如果没有任何连接，返回第一个Cue
-    if (inWeights.size === 0) {
-      const firstWord = this.network.cues.keys().next().value;
-      logger.debug('[Prime] No connections found, using first cue', { 
-        word: firstWord 
+    // 策略1: 寻找根节点（入度为0的节点）
+    const rootNodes = this.findRootNodes();
+    if (rootNodes.length > 0) {
+      // 如果有多个根节点，选择出度最大的那个
+      const selectedRoot = rootNodes.reduce((best, current) => {
+        const currentOutDegree = this.network.cues.get(current)?.connections?.size || 0;
+        const bestOutDegree = this.network.cues.get(best)?.connections?.size || 0;
+        return currentOutDegree > bestOutDegree ? current : best;
       });
-      return firstWord;
+      
+      logger.info('[Prime] Selected root node as prime word', {
+        word: selectedRoot,
+        allRoots: rootNodes,
+        outDegree: this.network.cues.get(selectedRoot)?.connections?.size || 0
+      });
+      return selectedRoot;
     }
     
-    // 找到入度权重最高的词
-    let maxWeight = 0;
-    let primeWord = null;
+    // 策略2: 选择hub节点（出度最高的节点）
+    const hubNode = this.findHubNode();
+    if (hubNode) {
+      logger.info('[Prime] Selected hub node as prime word', {
+        word: hubNode,
+        outDegree: this.network.cues.get(hubNode)?.connections?.size || 0
+      });
+      return hubNode;
+    }
     
-    for (const [word, weight] of inWeights) {
-      if (weight > maxWeight) {
-        maxWeight = weight;
-        primeWord = word;
+    // 策略3: 选择被指向最多的节点（原逻辑）
+    const inWeights = this.network.calculateInWeights();
+    if (inWeights.size > 0) {
+      let maxWeight = 0;
+      let primeWord = null;
+      
+      for (const [word, weight] of inWeights) {
+        if (weight > maxWeight) {
+          maxWeight = weight;
+          primeWord = word;
+        }
+      }
+      
+      if (primeWord) {
+        logger.info('[Prime] Selected high in-degree node as prime word', {
+          word: primeWord,
+          inWeight: maxWeight
+        });
+        return primeWord;
       }
     }
     
-    // 获取前5个候选者供调试
-    const topCandidates = Array.from(inWeights.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([word, weight]) => `${word}(${weight})`);
+    // 策略4: 返回第一个节点
+    const firstWord = this.network.cues.keys().next().value;
+    logger.debug('[Prime] Using first cue as fallback', { 
+      word: firstWord 
+    });
+    return firstWord;
+  }
+  
+  /**
+   * 寻找根节点（入度为0的节点）
+   * @returns {Array<string>} 根节点列表
+   */
+  findRootNodes() {
+    const hasIncomingEdge = new Set();
     
-    logger.info('[Prime] Selected prime word', {
-      word: primeWord,
-      weight: maxWeight,
-      topCandidates
+    // 标记所有有入边的节点
+    for (const [sourceWord, sourceCue] of this.network.cues) {
+      for (const [targetWord] of sourceCue.connections) {
+        hasIncomingEdge.add(targetWord);
+      }
+    }
+    
+    // 找出没有入边的节点（根节点）
+    const rootNodes = [];
+    for (const word of this.network.cues.keys()) {
+      if (!hasIncomingEdge.has(word)) {
+        rootNodes.push(word);
+      }
+    }
+    
+    logger.debug('[Prime] Found root nodes', {
+      count: rootNodes.length,
+      nodes: rootNodes
     });
     
-    return primeWord;
+    return rootNodes;
+  }
+  
+  /**
+   * 寻找hub节点（出度最高的节点）
+   * @returns {string|null} hub节点
+   */
+  findHubNode() {
+    let maxOutDegree = 0;
+    let hubNode = null;
+    
+    for (const [word, cue] of this.network.cues) {
+      const outDegree = cue.connections?.size || 0;
+      if (outDegree > maxOutDegree) {
+        maxOutDegree = outDegree;
+        hubNode = word;
+      }
+    }
+    
+    logger.debug('[Prime] Found hub node', {
+      word: hubNode,
+      outDegree: maxOutDegree
+    });
+    
+    return hubNode;
   }
   
   /**
