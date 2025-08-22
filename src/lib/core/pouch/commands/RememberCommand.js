@@ -2,7 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const RememberArea = require('../areas/remember/RememberArea')
 const StateArea = require('../areas/common/StateArea')
 const { getGlobalResourceManager } = require('../../resource')
-const { CognitionManager } = require('../../cognition/CognitionManager')
+const CognitionManager = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
 
 /**

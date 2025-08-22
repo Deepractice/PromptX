@@ -6,7 +6,7 @@ const { COMMANDS } = require('../../../../constants')
 const { getGlobalResourceManager } = require('../../resource')
 const DPMLContentParser = require('../../dpml/DPMLContentParser')
 const SemanticRenderer = require('../../dpml/SemanticRenderer')
-const { CognitionManager } = require('../../cognition/CognitionManager')
+const CognitionManager = require('../../cognition/CognitionManager')
 const ProjectManager = require('../../../utils/ProjectManager')
 const { getGlobalProjectManager } = require('../../../utils/ProjectManager')
 const logger = require('../../../utils/logger')
@@ -22,6 +22,7 @@ class ActionCommand extends BasePouchCommand {
     this.dpmlParser = new DPMLContentParser()
     this.semanticRenderer = new SemanticRenderer()
     this.projectManager = getGlobalProjectManager()
+    this.cognitionManager = new CognitionManager(this.resourceManager)
   }
 
   /**
@@ -64,14 +65,13 @@ class ActionCommand extends BasePouchCommand {
       const dependencies = await this.analyzeRoleDependencies(roleInfo)
 
       // 1. 创建认知区域
-      const memories = await this.loadMemories(roleId)
-      logger.debug(`[ActionCommand] 加载的memories:`, {
-        hasMemories: !!memories,
-        keys: memories ? Object.keys(memories) : [],
-        semanticNetwork: memories?.semanticNetwork ? 'exists' : 'missing',
-        proceduralPatterns: memories?.proceduralPatterns ? 'exists' : 'missing'
+      const mind = await this.loadMemories(roleId)
+      logger.debug(`[ActionCommand] 加载的 Mind:`, {
+        hasMind: !!mind,
+        nodeCount: mind?.activatedCues?.size || 0,
+        connectionCount: mind?.connections?.length || 0
       })
-      const cognitionArea = new CognitionArea(memories, roleId, 'action')
+      const cognitionArea = new CognitionArea(mind, roleId, 'action')
       this.registerArea(cognitionArea)
 
       // 2. 创建角色区域
@@ -212,103 +212,31 @@ class ActionCommand extends BasePouchCommand {
   }
 
   /**
-   * 加载记忆数据 - 从认知系统获取语义网络和程序模式
+   * 加载记忆数据 - 从认知系统获取 Mind 对象
    */
   async loadMemories(roleId) {
     try {
       logger.debug(`[ActionCommand] 开始加载角色 ${roleId} 的认知数据`)
       
-      // 使用 CognitionManager 获取认知数据
-      const cognitionManager = new CognitionManager(this.resourceManager)
+      // 使用 CognitionManager 获取 Mind 对象
+      const mind = await this.cognitionManager.prime(roleId)
       
-      // 获取语义网络（mindmap格式）
-      const mindmapText = await cognitionManager.prime(roleId)
-      logger.debug(`[ActionCommand] 获取到的mindmap长度: ${mindmapText?.length || 0}`)
-      
-      // 解析mindmap为语义网络结构
-      const semanticNetwork = this.parseMindmapToSemanticNetwork(mindmapText)
-      
-      // TODO: 获取程序模式 - 暂时返回空数组
-      const proceduralPatterns = []
-      
-      const memories = {
-        semanticNetwork,
-        proceduralPatterns
+      if (!mind) {
+        logger.warn(`[ActionCommand] 未找到角色 ${roleId} 的认知数据`)
+        return null
       }
       
-      logger.debug(`[ActionCommand] 加载的memories结构:`, {
-        hasSemanticNetwork: !!semanticNetwork,
-        conceptsCount: semanticNetwork?.concepts ? Object.keys(semanticNetwork.concepts).length : 0,
-        patternsCount: proceduralPatterns.length
+      logger.debug(`[ActionCommand] 加载的 Mind 对象:`, {
+        hasMind: !!mind,
+        nodeCount: mind.activatedCues?.size || 0,
+        connectionCount: mind.connections?.length || 0
       })
       
-      return memories
+      return mind
     } catch (error) {
       logger.warn(`[ActionCommand] 加载角色 ${roleId} 的认知数据失败:`, error)
-      return {}
+      return null
     }
-  }
-  
-  /**
-   * 解析mindmap文本为语义网络结构
-   */
-  parseMindmapToSemanticNetwork(mindmapText) {
-    if (!mindmapText) return null
-    
-    const lines = mindmapText.split('\n')
-    const concepts = {}
-    const stack = []
-    
-    for (const line of lines) {
-      if (line.trim() === 'mindmap' || line.trim().startsWith('((') || !line.trim()) {
-        continue
-      }
-      
-      // 计算缩进级别
-      const indent = line.match(/^(\s*)/)[1].length
-      const level = Math.floor(indent / 2)
-      
-      // 提取概念名称和强度
-      const match = line.trim().match(/^(.+?)(?:\s*\[(\d+\.\d+)\])?$/)
-      if (!match) continue
-      
-      const concept = match[1].trim()
-      const strength = match[2] ? parseFloat(match[2]) : 0.5
-      
-      // 构建层级结构
-      stack.length = level
-      stack[level] = concept
-      
-      // 创建概念节点
-      let current = concepts
-      for (let i = 0; i <= level; i++) {
-        if (!stack[i]) continue
-        
-        if (i === level) {
-          // 当前层级：创建或更新节点
-          if (!current[stack[i]]) {
-            current[stack[i]] = {
-              strength: strength,
-              children: {}
-            }
-          } else {
-            // 更新强度值（如果节点已存在）
-            current[stack[i]].strength = strength
-          }
-        } else {
-          // 父层级：确保节点存在但不修改strength
-          if (!current[stack[i]]) {
-            current[stack[i]] = {
-              strength: 0.5,  // 默认值，将被后续正确的值覆盖
-              children: {}
-            }
-          }
-          current = current[stack[i]].children
-        }
-      }
-    }
-    
-    return { concepts }
   }
 }
 

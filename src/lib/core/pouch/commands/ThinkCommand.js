@@ -1,6 +1,6 @@
 const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
-const { CognitionManager } = require('../../cognition/CognitionManager')
+const CognitionManager = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
 
 /**

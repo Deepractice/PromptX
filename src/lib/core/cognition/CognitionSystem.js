@@ -160,15 +160,8 @@ class CognitionSystem {
     const remember = this.getRememberEngine();
     const result = remember.execute(schema);
     
-    // 自动持久化
-    try {
-      this.network.persistSync(this.dataPath);
-      logger.debug('[CognitionSystem] Auto-saved after remember');
-    } catch (error) {
-      logger.error('[CognitionSystem] Failed to auto-save', {
-        error: error.message
-      });
-    }
+    // 注意：持久化由CognitionManager.saveSystem()负责
+    // 这里不再自动保存，避免路径冲突
     
     return result;
   }
@@ -214,17 +207,11 @@ class CognitionSystem {
   prime() {
     logger.debug('[CognitionSystem] Prime operation');
     
-    // 尝试加载已有数据
-    try {
-      this.network.loadSync(this.dataPath);
-      logger.info('[CognitionSystem] Loaded existing network', {
-        cues: this.network.size()
-      });
-    } catch (error) {
-      logger.warn('[CognitionSystem] No existing data, starting fresh', {
-        error: error.message
-      });
-    }
+    // 注意：数据加载已由CognitionManager.getSystem()完成
+    // 这里直接使用已加载的network，不再重复加载
+    logger.info('[CognitionSystem] Using existing network', {
+      cues: this.network.size()
+    });
     
     // 使用Prime选择起始点
     const prime = new Prime(this.network);

@@ -2,7 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const RecallArea = require('../areas/recall/RecallArea')
 const StateArea = require('../areas/common/StateArea')
 const { getGlobalResourceManager } = require('../../resource')
-const { CognitionManager } = require('../../cognition/CognitionManager')
+const CognitionManager = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
 
 /**
@@ -47,20 +47,31 @@ recall copywriter "A/B测试"
     logger.info(`🔍 [RecallCommand] 角色: ${role}, 查询内容: ${query ? `"${query}"` : '全部记忆'}`)
 
     try {
-      // 使用CognitionManager进行检索
-      const memories = await this.cognitionManager.recall(role, query || '')
-      this.lastSearchCount = memories.length
-      logger.success(`✅ [RecallCommand] 认知检索完成 - 找到 ${memories.length} 条匹配记忆`)
+      let mind = null
+      if (query) {
+        // 有查询词时，执行 recall
+        mind = await this.cognitionManager.recall(role, query)
+      } else {
+        // 无查询词时，执行 prime 获取全局概览
+        mind = await this.cognitionManager.prime(role)
+      }
+      
+      if (!mind) {
+        logger.warn(`[RecallCommand] No mind returned for role: ${role}, query: ${query}`)
+      }
+      
+      const nodeCount = mind ? mind.activatedCues.size : 0
+      logger.success(`✅ [RecallCommand] 认知检索完成 - 激活 ${nodeCount} 个节点`)
 
-      // 注册RecallArea
-      const recallArea = new RecallArea(memories, query)
+      // 注册RecallArea，传递 Mind 对象
+      const recallArea = new RecallArea(mind, query, role)
       this.registerArea(recallArea)
 
       // 注册StateArea
       const stateArea = new StateArea('recall_completed', {
         role,
         query,
-        count: memories.length
+        count: nodeCount
       })
       this.registerArea(stateArea)
 
