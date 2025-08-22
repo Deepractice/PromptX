@@ -217,10 +217,13 @@ class ActionCommand extends BasePouchCommand {
    */
   async loadMemories(roleId) {
     try {
+      logger.info(`[ActionCommand] loadMemories called for role: ${roleId}`)
       logger.debug(`[ActionCommand] 开始加载角色 ${roleId} 的认知数据`)
       
       // 使用 CognitionManager 获取 Mind 对象
+      logger.info(`[ActionCommand] About to call cognitionManager.prime`)
       const mind = await this.cognitionManager.prime(roleId)
+      logger.info(`[ActionCommand] cognitionManager.prime returned:`, mind)
       
       if (!mind) {
         logger.warn(`[ActionCommand] 未找到角色 ${roleId} 的认知数据`)
