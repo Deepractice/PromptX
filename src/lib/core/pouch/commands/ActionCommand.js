@@ -1,5 +1,5 @@
 const BasePouchCommand = require('../BasePouchCommand')
-const CognitionArea = require('../areas/action/CognitionArea')
+const CognitionArea = require('../areas/CognitionArea')
 const RoleArea = require('../areas/action/RoleArea')
 const StateArea = require('../areas/common/StateArea')
 const { COMMANDS } = require('../../../../constants')
@@ -71,7 +71,8 @@ class ActionCommand extends BasePouchCommand {
         nodeCount: mind?.activatedCues?.size || 0,
         connectionCount: mind?.connections?.length || 0
       })
-      const cognitionArea = new CognitionArea(mind, roleId, 'action')
+      // 使用新的统一CognitionArea，操作类型为'prime'
+      const cognitionArea = new CognitionArea('prime', mind, roleId)
       this.registerArea(cognitionArea)
 
       // 2. 创建角色区域

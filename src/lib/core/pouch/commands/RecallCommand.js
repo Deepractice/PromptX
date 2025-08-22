@@ -1,5 +1,5 @@
 const BasePouchCommand = require('../BasePouchCommand')
-const RecallArea = require('../areas/recall/RecallArea')
+const CognitionArea = require('../areas/CognitionArea')
 const StateArea = require('../areas/common/StateArea')
 const { getGlobalResourceManager } = require('../../resource')
 const CognitionManager = require('../../cognition/CognitionManager')
@@ -27,19 +27,12 @@ class RecallCommand extends BasePouchCommand {
 
     if (!role) {
       // 错误提示Area
-      const errorArea = new RecallArea([], null)
-      errorArea.render = async () => `❌ 错误：缺少必填参数 role
-
-🎯 **使用方法**：
-recall 角色ID [查询关键词]
-
-📋 **示例**：
-recall java-developer "React Hooks"
-recall product-manager  # 查看所有产品经理记忆
-recall copywriter "A/B测试"
-
-💡 **可用角色ID**：通过 welcome 工具查看所有可用角色`
-      this.registerArea(errorArea)
+      this.registerArea(new StateArea(
+        'error: 缺少必填参数 role',
+        ['使用方法：recall 角色ID [查询关键词]',
+         '示例：recall java-developer "React Hooks"',
+         '通过 welcome 工具查看所有可用角色']
+      ))
       return
     }
 
@@ -63,9 +56,10 @@ recall copywriter "A/B测试"
       const nodeCount = mind ? mind.activatedCues.size : 0
       logger.success(`✅ [RecallCommand] 认知检索完成 - 激活 ${nodeCount} 个节点`)
 
-      // 注册RecallArea，传递 Mind 对象
-      const recallArea = new RecallArea(mind, query, role)
-      this.registerArea(recallArea)
+      // 使用新的统一CognitionArea，操作类型为'recall'
+      const operationType = query ? 'recall' : 'prime'
+      const cognitionArea = new CognitionArea(operationType, mind, role, { query })
+      this.registerArea(cognitionArea)
 
       // 注册StateArea
       const stateArea = new StateArea('recall_completed', {

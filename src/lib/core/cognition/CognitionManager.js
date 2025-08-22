@@ -129,12 +129,20 @@ class CognitionManager {
     logger.info(`[CognitionManager] Prime for role: ${roleId}`);
     
     const system = await this.getSystem(roleId);
+    logger.debug(`[CognitionManager] System network size before prime: ${system.network.size()}`);
+    
     const mind = system.prime();
     
     if (!mind) {
       logger.warn(`[CognitionManager] Prime returned null for role: ${roleId}`);
       return null;
     }
+    
+    logger.debug(`[CognitionManager] Prime returned Mind:`, {
+      hasMind: !!mind,
+      activatedCuesSize: mind?.activatedCues?.size || 0,
+      connectionsCount: mind?.connections?.length || 0
+    });
     
     return mind;
   }

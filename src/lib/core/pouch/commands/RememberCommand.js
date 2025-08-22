@@ -1,5 +1,5 @@
 const BasePouchCommand = require('../BasePouchCommand')
-const RememberArea = require('../areas/remember/RememberArea')
+const CognitionArea = require('../areas/CognitionArea')
 const StateArea = require('../areas/common/StateArea')
 const { getGlobalResourceManager } = require('../../resource')
 const CognitionManager = require('../../cognition/CognitionManager')
@@ -26,9 +26,10 @@ class RememberCommand extends BasePouchCommand {
 
     if (!role || !engrams) {
       // 错误提示Area
-      const errorArea = new RememberArea([], null)
-      errorArea.render = async () => this.getUsageHelp()
-      this.registerArea(errorArea)
+      this.registerArea(new StateArea(
+        'error: 缺少必填参数',
+        [this.getUsageHelp()]
+      ))
       return
     }
 
@@ -40,9 +41,14 @@ class RememberCommand extends BasePouchCommand {
       await this.cognitionManager.remember(role, engrams)
       logger.success('✅ [RememberCommand] 批量记忆保存完成')
       
-      // 注册RememberArea
-      const rememberArea = new RememberArea(engrams, role)
-      this.registerArea(rememberArea)
+      // 使用新的统一CognitionArea，操作类型为'remember'
+      // 注意：这里需要获取remember后的mind对象
+      const mind = await this.cognitionManager.prime(role) // 获取更新后的认知网络
+      const cognitionArea = new CognitionArea('remember', mind, role, { 
+        engramCount: engrams.length,
+        newNodes: engrams.map(e => e.content) 
+      })
+      this.registerArea(cognitionArea)
       
       // 注册StateArea
       const stateArea = new StateArea('remember_completed', {
@@ -56,19 +62,10 @@ class RememberCommand extends BasePouchCommand {
       logger.debug(`🐛 [RememberCommand] 错误堆栈: ${error.stack}`)
       
       // 错误Area
-      const errorArea = new RememberArea([], null)
-      errorArea.render = async () => `❌ 记忆保存失败：${error.message}
-
-💡 **可能的原因**：
-- 角色ID不正确
-- 记忆内容格式问题
-- 认知系统初始化失败
-
-🔧 **建议操作**：
-1. 检查角色ID是否正确
-2. 验证记忆格式是否符合要求
-3. 重试保存操作`
-      this.registerArea(errorArea)
+      this.registerArea(new StateArea(
+        `error: ${error.message}`,
+        ['检查角色ID是否正确', '验证记忆格式是否符合要求', '重试保存操作']
+      ))
     }
   }
 
