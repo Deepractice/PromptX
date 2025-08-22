@@ -169,16 +169,18 @@ class Prime extends Recall {
   execute(word = null) {
     logger.info('[Prime] Starting prime operation', { 
       providedWord: word,
-      autoSelect: !word 
+      autoSelect: !word,
+      networkSize: this.network.cues.size
     });
     
     // 如果没有提供启动词，自动选择
     if (!word) {
       word = this.getPrimeWord();
       if (!word) {
-        logger.error('[Prime] Failed to find prime word');
+        logger.error('[Prime] Failed to find prime word, network empty or no suitable node');
         return null;
       }
+      logger.info('[Prime] Auto-selected prime word', { word });
     } else {
       // 验证提供的词是否存在
       if (!this.network.hasCue(word)) {
@@ -187,7 +189,11 @@ class Prime extends Recall {
       }
     }
     
-    logger.debug('[Prime] Executing recall with prime word', { word });
+    logger.info('[Prime] Executing recall with prime word', { 
+      word,
+      cueExists: this.network.hasCue(word),
+      cueConnections: this.network.cues.get(word)?.connections?.size || 0
+    });
     
     // 调用父类的recall逻辑
     const mind = super.execute(word);
