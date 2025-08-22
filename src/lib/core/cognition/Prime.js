@@ -67,9 +67,8 @@ class Prime extends Recall {
    * 
    * 策略优先级：
    * 1. 选择根节点（入度为0的节点）- 认知网络的起点
-   * 2. 选择hub节点（出度最高的节点）- 认知网络的中心
-   * 3. 选择被指向最多的节点 - 重要概念
-   * 4. 返回第一个节点 - 兜底策略
+   * 2. 选择被指向最多的节点 - 重要概念
+   * 3. 返回第一个节点 - 兜底策略
    * 
    * @returns {string|null} 启动词
    */
@@ -101,17 +100,7 @@ class Prime extends Recall {
       return selectedRoot;
     }
     
-    // 策略2: 选择hub节点（出度最高的节点）
-    const hubNode = this.findHubNode();
-    if (hubNode) {
-      logger.info('[Prime] Selected hub node as prime word', {
-        word: hubNode,
-        outDegree: this.network.cues.get(hubNode)?.connections?.size || 0
-      });
-      return hubNode;
-    }
-    
-    // 策略3: 选择被指向最多的节点（原逻辑）
+    // 策略2: 选择被指向最多的节点（原逻辑）
     const inWeights = this.network.calculateInWeights();
     if (inWeights.size > 0) {
       let maxWeight = 0;
@@ -133,7 +122,7 @@ class Prime extends Recall {
       }
     }
     
-    // 策略4: 返回第一个节点
+    // 策略3: 返回第一个节点
     const firstWord = this.network.cues.keys().next().value;
     logger.debug('[Prime] Using first cue as fallback', { 
       word: firstWord 
@@ -169,30 +158,6 @@ class Prime extends Recall {
     });
     
     return rootNodes;
-  }
-  
-  /**
-   * 寻找hub节点（出度最高的节点）
-   * @returns {string|null} hub节点
-   */
-  findHubNode() {
-    let maxOutDegree = 0;
-    let hubNode = null;
-    
-    for (const [word, cue] of this.network.cues) {
-      const outDegree = cue.connections?.size || 0;
-      if (outDegree > maxOutDegree) {
-        maxOutDegree = outDegree;
-        hubNode = word;
-      }
-    }
-    
-    logger.debug('[Prime] Found hub node', {
-      word: hubNode,
-      outDegree: maxOutDegree
-    });
-    
-    return hubNode;
   }
   
   /**
