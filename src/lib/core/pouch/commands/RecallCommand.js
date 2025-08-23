@@ -15,7 +15,7 @@ class RecallCommand extends BasePouchCommand {
     super()
     this.lastSearchCount = 0
     this.resourceManager = getGlobalResourceManager()
-    this.cognitionManager = new CognitionManager(this.resourceManager)
+    this.cognitionManager = CognitionManager.getInstance(this.resourceManager)
   }
 
   /**

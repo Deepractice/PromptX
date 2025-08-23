@@ -146,7 +146,7 @@ class Remember {
     
     // Phase 2: 建立连接结构（先用临时权重）
     logger.debug('[Remember] Phase 2: Building connection structure');
-    const Context = require('./Context');
+    const WeightContext = require('./WeightContext');
     const connections = [];
     const timestamp = Date.now();  // 同批次使用相同时间戳
     
@@ -172,7 +172,7 @@ class Remember {
       const sourceCue = this.network.cues.get(sourceWord);
       
       // 构建上下文（现在sourceOutDegree是正确的）
-      const context = new Context({
+      const context = new WeightContext({
         sourceCue: sourceCue,
         targetWord: targetWord,
         position: i,

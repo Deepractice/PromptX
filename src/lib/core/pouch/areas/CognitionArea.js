@@ -102,9 +102,6 @@ class CognitionArea extends BaseArea {
       content += '⚠️ 无法渲染认知网络图\n\n'
     }
     
-    // 统计信息
-    content += this.renderStatistics()
-    
     return content
   }
 
@@ -171,7 +168,6 @@ class CognitionArea extends BaseArea {
    * Remember模式引导
    */
   renderRememberGuide() {
-    const newNodes = this.metadata.newNodes || []
     const engramCount = this.metadata.engramCount || 0
     
     return `✅ **记忆保存成功！**
@@ -199,53 +195,22 @@ class CognitionArea extends BaseArea {
   }
 
   /**
-   * 认知循环提示
+   * 认知循环提示 - 精简版
    */
   renderCognitionCycle() {
-    return `认知三步，一步都不能少：
-1️⃣ **立即recall** → 激活相关记忆（别错过宝藏）
-2️⃣ **应用经验** → 基于记忆工作（用上找到的）
-3️⃣ **remember新知** → 保存新发现（积累更多宝藏）
-
-💡 3秒recall，避免30分钟弯路！
-现在就试：recall("角色", "mindmap任意词")`
+    // 根据操作类型返回不同的简短提示
+    switch(this.operationType) {
+      case 'prime':
+        return `💡 **下一步**: recall("${this.roleId}", "关键词") 激活相关记忆`
+      case 'recall':
+        return `💡 **下一步**: 基于激活的概念继续探索或 remember 新知识`
+      case 'remember':
+        return `💡 **下一步**: recall 验证记忆是否正确保存`
+      default:
+        return ''
+    }
   }
 
-  /**
-   * 渲染统计信息
-   */
-  renderStatistics() {
-    if (!this.mind || !this.mind.activatedCues) {
-      return ''
-    }
-    
-    const stats = []
-    stats.push(`📊 **网络统计**：`)
-    stats.push(`- 节点数：${this.mind.activatedCues.size}`)
-    stats.push(`- 连接数：${this.mind.connections?.length || 0}`)
-    
-    // Recall特有统计
-    if (this.operationType === 'recall') {
-      if (this.metadata.activationStrength) {
-        stats.push(`- 激活强度：${this.metadata.activationStrength.toFixed(2)}`)
-      }
-      if (this.metadata.searchDepth) {
-        stats.push(`- 搜索深度：${this.metadata.searchDepth}`)
-      }
-    }
-    
-    // Remember特有统计
-    if (this.operationType === 'remember') {
-      if (this.metadata.newNodes) {
-        stats.push(`- 新增节点：${this.metadata.newNodes.length}`)
-      }
-      if (this.metadata.newConnections) {
-        stats.push(`- 新增连接：${this.metadata.newConnections}`)
-      }
-    }
-    
-    return stats.join('\n') + '\n'
-  }
 
   /**
    * 空认知网络提示
@@ -263,7 +228,7 @@ class CognitionArea extends BaseArea {
 3. 形成个人认知体系
 `
       
-      case 'recall':
+      case 'recall': {
         const query = this.metadata.query || '未知'
         return `## 🔍 未找到相关记忆
 
@@ -278,6 +243,7 @@ class CognitionArea extends BaseArea {
 1. 尝试使用相关的其他概念进行检索
 2. 如果是新知识，使用 remember 工具进行记录
 `
+      }
       
       case 'remember':
         return `## ⚠️ 存储失败

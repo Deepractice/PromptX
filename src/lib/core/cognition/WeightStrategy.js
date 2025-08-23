@@ -24,12 +24,12 @@
  * 3. **关注点分离**
  *    - Remember只负责构建网络结构
  *    - Strategy只负责计算权重
- *    - Context负责传递数据
+ *    - WeightContext负责传递数据
  * 
  * ## 策略接口约定
  * 
  * 所有策略必须实现calculate方法：
- * - 输入：Context对象（包含所有计算所需信息）
+ * - 输入：WeightContext对象（包含所有计算所需信息）
  * - 输出：number类型的权重值
  * - 约束：权重应该是正数，且有合理的数值范围
  * 
@@ -41,7 +41,7 @@ class WeightStrategy {
    * 
    * 子类必须实现此方法。
    * 
-   * @param {Context} context - 计算上下文
+   * @param {WeightContext} context - 计算上下文
    * @param {Cue} context.sourceCue - 源节点
    * @param {string} context.targetWord - 目标词
    * @param {number} context.position - 在Schema中的位置
@@ -118,7 +118,7 @@ class SimpleWeightStrategy extends WeightStrategy {
   /**
    * 计算权重
    * 
-   * @param {Context} context - 计算上下文
+   * @param {WeightContext} context - 计算上下文
    * @returns {number} 权重值
    */
   calculate(context) {
@@ -231,7 +231,7 @@ class TimeBasedWeightStrategy extends WeightStrategy {
   /**
    * 计算存储权重
    * 
-   * @param {Context} context - 计算上下文
+   * @param {WeightContext} context - 计算上下文
    * @returns {number} 权重值
    */
   calculate(context) {
@@ -299,8 +299,179 @@ class TimeBasedWeightStrategy extends WeightStrategy {
   }
 }
 
+/**
+ * TemperatureWeightStrategy - 温度控制的权重策略
+ * 
+ * ## 设计理念
+ * 
+ * 基于深度学习中的temperature-controlled softmax，解决hub节点语义污染问题。
+ * 通过温度参数控制概率分布的"锐度"，实现批次隔离和创造性平衡。
+ * 
+ * ### 核心创新
+ * 1. **批次感知**：利用timestamp作为天然的批次指纹
+ * 2. **温度控制**：动态调节激活的集中度
+ * 3. **对比度调节**：保留归一化的同时维持批次差异
+ * 
+ * ## 温度参数效果
+ * 
+ * - **低温（0.1-0.5）**：锐化差异，强化同批次连接
+ * - **常温（0.8-1.2）**：平衡模式，适度扩散
+ * - **高温（1.5-2.0）**：平滑差异，鼓励跨批次探索
+ * 
+ * ## 算法公式
+ * 
+ * ### 带温度的Softmax
+ * ```
+ * probability_i = exp((weight_i + batch_bonus_i) / T) / Σexp((weight_j + batch_bonus_j) / T)
+ * ```
+ * 
+ * 其中：
+ * - T: 温度参数
+ * - batch_bonus: 批次奖励（同批次获得额外权重）
+ * 
+ * @class TemperatureWeightStrategy
+ * @extends TimeBasedWeightStrategy
+ */
+class TemperatureWeightStrategy extends TimeBasedWeightStrategy {
+  constructor(options = {}) {
+    super(options);
+    
+    /**
+     * 温度参数
+     * 控制概率分布的锐度
+     * @type {number}
+     */
+    this.temperature = options.temperature || 0.5;
+    
+    /**
+     * 对比度模式
+     * 'auto' | 'low' | 'medium' | 'high'
+     * @type {string}
+     */
+    this.contrastMode = options.contrastMode || 'auto';
+  }
+  
+  /**
+   * 设置对比度级别
+   * 
+   * @param {'low'|'medium'|'high'} level - 对比度级别
+   */
+  setContrastLevel(level) {
+    const contrastMap = {
+      'low': 2.0,    // 高温，低对比度（~20%差异）
+      'medium': 1.0,  // 常温，中等对比度（~50%差异）
+      'high': 0.3     // 低温，高对比度（~80%差异）
+    };
+    
+    this.temperature = contrastMap[level] || 1.0;
+    this.contrastMode = level;
+  }
+  
+  /**
+   * 设置对比度百分比
+   * 
+   * @param {number} percentage - 对比度百分比（0-100）
+   */
+  setContrastPercentage(percentage) {
+    // 0% = 完全平均（高温），100% = 极度锐化（低温）
+    const clampedPercentage = Math.max(0, Math.min(100, percentage));
+    this.temperature = 2.0 - (clampedPercentage / 100) * 1.8;
+    this.contrastMode = 'custom';
+  }
+  
+  
+  /**
+   * 自动调节温度（基于网络状态）
+   * 
+   * @param {Array} edges - 边数组
+   * @returns {number} 调节后的温度
+   */
+  autoAdjustTemperature(edges) {
+    if (this.contrastMode !== 'auto') {
+      return this.temperature;
+    }
+    
+    // 计算hub密度（高连接数节点的比例）
+    const avgConnections = edges.length;
+    const hubThreshold = 5;
+    
+    if (avgConnections > hubThreshold * 2) {
+      // 超级hub节点：降低温度，增强选择性
+      return 0.3;
+    } else if (avgConnections > hubThreshold) {
+      // 普通hub节点：中低温度
+      return 0.5;
+    } else {
+      // 普通节点：常温
+      return 1.0;
+    }
+  }
+  
+  /**
+   * 带温度控制的Softmax归一化
+   * 
+   * 核心思想：
+   * - 权重本身已包含timestamp信息（weight = timestamp * decay^position）
+   * - 同批次的权重数量级相近，不同批次差异巨大
+   * - 温度控制这种差异的影响程度
+   * 
+   * @param {Array} edges - 边数组
+   * @returns {Array} 归一化后的边数组
+   */
+  normalizeForActivation(edges) {
+    if (edges.length === 0) return edges;
+    
+    // 自动调节温度
+    const effectiveTemperature = this.autoAdjustTemperature(edges);
+    
+    // 计算带频率偏置的对数权重
+    const enhancedEdges = edges.map(edge => {
+      // 获取频率（继承自父类）
+      let frequency = 0;
+      if (this.network) {
+        const targetCue = this.network.cues.get(edge.targetWord);
+        frequency = targetCue ? (targetCue.recallFrequency || 0) : 0;
+      }
+      
+      // 在对数空间处理（权重已包含timestamp信息）
+      const logWeight = Math.log(edge.weight);
+      const frequencyBias = Math.log(1 + frequency * this.frequencyFactor);
+      
+      return {
+        ...edge,
+        adjustedLogWeight: logWeight + frequencyBias,
+        frequency
+      };
+    });
+    
+    // 找出最大值（数值稳定性）
+    const maxLogWeight = Math.max(...enhancedEdges.map(e => e.adjustedLogWeight));
+    
+    // 带温度的softmax计算
+    // 低温：放大权重差异（同批次权重相近，会一起被选中）
+    // 高温：平滑权重差异（允许跨批次激活）
+    const expWeights = enhancedEdges.map(e => 
+      Math.exp((e.adjustedLogWeight - maxLogWeight) / effectiveTemperature)
+    );
+    const sumExp = expWeights.reduce((a, b) => a + b, 0);
+    
+    // 计算概率并排序
+    const normalizedEdges = enhancedEdges.map((edge, i) => ({
+      ...edges[i],
+      probability: expWeights[i] / sumExp,
+      frequency: edge.frequency,
+      temperature: effectiveTemperature
+    })).sort((a, b) => b.probability - a.probability);
+    
+    // 过滤掉概率太低的边
+    return normalizedEdges.filter(edge => edge.probability >= this.activationThreshold);
+  }
+  
+}
+
 module.exports = {
   WeightStrategy,
   SimpleWeightStrategy,
-  TimeBasedWeightStrategy
+  TimeBasedWeightStrategy,
+  TemperatureWeightStrategy
 };

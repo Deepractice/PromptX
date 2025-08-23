@@ -18,26 +18,33 @@ const Mind = require('./Mind');
 const Remember = require('./Remember');
 const Recall = require('./Recall');
 const Prime = require('./Prime');
-const Context = require('./Context');
+const WeightContext = require('./WeightContext');
+const ActivationContext = require('./ActivationContext');
 const CognitionSystem = require('./CognitionSystem');
 const { WeightStrategy, SimpleWeightStrategy, TimeBasedWeightStrategy } = require('./WeightStrategy');
+const { ActivationStrategy, HippocampalActivationStrategy } = require('./ActivationStrategy');
 
 module.exports = {
   // 核心数据结构
   Cue,
   Network,
   Mind,
-  Context,
+  WeightContext,
+  ActivationContext,
   
   // 操作类
   Remember,
   Recall,
   Prime,
   
-  // 策略
+  // 权重策略
   WeightStrategy,
   SimpleWeightStrategy,
   TimeBasedWeightStrategy,
+  
+  // 激活策略
+  ActivationStrategy,
+  HippocampalActivationStrategy,
   
   // 系统
   CognitionSystem

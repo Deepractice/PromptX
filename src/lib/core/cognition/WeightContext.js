@@ -1,15 +1,15 @@
 /**
- * Context - 权重计算上下文
+ * WeightContext - 权重计算上下文
  * 
  * ## 设计理念
  * 
- * Context封装了计算连接权重所需的所有信息。
+ * WeightContext封装了计算连接权重所需的所有信息。
  * 这是策略模式（Strategy Pattern）的关键部分，让权重计算与数据收集解耦。
  * 
  * ## 为什么这样设计
  * 
  * 1. **职责分离**
- *    - Context负责收集数据
+ *    - WeightContext负责收集数据
  *    - Strategy负责计算逻辑
  *    - 便于测试和扩展
  * 
@@ -52,9 +52,9 @@
  * Q: 为什么timestamp可以外部传入？
  * A: 同一批Schema应该使用相同的时间戳，保持批次内的一致性。
  * 
- * @class Context
+ * @class WeightContext
  */
-class Context {
+class WeightContext {
   /**
    * 创建权重计算上下文
    * 
@@ -144,7 +144,7 @@ class Context {
    */
   toString() {
     const sourceWord = this.getSourceWord();
-    return `Context{${sourceWord}->${this.targetWord}, pos:${this.position}, degree:${this.sourceOutDegree}}`;
+    return `WeightContext{${sourceWord}->${this.targetWord}, pos:${this.position}, degree:${this.sourceOutDegree}}`;
   }
   
   /**
@@ -165,4 +165,4 @@ class Context {
   }
 }
 
-module.exports = Context;
+module.exports = WeightContext;

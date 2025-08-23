@@ -3,7 +3,7 @@ const Network = require('./Network');
 const Remember = require('./Remember');
 const Recall = require('./Recall');
 const Prime = require('./Prime');
-const { TimeBasedWeightStrategy } = require('./WeightStrategy');
+const { TemperatureWeightStrategy } = require('./WeightStrategy');
 
 /**
  * CognitionSystem - 认知系统主控制器
@@ -71,10 +71,12 @@ class CognitionSystem {
      * 权重计算策略
      * @type {WeightStrategy}
      */
-    this.strategy = new TimeBasedWeightStrategy({
+    this.strategy = new TemperatureWeightStrategy({
       decay: 0.9,
-      activationThreshold: 0.05,
+      activationThreshold: 0.01,  // 降低过滤阈值
       frequencyFactor: 0.1,  // 频率因子
+      temperature: 0.8,      // 提高温度，允许适度扩散
+      contrastMode: 'auto',  // 自动调节对比度
       ...options.strategyOptions
     });
     
@@ -96,7 +98,7 @@ class CognitionSystem {
      */
     this.recallOptions = {
       ...options.recallOptions,
-      strategy: this.strategy
+      weightStrategy: this.strategy  // 传递权重策略
     };
     
     /**

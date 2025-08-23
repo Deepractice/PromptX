@@ -22,7 +22,7 @@ class ActionCommand extends BasePouchCommand {
     this.dpmlParser = new DPMLContentParser()
     this.semanticRenderer = new SemanticRenderer()
     this.projectManager = getGlobalProjectManager()
-    this.cognitionManager = new CognitionManager(this.resourceManager)
+    this.cognitionManager = CognitionManager.getInstance(this.resourceManager)
   }
 
   /**

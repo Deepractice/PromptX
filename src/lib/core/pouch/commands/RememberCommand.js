@@ -14,7 +14,7 @@ class RememberCommand extends BasePouchCommand {
   constructor () {
     super()
     this.resourceManager = getGlobalResourceManager()
-    this.cognitionManager = new CognitionManager(this.resourceManager)
+    this.cognitionManager = CognitionManager.getInstance(this.resourceManager)
   }
 
   /**

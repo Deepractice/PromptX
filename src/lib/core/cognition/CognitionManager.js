@@ -10,6 +10,8 @@ const logger = require('../../utils/logger');
  * 负责管理多个角色的认知系统实例
  * 每个角色都有独立的 CognitionSystem 实例和存储路径
  * 
+ * 使用单例模式确保内存状态一致性
+ * 
  * 存储结构：
  * ~/.promptx/cognition/
  *   ├── java-developer/
@@ -24,6 +26,19 @@ class CognitionManager {
     this.resourceManager = resourceManager;
     this.systems = new Map(); // roleId -> CognitionSystem
     this.basePath = path.join(os.homedir(), '.promptx', 'cognition');
+  }
+  
+  /**
+   * 获取单例实例
+   * @param {Object} resourceManager - 可选的资源管理器
+   * @returns {CognitionManager}
+   */
+  static getInstance(resourceManager = null) {
+    if (!CognitionManager.instance) {
+      CognitionManager.instance = new CognitionManager(resourceManager);
+      logger.info('[CognitionManager] Created singleton instance');
+    }
+    return CognitionManager.instance;
   }
 
   /**
