@@ -32,7 +32,7 @@ class PouchCLI {
       recall: commands.RecallCommand,
       remember: commands.RememberCommand,
       think: commands.ThinkCommand,
-      tool: commands.ToolCommand
+      toolx: commands.ToolCommand
     })
 
     // 将命令注册到状态机

@@ -5,7 +5,7 @@ const logger = require('../../../utils/logger')
 
 /**
  * Tool命令处理器
- * 实现promptx_tool MCP工具，执行通过@tool协议声明的工具
+ * 实现toolx MCP工具，执行通过@tool协议声明的工具
  */
 class ToolCommand extends BasePouchCommand {
   constructor() {
@@ -534,7 +534,7 @@ ${intelligentError.suggestion}
 • 可能需要使用 "rebuild": true 重建沙箱
 
 💡 建议操作：
-promptx_tool ${toolResource} {"rebuild": true, ...其他参数}`
+toolx ${toolResource} {"rebuild": true, ...其他参数}`
       }
     }
     
@@ -585,7 +585,7 @@ ${typeof details === 'string' ? details : JSON.stringify(details, null, 2)}`
    */
   getMetadata() {
     return {
-      name: 'promptx_tool',
+      name: 'toolx',
       description: '使用ToolSandbox执行通过@tool协议声明的工具',
       version: '2.0.0',
       author: 'PromptX Framework',

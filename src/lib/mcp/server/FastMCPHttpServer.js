@@ -613,16 +613,16 @@ class FastMCPHttpServer {
         }
         return [];
       
-      case 'promptx_welcome':
+      case 'welcome':
         return [];
       
-      case 'promptx_action':
+      case 'action':
         return args && args.role ? [args.role] : [];
       
-      case 'promptx_learn':
+      case 'learn':
         return args && args.resource ? [args.resource] : [];
       
-      case 'promptx_recall': {
+      case 'recall': {
         if (!args || !args.role) {
           throw new Error('role 参数是必需的');
         }
@@ -633,7 +633,7 @@ class FastMCPHttpServer {
         return recallArgs;
       }
       
-      case 'promptx_remember':
+      case 'remember':
         if (!args || !args.role) {
           throw new Error('role 参数是必需的');
         }
@@ -643,7 +643,7 @@ class FastMCPHttpServer {
         // 保持对象格式，RememberCommand.parseArgs期望接收对象
         return [args];
       
-      case 'promptx_tool': {
+      case 'toolx': {
         if (!args || !args.tool_resource || !args.parameters) {
           throw new Error('tool_resource 和 parameters 参数是必需的');
         }

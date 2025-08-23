@@ -26,8 +26,8 @@ class ToolListArea extends BaseArea {
       tools.sort((a, b) => a.id.localeCompare(b.id))
       
       tools.forEach(tool => {
-        const manualCommand = `promptx_learn("@manual://${tool.id}")`
-        const toolCommand = `promptx_tool("@tool://${tool.id}", parameters)`
+        const manualCommand = `learn("@manual://${tool.id}")`
+        const toolCommand = `toolx("@tool://${tool.id}", parameters)`
         
         content += `- \`${tool.id}\`: ${tool.name || tool.title || '未命名工具'}\n`
         content += `  - 📖 查看使用手册: ${manualCommand}\n`

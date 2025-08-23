@@ -26,7 +26,7 @@ class RoleListArea extends BaseArea {
       roles.sort((a, b) => a.id.localeCompare(b.id))
       
       roles.forEach(role => {
-        const command = `promptx_action("${role.id}")`
+        const command = `action("${role.id}")`
         content += `- \`${role.id}\`: ${role.name || role.title || '未命名角色'} → ${command}\n`
       })
     }

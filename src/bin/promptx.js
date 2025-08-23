@@ -128,10 +128,10 @@ program
   })
 
 
-// Tool命令
+// ToolX命令
 program
-  .command('tool <arguments>')
-  .description('🔧 tool锦囊 - 执行通过@tool协议声明的JavaScript工具')
+  .command('toolx <arguments>')
+  .description('🔧 toolx锦囊 - 执行PromptX工具体系(ToolX)中的JavaScript功能')
   .action(async (argumentsJson, options) => {
     try {
       let args = {};
@@ -159,9 +159,9 @@ program
         process.exit(1);
       }
       
-      await cli.execute('tool', args);
+      await cli.execute('toolx', args);
     } catch (error) {
-      console.error(`❌ Tool命令执行失败: ${error.message}`);
+      console.error(`❌ ToolX命令执行失败: ${error.message}`);
       process.exit(1);
     }
   })
@@ -244,7 +244,7 @@ ${chalk.cyan('🎒 六大核心命令:')}
   📚 ${chalk.blue('learn')}  → 深入学习领域知识体系
   🔍 ${chalk.green('recall')} → AI主动检索应用记忆
   🧠 ${chalk.magenta('remember')} → AI主动内化知识增强记忆
-  🔧 ${chalk.cyan('tool')} → 执行JavaScript工具，AI智能行动
+  🔧 ${chalk.cyan('toolx')} → 执行PromptX工具体系(ToolX)，AI智能行动
   🔌 ${chalk.blue('mcp-server')} → 启动MCP Server，连接AI应用
 
 ${chalk.cyan('示例:')}
@@ -271,8 +271,8 @@ ${chalk.cyan('示例:')}
   promptx remember "测试→预发布→生产"
 
   ${chalk.gray('# 7️⃣ 执行JavaScript工具')}
-  promptx tool '{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 2, "b": 3}}'
-  promptx tool '{"tool_resource": "@tool://send-email", "parameters": {"to": "test@example.com", "subject": "Hello", "content": "Test"}}'
+  promptx toolx '{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 2, "b": 3}}'
+  promptx toolx '{"tool_resource": "@tool://send-email", "parameters": {"to": "test@example.com", "subject": "Hello", "content": "Test"}}'
 
   ${chalk.gray('# 8️⃣ 启动MCP服务')}
   promptx mcp-server                    # stdio传输(默认)

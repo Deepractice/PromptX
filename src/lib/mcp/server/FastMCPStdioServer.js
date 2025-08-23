@@ -550,16 +550,16 @@ class FastMCPStdioServer {
         }
         return [];
       
-      case 'promptx_welcome':
+      case 'welcome':
         return [];
       
-      case 'promptx_action':
+      case 'action':
         return args && args.role ? [args.role] : [];
       
-      case 'promptx_learn':
+      case 'learn':
         return args && args.resource ? [args.resource] : [];
       
-      case 'promptx_recall': {
+      case 'recall': {
         if (!args || !args.role) {
           throw new Error('role 参数是必需的');
         }
@@ -570,7 +570,7 @@ class FastMCPStdioServer {
         return recallArgs;
       }
       
-      case 'promptx_remember':
+      case 'remember':
         if (!args || !args.role) {
           throw new Error('role 参数是必需的');
         }
@@ -580,8 +580,8 @@ class FastMCPStdioServer {
         // 保持对象格式，RememberCommand.parseArgs期望接收对象
         return [args];
       
-      case 'promptx_tool': {
-        logger.info('[FastStdioMCPServer] convertToCliArgs promptx_tool:');
+      case 'toolx': {
+        logger.info('[FastStdioMCPServer] convertToCliArgs toolx:');
         logger.info('[FastStdioMCPServer] args:', args);
         logger.info('[FastStdioMCPServer] args.parameters:', args.parameters);
         
