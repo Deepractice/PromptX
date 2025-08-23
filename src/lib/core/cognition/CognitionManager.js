@@ -2,6 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
 const CognitionSystem = require('./CognitionSystem');
+const Anchor = require('./Anchor');
 const logger = require('../../utils/logger');
 
 /**
@@ -89,6 +90,10 @@ class CognitionManager {
       // 创建新的认知系统实例
       const system = new CognitionSystem();
       
+      // 为Network添加必要的属性
+      system.network.roleId = roleId;
+      system.network.directory = this.getRolePath(roleId);
+      
       // 尝试加载已有的认知数据
       const networkFilePath = this.getNetworkFilePath(roleId);
       try {
@@ -137,6 +142,7 @@ class CognitionManager {
 
   /**
    * Prime - 获取角色的认知概览
+   * 优先从锚定状态恢复，如果没有则执行常规prime
    * @param {string} roleId - 角色ID
    * @returns {Mind} Mind 对象
    */
@@ -146,7 +152,32 @@ class CognitionManager {
     const system = await this.getSystem(roleId);
     logger.debug(`[CognitionManager] System network size before prime: ${system.network.size()}`);
     
-    const mind = system.prime();
+    // 尝试从锚定状态恢复
+    const anchor = new Anchor(system.network);
+    const anchoredState = await anchor.load();
+    
+    let mind = null;
+    
+    if (anchoredState && anchoredState.centerWord) {
+      // 从锚定状态恢复：执行recall(centerWord)
+      logger.info(`[CognitionManager] Prime from anchored state`, {
+        centerWord: anchoredState.centerWord,
+        timestamp: new Date(anchoredState.timestamp).toISOString(),
+        nodeCount: anchoredState.metadata?.nodeCount
+      });
+      
+      mind = system.recall(anchoredState.centerWord);
+      
+      if (mind) {
+        logger.success(`[CognitionManager] Successfully primed from anchored state: "${anchoredState.centerWord}"`);
+      }
+    }
+    
+    // 如果没有锚定状态或恢复失败，执行常规prime
+    if (!mind) {
+      logger.debug(`[CognitionManager] No anchored state or recovery failed, using regular prime`);
+      mind = system.prime();
+    }
     
     if (!mind) {
       logger.warn(`[CognitionManager] Prime returned null for role: ${roleId}`);
@@ -164,6 +195,7 @@ class CognitionManager {
 
   /**
    * Recall - 从角色的认知中检索相关记忆
+   * 每次recall后自动锚定状态
    * @param {string} roleId - 角色ID
    * @param {string} query - 查询词
    * @returns {Mind} Mind 对象
@@ -179,6 +211,16 @@ class CognitionManager {
     if (!mind) {
       logger.warn(`[CognitionManager] Recall returned null for role: ${roleId}, query: ${query}`);
       return null;
+    }
+    
+    // 自动锚定当前认知状态
+    try {
+      const anchor = new Anchor(system.network);
+      await anchor.execute(query, mind);
+      logger.debug(`[CognitionManager] Auto-anchored state after recall: "${query}"`);
+    } catch (error) {
+      logger.error(`[CognitionManager] Failed to auto-anchor state:`, error);
+      // 锚定失败不影响recall结果
     }
     
     return mind;
