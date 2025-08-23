@@ -1,6 +1,6 @@
 module.exports = {
-  name: 'promptx_tool',
-  description: `🔧 [工具执行器] 执行通过@tool协议声明的JavaScript功能工具
+  name: 'toolx',
+  description: `🔧 [ToolX执行器] 执行PromptX工具体系(ToolX)中的JavaScript功能
 基于PromptX工具生态系统，提供安全可控的工具执行环境。
 
 何时使用此工具:

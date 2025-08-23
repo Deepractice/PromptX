@@ -147,20 +147,21 @@ class CognitionSystem {
    * 记忆操作
    * 
    * 执行流程：
-   * 1. 调用Remember引擎处理Schema
+   * 1. 调用Remember引擎处理Engram
    * 2. 自动保存到磁盘
    * 
-   * @param {Array<string>} schema - 概念序列
+   * @param {Engram} engram - 记忆痕迹对象
    * @returns {Object} 记忆结果
    */
-  remember(schema) {
+  remember(engram) {
     logger.debug('[CognitionSystem] Remember operation', {
-      schemaLength: schema.length,
-      firstWord: schema[0]
+      schemaLength: engram.length,
+      strength: engram.strength,
+      preview: engram.getPreview()
     });
     
     const remember = this.getRememberEngine();
-    const result = remember.execute(schema);
+    const result = remember.execute(engram);
     
     // 注意：持久化由CognitionManager.saveSystem()负责
     // 这里不再自动保存，避免路径冲突

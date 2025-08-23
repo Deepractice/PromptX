@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'promptx_think',
+  name: 'think',
   description: `🤔 [认知思考系统] 基于认知心理学的思维链式推理机制
 
 ## 🧠 核心理解

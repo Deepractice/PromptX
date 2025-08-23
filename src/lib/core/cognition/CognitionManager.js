@@ -193,24 +193,28 @@ class CognitionManager {
     logger.info(`[CognitionManager] Remember for role: ${roleId}, ${engrams.length} engrams`);
     
     const system = await this.getSystem(roleId);
+    const Engram = require('./Engram');
     
-    for (const engram of engrams) {
+    for (const engramData of engrams) {
       try {
-        // 解析 schema 为层级结构
-        const concepts = this.parseSchema(engram.schema);
+        // 创建Engram对象
+        const engram = new Engram({
+          content: engramData.content,
+          schema: engramData.schema,
+          strength: engramData.strength,
+          timestamp: Date.now()  // 使用当前时间戳
+        });
         
-        if (concepts.length === 0) {
-          logger.warn(`[CognitionManager] Empty schema for engram:`, engram);
+        if (!engram.isValid()) {
+          logger.warn(`[CognitionManager] Invalid engram (schema too short):`, engramData);
           continue;
         }
         
-        // 直接使用 system.remember 传递 concepts 数组
-        // CognitionSystem.remember 会调用 Remember.execute
-        system.remember(concepts);
+        // 传递Engram对象给system.remember
+        system.remember(engram);
         
         logger.debug(`[CognitionManager] Processed engram:`, {
-          type: engram.type,
-          concepts: concepts.length,
+          preview: engram.getPreview(),
           strength: engram.strength
         });
         

@@ -94,36 +94,40 @@ class Remember {
   /**
    * 执行记忆写入
    * 
-   * 将Schema序列写入Network，建立Cue之间的连接。
+   * 将Engram中的Schema序列写入Network，建立Cue之间的连接。
    * 
-   * @param {Array<string>} schema - Cue词的有序序列
+   * @param {Engram} engram - 记忆痕迹对象
    * @returns {Object} 执行结果
    * @returns {number} returns.processed - 处理的节点数
    * @returns {Array} returns.connections - 创建的连接列表
    */
-  execute(schema) {
+  execute(engram) {
     // 参数验证
-    if (!schema || !Array.isArray(schema)) {
-      logger.warn('[Remember] Invalid schema provided', { schema });
+    const Engram = require('./Engram');
+    if (!engram || !(engram instanceof Engram)) {
+      logger.warn('[Remember] Invalid engram provided', { engram });
       return {
         processed: 0,
         connections: []
       };
     }
     
-    if (schema.length < 2) {
-      logger.debug('[Remember] Schema too short, no connections to create', { 
-        length: schema.length 
+    if (!engram.isValid()) {
+      logger.debug('[Remember] Engram schema too short, no connections to create', { 
+        length: engram.length 
       });
       return {
-        processed: schema.length,
+        processed: engram.length,
         connections: []
       };
     }
     
-    logger.debug('[Remember] Processing schema', { 
+    const { schema, strength, timestamp } = engram;
+    
+    logger.debug('[Remember] Processing engram', { 
       length: schema.length,
-      preview: schema.slice(0, 5).join(' -> ') + (schema.length > 5 ? '...' : '')
+      strength: strength,
+      preview: engram.getPreview()
     });
     
     // Phase 1: 确保所有Cue存在
@@ -148,7 +152,7 @@ class Remember {
     logger.debug('[Remember] Phase 2: Building connection structure');
     const WeightContext = require('./WeightContext');
     const connections = [];
-    const timestamp = Date.now();  // 同批次使用相同时间戳
+    // 使用engram的timestamp，保证时间一致性
     
     // 2.1 先建立所有连接（用临时权重0）
     for (let i = 0; i < schema.length - 1; i++) {
@@ -176,7 +180,8 @@ class Remember {
         sourceCue: sourceCue,
         targetWord: targetWord,
         position: i,
-        timestamp: timestamp
+        timestamp: timestamp,
+        engram: engram  // 传递完整的engram对象
       });
       
       // 委托策略计算权重

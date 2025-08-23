@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'promptx_recall',
+  name: 'recall',
   description: `🔍 记忆探索 - 每个mindmap词都是潜在宝藏！
 
 ⚠️ 不试 = 100%错过 | 试了 = 可能大赚

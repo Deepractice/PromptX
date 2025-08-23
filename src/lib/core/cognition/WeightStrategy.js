@@ -241,8 +241,11 @@ class TimeBasedWeightStrategy extends WeightStrategy {
     // 位置衰减因子
     const positionFactor = Math.pow(this.decay, context.position);
     
-    // 最终权重（不再考虑出度）
-    const weight = timestamp * positionFactor;
+    // 角色强度因子（从engram获取）
+    const strengthFactor = context.strength || 0.8;
+    
+    // 最终权重：时间 * 位置衰减 * 角色强度
+    const weight = timestamp * positionFactor * strengthFactor;
     
     return weight;
   }

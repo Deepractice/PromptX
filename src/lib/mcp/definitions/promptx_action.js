@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'promptx_action',
+  name: 'action',
   description: `⚡ [专业角色激活器] 瞬间获得指定专业角色的完整思维和技能包
 通过角色ID激活专业身份，获得该领域专家的思考方式、工作原则和专业知识。
 

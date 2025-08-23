@@ -63,6 +63,7 @@ class WeightContext {
    * @param {string} data.targetWord - 目标词
    * @param {number} data.position - 在Schema中的位置
    * @param {number} [data.timestamp] - 时间戳（可选，默认当前时间）
+   * @param {Engram} [data.engram] - 完整的记忆痕迹对象（可选）
    */
   constructor(data) {
     /**
@@ -122,6 +123,31 @@ class WeightContext {
      * @type {number}
      */
     this.sourceOutDegree = this.sourceCue ? this.sourceCue.connections.size : 0;
+    
+    /**
+     * 完整的记忆痕迹对象
+     * 
+     * 包含了记忆的完整信息：
+     * - content: 原始经验
+     * - schema: 概念序列
+     * - strength: 角色评分（0-1）
+     * - timestamp: 时间戳
+     * 
+     * 让策略可以使用strength进行权重调整
+     * 
+     * @type {Engram|null}
+     */
+    this.engram = data.engram || null;
+    
+    /**
+     * 记忆强度（从engram提取）
+     * 
+     * 便捷访问，避免总是写this.engram.strength
+     * 默认值0.8用于向后兼容
+     * 
+     * @type {number}
+     */
+    this.strength = this.engram ? this.engram.strength : 0.8;
   }
   
   /**
@@ -160,7 +186,8 @@ class WeightContext {
       targetWord: this.targetWord,
       position: this.position,
       timestamp: this.timestamp,
-      sourceOutDegree: this.sourceOutDegree
+      sourceOutDegree: this.sourceOutDegree,
+      strength: this.strength
     };
   }
 }

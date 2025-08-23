@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'promptx_learn',
+  name: 'learn',
   description: `🧠 [专业资源学习器] PromptX资源管理体系的统一学习入口
 通过标准化协议体系加载各类专业资源，是AI获取专业能力和理解工具使用的核心通道。
 

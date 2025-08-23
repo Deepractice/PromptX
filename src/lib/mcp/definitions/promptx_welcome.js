@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'promptx_welcome',
+  name: 'welcome',
   description: `🎭 [专业服务清单] 展示所有可用的AI专业角色和工具
 为AI提供完整的专业服务选项清单，包括可激活的角色和可调用的工具。
 

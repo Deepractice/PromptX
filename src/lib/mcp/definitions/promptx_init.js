@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'promptx_init',
+  name: 'init',
   description: '📁 [项目配置工具]（可选）仅在需要项目级配置隔离时使用。大多数情况下无需执行此工具，所有 PromptX 功能均可直接使用。',
   inputSchema: {
     type: 'object',
