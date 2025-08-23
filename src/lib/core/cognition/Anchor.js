@@ -41,7 +41,7 @@ class Anchor {
      * 状态文件路径
      * @type {string}
      */
-    this.statePath = path.join(network.directory, 'State.json');
+    this.statePath = path.join(network.directory, 'state.json');
     
     logger.debug('[Anchor] Initialized', {
       roleId: network.roleId,
