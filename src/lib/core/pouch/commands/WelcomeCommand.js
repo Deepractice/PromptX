@@ -153,14 +153,20 @@ class WelcomeCommand extends BasePouchCommand {
       logger.info('[WelcomeCommand] 开始刷新所有注册表...')
       
       // 1. 刷新项目级注册表（如果在项目环境中）
-      const currentProject = this.projectManager.getCurrentProject()
-      if (currentProject) {
-        logger.info('[WelcomeCommand] 刷新项目级注册表...')
-        const projectDiscovery = new ProjectDiscovery()
-        await projectDiscovery.generateRegistry()
+      // 项目级注册表是可选的，可能没有初始化项目
+      try {
+        const currentProject = ProjectManager.getCurrentProject()
+        if (currentProject && currentProject.initialized) {
+          logger.info('[WelcomeCommand] 刷新项目级注册表...')
+          const projectDiscovery = new ProjectDiscovery()
+          await projectDiscovery.generateRegistry()
+        }
+      } catch (projectError) {
+        // 项目未初始化是正常情况，不需要报错
+        logger.debug('[WelcomeCommand] 项目未初始化，跳过项目级注册表刷新')
       }
       
-      // 2. 刷新用户级注册表
+      // 2. 刷新用户级注册表（这个是必须的）
       logger.info('[WelcomeCommand] 刷新用户级注册表...')
       const userDiscovery = new UserDiscovery()
       await userDiscovery.generateRegistry()
