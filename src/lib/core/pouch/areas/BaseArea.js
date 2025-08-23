@@ -23,7 +23,7 @@ class BaseArea {
     
     this.name = name
     this.options = options
-    this.separator = '='.repeat(22)
+    this.separator = '-'.repeat(50)
   }
 
   /**

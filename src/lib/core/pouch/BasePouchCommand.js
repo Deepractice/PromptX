@@ -156,12 +156,22 @@ class BasePouchCommand {
     const sortedLayers = [...this.layers].sort((a, b) => a.getPriority() - b.getPriority())
     
     const contents = []
+    const layerSeparator = '='.repeat(75)
     
-    for (const layer of sortedLayers) {
+    for (let i = 0; i < sortedLayers.length; i++) {
+      const layer = sortedLayers[i]
       if (layer.isEnabled()) {
         const content = await layer.render(this.context)
         if (content) {
           contents.push(content)
+          // 在非空Layer之间添加分隔符
+          if (i < sortedLayers.length - 1) {
+            // 检查是否还有后续的非空Layer
+            const hasMoreContent = sortedLayers.slice(i + 1).some(l => l.isEnabled())
+            if (hasMoreContent) {
+              contents.push('\n' + layerSeparator + '\n')
+            }
+          }
         }
       }
     }

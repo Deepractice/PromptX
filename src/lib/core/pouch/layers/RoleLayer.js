@@ -116,11 +116,15 @@ class RoleLayer extends BaseLayer {
 
   /**
    * 组合Area内容
-   * 角色层的Areas之间可能需要分隔
+   * 角色层的Areas之间使用短横线分隔
    */
   combineAreaContents(contents) {
-    // 保持原有的组合方式
-    return contents.join('')
+    if (contents.length <= 1) {
+      // 只有一个或没有Area时，不需要分隔符
+      return contents.join('')
+    }
+    // 多个Areas之间使用短横线分隔
+    return contents.join('\n\n')
   }
 
   /**
