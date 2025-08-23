@@ -1,6 +1,9 @@
 const BasePouchCommand = require('../BasePouchCommand')
 const CognitionArea = require('../areas/CognitionArea')
 const StateArea = require('../areas/common/StateArea')
+const ConsciousnessLayer = require('../layers/ConsciousnessLayer')
+const CognitionLayer = require('../layers/CognitionLayer')
+const RoleLayer = require('../layers/RoleLayer')
 const { getGlobalResourceManager } = require('../../resource')
 const CognitionManager = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
@@ -8,7 +11,7 @@ const logger = require('../../../utils/logger')
 /**
  * 记忆检索命令 - 基于认知体系
  * 使用 CognitionManager 进行智能语义检索
- * 使用Area架构组装输出
+ * 使用Layer架构组装输出
  */
 class RecallCommand extends BasePouchCommand {
   constructor () {
@@ -19,20 +22,22 @@ class RecallCommand extends BasePouchCommand {
   }
 
   /**
-   * 组装Areas
+   * 组装Layers - 使用三层架构
    */
-  async assembleAreas(args) {
+  async assembleLayers(args) {
     // 解析参数：--role, query
     const { role, query } = this.parseArgs(args)
 
     if (!role) {
-      // 错误提示Area
-      this.registerArea(new StateArea(
+      // 错误情况：只创建角色层显示错误
+      const roleLayer = new RoleLayer()
+      roleLayer.addRoleArea(new StateArea(
         'error: 缺少必填参数 role',
         ['使用方法：recall 角色ID [查询关键词]',
          '示例：recall java-developer "React Hooks"',
          '通过 welcome 工具查看所有可用角色']
       ))
+      this.registerLayer(roleLayer)
       return
     }
 
@@ -56,37 +61,46 @@ class RecallCommand extends BasePouchCommand {
       const nodeCount = mind ? mind.activatedCues.size : 0
       logger.success(`✅ [RecallCommand] 认知检索完成 - 激活 ${nodeCount} 个节点`)
 
-      // 使用新的统一CognitionArea，操作类型为'recall'
-      const operationType = query ? 'recall' : 'prime'
-      const cognitionArea = new CognitionArea(operationType, mind, role, { query })
-      this.registerArea(cognitionArea)
+      // 设置上下文
+      this.context.roleId = role
+      this.context.query = query
+      this.context.mind = mind
 
-      // 注册StateArea
+      // 1. 创建意识层 (最高优先级)
+      const consciousnessLayer = new ConsciousnessLayer({
+        injectionMode: 'comment'
+      })
+      this.registerLayer(consciousnessLayer)
+
+      // 2. 创建认知层 (中等优先级)
+      const operationType = query ? 'recall' : 'prime'
+      const cognitionLayer = query 
+        ? CognitionLayer.createForRecall(mind, role, query)
+        : CognitionLayer.createForPrime(mind, role)
+      this.registerLayer(cognitionLayer)
+
+      // 3. 创建角色层 (最低优先级)
+      const roleLayer = new RoleLayer({ roleId: role })
       const stateArea = new StateArea('recall_completed', {
         role,
         query,
         count: nodeCount
       })
-      this.registerArea(stateArea)
+      roleLayer.addRoleArea(stateArea)
+      this.registerLayer(roleLayer)
 
     } catch (error) {
       logger.error(`❌ [RecallCommand] 记忆检索失败: ${error.message}`)
       logger.debug(`🐛 [RecallCommand] 错误堆栈: ${error.stack}`)
       
-      // 错误Area
-      const errorArea = new RecallArea([], null)
-      errorArea.render = async () => `❌ 检索记忆时出错：${error.message}
-
-💡 **可能的原因**：
-- 角色ID不正确
-- 认知系统初始化失败
-- 记忆存储路径问题
-
-🔧 **建议操作**：
-1. 检查角色ID是否正确
-2. 重试检索操作
-3. 如持续失败，查看日志详情`
-      this.registerArea(errorArea)
+      // 错误情况：只创建角色层显示错误
+      const roleLayer = new RoleLayer()
+      const errorArea = new StateArea(
+        `error: ${error.message}`,
+        ['检查角色ID是否正确', '重试检索操作', '如持续失败，查看日志详情']
+      )
+      roleLayer.addRoleArea(errorArea)
+      this.registerLayer(roleLayer)
     }
   }
 

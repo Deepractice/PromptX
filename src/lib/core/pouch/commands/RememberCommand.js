@@ -1,6 +1,9 @@
 const BasePouchCommand = require('../BasePouchCommand')
 const CognitionArea = require('../areas/CognitionArea')
 const StateArea = require('../areas/common/StateArea')
+const ConsciousnessLayer = require('../layers/ConsciousnessLayer')
+const CognitionLayer = require('../layers/CognitionLayer')
+const RoleLayer = require('../layers/RoleLayer')
 const { getGlobalResourceManager } = require('../../resource')
 const CognitionManager = require('../../cognition/CognitionManager')
 const logger = require('../../../utils/logger')
@@ -8,7 +11,7 @@ const logger = require('../../../utils/logger')
 /**
  * 记忆保存命令 - 基于认知体系
  * 使用 CognitionManager 保存角色专属记忆
- * 使用Area架构组装输出
+ * 使用Layer架构组装输出
  */
 class RememberCommand extends BasePouchCommand {
   constructor () {
@@ -18,18 +21,20 @@ class RememberCommand extends BasePouchCommand {
   }
 
   /**
-   * 组装Areas
+   * 组装Layers - 使用三层架构
    */
-  async assembleAreas(args) {
+  async assembleLayers(args) {
     // 解析参数：role 和 engrams数组
     const { role, engrams } = this.parseArgs(args)
 
     if (!role || !engrams) {
-      // 错误提示Area
-      this.registerArea(new StateArea(
+      // 错误情况：只创建角色层显示错误
+      const roleLayer = new RoleLayer()
+      roleLayer.addRoleArea(new StateArea(
         'error: 缺少必填参数',
         [this.getUsageHelp()]
       ))
+      this.registerLayer(roleLayer)
       return
     }
 
@@ -41,31 +46,44 @@ class RememberCommand extends BasePouchCommand {
       await this.cognitionManager.remember(role, engrams)
       logger.success('✅ [RememberCommand] 批量记忆保存完成')
       
-      // 使用新的统一CognitionArea，操作类型为'remember'
-      // 注意：这里需要获取remember后的mind对象
-      const mind = await this.cognitionManager.prime(role) // 获取更新后的认知网络
-      const cognitionArea = new CognitionArea('remember', mind, role, { 
-        engramCount: engrams.length,
-        newNodes: engrams.map(e => e.content) 
-      })
-      this.registerArea(cognitionArea)
+      // 获取更新后的认知网络
+      const mind = await this.cognitionManager.prime(role)
       
-      // 注册StateArea
+      // 设置上下文
+      this.context.roleId = role
+      this.context.engrams = engrams
+      this.context.mind = mind
+
+      // 1. 创建意识层 (最高优先级)
+      const consciousnessLayer = new ConsciousnessLayer({
+        injectionMode: 'comment'
+      })
+      this.registerLayer(consciousnessLayer)
+
+      // 2. 创建认知层 (中等优先级)
+      const cognitionLayer = CognitionLayer.createForRemember(mind, role, engrams.length)
+      this.registerLayer(cognitionLayer)
+
+      // 3. 创建角色层 (最低优先级)
+      const roleLayer = new RoleLayer({ roleId: role })
       const stateArea = new StateArea('remember_completed', {
         role,
         count: engrams.length
       })
-      this.registerArea(stateArea)
+      roleLayer.addRoleArea(stateArea)
+      this.registerLayer(roleLayer)
       
     } catch (error) {
       logger.error(`❌ [RememberCommand] 记忆保存失败: ${error.message}`)
       logger.debug(`🐛 [RememberCommand] 错误堆栈: ${error.stack}`)
       
-      // 错误Area
-      this.registerArea(new StateArea(
+      // 错误情况：只创建角色层显示错误
+      const roleLayer = new RoleLayer()
+      roleLayer.addRoleArea(new StateArea(
         `error: ${error.message}`,
         ['检查角色ID是否正确', '验证记忆格式是否符合要求', '重试保存操作']
       ))
+      this.registerLayer(roleLayer)
     }
   }
 
