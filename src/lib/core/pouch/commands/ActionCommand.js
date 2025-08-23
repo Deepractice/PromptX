@@ -2,6 +2,9 @@ const BasePouchCommand = require('../BasePouchCommand')
 const CognitionArea = require('../areas/CognitionArea')
 const RoleArea = require('../areas/action/RoleArea')
 const StateArea = require('../areas/common/StateArea')
+const ConsciousnessLayer = require('../layers/ConsciousnessLayer')
+const CognitionLayer = require('../layers/CognitionLayer')
+const RoleLayer = require('../layers/RoleLayer')
 const { COMMANDS } = require('../../../../constants')
 const { getGlobalResourceManager } = require('../../resource')
 const DPMLContentParser = require('../../dpml/DPMLContentParser')
@@ -13,7 +16,7 @@ const logger = require('../../../utils/logger')
 
 /**
  * ActionCommand - 角色激活命令
- * 使用Area架构组装输出
+ * 使用三层Layer架构组装输出
  */
 class ActionCommand extends BasePouchCommand {
   constructor() {
@@ -26,17 +29,19 @@ class ActionCommand extends BasePouchCommand {
   }
 
   /**
-   * 组装Areas
+   * 组装Layers - 使用新的三层架构
    */
-  async assembleAreas(args) {
+  async assembleLayers(args) {
     const [roleId] = args
 
     if (!roleId) {
-      // 错误情况：创建一个简单的StateArea
-      this.registerArea(new StateArea(
+      // 错误情况：只创建角色层显示错误
+      const roleLayer = new RoleLayer()
+      roleLayer.addRoleArea(new StateArea(
         'error',
         ['使用 MCP PromptX 工具的 action 功能激活角色', '使用 MCP PromptX 工具的 welcome 功能查看可用角色']
       ))
+      this.registerLayer(roleLayer)
       return
     }
 
@@ -54,28 +59,45 @@ class ActionCommand extends BasePouchCommand {
       
       if (!roleInfo) {
         logger.warn(`[ActionCommand] 角色 "${roleId}" 不存在！`)
-        this.registerArea(new StateArea(
+        const roleLayer = new RoleLayer()
+        roleLayer.addRoleArea(new StateArea(
           `error: 角色 "${roleId}" 不存在`,
           ['使用 welcome 功能查看所有可用角色', '使用正确的角色ID重试']
         ))
+        this.registerLayer(roleLayer)
         return
       }
 
       // 分析角色依赖
       const dependencies = await this.analyzeRoleDependencies(roleInfo)
 
-      // 1. 创建认知区域
+      // 加载记忆网络
       const mind = await this.loadMemories(roleId)
       logger.debug(`[ActionCommand] 加载的 Mind:`, {
         hasMind: !!mind,
         nodeCount: mind?.activatedCues?.size || 0,
         connectionCount: mind?.connections?.length || 0
       })
-      // 使用新的统一CognitionArea，操作类型为'prime'
-      const cognitionArea = new CognitionArea('prime', mind, roleId)
-      this.registerArea(cognitionArea)
 
-      // 2. 创建角色区域
+      // 设置上下文
+      this.context.roleId = roleId
+      this.context.roleInfo = roleInfo
+      this.context.mind = mind
+
+      // 1. 创建意识层 (最高优先级)
+      const consciousnessLayer = new ConsciousnessLayer({
+        injectionMode: 'comment' // 使用注释形式注入
+      })
+      this.registerLayer(consciousnessLayer)
+
+      // 2. 创建认知层 (中等优先级)
+      const cognitionLayer = CognitionLayer.createForPrime(mind, roleId)
+      this.registerLayer(cognitionLayer)
+
+      // 3. 创建角色层 (最低优先级)
+      const roleLayer = new RoleLayer({ roleId, roleInfo })
+      
+      // 添加角色区域
       const roleArea = new RoleArea(
         roleId,
         roleInfo.semantics,
@@ -85,20 +107,25 @@ class ActionCommand extends BasePouchCommand {
         dependencies.executions,
         roleInfo.metadata?.title || roleId
       )
-      this.registerArea(roleArea)
-
-      // 3. 创建状态区域
+      roleLayer.addRoleArea(roleArea)
+      
+      // 添加状态区域
       const stateArea = new StateArea('role_activated')
-      this.registerArea(stateArea)
+      roleLayer.addRoleArea(stateArea)
+      
+      this.registerLayer(roleLayer)
 
     } catch (error) {
       logger.error('Action command error:', error)
-      this.registerArea(new StateArea(
+      const roleLayer = new RoleLayer()
+      roleLayer.addRoleArea(new StateArea(
         `error: ${error.message}`,
         ['查看可用角色：使用 welcome 功能', '确认角色名称后重试']
       ))
+      this.registerLayer(roleLayer)
     }
   }
+
 
   /**
    * 获取角色信息

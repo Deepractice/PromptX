@@ -1,13 +1,20 @@
 const BaseArea = require('./areas/BaseArea')
 const LegacyArea = require('./areas/common/LegacyArea')
+const BaseLayer = require('./layers/BaseLayer')
+const logger = require('../../utils/logger')
 
 /**
- * BasePouchCommand - 基于Area架构的命令基类
+ * BasePouchCommand - 支持Layer和Area双架构的命令基类
  * 
  * 架构设计：
- * - Command负责组装Areas
- * - 每个Area自治管理自己的渲染
- * - 统一的渲染管道处理所有Areas
+ * - 支持新的Layer架构：Command → Layers → Areas
+ * - 兼容旧的Area架构：Command → Areas
+ * - 统一的渲染管道处理所有内容
+ * 
+ * 渲染流程：
+ * 1. 如果有Layers，按优先级渲染Layers
+ * 2. 如果没有Layers但有Areas，直接渲染Areas（兼容模式）
+ * 3. Layers内部管理自己的Areas
  */
 class BasePouchCommand {
   constructor() {
@@ -20,6 +27,8 @@ class BasePouchCommand {
     }
     this.outputFormat = 'human'
     this.areas = []
+    this.layers = []
+    this.useLayerSystem = false // 标记是否使用Layer系统
   }
 
   /**
@@ -47,6 +56,34 @@ class BasePouchCommand {
   }
 
   /**
+   * 注册一个Layer
+   * @param {BaseLayer} layer - Layer实例
+   */
+  registerLayer(layer) {
+    if (!(layer instanceof BaseLayer)) {
+      throw new Error('Layer must extend BaseLayer')
+    }
+    
+    // 检查名称唯一性
+    if (this.layers.some(l => l.getName() === layer.getName())) {
+      throw new Error(`Layer with name '${layer.getName()}' already registered`)
+    }
+    
+    this.layers.push(layer)
+    this.useLayerSystem = true // 标记使用Layer系统
+    
+    logger.debug(`[BasePouchCommand] Registered layer: ${layer.getName()}`)
+  }
+
+  /**
+   * 清空所有Layers
+   */
+  clearLayers() {
+    this.layers = []
+    this.useLayerSystem = false
+  }
+
+  /**
    * 组装Areas（子类可重写）
    * @param {Array} args - 命令参数
    * @returns {Promise<void>}
@@ -68,11 +105,29 @@ class BasePouchCommand {
   }
 
   /**
+   * 组装Layers（子类可重写）
+   * @param {Array} args - 命令参数
+   * @returns {Promise<void>}
+   */
+  async assembleLayers(args) {
+    // 子类实现具体的Layer组装逻辑
+    // 默认不做任何操作
+  }
+
+  /**
    * 验证所有Areas
    * @returns {boolean}
    */
   validateAreas() {
     return this.areas.every(area => area.validate())
+  }
+
+  /**
+   * 验证所有Layers
+   * @returns {boolean}
+   */
+  validateLayers() {
+    return this.layers.every(layer => layer.validate())
   }
 
   /**
@@ -93,24 +148,71 @@ class BasePouchCommand {
   }
 
   /**
+   * 渲染所有Layers
+   * @returns {Promise<string>}
+   */
+  async renderLayers() {
+    // 按优先级排序Layers（数字越小优先级越高）
+    const sortedLayers = [...this.layers].sort((a, b) => a.getPriority() - b.getPriority())
+    
+    const contents = []
+    
+    for (const layer of sortedLayers) {
+      if (layer.isEnabled()) {
+        const content = await layer.render(this.context)
+        if (content) {
+          contents.push(content)
+        }
+      }
+    }
+    
+    return contents.join('')
+  }
+
+  /**
    * 执行命令
    * @param {Array} args - 命令参数
    * @returns {Promise<Object|string>}
    */
   async execute(args = []) {
-    // 清空之前的Areas
+    // 清空之前的内容
     this.clearAreas()
+    this.clearLayers()
     
-    // 组装Areas
-    await this.assembleAreas(args)
+    // 尝试组装Layers（新架构）
+    await this.assembleLayers(args)
     
-    // 验证Areas
-    if (!this.validateAreas()) {
-      throw new Error('Area validation failed')
+    // 如果没有Layers，尝试组装Areas（兼容模式）
+    if (!this.useLayerSystem) {
+      await this.assembleAreas(args)
     }
     
-    // 渲染Areas
-    const content = await this.renderAreas()
+    let content = ''
+    
+    // 使用Layer系统渲染
+    if (this.useLayerSystem) {
+      logger.debug('[BasePouchCommand] Using Layer system for rendering')
+      
+      // 验证Layers
+      if (!this.validateLayers()) {
+        throw new Error('Layer validation failed')
+      }
+      
+      // 渲染Layers
+      content = await this.renderLayers()
+    } 
+    // 使用传统Area系统渲染
+    else {
+      logger.debug('[BasePouchCommand] Using Area system for rendering')
+      
+      // 验证Areas
+      if (!this.validateAreas()) {
+        throw new Error('Area validation failed')
+      }
+      
+      // 渲染Areas
+      content = await this.renderAreas()
+    }
     
     // 格式化输出
     return this.formatOutput(content)
