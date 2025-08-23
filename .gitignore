@@ -20,6 +20,9 @@ coverage/
 .nyc_output
 *.lcov
 test-output/
+test-results/
+cucumber-report.json
+cucumber-report.html
 
 # Logs
 logs/
@@ -107,6 +110,7 @@ temp/
 .env.act
 .secrets
 *.local
+
 
 # temp dir
 temp/
