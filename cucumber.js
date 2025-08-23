@@ -71,6 +71,32 @@ module.exports = {
     language: 'zh-CN'
   },
 
+  cognition: {
+    paths: ['features/e2e/cognition/**/*.feature'],
+    require: ['features/support/**/*.js'],
+    format: ['progress', 'html:test-results/cognition-report.html'],
+    publishQuiet: true,
+    language: 'zh-CN'
+  },
+
+  'cognition:smoke': {
+    paths: ['features/e2e/cognition/**/*.feature'],
+    require: ['features/support/**/*.js'],
+    format: ['progress'],
+    tags: '@smoke',
+    publishQuiet: true,
+    language: 'zh-CN'
+  },
+
+  'cognition:critical': {
+    paths: ['features/e2e/cognition/**/*.feature'],
+    require: ['features/support/**/*.js'],
+    format: ['progress', 'html:test-results/cognition-critical.html'],
+    tags: '@critical',
+    publishQuiet: true,
+    language: 'zh-CN'
+  },
+
   // CI/CD配置
   ci: {
     paths: ['features/**/*.feature'],
