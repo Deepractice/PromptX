@@ -1,4 +1,5 @@
 packages:
+  - '.'  # Root package (@promptx/cli)
   - apps/*
   - packages/*
 

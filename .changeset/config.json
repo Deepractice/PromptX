@@ -7,7 +7,9 @@
     }
   ],
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    ["@promptx/cli", "@promptx/desktop"]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "develop",
