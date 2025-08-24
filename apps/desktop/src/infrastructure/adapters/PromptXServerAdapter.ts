@@ -3,28 +3,11 @@ import { ServerConfig } from '../../domain/entities/ServerConfig.js'
 import { ServerError, ServerErrorCode } from '../../domain/errors/ServerErrors.js'
 import { ServerStatus } from '../../domain/valueObjects/ServerStatus.js'
 import type { IServerPort, ServerMetrics } from '../../domain/ports/IServerPort.js'
-
-// TODO: Import actual Server when available
-// import { Server } from '@promptx/core/lib/server.js'
-
-interface Server {
-  start(): Promise<void>
-  stop(): Promise<void>
-  isRunning(): boolean
-  isStarting(): boolean
-  isStopping(): boolean
-  getUptime(): number
-  getRequestCount(): number
-  getActiveConnections(): number
-  updateConfig(config: any): Promise<void>
-  on(event: string, handler: Function): void
-  off(event: string, handler: Function): void
-  host: string
-  port: number
-}
+import { logger } from '../../shared/logger.js'
+import { FastMCPServer } from './FastMCPServer.js'
 
 export class PromptXServerAdapter implements IServerPort {
-  private server: Server | null = null
+  private server: FastMCPServer | null = null
   private statusListeners: Set<(status: ServerStatus) => void> = new Set()
   private currentStatus: ServerStatus = ServerStatus.STOPPED
 
@@ -36,14 +19,18 @@ export class PromptXServerAdapter implements IServerPort {
 
       this.updateStatus(ServerStatus.STARTING)
 
-      // TODO: Initialize actual server
-      // this.server = new Server({ ...config })
-      
-      // Mock implementation for now
-      this.server = this.createMockServer(config)
+      // Create and start the FastMCP server
+      this.server = new FastMCPServer({
+        host: config.host,
+        port: config.port,
+        debug: config.debug || false,
+        stateless: config.stateless || false
+      })
       
       await this.server.start()
       this.updateStatus(ServerStatus.RUNNING)
+      
+      logger.info(`Server running at ${this.server.getMCPEndpoint()}`)
 
       return ResultUtil.ok(undefined)
     } catch (error) {
@@ -127,7 +114,7 @@ export class PromptXServerAdapter implements IServerPort {
       return ResultUtil.fail(ServerError.notRunning())
     }
 
-    const address = `http://${this.server.host}:${this.server.port}`
+    const address = this.server.getAddress()
     return ResultUtil.ok(address)
   }
 
@@ -180,27 +167,8 @@ export class PromptXServerAdapter implements IServerPort {
       try {
         listener(status)
       } catch (error) {
-        console.error('Error in status listener:', error)
+        logger.error('Error in status listener:', error)
       }
     })
-  }
-
-  private createMockServer(config: ServerConfig): Server {
-    // Mock implementation for testing
-    return {
-      host: config.host,
-      port: config.port,
-      start: async () => {},
-      stop: async () => {},
-      isRunning: () => this.currentStatus === ServerStatus.RUNNING,
-      isStarting: () => this.currentStatus === ServerStatus.STARTING,
-      isStopping: () => this.currentStatus === ServerStatus.STOPPING,
-      getUptime: () => 0,
-      getRequestCount: () => 0,
-      getActiveConnections: () => 0,
-      updateConfig: async () => {},
-      on: () => {},
-      off: () => {}
-    }
   }
 }

@@ -2,6 +2,7 @@
 out/
 dist/
 build/
+release/
 
 # Electron
 electron-builder.yml
@@ -25,3 +26,11 @@ Thumbs.db
 *.tmp
 temp/
 tmp/
+
+# Generated scripts
+scripts/
+
+# Generated icons (keep source SVG only)
+assets/icons/*.png
+assets/icons/*.icns
+!assets/icons/logo.svg

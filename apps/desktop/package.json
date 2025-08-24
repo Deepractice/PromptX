@@ -1,6 +1,11 @@
 {
   "name": "@promptx/desktop",
   "version": "0.1.0",
+  "description": "PromptX Desktop - Local AI prompt management application",
+  "author": {
+    "name": "Deepractice",
+    "email": "sean@deepracticex.com"
+  },
   "type": "module",
   "main": "out/src/main.js",
   "engines": {
@@ -9,9 +14,9 @@
   "scripts": {
     "dev": "npm run build:watch & npm run start:electron",
     "dev:vite": "electron-vite dev",
-    "build": "tsc",
+    "build": "rimraf out && tsc",
     "build:watch": "tsc --watch",
-    "start:electron": "wait-on out/main/index.js && electron .",
+    "start:electron": "wait-on out/src/main.js && electron .",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -19,11 +24,17 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist out",
-    "package": "electron-builder",
-    "package:mac": "electron-builder --mac",
-    "package:win": "electron-builder --win",
-    "package:linux": "electron-builder --linux"
+    "clean": "rimraf dist out release",
+    "package": "pnpm build && electron-builder",
+    "package:mac": "pnpm build && electron-builder --mac",
+    "package:win": "pnpm build && electron-builder --win",
+    "package:linux": "pnpm build && electron-builder --linux",
+    "dist": "pnpm package:mac"
+  },
+  "dependencies": {
+    "@promptx/cli": "workspace:*",
+    "fastmcp": "^3.14.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -32,6 +43,8 @@
     "@vitest/coverage-v8": "^1.0.0",
     "@vitest/ui": "^1.0.0",
     "electron": "28.3.3",
+    "electron-builder": "^26.0.12",
+    "electron-icon-builder": "^2.0.1",
     "electron-vite": "^2.0.0",
     "eslint": "^8.50.0",
     "prettier": "^3.0.0",

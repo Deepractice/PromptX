@@ -7,6 +7,8 @@ export interface ServerConfigData {
   workspace?: string
   autoStart?: boolean
   updateStrategy?: 'silent' | 'notify' | 'forced'
+  debug?: boolean
+  stateless?: boolean
 }
 
 export class ServerConfig {
@@ -36,7 +38,9 @@ export class ServerConfig {
       host: data.host.trim(),
       workspace: data.workspace || process.cwd(),
       autoStart: data.autoStart ?? false,
-      updateStrategy: data.updateStrategy ?? 'notify'
+      updateStrategy: data.updateStrategy ?? 'notify',
+      debug: data.debug ?? false,
+      stateless: data.stateless ?? false
     })
 
     return ResultUtil.ok(config)
@@ -48,7 +52,9 @@ export class ServerConfig {
       host: 'localhost',
       workspace: process.cwd(),
       autoStart: false,
-      updateStrategy: 'notify'
+      updateStrategy: 'notify',
+      debug: false,
+      stateless: false
     })
   }
 
@@ -70,6 +76,14 @@ export class ServerConfig {
 
   get updateStrategy(): 'silent' | 'notify' | 'forced' {
     return this.data.updateStrategy
+  }
+
+  get debug(): boolean {
+    return this.data.debug
+  }
+
+  get stateless(): boolean {
+    return this.data.stateless
   }
 
   getAddress(): string {

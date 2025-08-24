@@ -1,3 +1,6 @@
+// Import polyfills first, before any other modules
+import './polyfills.js'
+
 import { app, BrowserWindow } from 'electron'
 import { TrayPresenter } from './presentation/tray/TrayPresenter.js'
 import { PromptXServerAdapter } from './infrastructure/adapters/PromptXServerAdapter.js'
