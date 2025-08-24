@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false,
+    
+    "baseUrl": ".",
+    "paths": {
+      "@promptx/core": ["../../src/index.js"],
+      "@promptx/core/*": ["../../src/*"],
+      "@domain/*": ["src/domain/*"],
+      "@application/*": ["src/application/*"],
+      "@infrastructure/*": ["src/infrastructure/*"],
+      "@presentation/*": ["src/presentation/*"],
+      "@shared/*": ["src/shared/*"]
+    },
+    
+    "outDir": "out",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

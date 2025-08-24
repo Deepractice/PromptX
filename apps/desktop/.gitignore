@@ -1,0 +1,27 @@
+# Build output
+out/
+dist/
+build/
+
+# Electron
+electron-builder.yml
+
+# Logs
+*.log
+logs/
+
+# Dependencies (handled by root)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+temp/
+tmp/
