@@ -3,6 +3,36 @@
  * Must be imported before any other modules
  */
 
+// Override console methods to prevent EPIPE errors in Electron
+// This must be done before any modules that use console are imported
+const originalConsoleLog = console.log
+const originalConsoleError = console.error
+const originalConsoleWarn = console.warn
+const originalConsoleInfo = console.info
+
+const safeConsoleMethod = (original: typeof console.log) => {
+  return (...args: any[]) => {
+    try {
+      original.apply(console, args)
+    } catch (error: any) {
+      // Ignore EPIPE errors silently
+      if (error.code !== 'EPIPE' && error.message !== 'write EPIPE') {
+        // For non-EPIPE errors, try to log to stderr if possible
+        try {
+          process.stderr.write(`Console error: ${error.message}\n`)
+        } catch {
+          // Ignore if stderr is also unavailable
+        }
+      }
+    }
+  }
+}
+
+console.log = safeConsoleMethod(originalConsoleLog)
+console.error = safeConsoleMethod(originalConsoleError) 
+console.warn = safeConsoleMethod(originalConsoleWarn)
+console.info = safeConsoleMethod(originalConsoleInfo)
+
 // Fix for undici requiring File API which doesn't exist in Node.js/Electron main process
 // This is needed for FastMCP which uses undici for HTTP operations
 if (typeof globalThis.File === 'undefined') {

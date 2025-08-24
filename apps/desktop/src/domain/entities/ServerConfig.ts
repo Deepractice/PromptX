@@ -48,13 +48,13 @@ export class ServerConfig {
 
   static default(): ServerConfig {
     return new ServerConfig({
-      port: 3000,
+      port: 5203,
       host: 'localhost',
       workspace: process.cwd(),
       autoStart: false,
       updateStrategy: 'notify',
       debug: false,
-      stateless: false
+      stateless: true  // Changed to stateless mode for Claude Desktop compatibility
     })
   }
 

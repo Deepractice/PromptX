@@ -34,8 +34,8 @@ export class StartServerUseCase {
       return startResult
     }
 
-    // Save config after successful start
-    await this.configPort.save(config)
+    // Config persistence disabled - using default config only
+    // await this.configPort.save(config)
 
     // Show success notifications
     await this.showSuccessNotifications()
@@ -53,8 +53,8 @@ export class StartServerUseCase {
       return startResult
     }
 
-    // Save the custom config
-    await this.configPort.save(config)
+    // Config persistence disabled - using default config only
+    // await this.configPort.save(config)
 
     // Show success notifications
     await this.showSuccessNotifications()
@@ -63,32 +63,39 @@ export class StartServerUseCase {
   }
 
   private async loadOrCreateConfig(): Promise<Result<ServerConfig, UseCaseError>> {
-    const loadResult = await this.configPort.load()
+    // Config file persistence is disabled for now
+    // Always use default config from code
+    // This ensures users always get the latest configuration we ship
     
-    if (loadResult.ok) {
-      return ResultUtil.ok(loadResult.value)
-    }
-
-    // Check if config doesn't exist
-    const exists = await this.configPort.exists()
-    if (!exists) {
-      // Use default config
-      return ResultUtil.ok(ServerConfig.default())
-    }
-
-    // Config exists but failed to load
-    const error: UseCaseError = {
-      code: 'USE_CASE_CONFIG_ERROR',
-      message: loadResult.error.message,
-      cause: loadResult.error
-    }
-
-    await this.notificationPort.showError(
-      `Failed to load configuration: ${loadResult.error.message}`,
-      'Configuration Error'
-    )
-
-    return ResultUtil.fail(error)
+    // TODO: In the future, we can enable this for user preferences
+    // const loadResult = await this.configPort.load()
+    // 
+    // if (loadResult.ok) {
+    //   return ResultUtil.ok(loadResult.value)
+    // }
+    //
+    // // Check if config doesn't exist
+    // const exists = await this.configPort.exists()
+    // if (!exists) {
+    //   // Use default config
+    //   return ResultUtil.ok(ServerConfig.default())
+    // }
+    //
+    // // Config exists but failed to load
+    // const error: UseCaseError = {
+    //   code: 'USE_CASE_CONFIG_ERROR',
+    //   message: loadResult.error.message,
+    //   cause: loadResult.error
+    // }
+    //
+    // await this.notificationPort.showError(
+    //   `Failed to load configuration: ${loadResult.error.message}`,
+    //   'Configuration Error'
+    // )
+    //
+    // return ResultUtil.fail(error)
+    
+    return ResultUtil.ok(ServerConfig.default())
   }
 
   private async handleStartError(error: ServerError): Promise<void> {

@@ -1,7 +1,7 @@
 // Import polyfills first, before any other modules
 import './polyfills.js'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import { TrayPresenter } from './presentation/tray/TrayPresenter.js'
 import { PromptXServerAdapter } from './infrastructure/adapters/PromptXServerAdapter.js'
 import { FileConfigAdapter } from './infrastructure/adapters/FileConfigAdapter.js'
@@ -47,6 +47,15 @@ class PromptXDesktopApp {
     this.setupAppEvents()
     
     logger.success('PromptX Desktop initialized successfully')
+    
+    // Auto-start server on app launch
+    logger.info('Auto-starting PromptX server...')
+    try {
+      await startUseCase.execute()
+      logger.success('PromptX server started automatically')
+    } catch (error) {
+      logger.error('Failed to auto-start server:', error)
+    }
   }
 
   private setupInfrastructure(): void {
@@ -105,24 +114,46 @@ class PromptXDesktopApp {
       // On macOS, do nothing - app stays in menu bar
     })
 
-    // Handle app quit
-    app.on('before-quit', async () => {
-      // Stop server if running
-      if (this.serverPort) {
-        const statusResult = await this.serverPort.getStatus()
-        if (statusResult.ok && statusResult.value === 'running') {
-          await this.serverPort.stop()
-        }
+    // Handle app quit - use synchronous cleanup
+    let isQuitting = false
+    app.on('before-quit', (event) => {
+      if (!isQuitting) {
+        event.preventDefault()
+        isQuitting = true
+        
+        // Perform cleanup
+        this.performCleanup().then(() => {
+          logger.info('Cleanup completed, exiting...')
+          app.exit(0)
+        }).catch((error) => {
+          logger.error('Error during cleanup:', error)
+          app.exit(0)
+        })
       }
-
-      // Cleanup
-      this.cleanup()
     })
 
     // Handle activation (macOS)
     app.on('activate', () => {
       // Show tray menu if needed
     })
+  }
+
+  private async performCleanup(): Promise<void> {
+    try {
+      // Stop server if running
+      if (this.serverPort) {
+        const statusResult = await this.serverPort.getStatus()
+        if (statusResult.ok && statusResult.value === 'running') {
+          logger.info('Stopping server before quit...')
+          await this.serverPort.stop()
+        }
+      }
+    } catch (error) {
+      logger.error('Error stopping server:', error)
+    }
+
+    // Cleanup UI components
+    this.cleanup()
   }
 
   private cleanup(): void {
@@ -132,6 +163,51 @@ class PromptXDesktopApp {
     }
   }
 }
+
+// Global error handlers for uncaught exceptions and rejections
+process.on('uncaughtException', (error: Error) => {
+  // Ignore EPIPE errors globally
+  if (error.message && error.message.includes('EPIPE')) {
+    logger.debug('Ignoring EPIPE error:', error.message)
+    return
+  }
+  
+  // Log other errors but don't crash
+  logger.error('Uncaught exception:', error)
+  
+  // For critical errors, show dialog
+  if (!error.message?.includes('write') && !error.message?.includes('stream')) {
+    dialog.showErrorBox('Unexpected Error', error.message)
+    app.quit()
+  }
+})
+
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  // Ignore EPIPE errors
+  if (reason?.message && reason.message.includes('EPIPE')) {
+    logger.debug('Ignoring unhandled EPIPE rejection:', reason.message)
+    return
+  }
+  
+  logger.error('Unhandled promise rejection:', reason)
+})
+
+// Handle write stream errors specifically
+process.stdout.on('error', (error: any) => {
+  if (error.code === 'EPIPE') {
+    // Ignore EPIPE on stdout
+    return
+  }
+  logger.error('stdout error:', error)
+})
+
+process.stderr.on('error', (error: any) => {
+  if (error.code === 'EPIPE') {
+    // Ignore EPIPE on stderr
+    return
+  }
+  logger.error('stderr error:', error)
+})
 
 // Application entry point
 const application = new PromptXDesktopApp()

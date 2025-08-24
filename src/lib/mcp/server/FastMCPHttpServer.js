@@ -48,7 +48,7 @@ class FastMCPHttpServer {
     // 配置选项
     this.config = {
       debug: options.debug || process.env.MCP_DEBUG === 'true',
-      port: options.port || 3000,
+      port: options.port || 5203,
       host: options.host || 'localhost',
       endpoint: options.endpoint || '/mcp',
       stateless: options.stateless || false,
@@ -386,21 +386,23 @@ class FastMCPHttpServer {
    * 加载工具定义文件
    */
   loadToolDefinitions() {
-    const definitionsDir = path.join(__dirname, '../definitions');
-    const definitions = [];
+    // 从 index.js 读取所有工具定义
+    const definitions = require('../definitions');
     
-    // 读取所有 JS 文件（排除 promptx_think.js）
-    const files = fs.readdirSync(definitionsDir)
-      .filter(file => file.endsWith('.js'))
-      .filter(file => file !== 'promptx_think.js'); // 暂时禁用 think 工具
-    
-    for (const file of files) {
-      const filePath = path.join(definitionsDir, file);
-      const definition = require(filePath);
-      definitions.push(definition);
+    // 如果导出了 tools 数组，使用它；否则使用对象的值
+    if (definitions.tools && Array.isArray(definitions.tools)) {
+      return definitions.tools;
     }
     
-    return definitions;
+    // 将对象转换为数组，排除 tools 属性本身
+    const tools = [];
+    for (const key in definitions) {
+      if (key !== 'tools' && definitions[key] && typeof definitions[key] === 'object') {
+        tools.push(definitions[key]);
+      }
+    }
+    
+    return tools;
   }
 
   /**
