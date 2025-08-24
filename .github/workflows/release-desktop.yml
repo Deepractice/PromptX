@@ -1,0 +1,221 @@
+name: Desktop Application Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to build for (e.g., v1.7.1)'
+        required: true
+        type: string
+  
+  release:
+    types: [created, published]
+
+jobs:
+  build-desktop:
+    # Skip if no desktop app exists
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'release' && !contains(github.event.release.body, '[skip-desktop]'))
+    
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+            build_cmd: package:mac
+            artifacts: |
+              release/*.dmg
+              release/*.zip
+              release/latest-mac.yml
+          - os: windows-latest
+            platform: win
+            build_cmd: package:win
+            artifacts: |
+              release/*.exe
+              release/*.msi
+              release/latest.yml
+          - os: ubuntu-latest
+            platform: linux
+            build_cmd: package:linux
+            artifacts: |
+              release/*.AppImage
+              release/*.deb
+              release/*.rpm
+              release/*.snap
+              release/latest-linux.yml
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Determine release info
+        id: release-info
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Manual trigger
+            RELEASE_TAG="${{ github.event.inputs.release_tag }}"
+          else
+            # Release event trigger
+            RELEASE_TAG="${{ github.event.release.tag_name }}"
+          fi
+          
+          # Extract version from tag (remove 'v' prefix)
+          VERSION="${RELEASE_TAG#v}"
+          
+          # Check if it's a prerelease
+          IS_PRERELEASE="false"
+          if [[ "$VERSION" == *"-beta"* ]] || [[ "$VERSION" == *"-alpha"* ]] || [[ "$VERSION" == *"-rc"* ]]; then
+            IS_PRERELEASE="true"
+          fi
+          
+          # Also check the release event's prerelease flag
+          if [ "${{ github.event_name }}" == "release" ] && [ "${{ github.event.release.prerelease }}" == "true" ]; then
+            IS_PRERELEASE="true"
+          fi
+          
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          
+          echo "📦 Building Desktop for release: $RELEASE_TAG"
+          echo "📌 Version: $VERSION"
+          echo "🏷️ Prerelease: $IS_PRERELEASE"
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ steps.release-info.outputs.release_tag }}
+          fetch-depth: 0
+      
+      - name: Check for Desktop app
+        id: check
+        run: |
+          if [ -d "apps/desktop" ]; then
+            echo "has_desktop=true" >> $GITHUB_OUTPUT
+            echo "✅ Desktop app found, proceeding with ${{ matrix.platform }} build"
+          else
+            echo "has_desktop=false" >> $GITHUB_OUTPUT
+            echo "❌ No desktop app found in this repository"
+            exit 0
+          fi
+      
+      - name: Setup Node.js
+        if: steps.check.outputs.has_desktop == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install pnpm
+        if: steps.check.outputs.has_desktop == 'true'
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Get pnpm store directory
+        if: steps.check.outputs.has_desktop == 'true'
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      
+      - name: Setup pnpm cache
+        if: steps.check.outputs.has_desktop == 'true'
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-desktop-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-desktop-
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install root dependencies
+        if: steps.check.outputs.has_desktop == 'true'
+        run: |
+          echo "📦 Installing root dependencies..."
+          pnpm install --frozen-lockfile || pnpm install
+      
+      - name: Build and Package Desktop
+        if: steps.check.outputs.has_desktop == 'true'
+        env:
+          # Electron Builder configuration
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        run: |
+          cd apps/desktop
+          
+          # Update version to match release
+          VERSION="${{ steps.release-info.outputs.version }}"
+          echo "📝 Updating package.json version to $VERSION"
+          node -e "const pkg=require('./package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2))"
+          
+          # Install desktop dependencies
+          echo "📦 Installing desktop dependencies..."
+          pnpm install --frozen-lockfile || pnpm install
+          
+          # Build the application
+          echo "🔨 Building desktop application..."
+          pnpm run build
+          
+          # Package for current platform
+          echo "📦 Packaging for ${{ matrix.platform }}..."
+          
+          # Configure publish based on release type
+          if [ "${{ steps.release-info.outputs.is_prerelease }}" == "true" ]; then
+            echo "🏷️ Building prerelease version..."
+            # For prerelease, we might want different update channel
+            pnpm run ${{ matrix.build_cmd }}
+          else
+            echo "🏷️ Building stable release version..."
+            pnpm run ${{ matrix.build_cmd }}
+          fi
+          
+          # List built artifacts
+          echo "📋 Built artifacts:"
+          ls -la release/ || true
+      
+      - name: Upload artifacts to Release
+        if: steps.check.outputs.has_desktop == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          cd apps/desktop
+          
+          RELEASE_TAG="${{ steps.release-info.outputs.release_tag }}"
+          
+          echo "📤 Uploading artifacts to release $RELEASE_TAG..."
+          
+          # Process each artifact pattern
+          IFS=$'\n'
+          for pattern in ${{ matrix.artifacts }}; do
+            pattern=$(echo "$pattern" | xargs) # Trim whitespace
+            if [ -n "$pattern" ]; then
+              for file in $pattern; do
+                if [ -f "$file" ]; then
+                  echo "  Uploading: $file"
+                  gh release upload "$RELEASE_TAG" "$file" --clobber || {
+                    echo "  ⚠️ Failed to upload $file, continuing..."
+                  }
+                else
+                  echo "  ⏭️ No files matching pattern: $pattern"
+                fi
+              done
+            fi
+          done
+          
+          echo "✅ Completed ${{ matrix.platform }} artifacts upload"
+      
+      - name: Post upload summary
+        if: steps.check.outputs.has_desktop == 'true' && success()
+        shell: bash
+        run: |
+          echo "🎉 Successfully built and uploaded Desktop app for ${{ matrix.platform }}"
+          echo "📦 Release: ${{ steps.release-info.outputs.release_tag }}"
+          echo "🔢 Version: ${{ steps.release-info.outputs.version }}"
+          if [ "${{ steps.release-info.outputs.is_prerelease }}" == "true" ]; then
+            echo "🏷️ Type: Pre-release (beta/alpha/rc)"
+          else
+            echo "🏷️ Type: Stable release"
+          fi
