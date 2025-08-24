@@ -11,12 +11,17 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 // Import PromptX CLI for executing tools
 const { cli } = require('@promptx/cli/src/lib/core/pouch')
+// Import ServerEnvironment for initialization
+const { getGlobalServerEnvironment } = require('@promptx/cli/src/lib/utils/ServerEnvironment')
+// Import MCPOutputAdapter for output formatting
+const { MCPOutputAdapter } = require('@promptx/cli/src/lib/mcp/MCPOutputAdapter')
 
 export interface FastMCPServerConfig {
   host: string
   port: number
   debug?: boolean
   stateless?: boolean
+  enableMetrics?: boolean
 }
 
 export class FastMCPServer {
@@ -25,9 +30,23 @@ export class FastMCPServer {
   private startTime: Date | null = null
   private requestCount: number = 0
   private isRunningFlag: boolean = false
+  private sessions: Map<string, any> = new Map()
+  private connections: number = 0
+  private lastError: Error | null = null
+  private outputAdapter: any // MCPOutputAdapter instance
+  private metrics = {
+    enabled: false,
+    requestsTotal: 0,
+    responseTimeSum: 0,
+    responseTimeCount: 0,
+    errors: 0,
+    toolExecutions: {} as Record<string, number>
+  }
 
   constructor(config: FastMCPServerConfig) {
     this.config = config
+    this.metrics.enabled = config.enableMetrics || false
+    this.outputAdapter = new MCPOutputAdapter()
     logger.debug(`FastMCPServer initialized with config:`, config)
   }
 
@@ -39,11 +58,22 @@ export class FastMCPServer {
 
       logger.info(`Starting FastMCP Server on ${this.config.host}:${this.config.port}`)
 
+      // Initialize ServerEnvironment
+      const serverEnv = getGlobalServerEnvironment()
+      if (!serverEnv.isInitialized()) {
+        serverEnv.initialize({ 
+          transport: 'http', 
+          host: this.config.host, 
+          port: this.config.port 
+        })
+      }
+
       // Create FastMCP instance
       this.server = new FastMCP({
         name: 'promptx-desktop',
         version: '0.1.0', 
         instructions: 'PromptX Desktop MCP Server - Local AI prompt management',
+        logger: this.config.debug ? this.createLogger() : undefined
       })
 
       // Register PromptX tools
@@ -65,9 +95,18 @@ export class FastMCPServer {
       
       logger.success(`FastMCP Server started successfully at http://${this.config.host}:${this.config.port}`)
       logger.info(`MCP endpoint: http://${this.config.host}:${this.config.port}/mcp`)
+      logger.info(`Mode: ${this.config.stateless ? 'Stateless' : 'Stateful'}`)
+      
+      if (this.config.debug) {
+        logger.debug('Debug mode enabled')
+      }
+      
+      // Setup signal handlers
+      this.setupSignalHandlers()
     } catch (error) {
       logger.error('Failed to start FastMCP Server:', error)
       this.isRunningFlag = false
+      this.lastError = error as Error
       throw error
     }
   }
@@ -167,6 +206,9 @@ export class FastMCPServer {
       parameters: z.object(parameters),
       execute: async (args: any) => {
         this.requestCount++
+        if (this.metrics.enabled) {
+          this.metrics.requestsTotal++
+        }
         
         try {
           // Call the original tool handler or use default implementation
@@ -178,35 +220,8 @@ export class FastMCPServer {
             result = await this.executePromptXTool(toolDef.name, args)
           }
           
-          // Convert result to FastMCP format
-          if (typeof result === 'string') {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: result
-                }
-              ]
-            }
-          } else if (result && typeof result === 'object') {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: JSON.stringify(result, null, 2)
-                }
-              ]
-            }
-          } else {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: String(result)
-                }
-              ]
-            }
-          }
+          // Format output using MCPOutputAdapter
+          return this.outputAdapter.convertToMCPFormat(result)
         } catch (error) {
           logger.error(`Error executing tool ${toolDef.name}:`, error)
           throw error
@@ -216,6 +231,8 @@ export class FastMCPServer {
   }
 
   private async executePromptXTool(toolName: string, args: any): Promise<any> {
+    const startTime = Date.now()
+    
     try {
       logger.info(`Executing PromptX tool: ${toolName} with args:`, args)
       
@@ -228,9 +245,29 @@ export class FastMCPServer {
       // Execute via PromptX CLI
       const result = await cli.execute(commandName, cliArgs)
       
+      // Record metrics
+      if (this.metrics.enabled) {
+        const responseTime = Date.now() - startTime
+        this.metrics.responseTimeSum += responseTime
+        this.metrics.responseTimeCount++
+        
+        // Record tool execution count
+        if (!this.metrics.toolExecutions[toolName]) {
+          this.metrics.toolExecutions[toolName] = 0
+        }
+        this.metrics.toolExecutions[toolName]++
+      }
+      
       logger.debug(`Tool ${toolName} executed successfully`)
+      
+      // Return raw result - will be formatted by MCPOutputAdapter in registerToolToFastMCP
       return result
     } catch (error) {
+      // Record error metrics
+      if (this.metrics.enabled) {
+        this.metrics.errors++
+      }
+      
       logger.error(`Error executing tool ${toolName}:`, error)
       throw error
     }
@@ -273,7 +310,8 @@ export class FastMCPServer {
         if (!args.engrams || !Array.isArray(args.engrams)) {
           throw new Error('engrams parameter is required and must be an array')
         }
-        return [args.role, JSON.stringify(args.engrams)]
+        // Keep object format, RememberCommand.parseArgs expects object
+        return [args]
       
       case 'toolx':
         if (!args || !args.tool_resource) {
@@ -388,5 +426,110 @@ export class FastMCPServer {
 
   getMCPEndpoint(): string {
     return `http://${this.config.host}:${this.config.port}/mcp`
+  }
+
+  // Session management methods
+  createSession(sessionId: string): any {
+    if (this.config.stateless) {
+      return null
+    }
+    
+    const session = {
+      id: sessionId,
+      createdAt: new Date(),
+      lastAccess: new Date(),
+      data: {}
+    }
+    
+    this.sessions.set(sessionId, session)
+    return session
+  }
+
+  getSession(sessionId: string): any {
+    if (this.config.stateless) {
+      return null
+    }
+    
+    const session = this.sessions.get(sessionId)
+    if (session) {
+      session.lastAccess = new Date()
+    }
+    return session
+  }
+
+  deleteSession(sessionId: string): void {
+    this.sessions.delete(sessionId)
+  }
+
+  // Helper methods
+  private createLogger() {
+    return {
+      log: (message: string, ...args: any[]) => logger.log(message, ...args),
+      info: (message: string, ...args: any[]) => logger.info(message, ...args),
+      warn: (message: string, ...args: any[]) => logger.warn(message, ...args),
+      error: (message: string, ...args: any[]) => logger.error(message, ...args),
+      debug: (message: string, ...args: any[]) => logger.debug(message, ...args)
+    }
+  }
+
+  private setupSignalHandlers(): void {
+    const shutdown = async (signal: string) => {
+      logger.info(`\n🛑 Received ${signal}, shutting down gracefully...`)
+      await this.stop()
+      process.exit(0)
+    }
+
+    process.once('SIGINT', () => shutdown('SIGINT'))
+    process.once('SIGTERM', () => shutdown('SIGTERM'))
+  }
+
+  getStatus(): any {
+    const uptime = this.startTime 
+      ? (Date.now() - this.startTime.getTime()) / 1000 
+      : 0
+
+    return {
+      running: this.isRunningFlag,
+      transport: 'http',
+      endpoint: this.getMCPEndpoint(),
+      port: this.config.port,
+      host: this.config.host,
+      connections: this.connections,
+      sessions: this.config.stateless ? null : {
+        count: this.sessions.size,
+        ids: Array.from(this.sessions.keys())
+      },
+      uptime,
+      processedMessages: this.requestCount,
+      lastError: this.lastError
+    }
+  }
+
+  getHealthCheck(): any {
+    const uptime = this.startTime 
+      ? (Date.now() - this.startTime.getTime()) / 1000 
+      : 0
+
+    return {
+      status: this.isRunningFlag ? 'healthy' : 'unhealthy',
+      uptime,
+      memory: process.memoryUsage(),
+      tools: this.server ? 'available' : 'unavailable',
+      errors: this.metrics.errors
+    }
+  }
+
+  getMetrics(): any {
+    const avgResponseTime = this.metrics.responseTimeCount > 0
+      ? this.metrics.responseTimeSum / this.metrics.responseTimeCount
+      : 0
+
+    return {
+      requestsTotal: this.metrics.requestsTotal,
+      requestsPerSecond: 0, // Need to implement calculation logic
+      averageResponseTime: avgResponseTime,
+      activeConnections: this.connections,
+      toolExecutions: this.metrics.toolExecutions
+    }
   }
 }
