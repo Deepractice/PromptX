@@ -2,7 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const CognitionArea = require('../areas/CognitionArea')
 const RoleArea = require('../areas/action/RoleArea')
 const StateArea = require('../areas/common/StateArea')
-const ConsciousnessLayer = require('../layers/ConsciousnessLayer')
+// const ConsciousnessLayer = require('../layers/ConsciousnessLayer') // 已移除意识层
 const CognitionLayer = require('../layers/CognitionLayer')
 const RoleLayer = require('../layers/RoleLayer')
 const { COMMANDS } = require('../../../../constants')
@@ -84,17 +84,11 @@ class ActionCommand extends BasePouchCommand {
       this.context.roleInfo = roleInfo
       this.context.mind = mind
 
-      // 1. 创建意识层 (最高优先级) - 暂时注释，回归简单的两层架构
-      // const consciousnessLayer = new ConsciousnessLayer({
-      //   injectionMode: 'guided' // 使用引导形式注入，让AI更关注意识状态
-      // })
-      // this.registerLayer(consciousnessLayer)
-
-      // 2. 创建认知层 (中等优先级)
+      // 1. 创建认知层 (最高优先级)
       const cognitionLayer = CognitionLayer.createForPrime(mind, roleId)
       this.registerLayer(cognitionLayer)
 
-      // 3. 创建角色层 (最低优先级) - 恢复角色层
+      // 2. 创建角色层 (次优先级)
       const roleLayer = new RoleLayer({ roleId, roleInfo })
       
       // 添加角色区域

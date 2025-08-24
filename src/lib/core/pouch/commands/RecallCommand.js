@@ -1,7 +1,7 @@
 const BasePouchCommand = require('../BasePouchCommand')
 const CognitionArea = require('../areas/CognitionArea')
 const StateArea = require('../areas/common/StateArea')
-const ConsciousnessLayer = require('../layers/ConsciousnessLayer')
+// const ConsciousnessLayer = require('../layers/ConsciousnessLayer') // 已移除意识层
 const CognitionLayer = require('../layers/CognitionLayer')
 const RoleLayer = require('../layers/RoleLayer')
 const { getGlobalResourceManager } = require('../../resource')
@@ -22,7 +22,7 @@ class RecallCommand extends BasePouchCommand {
   }
 
   /**
-   * 组装Layers - 使用三层架构
+   * 组装Layers - 使用两层架构
    */
   async assembleLayers(args) {
     // 解析参数：--role, query
@@ -66,20 +66,14 @@ class RecallCommand extends BasePouchCommand {
       this.context.query = query
       this.context.mind = mind
 
-      // 1. 创建意识层 (最高优先级)
-      const consciousnessLayer = new ConsciousnessLayer({
-        injectionMode: 'comment'
-      })
-      this.registerLayer(consciousnessLayer)
-
-      // 2. 创建认知层 (中等优先级)
+      // 1. 创建认知层 (最高优先级)
       const operationType = query ? 'recall' : 'prime'
       const cognitionLayer = query 
         ? CognitionLayer.createForRecall(mind, role, query)
         : CognitionLayer.createForPrime(mind, role)
       this.registerLayer(cognitionLayer)
 
-      // 3. 创建角色层 (最低优先级)
+      // 2. 创建角色层 (次优先级)
       const roleLayer = new RoleLayer({ roleId: role })
       const stateArea = new StateArea('recall_completed', {
         role,
