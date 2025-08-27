@@ -179,7 +179,30 @@ export class FastMCPServer {
         } else if (prop.type === 'boolean') {
           zodType = z.boolean()
         } else if (prop.type === 'object') {
-          zodType = z.object({})
+          // For object types, recursively create Zod schema if properties are defined
+          if (prop.properties) {
+            const objSchema: any = {}
+            for (const [objKey, objValue] of Object.entries(prop.properties)) {
+              const objProp = objValue as any
+              if (objProp.type === 'string') {
+                objSchema[objKey] = z.string()
+              } else if (objProp.type === 'number') {
+                objSchema[objKey] = z.number()
+              } else if (objProp.type === 'boolean') {
+                objSchema[objKey] = z.boolean()
+              } else {
+                objSchema[objKey] = z.any()
+              }
+              // Make optional if not required
+              if (!prop.required?.includes(objKey)) {
+                objSchema[objKey] = objSchema[objKey].optional()
+              }
+            }
+            zodType = z.object(objSchema)
+          } else {
+            // If no properties defined, accept any object
+            zodType = z.record(z.any())
+          }
         } else if (prop.type === 'array') {
           zodType = z.array(z.any())
         } else {
