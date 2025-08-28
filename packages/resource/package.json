@@ -1,0 +1,41 @@
+{
+  "name": "@promptx/resource",
+  "version": "1.10.0",
+  "description": "PromptX resource templates and prompt definitions",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./role": "./role/index.js",
+    "./protocol": "./protocol/index.js",
+    "./tool": "./tool/index.js"
+  },
+  "files": [
+    "role/**/*.md",
+    "role/**/*.json",
+    "protocol/**/*.md",
+    "protocol/**/*.json",
+    "tool/**/*.md",
+    "tool/**/*.json",
+    "index.js"
+  ],
+  "scripts": {
+    "build": "echo 'No build required for resources'",
+    "generate-registry": "node scripts/generate-registry.js",
+    "postinstall": "node scripts/generate-registry.js"
+  },
+  "dependencies": {
+    "glob": "^10.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "keywords": [
+    "promptx",
+    "dpml",
+    "prompt",
+    "template",
+    "resource",
+    "ai"
+  ]
+}

@@ -59,7 +59,7 @@ setup_dev_env() {
     export PROMPTX_ENV=development
     export PROMPTX_DEV_MODE=true
     export PROMPTX_SOURCE_ROOT="$PROMPTX_ROOT"
-    export PROMPTX_SYSTEM_ROLE_PATH="$PROMPTX_ROOT/resource/role"
+    export PROMPTX_SYSTEM_ROLE_PATH="$PROMPTX_ROOT/packages/resource/role"
     
     if [ "${PROMPTX_DEBUG}" = "true" ]; then
         echo -e "${GREEN}✅ 开发环境变量已设置${NC}"
@@ -76,9 +76,9 @@ main() {
     
     # 判断使用哪种模式
     if is_dev_mode; then
-        # 开发模式：使用源码
+        # 开发模式：使用 CLI 包
         use_dev=true
-        promptx_cmd="node $PROMPTX_ROOT/src/bin/promptx.js"
+        promptx_cmd="node $PROMPTX_ROOT/apps/cli/src/bin/promptx.js"
         
         # 设置开发环境变量
         setup_dev_env
@@ -110,7 +110,7 @@ main() {
     else
         # 回退到源码模式
         echo -e "${YELLOW}⚠️  未找到全局 PromptX，使用源码模式${NC}"
-        promptx_cmd="node $PROMPTX_ROOT/src/bin/promptx.js"
+        promptx_cmd="node $PROMPTX_ROOT/apps/cli/src/bin/promptx.js"
         
         # 检查 Node.js
         if ! command -v node >/dev/null 2>&1; then

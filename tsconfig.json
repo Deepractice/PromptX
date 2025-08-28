@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@promptx/core": ["packages/core/src"],
+      "@promptx/core/*": ["packages/core/src/*"],
+      "@promptx/cli": ["apps/cli/src"],
+      "@promptx/cli/*": ["apps/cli/src/*"]
+    }
+  },
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./apps/cli" },
+    { "path": "./apps/desktop" }
+  ]
+}

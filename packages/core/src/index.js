@@ -20,13 +20,19 @@ const mcp = require('./mcp')
 // 工具扩展模块
 const toolx = require('./toolx')
 
+// Pouch CLI 框架
+const pouch = require('./pouch')
+
 // 工具模块
 const utils = {
   logger: require('./utils/logger'),
   banner: require('./utils/banner'),
   version: require('./utils/version'),
   DirectoryService: require('./utils/DirectoryService'),
-  ServerEnvironment: require('./utils/ServerEnvironment')
+  ServerEnvironment: require('./utils/ServerEnvironment'),
+  ProjectManager: require('./utils/ProjectManager'),
+  ProjectPathResolver: require('./utils/ProjectPathResolver'),
+  ProjectConfig: require('./utils/ProjectConfig')
 }
 
 module.exports = {
@@ -34,6 +40,7 @@ module.exports = {
   resource,
   mcp,
   toolx,
+  pouch,
   utils,
   
   // 便捷导出

@@ -13,11 +13,12 @@ class PromptProtocol extends ResourceProtocol {
     super('prompt', options)
 
     // PromptX 内置资源注册表
+    // 现在资源在 @promptx/resource 包中
     this.registry = new Map([
-      ['protocols', '@package://resource/protocol/**/*.md'],
-      ['core', '@package://resource/core/**/*.md'],
-      ['role', '@package://resource/role/**/*.md'],
-      ['resource', '@package://resource/resource/**/*.md'],
+      ['protocols', '@package://node_modules/@promptx/resource/protocol/**/*.md'],
+      ['core', '@package://node_modules/@promptx/resource/core/**/*.md'],
+      ['role', '@package://node_modules/@promptx/resource/role/**/*.md'],
+      ['resource', '@package://node_modules/@promptx/resource/resource/**/*.md'],
       ['bootstrap', '@package://bootstrap.md']
     ])
 

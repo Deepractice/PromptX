@@ -1,0 +1,25 @@
+# Lefthook configuration
+
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.js"
+      run: pnpm lint:fix
+    test:
+      run: pnpm test:unit --passWithNoTests
+
+pre-push:
+  commands:
+    test:
+      run: pnpm test:ci
+
+commit-msg:
+  commands:
+    commitlint:
+      run: |
+        if command -v commitlint >/dev/null 2>&1; then
+          commitlint --edit $1
+        else
+          echo "commitlint not found, skipping commit message validation"
+        fi

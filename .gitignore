@@ -61,6 +61,7 @@ Thumbs.db
 .npm
 .eslintcache
 .node_repl_history
+.turbo
 
 # Output of package managers
 *.tgz
@@ -76,33 +77,17 @@ temp/
 # Application specific
 /.memory/
 
-# PromptX resources - selective ignore
-# Keep role definitions (public resources)
-!/.promptx/
-!/.promptx/resource/
-!/.promptx/resource/role/
-!/.promptx/resource/role/**/*.md
-!/.promptx/resource/thought/
-!/.promptx/resource/thought/**/*.md
-!/.promptx/resource/execution/
-!/.promptx/resource/execution/**/*.md
-!/.promptx/resource/knowledge/
-!/.promptx/resource/knowledge/**/*.md
-
-# Ignore private/runtime data
-/.promptx/memory/
-/.promptx/config/
-/.promptx/*.bin
-/.promptx/*.json
-/.promptx/*.log
-/.promptx/resource/project.registry.json
+# PromptX local development directories
+.promptx/
+.serena/
 
 /.idea/
 /.vscode/
 
 # Development
 *.orig
-.husky/_
+.husky/
+.lefthook/
 
 .kilocode/
 
