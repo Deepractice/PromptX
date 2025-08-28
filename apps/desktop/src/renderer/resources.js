@@ -38,32 +38,29 @@ class ResourceManager {
       
       // 获取分组资源和统计信息
       const result = await window.electronAPI.getGroupedResources()
-      logger.debug('IPC result received:', result)
+      logger.debug('IPC result received')
       
       if (result.success) {
-        // 调试：检查 result.data 的实际结构
-        logger.info('=== DEBUG: result.data structure ===')
-        logger.info('result.data type:', typeof result.data)
-        logger.info('result.data keys:', Object.keys(result.data || {}))
-        logger.info('result.data:', JSON.stringify(result.data, null, 2))
+        const { grouped, statistics } = result.data || {}
         
-        let { grouped, statistics } = result.data
-        
-        // 修复数据格式问题 - 如果 grouped 是数组，取第一个元素
-        if (Array.isArray(grouped) && grouped.length > 0) {
-          logger.warn('Grouped data is array, extracting first element')
-          grouped = grouped[0]
+        // 检查数据是否存在
+        if (!grouped) {
+          logger.error('No grouped data found!')
+          this.showError('No resources data available')
+          return
         }
-        if (Array.isArray(statistics) && statistics.length > 0) {
-          logger.warn('Statistics is array, extracting first element')
-          statistics = statistics[0]
-        }
-        
-        logger.debug('After extraction - grouped:', grouped)
-        logger.debug('After extraction - statistics:', statistics)
         
         // 保存统计信息
-        this.statistics = statistics
+        this.statistics = statistics || {
+          totalRoles: 0,
+          totalTools: 0,
+          systemRoles: 0,
+          systemTools: 0,
+          projectRoles: 0,
+          projectTools: 0,
+          userRoles: 0,
+          userTools: 0
+        }
         this.updateStatistics()
         
         // 将分组资源转换为平面列表
@@ -93,29 +90,30 @@ class ResourceManager {
       const sourceGroup = grouped[source]
       if (sourceGroup) {
         // 添加角色
-        if (sourceGroup.roles) {
+        if (sourceGroup.roles && Array.isArray(sourceGroup.roles)) {
           sourceGroup.roles.forEach(role => {
             resources.push({
               ...role,
-              type: 'role',
-              source
+              type: role.type || 'role',
+              source: role.source || source
             })
           })
         }
         
         // 添加工具
-        if (sourceGroup.tools) {
+        if (sourceGroup.tools && Array.isArray(sourceGroup.tools)) {
           sourceGroup.tools.forEach(tool => {
             resources.push({
               ...tool,
-              type: 'tool',
-              source
+              type: tool.type || 'tool',
+              source: tool.source || source
             })
           })
         }
       }
     })
     
+    logger.debug(`Flattened ${resources.length} resources from grouped data`)
     return resources
   }
   

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test IPC Communication</title>
+</head>
+<body>
+  <h1>测试 IPC 通信</h1>
+  <button id="testBtn">获取资源数据</button>
+  <pre id="output" style="background: #f0f0f0; padding: 10px; margin-top: 20px;"></pre>
+  
+  <script>
+    const output = document.getElementById('output');
+    const btn = document.getElementById('testBtn');
+    
+    function log(msg) {
+      output.textContent += msg + '\n';
+      console.log(msg);
+    }
+    
+    btn.addEventListener('click', async () => {
+      log('开始获取资源...');
+      
+      try {
+        // 测试 electronAPI 是否存在
+        if (!window.electronAPI) {
+          log('❌ window.electronAPI 不存在!');
+          return;
+        }
+        
+        log('✅ window.electronAPI 存在');
+        log('Available methods: ' + Object.keys(window.electronAPI).join(', '));
+        
+        // 调用 getGroupedResources
+        log('\n调用 getGroupedResources...');
+        const result = await window.electronAPI.getGroupedResources();
+        
+        log('\n收到结果:');
+        log('Type: ' + typeof result);
+        log('Keys: ' + Object.keys(result).join(', '));
+        log('\n完整数据:');
+        log(JSON.stringify(result, null, 2));
+        
+      } catch (error) {
+        log('❌ 错误: ' + error.message);
+        console.error(error);
+      }
+    });
+    
+    // 页面加载时自动测试
+    window.addEventListener('DOMContentLoaded', () => {
+      log('页面已加载');
+      log('window.electronAPI: ' + (window.electronAPI ? '存在' : '不存在'));
+    });
+  </script>
+</body>
+</html>
