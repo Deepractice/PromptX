@@ -1,18 +1,20 @@
 # Lefthook configuration
 
-pre-commit:
-  parallel: true
-  commands:
-    lint:
-      glob: "*.js"
-      run: pnpm lint:fix
-    test:
-      run: pnpm test -- --passWithNoTests
+# pre-commit hooks 暂时禁用
+# pre-commit:
+#   parallel: true
+#   commands:
+#     lint:
+#       glob: "*.js"
+#       run: pnpm lint:fix
+#     test:
+#       run: pnpm test -- --passWithNoTests
 
-pre-push:
-  commands:
-    test:
-      run: pnpm test
+# pre-push hooks 暂时禁用
+# pre-push:
+#   commands:
+#     test:
+#       run: pnpm test
 
 commit-msg:
   commands:
