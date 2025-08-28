@@ -13,8 +13,10 @@
   },
   "scripts": {
     "dev": "electron-vite dev",
-    "build": "electron-vite build",
+    "build": "pnpm clean && electron-vite build",
+    "build:force": "pnpm clean && electron-vite build",
     "preview": "electron-vite preview",
+    "clean": "rimraf out dist release .turbo tsconfig.tsbuildinfo",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -22,7 +24,6 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist out release",
     "package": "pnpm build && electron-builder",
     "package:mac": "pnpm build && electron-builder --mac",
     "package:win": "pnpm build && electron-builder --win",
@@ -30,27 +31,14 @@
     "dist": "pnpm package:mac"
   },
   "dependencies": {
-    "@promptx/cli": "workspace:*",
     "@promptx/core": "workspace:*",
-    "@promptx/mcp-server": "workspace:*",
-    "fastmcp": "^3.14.4",
-    "zod": "^3.23.8"
+    "@promptx/mcp-server": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vitest/coverage-v8": "^1.0.0",
-    "@vitest/ui": "^1.0.0",
     "electron": "28.3.3",
     "electron-builder": "^26.0.12",
     "electron-icon-builder": "^2.0.1",
     "electron-vite": "^2.0.0",
-    "eslint": "^8.50.0",
-    "prettier": "^3.0.0",
-    "rimraf": "^5.0.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
+    "rimraf": "^5.0.0"
   }
 }

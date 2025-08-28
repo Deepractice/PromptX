@@ -2,26 +2,23 @@
   "name": "@promptx/resource",
   "version": "1.10.0",
   "description": "PromptX resource templates and prompt definitions",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./index.js",
-    "./role": "./role/index.js",
-    "./protocol": "./protocol/index.js",
-    "./tool": "./tool/index.js"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./registry": "./dist/registry.json"
   },
   "files": [
-    "role/**/*.md",
-    "role/**/*.json",
-    "protocol/**/*.md",
-    "protocol/**/*.json",
-    "tool/**/*.md",
-    "tool/**/*.json",
-    "index.js"
+    "dist"
   ],
   "scripts": {
-    "build": "echo 'No build required for resources'",
-    "generate-registry": "node scripts/generate-registry.js",
-    "postinstall": "node scripts/generate-registry.js"
+    "build": "tsup",
+    "discover": "node scripts/generate-registry.js"
   },
   "dependencies": {
     "glob": "^10.4.5"

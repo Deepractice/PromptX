@@ -21,12 +21,13 @@ async function generateRegistry() {
     const registry = {
       version: '1.0.0',
       generated: new Date().toISOString(),
+      total: 0,
       resources: {}
     };
     
     // 扫描每个资源目录
     for (const dir of resourceDirs) {
-      const dirPath = path.join(packageRoot, dir);
+      const dirPath = path.join(packageRoot, 'resources', dir);
       
       // 检查目录是否存在
       try {
@@ -88,8 +89,10 @@ async function generateRegistry() {
           description,
           type: path.extname(filePath).slice(1),
           size: stats.size,
-          modified: stats.mtime.toISOString()
+          modified: stats.mtime.toISOString(),
+          category: dir
         });
+        registry.total++;
       }
       
       console.log(`   ✓ 找到 ${files.length} 个资源文件`);

@@ -312,36 +312,17 @@ class PackageProtocol extends ResourceProtocol {
   }
 
   /**
-   * 获取包根目录
+   * 获取包根目录 - 简化版，直接使用 @promptx/resource
    */
   async getPackageRoot () {
-    const mode = this.detectInstallMode()
-
-    switch (mode) {
-      case 'development':
-        // 开发模式：查找项目根目录
-        return this._findProjectRoot()
-
-      case 'global':
-        // 全局安装：查找全局包目录
-        return this._findGlobalPackageRoot()
-
-      case 'npx':
-        // npx：查找临时包目录
-        return this._findNpxPackageRoot()
-
-      case 'monorepo':
-        // monorepo：查找workspace包目录
-        return this._findWorkspacePackageRoot()
-
-      case 'link':
-        // npm link：解析符号链接
-        return this._findLinkedPackageRoot()
-
-      case 'local':
-      default:
-        // 本地安装：查找node_modules中的包目录
-        return this._findLocalPackageRoot()
+    try {
+      // 直接使用 @promptx/resource 包的路径
+      const resourcePath = require.resolve('@promptx/resource')
+      return path.dirname(resourcePath)
+    } catch (error) {
+      logger.warn(`无法定位 @promptx/resource 包: ${error.message}`)
+      // 降级到查找项目根目录
+      return this._findProjectRoot()
     }
   }
 
@@ -401,39 +382,36 @@ class PackageProtocol extends ResourceProtocol {
   }
 
   /**
-   * 解析路径到具体的文件系统路径
+   * 解析路径到具体的文件系统路径 - 简化版，使用 @promptx/resource
    * @param {string} relativePath - 相对于包根目录的路径
    * @param {QueryParams} params - 查询参数
    * @returns {Promise<string>} 解析后的绝对路径
    */
   async resolvePath (relativePath, params = null) {
-    // 生成缓存键
-    const cacheKey = `resolve:${relativePath}:${params ? params.toString() : ''}`
-    
-    // 检查缓存
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)
+    try {
+      // 使用 @promptx/resource 包
+      const resourcePackage = require('@promptx/resource')
+      
+      // 清理路径
+      const cleanPath = relativePath.replace(/^\/+/, '')
+      
+      // 获取资源的绝对路径
+      const fullPath = resourcePackage.getResourcePath(cleanPath)
+      
+      // 检查文件是否存在
+      if (!fs.existsSync(fullPath)) {
+        logger.warn(`[PackageProtocol] 资源文件不存在: ${fullPath}`)
+        return null
+      }
+      
+      return fullPath
+    } catch (error) {
+      logger.warn(`[PackageProtocol] 解析资源路径失败: ${error.message}`)
+      // 降级到原来的方式
+      const packageRoot = await this.getPackageRoot()
+      const cleanPath = relativePath.replace(/^\/+/, '')
+      return path.resolve(packageRoot, cleanPath)
     }
-
-    // 获取包根目录
-    const packageRoot = await this.getPackageRoot()
-
-    // 验证路径是否在package.json的files字段中
-    this.validateFileAccess(packageRoot, relativePath)
-
-    // 直接处理路径，不需要目录映射
-    const relativePathClean = relativePath.replace(/^\/+/, '')
-    const fullPath = path.resolve(packageRoot, relativePathClean)
-
-    // 安全检查：确保路径在包根目录内
-    if (!fullPath.startsWith(packageRoot)) {
-      throw new Error(`路径安全检查失败: ${relativePath}`)
-    }
-
-    // 存储到缓存
-    this.cache.set(cacheKey, fullPath)
-
-    return fullPath
   }
 
   /**

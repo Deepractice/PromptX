@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["@promptx/core#build", "@promptx/mcp-server#build", "@promptx/resource#build"],
+      "outputs": ["out/**"],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.js", 
+        "package.json",
+        "tsconfig.json",
+        "electron.vite.config.*",
+        "electron-builder.yml"
+      ],
+      "env": ["NODE_ENV"],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": ["@promptx/core#build", "@promptx/mcp-server#build", "@promptx/resource#build"],
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

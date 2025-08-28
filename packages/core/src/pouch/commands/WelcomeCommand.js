@@ -63,18 +63,32 @@ class WelcomeCommand extends BasePouchCommand {
    * 按来源分组资源
    */
   categorizeBySource(registry) {
+    const logger = require('@promptx/logger')
     const categories = {
       system: [],
       project: [],
       user: []
     }
     
-    Object.values(registry).forEach(item => {
+    const items = Object.values(registry)
+    logger.info(`[WelcomeCommand] 开始分类 ${items.length} 个资源`)
+    
+    // 统计各种 source 值
+    const sourceCounts = {}
+    items.forEach(item => {
+      const src = item.source || 'undefined'
+      sourceCounts[src] = (sourceCounts[src] || 0) + 1
+    })
+    logger.info(`[WelcomeCommand] 原始 source 分布: ${JSON.stringify(sourceCounts)}`)
+    
+    items.forEach(item => {
       const source = this.normalizeSource(item.source)
       if (categories[source]) {
         categories[source].push(item)
       }
     })
+    
+    logger.info(`[WelcomeCommand] 分类结果: system=${categories.system.length}, project=${categories.project.length}, user=${categories.user.length}`)
     
     return categories
   }
@@ -83,9 +97,19 @@ class WelcomeCommand extends BasePouchCommand {
    * 标准化来源
    */
   normalizeSource(source) {
-    if (source === 'user') return 'user'
-    if (source === 'project') return 'project'
-    if (['package', 'merged', 'fallback', 'system'].includes(source)) return 'system'
+    const logger = require('@promptx/logger')
+    logger.info(`[WelcomeCommand] normalizeSource 输入: "${source}" (类型: ${typeof source})`)
+    
+    // 转换为小写进行比较
+    const lowerSource = String(source).toLowerCase()
+    
+    if (lowerSource === 'user') return 'user'
+    if (lowerSource === 'project') return 'project'
+    if (['package', 'merged', 'fallback', 'system'].includes(lowerSource)) {
+      logger.info(`[WelcomeCommand] normalizeSource: "${source}" -> "system"`)
+      return 'system'
+    }
+    logger.info(`[WelcomeCommand] normalizeSource: "${source}" -> "system" (默认)`)
     return 'system'
   }
   

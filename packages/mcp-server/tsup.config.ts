@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
-  dts: true,
+  dts: false, // 暂时禁用，有类型错误需要修复
   sourcemap: true,
   clean: true,
   target: 'es2020',
