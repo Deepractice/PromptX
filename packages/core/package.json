@@ -1,0 +1,54 @@
+{
+  "name": "@promptx/core",
+  "version": "1.10.0",
+  "description": "Core library for PromptX - DPML-powered AI prompt framework",
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./cognition": {
+      "require": "./dist/cognition.js",
+      "import": "./dist/cognition.mjs"
+    },
+    "./resource": {
+      "require": "./dist/resource.js",
+      "import": "./dist/resource.mjs"
+    },
+    "./mcp": {
+      "require": "./dist/mcp.js",
+      "import": "./dist/mcp.mjs"
+    },
+    "./toolx": {
+      "require": "./dist/toolx.js",
+      "import": "./dist/toolx.mjs"
+    }
+  },
+  "scripts": {
+    "build": "node build.js",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.2",
+    "chevrotain": "^11.0.3",
+    "chalk": "^4.1.2",
+    "js-yaml": "^4.1.0",
+    "mermaid": "^10.9.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}
