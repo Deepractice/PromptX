@@ -20,7 +20,6 @@ async function generateRegistry() {
     const resourceDirs = ['role', 'protocol', 'tool'];
     const registry = {
       version: '1.0.0',
-      generated: new Date().toISOString(),
       total: 0,
       resources: {}
     };
