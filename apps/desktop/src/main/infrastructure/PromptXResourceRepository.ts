@@ -1,4 +1,4 @@
-import { Resource, ResourceRepository, ResourceType, ResourceSource, GroupedResources, ResourceStatistics } from '~/main/domain/Resource'
+import { GroupedResources, Resource, ResourceRepository, ResourceSource, ResourceStatistics, ResourceType } from '~/main/domain/Resource'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
@@ -94,8 +94,9 @@ export class PromptXResourceRepository implements ResourceRepository {
 
   private getWelcomeCommand() {
     if (!this.welcomeCommand) {
-      // 动态导入 WelcomeCommand
-      const WelcomeCommand = require('@promptx/cli/src/lib/core/pouch/commands/WelcomeCommand')
+      // 动态导入 WelcomeCommand from core package
+      const core = require('@promptx/core')
+      const { WelcomeCommand } = core.pouch.commands
       this.welcomeCommand = new WelcomeCommand()
     }
     return this.welcomeCommand

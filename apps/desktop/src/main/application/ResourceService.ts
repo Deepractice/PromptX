@@ -1,4 +1,4 @@
-import { Resource, ResourceRepository, ResourceType, ResourceSource, GroupedResources, ResourceStatistics } from '~/main/domain/Resource'
+import { GroupedResources, Resource, ResourceRepository, ResourceSource, ResourceStatistics, ResourceType } from '~/main/domain/Resource'
 
 /**
  * Resource Service - 应用层服务

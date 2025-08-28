@@ -110,49 +110,65 @@ export class Logger {
   }
 
   info(message: string, ...args: any[]): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     console.log(`ℹ ${message}`, ...args)
     this.writeToFile('INFO', message, ...args)
   }
 
   success(message: string, ...args: any[]): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     console.log(`✅ ${message}`, ...args)
     this.writeToFile('SUCCESS', message, ...args)
   }
 
   warn(message: string, ...args: any[]): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     console.warn(`⚠️ ${message}`, ...args)
     this.writeToFile('WARN', message, ...args)
   }
 
   error(message: string, ...args: any[]): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     console.error(`❌ ${message}`, ...args)
     this.writeToFile('ERROR', message, ...args)
   }
 
   debug(message: string, ...args: any[]): void {
-    if (this.silent || !process.env.DEBUG) return
+    if (this.silent || !process.env.DEBUG) {
+return
+}
     console.log(`🐛 ${message}`, ...args)
     this.writeToFile('DEBUG', message, ...args)
   }
 
   step(message: string, ...args: any[]): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     console.log(`▶️ ${message}`, ...args)
     this.writeToFile('STEP', message, ...args)
   }
 
   log(message: string, ...args: any[]): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     console.log(message, ...args)
     this.writeToFile('LOG', message, ...args)
   }
 
   separator(char: string = '=', length: number = 80): void {
-    if (this.silent) return
+    if (this.silent) {
+return
+}
     const line = char.repeat(length)
     console.log(line)
     this.writeToFile('LOG', line)

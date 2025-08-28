@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2025-08-28T09:28:25.880Z",
+  "generated": "2025-08-28T13:18:59.185Z",
   "resources": {
     "role": [
       {
@@ -256,6 +256,24 @@
         "modified": "2025-07-13T13:16:59.633Z"
       },
       {
+        "id": "assistant.thought",
+        "path": "role/assistant/thought/assistant.thought.md",
+        "title": "assistant.thought",
+        "description": "",
+        "type": "md",
+        "size": 3470,
+        "modified": "2025-07-13T13:16:59.632Z"
+      },
+      {
+        "id": "assistant.execution",
+        "path": "role/assistant/execution/assistant.execution.md",
+        "title": "assistant.execution",
+        "description": "",
+        "type": "md",
+        "size": 4332,
+        "modified": "2025-07-13T13:16:59.632Z"
+      },
+      {
         "id": "toolsandbox-mastery.execution",
         "path": "role/luban/execution/toolsandbox-mastery.execution.md",
         "title": "ToolSandbox系统精通",
@@ -281,24 +299,6 @@
         "type": "md",
         "size": 5485,
         "modified": "2025-08-19T14:24:06.578Z"
-      },
-      {
-        "id": "assistant.thought",
-        "path": "role/assistant/thought/assistant.thought.md",
-        "title": "assistant.thought",
-        "description": "",
-        "type": "md",
-        "size": 3470,
-        "modified": "2025-07-13T13:16:59.632Z"
-      },
-      {
-        "id": "assistant.execution",
-        "path": "role/assistant/execution/assistant.execution.md",
-        "title": "assistant.execution",
-        "description": "",
-        "type": "md",
-        "size": 4332,
-        "modified": "2025-07-13T13:16:59.632Z"
       }
     ],
     "protocol": [

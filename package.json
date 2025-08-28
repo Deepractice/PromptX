@@ -23,6 +23,7 @@
     "@evilmartians/lefthook": "^1.12.3",
     "eslint": "^8.57.1",
     "prettier": "^2.8.8",
+    "tsup": "^8.5.0",
     "turbo": "^2.5.6"
   },
   "engines": {

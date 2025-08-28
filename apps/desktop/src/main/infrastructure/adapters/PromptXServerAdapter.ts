@@ -4,10 +4,12 @@ import { ServerError, ServerErrorCode } from '~/main/domain/errors/ServerErrors'
 import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
 import type { IServerPort, ServerMetrics } from '~/main/domain/ports/IServerPort'
 import { logger } from '~/shared/logger'
-import { FastMCPServer } from './FastMCPServer.js'
+
+// Dynamic import for ESM module
+let FastMCPHttpServer: any
 
 export class PromptXServerAdapter implements IServerPort {
-  private server: FastMCPServer | null = null
+  private server: any = null
   private statusListeners: Set<(status: ServerStatus) => void> = new Set()
   private currentStatus: ServerStatus = ServerStatus.STOPPED
 
@@ -19,8 +21,14 @@ export class PromptXServerAdapter implements IServerPort {
 
       this.updateStatus(ServerStatus.STARTING)
 
+      // Dynamic import @promptx/mcp-server (ESM module)
+      if (!FastMCPHttpServer) {
+        const mcpServer = await import('@promptx/mcp-server')
+        FastMCPHttpServer = mcpServer.FastMCPHttpServer
+      }
+
       // Create and start the FastMCP server
-      this.server = new FastMCPServer({
+      this.server = new FastMCPHttpServer({
         host: config.host,
         port: config.port,
         debug: config.debug || false,

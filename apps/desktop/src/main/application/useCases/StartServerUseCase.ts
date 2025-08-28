@@ -2,7 +2,7 @@ import { Result, ResultUtil } from '~/shared/Result'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
 import { ServerError, ServerErrorCode } from '~/main/domain/errors/ServerErrors'
 import type { IServerPort } from '~/main/domain/ports/IServerPort'
-import type { IConfigPort, ConfigError } from '~/main/domain/ports/IConfigPort'
+import type { ConfigError, IConfigPort } from '~/main/domain/ports/IConfigPort'
 import type { INotificationPort } from '~/main/domain/ports/INotificationPort'
 
 export interface UseCaseError {

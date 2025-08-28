@@ -7,12 +7,12 @@ pre-commit:
       glob: "*.js"
       run: pnpm lint:fix
     test:
-      run: pnpm test:unit --passWithNoTests
+      run: pnpm test --passWithNoTests
 
 pre-push:
   commands:
     test:
-      run: pnpm test:ci
+      run: pnpm test
 
 commit-msg:
   commands:

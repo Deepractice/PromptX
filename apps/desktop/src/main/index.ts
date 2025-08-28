@@ -1,7 +1,7 @@
 // Import polyfills first, before any other modules
 import '~/main/polyfills'
 
-import { app, BrowserWindow, dialog, ipcMain } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain } from 'electron'
 import { TrayPresenter } from '~/main/tray/TrayPresenter'
 import { ResourceManager } from '~/main/ResourceManager'
 import { PromptXServerAdapter } from '~/main/infrastructure/adapters/PromptXServerAdapter'

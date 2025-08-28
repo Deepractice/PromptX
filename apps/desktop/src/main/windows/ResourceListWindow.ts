@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron'
 import { ResourceService } from '~/main/application/ResourceService'
 import { Resource } from '~/main/domain/Resource'
 import * as path from 'path'
@@ -16,7 +16,9 @@ export class ResourceListWindow {
   
   private setupIpcHandlers(): void {
     // 防止重复注册
-    if (ResourceListWindow.handlersRegistered) return
+    if (ResourceListWindow.handlersRegistered) {
+return
+}
     ResourceListWindow.handlersRegistered = true
     
     // 获取分组资源

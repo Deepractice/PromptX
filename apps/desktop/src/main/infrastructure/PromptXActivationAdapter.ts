@@ -1,6 +1,6 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import type { Role, ActivationResult } from '../domain/Role'
+import type { ActivationResult, Role } from '../domain/Role'
 import type { ActivationAdapter } from '../application/RoleService'
 
 const execAsync = promisify(exec)

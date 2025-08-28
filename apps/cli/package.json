@@ -2,18 +2,22 @@
   "name": "@promptx/cli",
   "version": "1.10.0",
   "description": "PromptX CLI - Command-line interface for the DPML-powered AI prompt framework",
+  "type": "module",
   "bin": {
-    "promptx": "./src/bin/promptx.js",
-    "promptx-cli": "./src/bin/promptx.js"
+    "promptx": "./dist/promptx.js",
+    "promptx-cli": "./dist/promptx.js"
   },
   "scripts": {
-    "start": "PROMPTX_ENV=development node src/bin/promptx.js",
-    "dev": "PROMPTX_ENV=development node src/bin/promptx.js",
+    "start": "PROMPTX_ENV=development node dist/promptx.js",
+    "dev": "tsup --watch",
     "test": "jest --passWithNoTests",
-    "build": "echo 'No build required for CLI'"
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@promptx/core": "workspace:*",
+    "@promptx/logger": "workspace:*",
+    "@promptx/mcp-server": "workspace:*",
     "@reaxi/node-detect-runtime": "^0.1.0",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
@@ -21,8 +25,11 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "@types/node": "^20.19.11",
     "jest": "^29.7.0",
-    "jest-environment-node": "^29.7.0"
+    "jest-environment-node": "^29.7.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=14.0.0"

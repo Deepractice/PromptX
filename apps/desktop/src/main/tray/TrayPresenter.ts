@@ -1,12 +1,12 @@
 import { 
-  app, 
-  Tray, 
+  BrowserWindow, 
   Menu, 
-  MenuItem,
-  nativeImage, 
+  MenuItem, 
+  Tray,
+  app, 
   clipboard, 
-  shell,
-  BrowserWindow 
+  nativeImage,
+  shell 
 } from 'electron'
 import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
 import { ResultUtil } from '~/shared/Result'
@@ -216,7 +216,9 @@ export class TrayPresenter {
 
   async handleToggleServer(): Promise<void> {
     const statusResult = await this.serverPort.getStatus()
-    if (!statusResult.ok) return
+    if (!statusResult.ok) {
+return
+}
 
     const status = statusResult.value
     

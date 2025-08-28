@@ -31,6 +31,8 @@
   },
   "dependencies": {
     "@promptx/cli": "workspace:*",
+    "@promptx/core": "workspace:*",
+    "@promptx/mcp-server": "workspace:*",
     "fastmcp": "^3.14.4",
     "zod": "^3.23.8"
   },
