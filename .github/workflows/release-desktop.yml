@@ -37,7 +37,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-build
-          path: apps/desktop/release/*.dmg
+          path: |
+            apps/desktop/*.dmg
+            apps/desktop/*.zip
+          if-no-files-found: warn
 
   build-windows:
     name: Build Windows
@@ -70,7 +73,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: apps/desktop/release/*.exe
+          path: |
+            apps/desktop/*.exe
+            apps/desktop/*.nsis
+            apps/desktop/*.msi
+          if-no-files-found: warn
 
   build-linux:
     name: Build Linux
@@ -104,9 +111,11 @@ jobs:
         with:
           name: linux-build
           path: |
-            apps/desktop/release/*.AppImage
-            apps/desktop/release/*.deb
-            apps/desktop/release/*.rpm
+            apps/desktop/*.AppImage
+            apps/desktop/*.deb
+            apps/desktop/*.rpm
+            apps/desktop/*.snap
+          if-no-files-found: warn
 
   upload-release:
     name: Upload to Release
