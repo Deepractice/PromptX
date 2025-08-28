@@ -102,39 +102,32 @@ export class PromptXServerAdapter implements IServerPort {
       return ResultUtil.ok(ServerStatus.STOPPED)
     }
 
-    if (this.server.isRunning()) {
+    // FastMCP使用status.running属性而非isRunning()方法
+    if (this.server.status?.running) {
       return ResultUtil.ok(ServerStatus.RUNNING)
     }
     
-    if (this.server.isStarting()) {
-      return ResultUtil.ok(ServerStatus.STARTING)
-    }
-    
-    if (this.server.isStopping()) {
-      return ResultUtil.ok(ServerStatus.STOPPING)
-    }
-
-    return ResultUtil.ok(ServerStatus.ERROR)
+    return ResultUtil.ok(ServerStatus.STOPPED)
   }
 
   async getAddress(): Promise<Result<string, ServerError>> {
-    if (!this.server?.isRunning()) {
+    if (!this.server?.status?.running) {
       return ResultUtil.fail(ServerError.notRunning())
     }
 
-    const address = this.server.getAddress()
+    const address = `http://${this.server.config.host}:${this.server.config.port}${this.server.config.endpoint}`
     return ResultUtil.ok(address)
   }
 
   async getMetrics(): Promise<Result<ServerMetrics, ServerError>> {
-    if (!this.server?.isRunning()) {
+    if (!this.server?.status?.running) {
       return ResultUtil.fail(ServerError.notRunning())
     }
 
     const metrics: ServerMetrics = {
-      uptime: this.server.getUptime(),
-      requestCount: this.server.getRequestCount(),
-      activeConnections: this.server.getActiveConnections(),
+      uptime: this.server.status.startTime ? Date.now() - this.server.status.startTime : 0,
+      requestCount: this.server.config.metrics?.requestsTotal || 0,
+      activeConnections: this.server.status.connections || 0,
       memoryUsage: process.memoryUsage()
     }
 
@@ -142,7 +135,7 @@ export class PromptXServerAdapter implements IServerPort {
   }
 
   async updateConfig(config: Partial<ServerConfig>): Promise<Result<void, ServerError>> {
-    if (!this.server?.isRunning()) {
+    if (!this.server?.status?.running) {
       return ResultUtil.fail(ServerError.notRunning())
     }
 
