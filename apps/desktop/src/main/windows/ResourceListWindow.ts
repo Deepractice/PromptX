@@ -144,11 +144,11 @@ export class ResourceListWindow {
       center: true
     })
     
-    // 加载资源管理页面 - 使用新的 GitHub 风格页面
+    // 加载资源管理页面
     if (process.env.NODE_ENV === 'development') {
-      this.window.loadURL('http://localhost:5173/github-resources.html')
+      this.window.loadURL('http://localhost:5173/resources.html')
     } else {
-      this.window.loadFile(path.join(__dirname, '../renderer/github-resources.html'))
+      this.window.loadFile(path.join(__dirname, '../renderer/resources.html'))
     }
     
     this.window.once('ready-to-show', () => {

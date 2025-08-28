@@ -146,39 +146,6 @@ export class TrayPresenter {
       label: 'Manage Resources',
       click: () => this.handleShowResources()
     })
-    
-    // Test IPC - for debugging
-    menuItems.push({
-      id: 'test-ipc',
-      label: 'Test IPC (调试)',
-      click: () => {
-        const { BrowserWindow, app } = require('electron')
-        const path = require('path')
-        const fs = require('fs')
-        
-        const testWindow = new BrowserWindow({
-          width: 600,
-          height: 500,
-          webPreferences: {
-            preload: path.join(__dirname, '../preload/preload.cjs'),
-            contextIsolation: true,
-            nodeIntegration: false
-          }
-        })
-        
-        // Use absolute path from app root
-        const testFilePath = path.join(app.getAppPath(), 'src/renderer/test.html')
-        console.log('Loading test file from:', testFilePath)
-        
-        if (fs.existsSync(testFilePath)) {
-          testWindow.loadFile(testFilePath)
-        } else {
-          // Try to load via URL if file doesn't exist
-          testWindow.loadURL(`http://localhost:5173/test.html`)
-        }
-        testWindow.webContents.openDevTools()
-      }
-    })
 
     menuItems.push({ type: 'separator' })
 
