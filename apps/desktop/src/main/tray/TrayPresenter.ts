@@ -8,19 +8,16 @@ import {
   shell,
   BrowserWindow 
 } from 'electron'
-import { ServerStatus } from '../../domain/valueObjects/ServerStatus.js'
-import { ResultUtil } from '../../shared/Result.js'
-import type { StartServerUseCase } from '../../application/useCases/StartServerUseCase.js'
-import type { StopServerUseCase } from '../../application/useCases/StopServerUseCase.js'
-import type { IServerPort } from '../../domain/ports/IServerPort.js'
+import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
+import { ResultUtil } from '~/shared/Result'
+import type { StartServerUseCase } from '~/main/application/useCases/StartServerUseCase'
+import type { StopServerUseCase } from '~/main/application/useCases/StopServerUseCase'
+import type { IServerPort } from '~/main/domain/ports/IServerPort'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { logger } from '../../shared/logger.js'
-import { createPIcon } from '../../utils/createPIcon.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import { logger } from '~/shared/logger'
+import { createPIcon } from '~/utils/createPIcon'
+import { ResourceManager } from '~/main/ResourceManager'
 
 interface TrayMenuItem {
   id?: string
@@ -36,12 +33,15 @@ export class TrayPresenter {
   private currentStatus: ServerStatus = ServerStatus.STOPPED
   private logsWindow: BrowserWindow | null = null
   private statusListener: (status: ServerStatus) => void
+  private resourceManager: ResourceManager
 
   constructor(
     private readonly startServerUseCase: StartServerUseCase,
     private readonly stopServerUseCase: StopServerUseCase,
     private readonly serverPort: IServerPort
   ) {
+    // Initialize resource manager
+    this.resourceManager = new ResourceManager()
     // Create tray icon
     this.tray = this.createTray()
     
@@ -139,6 +139,15 @@ export class TrayPresenter {
     }
 
     menuItems.push({ type: 'separator' })
+    
+    // Resource management (roles and tools)
+    menuItems.push({
+      id: 'resources',
+      label: 'Manage Resources',
+      click: () => this.handleShowResources()
+    })
+
+    menuItems.push({ type: 'separator' })
 
     // Show logs
     menuItems.push({
@@ -225,6 +234,10 @@ export class TrayPresenter {
     }
   }
 
+  async handleShowResources(): Promise<void> {
+    this.resourceManager.showResourceList()
+  }
+
   async handleShowLogs(): Promise<void> {
     if (this.logsWindow && !this.logsWindow.isDestroyed()) {
       this.logsWindow.focus()
@@ -276,6 +289,11 @@ export class TrayPresenter {
     // Close logs window if open
     if (this.logsWindow && !this.logsWindow.isDestroyed()) {
       this.logsWindow.close()
+    }
+
+    // Destroy resource manager
+    if (this.resourceManager) {
+      this.resourceManager.destroy()
     }
 
     // Destroy tray

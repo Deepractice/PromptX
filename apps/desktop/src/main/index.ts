@@ -1,24 +1,56 @@
 // Import polyfills first, before any other modules
-import './polyfills.js'
+import '~/main/polyfills'
 
-import { app, BrowserWindow, dialog } from 'electron'
-import { TrayPresenter } from './presentation/tray/TrayPresenter.js'
-import { PromptXServerAdapter } from './infrastructure/adapters/PromptXServerAdapter.js'
-import { FileConfigAdapter } from './infrastructure/adapters/FileConfigAdapter.js'
-import { ElectronNotificationAdapter } from './infrastructure/adapters/ElectronNotificationAdapter.js'
-import { StartServerUseCase } from './application/useCases/StartServerUseCase.js'
-import { StopServerUseCase } from './application/useCases/StopServerUseCase.js'
-import { logger } from './shared/logger.js'
+import { app, BrowserWindow, dialog, ipcMain } from 'electron'
+import { TrayPresenter } from '~/main/tray/TrayPresenter'
+import { ResourceManager } from '~/main/ResourceManager'
+import { PromptXServerAdapter } from '~/main/infrastructure/adapters/PromptXServerAdapter'
+import { FileConfigAdapter } from '~/main/infrastructure/adapters/FileConfigAdapter'
+import { ElectronNotificationAdapter } from '~/main/infrastructure/adapters/ElectronNotificationAdapter'
+import { StartServerUseCase } from '~/main/application/useCases/StartServerUseCase'
+import { StopServerUseCase } from '~/main/application/useCases/StopServerUseCase'
+import { logger } from '~/shared/logger'
 import * as path from 'node:path'
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
+  private resourceManager: ResourceManager | null = null
   private serverPort: PromptXServerAdapter | null = null
   private configPort: FileConfigAdapter | null = null
   private notificationPort: ElectronNotificationAdapter | null = null
 
   async initialize(): Promise<void> {
     logger.info('Initializing PromptX Desktop...')
+    
+    // Setup renderer logging - properly format and write to file
+    ipcMain.on('log', (event, level, message, args) => {
+      // Format the message with args properly
+      const formattedArgs = args && args.length > 0 
+        ? (args.length === 1 && typeof args[0] === 'object' 
+          ? JSON.stringify(args[0], null, 2)
+          : args.join(' '))
+        : ''
+      
+      const logMessage = `[Renderer] ${message}${formattedArgs ? ' ' + formattedArgs : ''}`
+      
+      // Use the appropriate logger method to ensure file output
+      switch(level) {
+        case 'error':
+          logger.error(logMessage)
+          break
+        case 'warn':
+          logger.warn(logMessage)
+          break
+        case 'info':
+          logger.info(logMessage)
+          break
+        case 'debug':
+          logger.debug(logMessage)
+          break
+        default:
+          logger.log(logMessage)
+      }
+    })
     
     // Wait for app to be ready
     await app.whenReady()
@@ -41,6 +73,11 @@ class PromptXDesktopApp {
     // Setup presentation layer
     logger.step('Setting up presentation layer...')
     this.setupPresentation(startUseCase, stopUseCase)
+    
+    // Setup ResourceManager for roles and tools
+    logger.step('Setting up resource manager...')
+    this.resourceManager = new ResourceManager()
+    logger.success('Resource manager initialized')
 
     // Handle app events
     logger.step('Setting up app events...')

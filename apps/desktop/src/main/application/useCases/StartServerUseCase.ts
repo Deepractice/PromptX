@@ -1,9 +1,9 @@
-import { Result, ResultUtil } from '../../shared/Result.js'
-import { ServerConfig } from '../../domain/entities/ServerConfig.js'
-import { ServerError, ServerErrorCode } from '../../domain/errors/ServerErrors.js'
-import type { IServerPort } from '../../domain/ports/IServerPort.js'
-import type { IConfigPort, ConfigError } from '../../domain/ports/IConfigPort.js'
-import type { INotificationPort } from '../../domain/ports/INotificationPort.js'
+import { Result, ResultUtil } from '~/shared/Result'
+import { ServerConfig } from '~/main/domain/entities/ServerConfig'
+import { ServerError, ServerErrorCode } from '~/main/domain/errors/ServerErrors'
+import type { IServerPort } from '~/main/domain/ports/IServerPort'
+import type { IConfigPort, ConfigError } from '~/main/domain/ports/IConfigPort'
+import type { INotificationPort } from '~/main/domain/ports/INotificationPort'
 
 export interface UseCaseError {
   code: 'USE_CASE_CONFIG_ERROR' | 'USE_CASE_EXECUTION_ERROR'

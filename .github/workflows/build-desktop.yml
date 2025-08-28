@@ -1,0 +1,66 @@
+name: Build Desktop
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/client-development
+    paths:
+      - 'apps/desktop/**'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm
+        
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build Windows
+        run: |
+          cd apps/desktop
+          pnpm package:win
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.zip
+            
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm
+        
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build macOS
+        run: |
+          cd apps/desktop
+          pnpm package:mac
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-build
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip

@@ -1,5 +1,5 @@
-import { Result, ResultUtil } from '../../shared/Result.js'
-import { ServerError } from '../errors/ServerErrors.js'
+import { Result, ResultUtil } from '~/shared/Result'
+import { ServerError } from '~/main/domain/errors/ServerErrors'
 
 export interface ServerConfigData {
   port: number

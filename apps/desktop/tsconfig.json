@@ -18,11 +18,7 @@
     "paths": {
       "@promptx/core": ["../../src/index.js"],
       "@promptx/core/*": ["../../src/*"],
-      "@domain/*": ["src/domain/*"],
-      "@application/*": ["src/application/*"],
-      "@infrastructure/*": ["src/infrastructure/*"],
-      "@presentation/*": ["src/presentation/*"],
-      "@shared/*": ["src/shared/*"]
+      "~/*": ["src/*"]
     },
     
     "outDir": "out",

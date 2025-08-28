@@ -7,16 +7,14 @@
     "email": "sean@deepracticex.com"
   },
   "type": "module",
-  "main": "out/src/main.js",
+  "main": "out/main/index.js",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev": "npm run build:watch & npm run start:electron",
-    "dev:vite": "electron-vite dev",
-    "build": "rimraf out && tsc",
-    "build:watch": "tsc --watch",
-    "start:electron": "wait-on out/src/main.js && electron .",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -49,8 +47,8 @@
     "eslint": "^8.50.0",
     "prettier": "^3.0.0",
     "rimraf": "^5.0.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0",
-    "wait-on": "^7.2.0"
+    "vitest": "^1.0.0"
   }
 }

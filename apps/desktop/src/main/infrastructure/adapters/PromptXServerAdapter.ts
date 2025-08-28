@@ -1,9 +1,9 @@
-import { Result, ResultUtil } from '../../shared/Result.js'
-import { ServerConfig } from '../../domain/entities/ServerConfig.js'
-import { ServerError, ServerErrorCode } from '../../domain/errors/ServerErrors.js'
-import { ServerStatus } from '../../domain/valueObjects/ServerStatus.js'
-import type { IServerPort, ServerMetrics } from '../../domain/ports/IServerPort.js'
-import { logger } from '../../shared/logger.js'
+import { Result, ResultUtil } from '~/shared/Result'
+import { ServerConfig } from '~/main/domain/entities/ServerConfig'
+import { ServerError, ServerErrorCode } from '~/main/domain/errors/ServerErrors'
+import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
+import type { IServerPort, ServerMetrics } from '~/main/domain/ports/IServerPort'
+import { logger } from '~/shared/logger'
 import { FastMCPServer } from './FastMCPServer.js'
 
 export class PromptXServerAdapter implements IServerPort {

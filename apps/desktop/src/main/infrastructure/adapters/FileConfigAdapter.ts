@@ -1,9 +1,9 @@
 import * as fs from 'node:fs/promises'
 import * as fsSync from 'node:fs'
 import * as path from 'node:path'
-import { Result, ResultUtil } from '../../shared/Result.js'
-import { ServerConfig, ServerConfigData } from '../../domain/entities/ServerConfig.js'
-import type { IConfigPort, ConfigError } from '../../domain/ports/IConfigPort.js'
+import { Result, ResultUtil } from '~/shared/Result'
+import { ServerConfig, ServerConfigData } from '~/main/domain/entities/ServerConfig'
+import type { IConfigPort, ConfigError } from '~/main/domain/ports/IConfigPort'
 
 export class FileConfigAdapter implements IConfigPort {
   private watchers: Set<(config: ServerConfig) => void> = new Set()

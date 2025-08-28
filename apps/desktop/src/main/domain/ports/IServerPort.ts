@@ -1,7 +1,7 @@
-import { Result } from '../../shared/Result.js'
-import { ServerConfig } from '../entities/ServerConfig.js'
-import { ServerError } from '../errors/ServerErrors.js'
-import { ServerStatus } from '../valueObjects/ServerStatus.js'
+import { Result } from '~/shared/Result'
+import { ServerConfig } from '~/main/domain/entities/ServerConfig'
+import { ServerError } from '~/main/domain/errors/ServerErrors'
+import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
 
 export interface ServerMetrics {
   uptime: number

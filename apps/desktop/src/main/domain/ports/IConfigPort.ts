@@ -1,5 +1,5 @@
-import { Result } from '../../shared/Result.js'
-import { ServerConfig, ServerConfigData } from '../entities/ServerConfig.js'
+import { Result } from '~/shared/Result'
+import { ServerConfig, ServerConfigData } from '~/main/domain/entities/ServerConfig'
 
 export interface ConfigError {
   code: 'CONFIG_LOAD_FAILED' | 'CONFIG_SAVE_FAILED' | 'CONFIG_PARSE_ERROR'

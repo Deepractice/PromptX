@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptX Resources - 资源管理</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Header with statistics */
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    
+    .stat-card {
+      background: #f7f9fc;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+    }
+    
+    /* Search bar */
+    .search-container {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      transition: border-color 0.3s;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      background: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    
+    .tab:hover {
+      background: #f7f9fc;
+    }
+    
+    .tab.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    /* Resource sections */
+    .resource-section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .source-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+    
+    .badge-system {
+      background: #e0e7ff;
+      color: #4f46e5;
+    }
+    
+    .badge-project {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    
+    .badge-user {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    
+    .resource-count {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    /* Resource grid */
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+    }
+    
+    .resource-card {
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .resource-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .resource-type {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .type-role {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .type-tool {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .resource-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .resource-description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    
+    .resource-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .tag {
+      padding: 3px 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #4b5563;
+    }
+    
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: white;
+      font-size: 18px;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header with statistics -->
+    <div class="header">
+      <h1>🚀 PromptX Resources</h1>
+      <div class="stats" id="stats">
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Total Resources</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Roles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Tools</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">User Custom</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Search bar -->
+    <div class="search-container">
+      <input 
+        type="text" 
+        class="search-input" 
+        id="searchInput" 
+        placeholder="Search resources by name, description or tags..."
+      />
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">All Resources</button>
+      <button class="tab" data-filter="roles">Roles Only</button>
+      <button class="tab" data-filter="tools">Tools Only</button>
+    </div>
+    
+    <!-- Resource list container -->
+    <div id="resourceContainer">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>Loading resources...</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 先加载 logger -->
+  <script src="./logger.js"></script>
+  <!-- 再加载主逻辑 -->
+  <script src="./resources.js"></script>
+</body>
+</html>

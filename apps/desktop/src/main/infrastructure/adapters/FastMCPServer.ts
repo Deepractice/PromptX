@@ -5,7 +5,7 @@
 
 import { FastMCP } from 'fastmcp'
 import { z } from 'zod'
-import { logger } from '../../shared/logger.js'
+import { logger } from '~/shared/logger'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)

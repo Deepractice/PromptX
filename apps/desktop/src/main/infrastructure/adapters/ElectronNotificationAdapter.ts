@@ -1,5 +1,5 @@
 import { Notification } from 'electron'
-import type { INotificationPort, NotificationOptions, NotificationType } from '../../domain/ports/INotificationPort.js'
+import type { INotificationPort, NotificationOptions, NotificationType } from '~/main/domain/ports/INotificationPort'
 
 export class ElectronNotificationAdapter implements INotificationPort {
   async show(options: NotificationOptions): Promise<void> {

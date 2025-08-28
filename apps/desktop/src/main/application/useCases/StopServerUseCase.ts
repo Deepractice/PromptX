@@ -1,7 +1,7 @@
-import { Result, ResultUtil } from '../../shared/Result.js'
-import { ServerError, ServerErrorCode } from '../../domain/errors/ServerErrors.js'
-import type { IServerPort } from '../../domain/ports/IServerPort.js'
-import type { INotificationPort } from '../../domain/ports/INotificationPort.js'
+import { Result, ResultUtil } from '~/shared/Result'
+import { ServerError, ServerErrorCode } from '~/main/domain/errors/ServerErrors'
+import type { IServerPort } from '~/main/domain/ports/IServerPort'
+import type { INotificationPort } from '~/main/domain/ports/INotificationPort'
 
 export interface StopOptions {
   graceful?: boolean
