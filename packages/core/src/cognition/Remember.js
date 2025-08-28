@@ -1,4 +1,4 @@
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * Remember - 记忆写入执行器

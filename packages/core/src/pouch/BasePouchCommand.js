@@ -1,7 +1,7 @@
 const BaseArea = require('./areas/BaseArea')
 const LegacyArea = require('./areas/common/LegacyArea')
 const BaseLayer = require('./layers/BaseLayer')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * BasePouchCommand - 支持Layer和Area双架构的命令基类

@@ -1,4 +1,4 @@
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 const Network = require('./Network');
 const Remember = require('./Remember');
 const Recall = require('./Recall');

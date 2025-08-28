@@ -1,6 +1,6 @@
 const BaseLayer = require('./BaseLayer')
 const Consciousness = require('../../cognition/Consciousness')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * ConsciousnessLayer - 意识层

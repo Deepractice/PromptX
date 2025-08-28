@@ -31,7 +31,7 @@ class SemanticRenderer {
     for (const ref of sortedReferences) {
       try {
         // 解析引用内容
-        const logger = require('~/utils/logger')
+        const logger = require('@promptx/logger')
         logger.debug(`[SemanticRenderer] 正在解析引用: ${ref.fullMatch}`)
         const result = await resourceManager.resolve(ref.fullMatch)
         logger.debug(`[SemanticRenderer] 解析结果:`, { success: result.success, error: result.error?.message })

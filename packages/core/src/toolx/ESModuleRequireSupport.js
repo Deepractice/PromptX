@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs').promises;
-const logger = require('../utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * ESModuleRequireSupport - ES Module 加载支持器

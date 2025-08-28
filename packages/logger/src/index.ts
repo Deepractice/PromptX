@@ -1,94 +1,23 @@
 /**
- * @promptx/logger - Unified logging system for PromptX
+ * @promptx/logger - Unified logging system for PromptX using Pino
  * Features:
- * - Multiple transports (Console, File, Daily Rotate)
- * - Structured logging with timestamp, process, package, file, line
+ * - Console with pretty print and caller location
+ * - File logging with daily rotation
  * - Configurable log levels
  * - Color support for console output
  */
 
-import winston from 'winston'
-import DailyRotateFile from 'winston-daily-rotate-file'
-import chalk from 'chalk'
+import pino from 'pino'
 import path from 'path'
 import os from 'os'
-
-// Get caller info (file and line number)
-function getCallerInfo(): { file: string; line: number; package: string } {
-  const error = new Error()
-  const stack = error.stack?.split('\n') || []
-  
-  // Skip first 3 lines (Error, getCallerInfo, createLogger method)
-  const callerLine = stack[3] || ''
-  
-  // Extract file path and line number
-  const match = callerLine.match(/\(?(.*?):(\d+):(\d+)\)?$/)
-  if (match) {
-    const fullPath = match[1] || 'unknown'
-    const lineNumber = parseInt(match[2] || '0', 10)
-    
-    // Extract package name from path
-    const packageMatch = fullPath.match(/@promptx\/([^\/]+)/) || 
-                        fullPath.match(/packages\/([^\/]+)/) ||
-                        fullPath.match(/apps\/([^\/]+)/)
-    const packageName = packageMatch ? `@promptx/${packageMatch[1]}` : 'unknown'
-    
-    // Get relative file path
-    const file = fullPath.includes('/') 
-      ? fullPath.substring(fullPath.lastIndexOf('/') + 1)
-      : fullPath
-    
-    return { file, line: lineNumber, package: packageName }
-  }
-  
-  return { file: 'unknown', line: 0, package: 'unknown' }
-}
-
-// Custom format for console output with colors
-const consoleFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-  winston.format.printf(({ level, message, timestamp }) => {
-    const caller = getCallerInfo()
-    const pid = process.pid
-    
-    // Color mapping
-    const levelColors = {
-      error: chalk.red,
-      warn: chalk.yellow,
-      info: chalk.green,
-      debug: chalk.blue,
-      verbose: chalk.cyan
-    }
-    
-    const colorFn = levelColors[level as keyof typeof levelColors] || chalk.white
-    
-    // Format: [timestamp] [PID:12345] [package] [file:line] LEVEL: message
-    return `${chalk.gray(`[${timestamp}]`)} ${chalk.gray(`[PID:${pid}]`)} ${chalk.magenta(caller.package)} ${chalk.cyan(`[${caller.file}:${caller.line}]`)} ${colorFn(level.toUpperCase())}: ${message}`
-  })
-)
-
-// Custom format for file output (no colors)
-const fileFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-  winston.format.printf(({ level, message, timestamp }) => {
-    const caller = getCallerInfo()
-    const pid = process.pid
-    
-    // Format: [timestamp] [PID:12345] [package] [file:line] LEVEL: message
-    return `[${timestamp}] [PID:${pid}] ${caller.package} [${caller.file}:${caller.line}] ${level.toUpperCase()}: ${message}`
-  })
-)
+import fs from 'fs'
 
 // Logger configuration interface
 export interface LoggerConfig {
   level?: string
   console?: boolean
   file?: boolean | {
-    filename?: string
     dirname?: string
-    maxSize?: string
-    maxFiles?: string | number
-    datePattern?: string
   }
   colors?: boolean
 }
@@ -98,98 +27,182 @@ const defaultConfig: LoggerConfig = {
   level: process.env.LOG_LEVEL || 'info',
   console: true,
   file: {
-    dirname: path.join(os.homedir(), '.promptx', 'logs'),
-    datePattern: 'YYYY-MM-DD',
-    maxSize: '20m',
-    maxFiles: '7d'  // 保留最近7天的日志
+    dirname: path.join(os.homedir(), '.promptx', 'logs')
   },
   colors: true
 }
 
+// Get caller information from stack
+function getCallerInfo() {
+  const stack = new Error().stack || ''
+  const stackLines = stack.split('\n')
+  
+  // Find first non-logger stack frame
+  for (let i = 2; i < stackLines.length; i++) {
+    const line = stackLines[i]
+    if (line && 
+        !line.includes('node_modules/pino') &&
+        !line.includes('packages/logger') &&
+        !line.includes('@promptx/logger')) {
+      
+      const match = line.match(/at\s+(?:.*?\s+)?\(?(.*?):(\d+):(\d+)\)?/)
+      if (match && match[1] && match[2]) {
+        const fullPath = match[1]
+        const lineNum = parseInt(match[2], 10)
+        
+        // Extract package name
+        let packageName = 'app'
+        const packageMatch = fullPath.match(/packages\/([^\/]+)/) || 
+                             fullPath.match(/@promptx\/([^\/]+)/)
+        if (packageMatch) {
+          packageName = `@promptx/${packageMatch[1]}`
+        }
+        
+        // Get filename only
+        const filename = path.basename(fullPath)
+        
+        return {
+          package: packageName,
+          file: filename,
+          line: lineNum
+        }
+      }
+    }
+  }
+  
+  return { package: 'app', file: 'unknown', line: 0 }
+}
+
 // Create logger instance
-export function createLogger(config: LoggerConfig = {}): winston.Logger {
+export function createLogger(config: LoggerConfig = {}): pino.Logger {
   const finalConfig = { ...defaultConfig, ...config }
   
-  const transports: winston.transport[] = []
+  // Ensure log directory exists
+  if (finalConfig.file) {
+    const fileConfig = typeof finalConfig.file === 'object' ? finalConfig.file : {}
+    const logDir = fileConfig.dirname || path.join(os.homedir(), '.promptx', 'logs')
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true })
+    }
+  }
+  
+  // Build transports configuration
+  const targets: any[] = []
   
   // Console transport
   if (finalConfig.console) {
-    transports.push(new winston.transports.Console({
-      format: finalConfig.colors ? consoleFormat : fileFormat
-    }))
+    targets.push({
+      target: 'pino-pretty',
+      level: finalConfig.level,
+      options: {
+        colorize: finalConfig.colors,
+        translateTime: 'yyyy-mm-dd HH:MM:ss.l',
+        ignore: 'hostname',
+        messageFormat: '[{time}] [PID:{pid}] {package} [{file}:{line}] {msg}'
+      }
+    })
   }
   
   // File transport
   if (finalConfig.file) {
     const fileConfig = typeof finalConfig.file === 'object' ? finalConfig.file : {}
+    const logDir = fileConfig.dirname || path.join(os.homedir(), '.promptx', 'logs')
+    const today = new Date().toISOString().split('T')[0]
     
-    // Daily rotate file transport
-    transports.push(new DailyRotateFile({
-      filename: fileConfig.filename || 'promptx-%DATE%.log',
-      dirname: fileConfig.dirname || path.join(os.homedir(), '.promptx', 'logs'),
-      datePattern: fileConfig.datePattern || 'YYYY-MM-DD',
-      maxSize: fileConfig.maxSize || '20m',
-      maxFiles: fileConfig.maxFiles || '14d',
-      format: fileFormat
-    }))
+    targets.push({
+      target: 'pino/file',
+      level: finalConfig.level,
+      options: {
+        destination: path.join(logDir, `promptx-${today}.log`)
+      }
+    })
     
-    // Error log file
-    transports.push(new DailyRotateFile({
-      filename: 'promptx-error-%DATE%.log',
-      dirname: fileConfig.dirname || path.join(os.homedir(), '.promptx', 'logs'),
-      datePattern: fileConfig.datePattern || 'YYYY-MM-DD',
-      maxSize: fileConfig.maxSize || '20m',
-      maxFiles: fileConfig.maxFiles || '14d',
-      format: fileFormat,
-      level: 'error'
-    }))
+    // Separate error log
+    targets.push({
+      target: 'pino/file',
+      level: 'error',
+      options: {
+        destination: path.join(logDir, `promptx-error-${today}.log`)
+      }
+    })
   }
   
-  return winston.createLogger({
-    level: finalConfig.level,
-    transports,
-    // Handle exceptions and rejections
-    exceptionHandlers: finalConfig.file ? [
-      new DailyRotateFile({
-        filename: 'promptx-exceptions-%DATE%.log',
-        dirname: typeof finalConfig.file === 'object' 
-          ? finalConfig.file.dirname || path.join(os.homedir(), '.promptx', 'logs')
-          : path.join(os.homedir(), '.promptx', 'logs'),
-        datePattern: 'YYYY-MM-DD',
-        maxSize: '20m',
-        maxFiles: '14d',
-        format: fileFormat
-      })
-    ] : undefined,
-    rejectionHandlers: finalConfig.file ? [
-      new DailyRotateFile({
-        filename: 'promptx-rejections-%DATE%.log',
-        dirname: typeof finalConfig.file === 'object' 
-          ? finalConfig.file.dirname || path.join(os.homedir(), '.promptx', 'logs')
-          : path.join(os.homedir(), '.promptx', 'logs'),
-        datePattern: 'YYYY-MM-DD',
-        maxSize: '20m',
-        maxFiles: '14d',
-        format: fileFormat
-      })
-    ] : undefined
+  // Create logger with transports
+  if (targets.length > 0) {
+    return pino({
+      level: finalConfig.level || 'info',
+      base: { pid: process.pid },
+      mixin: () => getCallerInfo(),
+      transport: {
+        targets
+      }
+    })
+  }
+  
+  // Fallback to basic logger if no transports
+  return pino({
+    level: finalConfig.level || 'info',
+    base: { pid: process.pid },
+    mixin: () => getCallerInfo()
   })
 }
 
 // Default logger instance
 const logger = createLogger()
 
-// Export logger methods
-export const log = logger.log.bind(logger)
-export const error = logger.error.bind(logger)
-export const warn = logger.warn.bind(logger)
-export const info = logger.info.bind(logger)
-export const debug = logger.debug.bind(logger)
-export const verbose = logger.verbose.bind(logger)
+// Export convenience methods
+export const error = (msg: string | object, ...args: any[]) => {
+  if (typeof msg === 'string') {
+    logger.error(msg)
+  } else {
+    logger.error(msg, args[0] || '')
+  }
+}
+
+export const warn = (msg: string | object, ...args: any[]) => {
+  if (typeof msg === 'string') {
+    logger.warn(msg)
+  } else {
+    logger.warn(msg, args[0] || '')
+  }
+}
+
+export const info = (msg: string | object, ...args: any[]) => {
+  if (typeof msg === 'string') {
+    logger.info(msg)
+  } else {
+    logger.info(msg, args[0] || '')
+  }
+}
+
+export const debug = (msg: string | object, ...args: any[]) => {
+  if (typeof msg === 'string') {
+    logger.debug(msg)
+  } else {
+    logger.debug(msg, args[0] || '')
+  }
+}
+
+export const verbose = (msg: string | object, ...args: any[]) => {
+  if (typeof msg === 'string') {
+    logger.trace(msg)
+  } else {
+    logger.trace(msg, args[0] || '')
+  }
+}
+
+export const log = (level: string, msg: string, ...args: any[]) => {
+  const method = (logger as any)[level]
+  if (typeof method === 'function') {
+    method(msg, ...args)
+  } else {
+    logger.info(msg, ...args)
+  }
+}
 
 // Export default logger
 export default logger
 
-// Re-export winston types
-export type Logger = winston.Logger
-export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'verbose'
+// Re-export pino types
+export type Logger = pino.Logger
+export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'

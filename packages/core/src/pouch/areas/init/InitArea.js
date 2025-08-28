@@ -1,7 +1,7 @@
 const BaseArea = require('../BaseArea')
 const path = require('path')
 const fs = require('fs-extra')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * InitArea - 初始化信息展示区域

@@ -1,6 +1,6 @@
 const FilePatternDiscovery = require('./FilePatternDiscovery')
 const RegistryData = require('../RegistryData')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 const path = require('path')
 const fs = require('fs-extra')
 const { getDirectoryService } = require('~/utils/DirectoryService')

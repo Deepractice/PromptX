@@ -1,5 +1,5 @@
 const { DirectoryLocatorFactory } = require('./DirectoryLocator')
-const logger = require('./logger')
+const logger = require('@promptx/logger')
 
 /**
  * IDE环境检测服务 - 新架构

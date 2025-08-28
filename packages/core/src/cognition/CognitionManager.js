@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 const CognitionSystem = require('./CognitionSystem');
 const Anchor = require('./Anchor');
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * CognitionManager - 认知系统管理器

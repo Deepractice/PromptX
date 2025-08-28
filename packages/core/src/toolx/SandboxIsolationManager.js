@@ -1,6 +1,6 @@
 const path = require('path');
 const Module = require('module');
-const logger = require('../utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * SandboxIsolationManager - 统一管理所有沙箱隔离逻辑

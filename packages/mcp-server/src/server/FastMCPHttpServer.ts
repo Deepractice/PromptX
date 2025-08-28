@@ -140,7 +140,8 @@ export class FastMCPHttpServer {
         name: this.name,
         version: this.version as any,
         instructions: this.description,
-        logger: this.config.debug ? logger : undefined
+        // 始终使用日志器，debug 模式会影响日志级别（在 logger 包中配置）
+        logger: logger
       });
       
       // 自动注册工具

@@ -22,7 +22,6 @@ const pouch = require('./pouch')
 
 // 工具模块
 const utils = {
-  logger: require('./utils/logger'),
   banner: require('./utils/banner'),
   version: require('./utils/version'),
   DirectoryService: require('./utils/DirectoryService'),

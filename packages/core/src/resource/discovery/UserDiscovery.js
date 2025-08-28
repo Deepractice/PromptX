@@ -1,5 +1,5 @@
 const BaseDiscovery = require('./BaseDiscovery')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 const RegistryData = require('../RegistryData')
 const ResourceData = require('../ResourceData')
 const fs = require('fs-extra')

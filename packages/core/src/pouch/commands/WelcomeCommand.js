@@ -12,7 +12,7 @@ const { getGlobalProjectManager } = require('~/utils/ProjectManager')
 const { getGlobalServerEnvironment } = require('~/utils/ServerEnvironment')
 const ProjectDiscovery = require('../../resource/discovery/ProjectDiscovery')
 const UserDiscovery = require('../../resource/discovery/UserDiscovery')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * 欢迎命令

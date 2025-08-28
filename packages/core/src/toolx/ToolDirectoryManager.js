@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs').promises;
-const logger = require('../utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * ToolDirectoryManager - 基于协议的工具目录管理器

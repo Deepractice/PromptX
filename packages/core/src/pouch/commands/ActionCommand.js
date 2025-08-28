@@ -12,7 +12,7 @@ const SemanticRenderer = require('../../dpml/SemanticRenderer')
 const CognitionManager = require('../../cognition/CognitionManager')
 const ProjectManager = require('~/utils/ProjectManager')
 const { getGlobalProjectManager } = require('~/utils/ProjectManager')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * ActionCommand - 角色激活命令

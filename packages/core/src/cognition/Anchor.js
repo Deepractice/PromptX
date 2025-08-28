@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * Anchor - 认知状态锚定器

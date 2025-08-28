@@ -4,7 +4,7 @@
 const { Cognition } = require('./Cognition');
 const path = require('path');
 const fs = require('fs-extra');
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 
 class CognitionManager {
   constructor(resourceManager) {

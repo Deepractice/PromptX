@@ -1,4 +1,4 @@
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * Recall - 记忆检索执行器

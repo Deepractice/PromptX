@@ -1,5 +1,5 @@
 const BaseDiscovery = require('./BaseDiscovery')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 const fs = require('fs-extra')
 const path = require('path')
 const CrossPlatformFileScanner = require('./CrossPlatformFileScanner')

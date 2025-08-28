@@ -3,7 +3,7 @@ const path = require('path')
 const os = require('os')
 const crypto = require('crypto')
 const { getGlobalServerEnvironment } = require('./ServerEnvironment')
-const logger = require('./logger')
+const logger = require('@promptx/logger')
 
 /**
  * 统一项目管理器 - 新架构

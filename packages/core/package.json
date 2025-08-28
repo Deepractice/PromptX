@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.2",
+    "@promptx/logger": "workspace:*",
     "@promptx/resource": "workspace:*",
     "body-parser": "^1.20.3",
     "boxen": "^5.1.2",

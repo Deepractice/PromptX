@@ -79,7 +79,7 @@ class ResourceProtocol {
     // 1. 验证路径格式
     if (!this.validatePath(resourcePath)) {
       const error = new Error(`无效的资源路径: ${resourcePath}`)
-      const logger = require('~/utils/logger')
+      const logger = require('@promptx/logger')
       logger.error(`[ResourceProtocol] 路径验证失败: ${resourcePath}`)
       logger.error(`[ResourceProtocol] 调用堆栈:`, error.stack)
       throw error

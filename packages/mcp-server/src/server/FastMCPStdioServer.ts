@@ -134,8 +134,8 @@ export class FastMCPStdioServer {
         name: this.name,
         version: this.version as any,
         instructions: this.description,
-        // 使用自定义日志器
-        logger: debug ? logger : undefined
+        // 始终使用日志器，debug 模式会影响日志级别（在 logger 包中配置）
+        logger: logger
       });
 
       // 自动注册 PromptX 工具
@@ -162,10 +162,9 @@ export class FastMCPStdioServer {
       this.status.running = true;
       this.status.startTime = new Date().toISOString();
       
-      if (debug) {
-        logger.info('✅ FastMCP Stdio Server started');
-        logger.info(`📊 Tools: ${this.tools.size} registered`);
-      }
+      // 始终输出启动信息到 info 级别
+      logger.info('✅ FastMCP Stdio Server started');
+      logger.info(`📊 Tools: ${this.tools.size} registered`);
 
       // 设置信号处理
       this.setupSignalHandlers();
@@ -193,9 +192,8 @@ export class FastMCPStdioServer {
       
       this.status.running = false;
       
-      if (this.config.debug) {
-        logger.info('🛑 FastMCP Stdio Server stopped');
-      }
+      // 始终输出停止信息到 info 级别
+      logger.info('🛑 FastMCP Stdio Server stopped');
     } catch (error) {
       logger.error('Error stopping server:', error);
       throw error;

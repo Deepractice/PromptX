@@ -1,5 +1,5 @@
 const BaseArea = require('../BaseArea')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * ToolListArea - 工具列表展示区域

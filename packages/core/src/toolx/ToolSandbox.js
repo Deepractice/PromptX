@@ -6,7 +6,7 @@ const SandboxIsolationManager = require('./SandboxIsolationManager');
 const SandboxErrorManager = require('./SandboxErrorManager');
 const ToolDirectoryManager = require('./ToolDirectoryManager');
 const ESModuleRequireSupport = require('./ESModuleRequireSupport');
-const logger = require('../utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * ToolSandbox - 工具沙箱环境管理器

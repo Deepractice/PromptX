@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2025-08-28T13:18:59.185Z",
+  "generated": "2025-08-28T13:52:58.780Z",
   "resources": {
     "role": [
       {
@@ -184,24 +184,6 @@
         "modified": "2025-07-13T13:16:59.634Z"
       },
       {
-        "id": "content-preservation.execution",
-        "path": "role/noface/execution/content-preservation.execution.md",
-        "title": "content-preservation.execution",
-        "description": "",
-        "type": "md",
-        "size": 2529,
-        "modified": "2025-07-13T13:16:59.634Z"
-      },
-      {
-        "id": "adaptive-learning.execution",
-        "path": "role/noface/execution/adaptive-learning.execution.md",
-        "title": "adaptive-learning.execution",
-        "description": "",
-        "type": "md",
-        "size": 3360,
-        "modified": "2025-07-13T13:16:59.634Z"
-      },
-      {
         "id": "validation.thought",
         "path": "role/luban/thought/validation.thought.md",
         "title": "验证思维 - 测试与质量保证",
@@ -256,22 +238,22 @@
         "modified": "2025-07-13T13:16:59.633Z"
       },
       {
-        "id": "assistant.thought",
-        "path": "role/assistant/thought/assistant.thought.md",
-        "title": "assistant.thought",
+        "id": "content-preservation.execution",
+        "path": "role/noface/execution/content-preservation.execution.md",
+        "title": "content-preservation.execution",
         "description": "",
         "type": "md",
-        "size": 3470,
-        "modified": "2025-07-13T13:16:59.632Z"
+        "size": 2529,
+        "modified": "2025-07-13T13:16:59.634Z"
       },
       {
-        "id": "assistant.execution",
-        "path": "role/assistant/execution/assistant.execution.md",
-        "title": "assistant.execution",
+        "id": "adaptive-learning.execution",
+        "path": "role/noface/execution/adaptive-learning.execution.md",
+        "title": "adaptive-learning.execution",
         "description": "",
         "type": "md",
-        "size": 4332,
-        "modified": "2025-07-13T13:16:59.632Z"
+        "size": 3360,
+        "modified": "2025-07-13T13:16:59.634Z"
       },
       {
         "id": "toolsandbox-mastery.execution",
@@ -299,6 +281,24 @@
         "type": "md",
         "size": 5485,
         "modified": "2025-08-19T14:24:06.578Z"
+      },
+      {
+        "id": "assistant.thought",
+        "path": "role/assistant/thought/assistant.thought.md",
+        "title": "assistant.thought",
+        "description": "",
+        "type": "md",
+        "size": 3470,
+        "modified": "2025-07-13T13:16:59.632Z"
+      },
+      {
+        "id": "assistant.execution",
+        "path": "role/assistant/execution/assistant.execution.md",
+        "title": "assistant.execution",
+        "description": "",
+        "type": "md",
+        "size": 4332,
+        "modified": "2025-07-13T13:16:59.632Z"
       }
     ],
     "protocol": [

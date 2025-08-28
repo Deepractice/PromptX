@@ -1,4 +1,4 @@
-const logger = require('~/utils/logger');
+const logger = require('@promptx/logger');
 
 /**
  * Engram - 记忆痕迹载体

@@ -1,5 +1,5 @@
 const BaseLayer = require('./BaseLayer')
-const logger = require('~/utils/logger')
+const logger = require('@promptx/logger')
 
 /**
  * RoleLayer - 角色层
