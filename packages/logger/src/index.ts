@@ -96,7 +96,7 @@ export function createLogger(config: LoggerConfig = {}): pino.Logger {
       level: finalConfig.level,
       options: {
         colorize: finalConfig.colors,
-        translateTime: 'HH:MM:ss.l',
+        translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',  // SYS: uses system timezone
         ignore: 'hostname,pid,package,file,line',
         messageFormat: '{package} [{file}:{line}] {msg}'
       }
