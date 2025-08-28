@@ -38,8 +38,8 @@ jobs:
         with:
           name: macos-build
           path: |
-            apps/desktop/*.dmg
-            apps/desktop/*.zip
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
           if-no-files-found: warn
 
   build-windows:
@@ -74,9 +74,8 @@ jobs:
         with:
           name: windows-build
           path: |
-            apps/desktop/*.exe
-            apps/desktop/*.nsis
-            apps/desktop/*.msi
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.msi
           if-no-files-found: warn
 
   build-linux:
@@ -111,10 +110,10 @@ jobs:
         with:
           name: linux-build
           path: |
-            apps/desktop/*.AppImage
-            apps/desktop/*.deb
-            apps/desktop/*.rpm
-            apps/desktop/*.snap
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+            apps/desktop/release/*.rpm
+            apps/desktop/release/*.snap
           if-no-files-found: warn
 
   upload-release:
