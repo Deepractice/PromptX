@@ -1,6 +1,6 @@
 {
   "name": "root",
-  "version": "1.10.1",
+  "version": "1.11.0",
   "private": true,
   "description": "DPML-powered AI prompt framework - Revolutionary AI-First CLI system based on Deepractice Prompt Markup Language. Build sophisticated AI agents with structured prompts, memory systems, and execution frameworks.",
   "scripts": {
