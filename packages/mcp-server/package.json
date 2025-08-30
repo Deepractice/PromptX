@@ -11,6 +11,9 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "bin": {
+    "mcp-server": "./dist/bin/mcp-server.js"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -22,7 +25,9 @@
     "@promptx/core": "workspace:*",
     "@promptx/logger": "workspace:*",
     "fastmcp": "^3.15.2",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0"
   },
   "devDependencies": {},
   "files": [
