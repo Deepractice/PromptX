@@ -1,5 +1,41 @@
 # @promptx/core
 
+## 1.13.0
+
+### Patch Changes
+
+- [#304](https://github.com/Deepractice/PromptX/pull/304) [`d60e63c`](https://github.com/Deepractice/PromptX/commit/d60e63c06f74059ecdc5435a744c57c1bfe7f7d0) Thanks [@deepracticexs](https://github.com/deepracticexs)! - fix: resolve recall memory content bug for newborn role
+
+  Fixed critical issue where newborn role (and other roles using prime) would show activated memory nodes during recall but no actual memory content was displayed.
+
+  **Root Cause:**
+
+  - `CognitionSystem.prime()` method was not async and didn't load engrams
+  - `CognitionManager.prime()` had missing await keywords for async calls
+
+  **Changes:**
+
+  - Modified `CognitionSystem.prime()` to be async and load engrams properly
+  - Fixed missing await calls in `CognitionManager.prime()` method
+  - Added comprehensive debug logging for memory structure inspection
+  - Enabled proper memory content display in recall for all roles
+
+  **Impact:**
+
+  - All roles now correctly display detailed memory content during recall
+  - Improved debugging capabilities with enhanced logging
+  - Better memory system reliability across different role activation paths
+
+  **Testing:**
+
+  - ✅ newborn role now shows complete memory content with recall
+  - ✅ Memory network activation and content loading working properly
+  - ✅ Debug logs provide clear visibility into memory loading process
+
+- Updated dependencies []:
+  - @promptx/logger@1.13.0
+  - @promptx/resource@1.13.0
+
 ## 1.12.0
 
 ### Patch Changes
