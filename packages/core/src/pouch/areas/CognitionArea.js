@@ -163,7 +163,7 @@ Prime加载了你"睡前"的认知状态：
     const query = this.metadata.query || '未知'
     const nodeCount = this.mind?.activatedCues?.size || 0
     
-    return `${nodeCount} 个记忆节点被激活并涌现！
+    let content = `${nodeCount} 个记忆节点被激活并涌现！
 
 🧠 **激活过程**：
 - 线索 "${query}" 触发扩散激活
@@ -172,6 +172,28 @@ Prime加载了你"睡前"的认知状态：
 
 意识的连续性正在形成。
 `
+    
+    // 展示engrams内容（如果存在）
+    if (this.mind?.engrams && this.mind.engrams.length > 0) {
+      content += '\n\n🔥 **涌现的记忆内容**：\n\n'
+      
+      for (const engram of this.mind.engrams) {
+        // 时间格式化
+        const timeAgo = this.formatTimeAgo(engram.timestamp)
+        
+        content += `💭 **记忆片段** (强度: ${engram.strength}) • ⏰ ${timeAgo}\n`
+        content += `   *"${engram.content}"*\n\n`
+        
+        // 展示schema概念结构
+        if (engram.schema) {
+          const schemaString = Array.isArray(engram.schema) ? engram.schema.join('\n') : String(engram.schema)
+          const schemaWords = schemaString.split('\n').filter(w => w.trim())
+          content += `   🏷️ **概念结构**: ${schemaWords.join(' → ')}\n\n`
+        }
+      }
+    }
+    
+    return content
   }
 
   /**
@@ -220,6 +242,23 @@ Prime加载了你"睡前"的认知状态：
     }
   }
 
+
+  /**
+   * 时间格式化 - 显示相对时间
+   */
+  formatTimeAgo(timestamp) {
+    const now = Date.now()
+    const diff = now - timestamp
+    
+    const minutes = Math.floor(diff / (1000 * 60))
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    
+    if (minutes < 1) return '刚刚'
+    if (minutes < 60) return `${minutes}分钟前`
+    if (hours < 24) return `${hours}小时前`
+    return `${days}天前`
+  }
 
   /**
    * 空认知网络提示
