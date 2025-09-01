@@ -163,6 +163,24 @@ Prime加载了你"睡前"的认知状态：
     const query = this.metadata.query || '未知'
     const nodeCount = this.mind?.activatedCues?.size || 0
     
+    // Debug logging for mind structure
+    logger.info('[CognitionArea] DEBUG - renderRecallGuide mind structure:', {
+      hasMind: !!this.mind,
+      mindKeys: this.mind ? Object.keys(this.mind) : null,
+      hasEngrams: !!this.mind?.engrams,
+      engramsLength: this.mind?.engrams?.length,
+      engramsType: typeof this.mind?.engrams,
+      mindType: typeof this.mind,
+      activatedCuesSize: this.mind?.activatedCues?.size,
+      roleId: this.roleId,
+      query: query
+    })
+    
+    // Deep debug: log actual mind object structure
+    if (this.mind) {
+      logger.debug('[CognitionArea] DEBUG - Full mind object:', JSON.stringify(this.mind, null, 2))
+    }
+    
     let content = `${nodeCount} 个记忆节点被激活并涌现！
 
 🧠 **激活过程**：

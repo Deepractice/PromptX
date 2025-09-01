@@ -56,6 +56,22 @@ class RecallCommand extends BasePouchCommand {
       
       if (!mind) {
         logger.warn(`[RecallCommand] No mind returned for role: ${role}, query: ${query}`)
+      } else {
+        // Debug logging for mind structure in RecallCommand
+        logger.info('[RecallCommand] DEBUG - Mind structure after recall/prime:', {
+          hasMind: !!mind,
+          mindKeys: Object.keys(mind),
+          hasEngrams: !!mind.engrams,
+          engramsLength: mind.engrams?.length,
+          engramsType: typeof mind.engrams,
+          activatedCuesSize: mind.activatedCues?.size,
+          roleId: role,
+          query: query,
+          operationType: query ? 'recall' : 'prime'
+        })
+        
+        // Deep debug: log actual mind object structure
+        logger.debug('[RecallCommand] DEBUG - Full mind object:', JSON.stringify(mind, null, 2))
       }
       
       const nodeCount = mind ? mind.activatedCues.size : 0

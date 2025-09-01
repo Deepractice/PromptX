@@ -166,7 +166,7 @@ class CognitionManager {
         nodeCount: anchoredState.metadata?.nodeCount
       });
       
-      mind = system.recall(anchoredState.centerWord);
+      mind = await system.recall(anchoredState.centerWord);
       
       if (mind) {
         logger.info(`[CognitionManager] Successfully primed from anchored state: "${anchoredState.centerWord}"`);
@@ -176,7 +176,7 @@ class CognitionManager {
     // 如果没有锚定状态或恢复失败，执行常规prime
     if (!mind) {
       logger.debug(`[CognitionManager] No anchored state or recovery failed, using regular prime`);
-      mind = system.prime();
+      mind = await system.prime();
     }
     
     if (!mind) {

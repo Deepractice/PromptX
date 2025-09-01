@@ -259,11 +259,34 @@ class CognitionSystem {
   async loadEngrams(mind, originalQuery) {
     mind.engrams = [];
     
+    // Debug logging for loadEngrams process
+    logger.info('[CognitionSystem] DEBUG - loadEngrams process:', {
+      originalQuery,
+      networkCuesSize: this.network.cues.size,
+      hasMemorySystem: !!this.getMemory(),
+      networkCuesKeys: Array.from(this.network.cues.keys())
+    });
+    
     // 只加载与原始查询词直接相关的engrams
     const queryCue = this.network.cues.get(originalQuery);
+    
+    logger.info('[CognitionSystem] DEBUG - queryCue lookup:', {
+      originalQuery,
+      hasQueryCue: !!queryCue,
+      queryCueMemories: queryCue?.memories,
+      memoriesLength: queryCue?.memories?.length
+    });
+    
     if (queryCue && queryCue.memories) {
       for (const engramId of queryCue.memories) {
         const engramData = await this.getMemory().get(engramId);
+        
+        logger.debug('[CognitionSystem] DEBUG - loading engram:', {
+          engramId,
+          hasEngramData: !!engramData,
+          engramContent: engramData?.content?.substring(0, 50)
+        });
+        
         if (engramData) {
           mind.engrams.push({
             id: engramData.id,
@@ -275,6 +298,12 @@ class CognitionSystem {
           });
         }
       }
+    } else {
+      logger.info('[CognitionSystem] DEBUG - No engrams loaded - reason:', {
+        hasQueryCue: !!queryCue,
+        hasMemories: !!queryCue?.memories,
+        query: originalQuery
+      });
     }
     
     logger.debug('[CognitionSystem] Loaded engrams', { 
@@ -293,7 +322,7 @@ class CognitionSystem {
    * 
    * @returns {Mind|null} 预热的认知网络
    */
-  prime() {
+  async prime() {
     logger.debug('[CognitionSystem] Prime operation');
     
     // 注意：数据加载已由CognitionManager.getSystem()完成
@@ -313,8 +342,26 @@ class CognitionSystem {
     
     logger.info('[CognitionSystem] Prime completed', {
       activatedNodes: mind.activatedCues?.size || 0,
-      connections: mind.connections?.length || 0
+      connections: mind.connections?.length || 0,
+      centerWord: mind.centerWord
     });
+    
+    // 加载与prime中心词相关的engrams
+    if (this.getMemory() && mind.centerWord) {
+      try {
+        await this.loadEngrams(mind, mind.centerWord);
+        logger.info('[CognitionSystem] Loaded engrams for prime center word', {
+          centerWord: mind.centerWord,
+          engramCount: mind.engrams?.length || 0
+        });
+      } catch (error) {
+        logger.error('[CognitionSystem] Failed to load engrams for prime', { 
+          centerWord: mind.centerWord,
+          error: error.message 
+        });
+        // 不影响prime的核心功能，继续执行
+      }
+    }
     
     // Prime时不更新频率，因为这是系统自动触发的
     
