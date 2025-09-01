@@ -3,6 +3,7 @@ const Network = require('./Network');
 const Remember = require('./Remember');
 const Recall = require('./Recall');
 const Prime = require('./Prime');
+const Memory = require('./Memory');
 const { TemperatureWeightStrategy } = require('./WeightStrategy');
 
 /**
@@ -113,6 +114,12 @@ class CognitionSystem {
      */
     this.recallEngine = null;
     
+    /**
+     * Memory存储实例（延迟创建）
+     * @type {Memory|null}
+     */
+    this.memory = null;
+    
     logger.info('[CognitionSystem] Initialized', {
       dataPath: this.dataPath,
       strategyType: this.strategy.constructor.name
@@ -144,24 +151,54 @@ class CognitionSystem {
   }
   
   /**
+   * 获取Memory存储（懒加载）
+   * 
+   * @returns {Memory|null} Memory实例，如果没有directory则返回null
+   */
+  getMemory() {
+    if (!this.memory && this.network.directory) {
+      const path = require('path');
+      const memoryPath = path.join(this.network.directory, 'engrams.db');
+      this.memory = new Memory(memoryPath);
+    }
+    return this.memory;
+  }
+  
+  /**
    * 记忆操作
    * 
    * 执行流程：
-   * 1. 调用Remember引擎处理Engram
-   * 2. 自动保存到磁盘
+   * 1. 存储Engram到Memory（使用engram.id）
+   * 2. 调用Remember引擎处理Schema连接
+   * 3. 建立Cue到Engram.id的反向索引
    * 
    * @param {Engram} engram - 记忆痕迹对象
-   * @returns {Object} 记忆结果
+   * @returns {Promise<Object>} 记忆结果
    */
-  remember(engram) {
+  async remember(engram) {
     logger.debug('[CognitionSystem] Remember operation', {
+      id: engram.id,
       schemaLength: engram.length,
       strength: engram.strength,
       preview: engram.getPreview()
     });
     
+    // 存储到Memory（使用engram.id作为key）
+    if (this.getMemory()) {
+      try {
+        await this.getMemory().store(engram);
+        logger.debug('[CognitionSystem] Stored engram to memory', { id: engram.id });
+      } catch (error) {
+        logger.error('[CognitionSystem] Failed to store engram to memory', { 
+          id: engram.id,
+          error: error.message 
+        });
+        throw error;
+      }
+    }
+    
     const remember = this.getRememberEngine();
-    const result = remember.execute(engram);
+    const result = remember.execute(engram, engram.id);
     
     // 注意：持久化由CognitionManager.saveSystem()负责
     // 这里不再自动保存，避免路径冲突
@@ -174,20 +211,35 @@ class CognitionSystem {
    * 
    * 执行流程：
    * 1. 调用Recall引擎激活网络
-   * 2. 更新被激活节点的频率
-   * 3. 返回激活的Mind
+   * 2. 加载与原始查询相关的Engrams
+   * 3. 更新被激活节点的频率
+   * 4. 返回激活的Mind（包含engrams）
    * 
    * @param {string} word - 起始概念
-   * @returns {Mind|null} 激活的认知网络
+   * @returns {Promise<Mind|null>} 激活的认知网络
    */
-  recall(word) {
+  async recall(word) {
     logger.debug('[CognitionSystem] Recall operation', { word });
     
     const recall = this.getRecallEngine();
     const mind = recall.execute(word);
     
+    if (!mind) {
+      return null;
+    }
+    
+    // 加载与原始查询直接相关的engrams
+    if (this.getMemory()) {
+      try {
+        await this.loadEngrams(mind, word);
+      } catch (error) {
+        logger.error('[CognitionSystem] Failed to load engrams', { error: error.message });
+        // 不影响recall的核心功能，继续执行
+      }
+    }
+    
     // 更新频率
-    if (mind && mind.activatedCues.size > 0) {
+    if (mind.activatedCues.size > 0) {
       this.network.updateRecallFrequency(mind.activatedCues);
       logger.debug('[CognitionSystem] Updated frequencies after recall', {
         activatedCount: mind.activatedCues.size
@@ -195,6 +247,40 @@ class CognitionSystem {
     }
     
     return mind;
+  }
+  
+  /**
+   * 加载与查询词直接相关的Engrams
+   * 
+   * @param {Mind} mind - Mind对象
+   * @param {string} originalQuery - 原始查询词
+   * @returns {Promise<void>}
+   */
+  async loadEngrams(mind, originalQuery) {
+    mind.engrams = [];
+    
+    // 只加载与原始查询词直接相关的engrams
+    const queryCue = this.network.cues.get(originalQuery);
+    if (queryCue && queryCue.memories) {
+      for (const engramId of queryCue.memories) {
+        const engramData = await this.getMemory().get(engramId);
+        if (engramData) {
+          mind.engrams.push({
+            id: engramData.id,
+            content: engramData.content,
+            schema: engramData.schema,
+            strength: engramData.strength,
+            timestamp: engramData.timestamp,
+            activatedBy: originalQuery
+          });
+        }
+      }
+    }
+    
+    logger.debug('[CognitionSystem] Loaded engrams', { 
+      query: originalQuery,
+      engramCount: mind.engrams.length 
+    });
   }
   
   /**

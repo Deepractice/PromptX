@@ -198,15 +198,15 @@ class CognitionManager {
    * 每次recall后自动锚定状态
    * @param {string} roleId - 角色ID
    * @param {string} query - 查询词
-   * @returns {Mind} Mind 对象
+   * @returns {Promise<Mind>} Mind 对象（包含engrams）
    */
   async recall(roleId, query) {
     logger.info(`[CognitionManager] Recall for role: ${roleId}, query: "${query}"`);
     
     const system = await this.getSystem(roleId);
     
-    // 执行recall
-    const mind = system.recall(query);
+    // 执行recall（现在是异步的，会加载engrams）
+    const mind = await system.recall(query);
     
     if (!mind) {
       logger.warn(`[CognitionManager] Recall returned null for role: ${roleId}, query: ${query}`);
@@ -252,8 +252,8 @@ class CognitionManager {
           continue;
         }
         
-        // 传递Engram对象给system.remember
-        system.remember(engram);
+        // CognitionSystem现在会自动处理Memory存储
+        await system.remember(engram);
         
         logger.debug(`[CognitionManager] Processed engram:`, {
           preview: engram.getPreview(),

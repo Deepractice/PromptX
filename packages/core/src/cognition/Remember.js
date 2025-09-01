@@ -94,14 +94,17 @@ class Remember {
   /**
    * 执行记忆写入
    * 
-   * 将Engram中的Schema序列写入Network，建立Cue之间的连接。
+   * 将Engram中的Schema序列写入Network，建立Cue之间的连接，
+   * 同时建立Cue到Engram.id的反向索引。
    * 
    * @param {Engram} engram - 记忆痕迹对象
+   * @param {string} [engramId] - 可选的Engram ID，默认使用engram.id
    * @returns {Object} 执行结果
    * @returns {number} returns.processed - 处理的节点数
    * @returns {Array} returns.connections - 创建的连接列表
+   * @returns {string} returns.engramId - 使用的Engram ID
    */
-  execute(engram) {
+  execute(engram, engramId = null) {
     // 参数验证
     const Engram = require('./Engram');
     if (!engram || !(engram instanceof Engram)) {
@@ -213,10 +216,31 @@ class Remember {
       timestamp: new Date(timestamp).toISOString()
     });
     
+    // 建立Cue到Engram的反向索引
+    const actualEngramId = engramId || engram.id;
+    if (actualEngramId) {
+      for (const word of schema) {
+        const cue = this.network.cues.get(word);
+        if (cue) {
+          if (!cue.memories) {
+            cue.memories = new Set();
+          }
+          cue.memories.add(actualEngramId);
+          
+          logger.debug('[Remember] Added engram reference', {
+            cue: word,
+            engramId: actualEngramId,
+            totalReferences: cue.memories.size
+          });
+        }
+      }
+    }
+    
     return {
       processed: schema.length,
       connections: connections,
-      timestamp: timestamp
+      timestamp: timestamp,
+      engramId: actualEngramId
     };
   }
 }

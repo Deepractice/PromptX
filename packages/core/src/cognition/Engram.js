@@ -87,6 +87,13 @@ class Engram {
      */
     this.timestamp = timestamp || Date.now();
     
+    /**
+     * Engram唯一标识符
+     * 格式: timestamp_randomId
+     * @type {string}
+     */
+    this.id = `${this.timestamp}_${Math.random().toString(36).substr(2, 9)}`;
+    
     logger.debug('[Engram] Created new engram', {
       schemaLength: this.schema.length,
       strength: this.strength,
@@ -176,6 +183,7 @@ class Engram {
    */
   toJSON() {
     return {
+      id: this.id,
       content: this.content,
       schema: this.schema,
       strength: this.strength,
