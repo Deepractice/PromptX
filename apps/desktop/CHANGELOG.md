@@ -1,5 +1,13 @@
 # @promptx/desktop
 
+## 1.12.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/core@1.12.0
+  - @promptx/mcp-server@1.12.0
+
 ## 1.11.0
 
 ### Patch Changes
