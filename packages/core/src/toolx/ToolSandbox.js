@@ -212,24 +212,23 @@ class ToolSandbox {
    * @returns {Promise<Object>} 执行结果
    */
   async execute(parameters = {}) {
-    logger.info(`[ToolSandbox] Starting execute for tool ${this.toolId} with params:`, JSON.stringify(parameters));
+    const startTime = Date.now();
+    logger.info(`[ToolSandbox] Executing tool "${this.toolId}" with params: ${JSON.stringify(parameters)}`);
     
     if (!this.isPrepared) {
-      logger.info(`[ToolSandbox] Tool not prepared, starting dependency preparation`);
+      logger.debug(`[ToolSandbox] Preparing dependencies for tool ${this.toolId}`);
       await this.prepareDependencies();
-      logger.info(`[ToolSandbox] Dependency preparation completed`);
     }
 
     try {
-      logger.info(`[ToolSandbox] Starting parameter validation`);
       // 1. 参数验证
       await this.validateParameters(parameters);
-      logger.info(`[ToolSandbox] Parameter validation completed`);
       
-      logger.info(`[ToolSandbox] Starting sandbox execution`);
       // 2. 在沙箱中执行工具
       const result = await this.executeInSandbox(parameters);
-      logger.info(`[ToolSandbox] Sandbox execution completed, result type: ${typeof result}`);
+      
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      logger.info(`[ToolSandbox] Tool "${this.toolId}" executed successfully in ${elapsed}s, result type: ${typeof result}`);
       
       return {
         success: true,
@@ -569,30 +568,24 @@ class ToolSandbox {
    * 运行pnpm安装
    */
   async runPnpmInstall() {
-    logger.info(`[ToolSandbox] Starting pnpm install process`);
+    const startTime = Date.now();
+    
+    // 构建依赖列表信息用于日志
+    let depsList = '';
+    if (typeof this.dependencies === 'object' && !Array.isArray(this.dependencies)) {
+      depsList = Object.keys(this.dependencies).map(name => `${name}@${this.dependencies[name]}`).join(', ');
+    } else if (Array.isArray(this.dependencies)) {
+      depsList = this.dependencies.join(', ');
+    }
+    
+    logger.info(`[ToolSandbox] Installing dependencies: [${depsList}]`);
     
     return new Promise((resolve, reject) => {
       // 获取内置pnpm路径 - 直接从node_modules获取
       const pnpmModulePath = require.resolve('pnpm');
       const pnpmBinPath = path.join(path.dirname(pnpmModulePath), 'bin', 'pnpm.cjs');
       
-      logger.info(`[ToolSandbox] Using pnpm at: ${pnpmBinPath}`);
-      logger.info(`[ToolSandbox] Installing in directory: ${this.directoryManager.getToolboxPath()}`);
-      
-      // 30秒超时
-      const timeout = setTimeout(() => {
-        logger.error(`[ToolSandbox] pnpm install timeout after 30s`);
-        logger.error(`[ToolSandbox] Collected stdout: ${stdout}`);
-        logger.error(`[ToolSandbox] Collected stderr: ${stderr}`);
-        pnpm.kill('SIGTERM');
-        reject(new Error('pnpm install timeout'));
-      }, 30000);
-      
-      // 使用环境变量中配置的 Node.js 路径，优先级：
-      // 1. PROMPTX_NODE_EXECUTABLE (Electron 环境)
-      // 2. 系统默认的 'node'
       const nodeExecutable = process.env.PROMPTX_NODE_EXECUTABLE || 'node';
-      logger.info(`[ToolSandbox] Using Node.js executable: ${nodeExecutable}`);
       
       // 准备子进程环境变量
       const spawnEnv = { ...process.env };
@@ -607,12 +600,7 @@ class ToolSandbox {
       // Add CI=1 to environment to enable non-interactive mode
       spawnEnv.CI = '1';
       
-      // Use comprehensive non-interactive flags:
-      // --config.confirmModulesPurge=false: Auto-confirm module purge
-      // --prefer-offline: Use cached packages when possible
-      // --ignore-scripts: Don't run install scripts that might prompt
-      // --reporter=append-only: Simple output without interactive elements
-      // Note: Not using --frozen-lockfile as it prevents lockfile creation/update
+      // 构建pnpm参数数组
       const pnpmArgs = [
         pnpmBinPath, 
         'install',
@@ -621,6 +609,25 @@ class ToolSandbox {
         '--ignore-scripts',
         '--reporter=append-only'
       ];
+      
+      const fullCommand = `${nodeExecutable} ${pnpmArgs.join(' ')}`;
+      
+      logger.info(`[ToolSandbox] Executing command: ${fullCommand}`);
+      logger.info(`[ToolSandbox] Working directory: ${this.directoryManager.getToolboxPath()}`);
+      logger.info(`[ToolSandbox] Using Node.js executable: ${nodeExecutable}`);
+      
+      // 30秒超时
+      const timeout = setTimeout(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        logger.error(`[ToolSandbox] pnpm install timeout (${elapsed}s > 30s)`);
+        logger.error(`[ToolSandbox] Command: ${fullCommand}`);
+        logger.error(`[ToolSandbox] Working directory: ${this.directoryManager.getToolboxPath()}`);
+        logger.error(`[ToolSandbox] Installing packages: [${depsList}]`);
+        logger.error(`[ToolSandbox] Stdout output: ${stdout}`);
+        logger.error(`[ToolSandbox] Stderr output: ${stderr}`);
+        pnpm.kill('SIGTERM');
+        reject(new Error(`pnpm install timeout after 30s. Command: ${fullCommand}`));
+      }, 30000);
       
       const pnpm = spawn(nodeExecutable, pnpmArgs, {
         cwd: this.directoryManager.getToolboxPath(),  // 使用 toolbox 路径安装依赖
@@ -645,15 +652,19 @@ class ToolSandbox {
       
       pnpm.on('close', (code) => {
         clearTimeout(timeout);
-        logger.info(`[ToolSandbox] pnpm process finished with code: ${code}`);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         
         if (code === 0) {
-          logger.info(`[ToolSandbox] pnpm install completed successfully`);
+          logger.info(`[ToolSandbox] Dependencies installed successfully in ${elapsed}s`);
+          logger.debug(`[ToolSandbox] Installed packages: [${depsList}]`);
           resolve({ stdout, stderr });
         } else {
-          logger.error(`[ToolSandbox] pnpm install failed with code ${code}`);
-          logger.error(`[ToolSandbox] stdout: ${stdout}`);
-          logger.error(`[ToolSandbox] stderr: ${stderr}`);
+          logger.error(`[ToolSandbox] pnpm install failed with exit code ${code} after ${elapsed}s`);
+          logger.error(`[ToolSandbox] Command: ${fullCommand}`);
+          logger.error(`[ToolSandbox] Working directory: ${this.directoryManager.getToolboxPath()}`);
+          logger.error(`[ToolSandbox] Installing packages: [${depsList}]`);
+          logger.error(`[ToolSandbox] Stdout: ${stdout}`);
+          logger.error(`[ToolSandbox] Stderr: ${stderr}`);
           reject(new Error(`pnpm install failed with code ${code}: ${stderr}`));
         }
       });
