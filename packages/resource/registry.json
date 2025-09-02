@@ -4,8 +4,8 @@
   "metadata": {
     "version": "2.0.0",
     "description": "package 级资源注册表",
-    "createdAt": "2025-09-01T08:44:59.232Z",
-    "updatedAt": "2025-09-01T08:44:59.233Z",
+    "createdAt": "2025-09-06T04:56:16.123Z",
+    "updatedAt": "2025-09-06T04:56:16.124Z",
     "resourceCount": 45
   },
   "resources": [
@@ -14,14 +14,14 @@
       "source": "package",
       "protocol": "protocol",
       "name": "Deepractice提示词标记语言模式协议 (DPML)",
-      "description": "dpml 协议",
+      "description": "> **TL;DR:** DPML(Deepractice Prompt Markup Language)是一种专为",
       "reference": "@package://resources/protocol/dpml.protocol.md",
       "metadata": {
         "path": "resources/protocol/dpml.protocol.md",
-        "size": 10792,
-        "modified": "2025-09-01T03:53:48.820Z",
-        "createdAt": "2025-09-01T03:53:48.820Z",
-        "updatedAt": "2025-09-01T03:53:48.820Z"
+        "size": 10486,
+        "modified": "2025-08-29T03:30:04.182Z",
+        "createdAt": "2025-08-29T03:30:04.182Z",
+        "updatedAt": "2025-08-29T03:30:04.182Z"
       }
     },
     {
@@ -29,14 +29,14 @@
       "source": "package",
       "protocol": "protocol",
       "name": "PATEOAS 协议 - Prompt as the Engine of Application State",
-      "description": "pateoas 协议",
+      "description": "> **TL;DR:** PromptX = AI的诸葛锦囊，通过 PATEOAS 让 AI 无需记忆，仅凭 Prompt 引导完成专家级任务",
       "reference": "@package://resources/protocol/pateoas.protocol.md",
       "metadata": {
         "path": "resources/protocol/pateoas.protocol.md",
-        "size": 2211,
-        "modified": "2025-09-01T03:53:48.820Z",
-        "createdAt": "2025-09-01T03:53:48.820Z",
-        "updatedAt": "2025-09-01T03:53:48.820Z"
+        "size": 2133,
+        "modified": "2025-08-29T03:30:04.182Z",
+        "createdAt": "2025-08-29T03:30:04.182Z",
+        "updatedAt": "2025-08-29T03:30:04.182Z"
       }
     },
     {
@@ -44,14 +44,14 @@
       "source": "package",
       "protocol": "tag",
       "name": "DPML#行为提示单元 框架",
-      "description": "execution 标签",
+      "description": "> **TL;DR:** DPML",
       "reference": "@package://resources/protocol/tag/execution.tag.md",
       "metadata": {
         "path": "resources/protocol/tag/execution.tag.md",
-        "size": 3314,
-        "modified": "2025-09-01T03:53:48.821Z",
-        "createdAt": "2025-09-01T03:53:48.821Z",
-        "updatedAt": "2025-09-01T03:53:48.821Z"
+        "size": 3254,
+        "modified": "2025-08-29T03:30:04.182Z",
+        "createdAt": "2025-08-29T03:30:04.182Z",
+        "updatedAt": "2025-08-29T03:30:04.182Z"
       }
     },
     {
@@ -59,14 +59,14 @@
       "source": "package",
       "protocol": "tag",
       "name": "DPML#资源提示单元 框架",
-      "description": "resource 标签",
+      "description": "> **TL;DR:** DPML",
       "reference": "@package://resources/protocol/tag/resource.tag.md",
       "metadata": {
         "path": "resources/protocol/tag/resource.tag.md",
-        "size": 8337,
-        "modified": "2025-09-01T03:53:48.821Z",
-        "createdAt": "2025-09-01T03:53:48.821Z",
-        "updatedAt": "2025-09-01T03:53:48.821Z"
+        "size": 8151,
+        "modified": "2025-08-29T03:30:04.183Z",
+        "createdAt": "2025-08-29T03:30:04.182Z",
+        "updatedAt": "2025-08-29T03:30:04.183Z"
       }
     },
     {
@@ -74,14 +74,14 @@
       "source": "package",
       "protocol": "tag",
       "name": "DPML#角色提示单元 框架",
-      "description": "role 标签",
+      "description": "> **TL;DR:** DPML",
       "reference": "@package://resources/protocol/tag/role.tag.md",
       "metadata": {
         "path": "resources/protocol/tag/role.tag.md",
-        "size": 3832,
-        "modified": "2025-09-01T03:53:48.822Z",
-        "createdAt": "2025-09-01T03:53:48.822Z",
-        "updatedAt": "2025-09-01T03:53:48.822Z"
+        "size": 3746,
+        "modified": "2025-08-29T03:30:04.183Z",
+        "createdAt": "2025-08-29T03:30:04.183Z",
+        "updatedAt": "2025-08-29T03:30:04.183Z"
       }
     },
     {
@@ -89,14 +89,14 @@
       "source": "package",
       "protocol": "tag",
       "name": "DPML动态术语协议 (Dynamic Terminology Protocol)",
-      "description": "terminology 标签",
+      "description": "> **TL;DR:** DPML采用动态术语理解机制，AI需根据`",
       "reference": "@package://resources/protocol/tag/terminology.tag.md",
       "metadata": {
         "path": "resources/protocol/tag/terminology.tag.md",
-        "size": 5597,
-        "modified": "2025-09-01T03:53:48.822Z",
-        "createdAt": "2025-09-01T03:53:48.822Z",
-        "updatedAt": "2025-09-01T03:53:48.822Z"
+        "size": 5468,
+        "modified": "2025-08-29T03:30:04.183Z",
+        "createdAt": "2025-08-29T03:30:04.183Z",
+        "updatedAt": "2025-08-29T03:30:04.183Z"
       }
     },
     {
@@ -104,14 +104,14 @@
       "source": "package",
       "protocol": "tag",
       "name": "DPML#思考提示单元 框架",
-      "description": "thought 标签",
+      "description": "> **TL;DR:** DPML",
       "reference": "@package://resources/protocol/tag/thought.tag.md",
       "metadata": {
         "path": "resources/protocol/tag/thought.tag.md",
-        "size": 4049,
-        "modified": "2025-09-01T03:53:48.822Z",
-        "createdAt": "2025-09-01T03:53:48.822Z",
-        "updatedAt": "2025-09-01T03:53:48.822Z"
+        "size": 3989,
+        "modified": "2025-08-29T03:30:04.183Z",
+        "createdAt": "2025-08-29T03:30:04.183Z",
+        "updatedAt": "2025-08-29T03:30:04.183Z"
       }
     },
     {
@@ -119,14 +119,14 @@
       "source": "package",
       "protocol": "tag",
       "name": "DPML#工具提示单元 框架",
-      "description": "tool 标签",
+      "description": "> **TL;DR:** DPML",
       "reference": "@package://resources/protocol/tag/tool.tag.md",
       "metadata": {
         "path": "resources/protocol/tag/tool.tag.md",
-        "size": 4262,
-        "modified": "2025-09-01T03:53:48.823Z",
-        "createdAt": "2025-09-01T03:53:48.823Z",
-        "updatedAt": "2025-09-01T03:53:48.823Z"
+        "size": 4167,
+        "modified": "2025-08-29T03:30:04.183Z",
+        "createdAt": "2025-08-29T03:30:04.183Z",
+        "updatedAt": "2025-08-29T03:30:04.183Z"
       }
     },
     {
@@ -138,10 +138,10 @@
       "reference": "@package://resources/role/assistant/assistant.role.md",
       "metadata": {
         "path": "resources/role/assistant/assistant.role.md",
-        "size": 141,
-        "modified": "2025-09-01T03:53:48.823Z",
-        "createdAt": "2025-09-01T03:53:48.823Z",
-        "updatedAt": "2025-09-01T03:53:48.823Z"
+        "size": 132,
+        "modified": "2025-08-29T03:30:04.184Z",
+        "createdAt": "2025-08-29T03:30:04.183Z",
+        "updatedAt": "2025-08-29T03:30:04.184Z"
       }
     },
     {
@@ -153,10 +153,10 @@
       "reference": "@package://resources/role/assistant/execution/assistant.execution.md",
       "metadata": {
         "path": "resources/role/assistant/execution/assistant.execution.md",
-        "size": 4435,
-        "modified": "2025-09-01T03:53:48.824Z",
-        "createdAt": "2025-09-01T03:53:48.824Z",
-        "updatedAt": "2025-09-01T03:53:48.824Z"
+        "size": 4332,
+        "modified": "2025-08-29T03:30:04.184Z",
+        "createdAt": "2025-08-29T03:30:04.184Z",
+        "updatedAt": "2025-08-29T03:30:04.184Z"
       }
     },
     {
@@ -168,10 +168,10 @@
       "reference": "@package://resources/role/assistant/thought/assistant.thought.md",
       "metadata": {
         "path": "resources/role/assistant/thought/assistant.thought.md",
-        "size": 3554,
-        "modified": "2025-09-01T03:53:48.825Z",
-        "createdAt": "2025-09-01T03:53:48.825Z",
-        "updatedAt": "2025-09-01T03:53:48.825Z"
+        "size": 3470,
+        "modified": "2025-08-29T03:30:04.184Z",
+        "createdAt": "2025-08-29T03:30:04.184Z",
+        "updatedAt": "2025-08-29T03:30:04.184Z"
       }
     },
     {
@@ -183,10 +183,10 @@
       "reference": "@package://resources/role/luban/execution/tool-creation-filesystem.execution.md",
       "metadata": {
         "path": "resources/role/luban/execution/tool-creation-filesystem.execution.md",
-        "size": 6096,
-        "modified": "2025-09-01T07:44:40.144Z",
-        "createdAt": "2025-09-01T07:44:40.143Z",
-        "updatedAt": "2025-09-01T07:44:40.144Z"
+        "size": 5875,
+        "modified": "2025-09-01T10:27:46.277Z",
+        "createdAt": "2025-09-01T10:27:46.277Z",
+        "updatedAt": "2025-09-01T10:27:46.277Z"
       }
     },
     {
@@ -198,10 +198,10 @@
       "reference": "@package://resources/role/luban/execution/tool-development-workflow.execution.md",
       "metadata": {
         "path": "resources/role/luban/execution/tool-development-workflow.execution.md",
-        "size": 14228,
-        "modified": "2025-09-01T03:53:48.826Z",
-        "createdAt": "2025-09-01T03:53:48.826Z",
-        "updatedAt": "2025-09-01T03:53:48.826Z"
+        "size": 13681,
+        "modified": "2025-08-29T03:30:04.185Z",
+        "createdAt": "2025-08-29T03:30:04.184Z",
+        "updatedAt": "2025-08-29T03:30:04.185Z"
       }
     },
     {
@@ -209,14 +209,14 @@
       "source": "package",
       "protocol": "execution",
       "name": "ToolSandbox系统精通",
-      "description": "toolsandbox-mastery 执行模式",
+      "description": "<execution>",
       "reference": "@package://resources/role/luban/execution/toolsandbox-mastery.execution.md",
       "metadata": {
         "path": "resources/role/luban/execution/toolsandbox-mastery.execution.md",
-        "size": 7248,
-        "modified": "2025-09-01T03:53:48.827Z",
-        "createdAt": "2025-09-01T03:53:48.827Z",
-        "updatedAt": "2025-09-01T03:53:48.827Z"
+        "size": 6999,
+        "modified": "2025-08-29T03:30:04.185Z",
+        "createdAt": "2025-08-29T03:30:04.185Z",
+        "updatedAt": "2025-08-29T03:30:04.185Z"
       }
     },
     {
@@ -224,14 +224,14 @@
       "source": "package",
       "protocol": "knowledge",
       "name": "DPML工具标签体系精通",
-      "description": "dpml-tool-tagging 知识体系",
+      "description": "<knowledge>",
       "reference": "@package://resources/role/luban/knowledge/dpml-tool-tagging.knowledge.md",
       "metadata": {
         "path": "resources/role/luban/knowledge/dpml-tool-tagging.knowledge.md",
-        "size": 7246,
-        "modified": "2025-09-01T03:53:48.828Z",
-        "createdAt": "2025-09-01T03:53:48.827Z",
-        "updatedAt": "2025-09-01T03:53:48.828Z"
+        "size": 6962,
+        "modified": "2025-08-29T03:30:04.187Z",
+        "createdAt": "2025-08-29T03:30:04.185Z",
+        "updatedAt": "2025-08-29T03:30:04.187Z"
       }
     },
     {
@@ -239,14 +239,14 @@
       "source": "package",
       "protocol": "knowledge",
       "name": "PromptX工具架构知识体系",
-      "description": "promptx-tool-architecture 知识体系",
+      "description": "<knowledge>",
       "reference": "@package://resources/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
       "metadata": {
         "path": "resources/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
-        "size": 12984,
-        "modified": "2025-09-01T03:53:48.828Z",
-        "createdAt": "2025-09-01T03:53:48.828Z",
-        "updatedAt": "2025-09-01T03:53:48.828Z"
+        "size": 12484,
+        "modified": "2025-08-29T03:30:04.189Z",
+        "createdAt": "2025-08-29T03:30:04.187Z",
+        "updatedAt": "2025-08-29T03:30:04.189Z"
       }
     },
     {
@@ -254,14 +254,14 @@
       "source": "package",
       "protocol": "role",
       "name": "鲁班 - PromptX工具大师",
-      "description": "luban 角色",
+      "description": "<role>",
       "reference": "@package://resources/role/luban/luban.role.md",
       "metadata": {
         "path": "resources/role/luban/luban.role.md",
-        "size": 427,
-        "modified": "2025-09-01T03:53:48.828Z",
-        "createdAt": "2025-09-01T03:53:48.828Z",
-        "updatedAt": "2025-09-01T03:53:48.828Z"
+        "size": 405,
+        "modified": "2025-08-29T03:30:04.189Z",
+        "createdAt": "2025-08-29T03:30:04.189Z",
+        "updatedAt": "2025-08-29T03:30:04.189Z"
       }
     },
     {
@@ -269,14 +269,14 @@
       "source": "package",
       "protocol": "thought",
       "name": "设计思维 - 方案架构设计",
-      "description": "design 思维模式",
+      "description": "<thought>",
       "reference": "@package://resources/role/luban/thought/design.thought.md",
       "metadata": {
         "path": "resources/role/luban/thought/design.thought.md",
-        "size": 4399,
-        "modified": "2025-09-01T03:53:48.829Z",
-        "createdAt": "2025-09-01T03:53:48.829Z",
-        "updatedAt": "2025-09-01T03:53:48.829Z"
+        "size": 4297,
+        "modified": "2025-08-29T03:30:04.189Z",
+        "createdAt": "2025-08-29T03:30:04.189Z",
+        "updatedAt": "2025-08-29T03:30:04.189Z"
       }
     },
     {
@@ -284,14 +284,14 @@
       "source": "package",
       "protocol": "thought",
       "name": "工程思维 - 技术方案实现",
-      "description": "engineering 思维模式",
+      "description": "<thought>",
       "reference": "@package://resources/role/luban/thought/engineering.thought.md",
       "metadata": {
         "path": "resources/role/luban/thought/engineering.thought.md",
-        "size": 5015,
-        "modified": "2025-09-01T03:53:48.829Z",
-        "createdAt": "2025-09-01T03:53:48.829Z",
-        "updatedAt": "2025-09-01T03:53:48.829Z"
+        "size": 4895,
+        "modified": "2025-08-29T03:30:04.190Z",
+        "createdAt": "2025-08-29T03:30:04.189Z",
+        "updatedAt": "2025-08-29T03:30:04.190Z"
       }
     },
     {
@@ -299,14 +299,14 @@
       "source": "package",
       "protocol": "thought",
       "name": "需求思维 - 探索与挑战并重",
-      "description": "requirements 思维模式",
+      "description": "<thought>",
       "reference": "@package://resources/role/luban/thought/requirements.thought.md",
       "metadata": {
         "path": "resources/role/luban/thought/requirements.thought.md",
-        "size": 2885,
-        "modified": "2025-09-01T03:53:48.830Z",
-        "createdAt": "2025-09-01T03:53:48.829Z",
-        "updatedAt": "2025-09-01T03:53:48.830Z"
+        "size": 2810,
+        "modified": "2025-08-29T03:30:04.190Z",
+        "createdAt": "2025-08-29T03:30:04.190Z",
+        "updatedAt": "2025-08-29T03:30:04.190Z"
       }
     },
     {
@@ -314,14 +314,14 @@
       "source": "package",
       "protocol": "thought",
       "name": "验证思维 - 测试与质量保证",
-      "description": "validation 思维模式",
+      "description": "<thought>",
       "reference": "@package://resources/role/luban/thought/validation.thought.md",
       "metadata": {
         "path": "resources/role/luban/thought/validation.thought.md",
-        "size": 5116,
-        "modified": "2025-09-01T03:53:48.830Z",
-        "createdAt": "2025-09-01T03:53:48.830Z",
-        "updatedAt": "2025-09-01T03:53:48.830Z"
+        "size": 4996,
+        "modified": "2025-08-29T03:30:04.190Z",
+        "createdAt": "2025-08-29T03:30:04.190Z",
+        "updatedAt": "2025-08-29T03:30:04.190Z"
       }
     },
     {
@@ -333,10 +333,10 @@
       "reference": "@package://resources/role/noface/execution/adaptive-learning.execution.md",
       "metadata": {
         "path": "resources/role/noface/execution/adaptive-learning.execution.md",
-        "size": 3452,
-        "modified": "2025-09-01T03:53:48.830Z",
-        "createdAt": "2025-09-01T03:53:48.830Z",
-        "updatedAt": "2025-09-01T03:53:48.830Z"
+        "size": 3360,
+        "modified": "2025-08-29T03:30:04.191Z",
+        "createdAt": "2025-08-29T03:30:04.190Z",
+        "updatedAt": "2025-08-29T03:30:04.191Z"
       }
     },
     {
@@ -348,10 +348,10 @@
       "reference": "@package://resources/role/noface/execution/content-preservation.execution.md",
       "metadata": {
         "path": "resources/role/noface/execution/content-preservation.execution.md",
-        "size": 2600,
-        "modified": "2025-09-01T03:53:48.831Z",
-        "createdAt": "2025-09-01T03:53:48.831Z",
-        "updatedAt": "2025-09-01T03:53:48.831Z"
+        "size": 2529,
+        "modified": "2025-08-29T03:30:04.191Z",
+        "createdAt": "2025-08-29T03:30:04.191Z",
+        "updatedAt": "2025-08-29T03:30:04.191Z"
       }
     },
     {
@@ -359,14 +359,14 @@
       "source": "package",
       "protocol": "role",
       "name": "无面 - 万能学习助手",
-      "description": "noface 角色",
+      "description": "<role>",
       "reference": "@package://resources/role/noface/noface.role.md",
       "metadata": {
         "path": "resources/role/noface/noface.role.md",
-        "size": 3057,
-        "modified": "2025-09-01T03:53:48.831Z",
-        "createdAt": "2025-09-01T03:53:48.831Z",
-        "updatedAt": "2025-09-01T03:53:48.831Z"
+        "size": 2980,
+        "modified": "2025-08-29T03:30:04.191Z",
+        "createdAt": "2025-08-29T03:30:04.191Z",
+        "updatedAt": "2025-08-29T03:30:04.191Z"
       }
     },
     {
@@ -378,10 +378,10 @@
       "reference": "@package://resources/role/nuwa/execution/dpml-authoring.execution.md",
       "metadata": {
         "path": "resources/role/nuwa/execution/dpml-authoring.execution.md",
-        "size": 3950,
-        "modified": "2025-09-01T03:53:48.832Z",
-        "createdAt": "2025-09-01T03:53:48.831Z",
-        "updatedAt": "2025-09-01T03:53:48.832Z"
+        "size": 3828,
+        "modified": "2025-08-29T03:30:04.191Z",
+        "createdAt": "2025-08-29T03:30:04.191Z",
+        "updatedAt": "2025-08-29T03:30:04.191Z"
       }
     },
     {
@@ -393,10 +393,10 @@
       "reference": "@package://resources/role/nuwa/execution/role-creation-filesystem.execution.md",
       "metadata": {
         "path": "resources/role/nuwa/execution/role-creation-filesystem.execution.md",
-        "size": 2187,
-        "modified": "2025-09-01T03:53:48.832Z",
-        "createdAt": "2025-09-01T03:53:48.832Z",
-        "updatedAt": "2025-09-01T03:53:48.832Z"
+        "size": 2118,
+        "modified": "2025-08-29T03:30:04.192Z",
+        "createdAt": "2025-08-29T03:30:04.192Z",
+        "updatedAt": "2025-08-29T03:30:04.192Z"
       }
     },
     {
@@ -408,10 +408,10 @@
       "reference": "@package://resources/role/nuwa/execution/role-design-patterns.execution.md",
       "metadata": {
         "path": "resources/role/nuwa/execution/role-design-patterns.execution.md",
-        "size": 2683,
-        "modified": "2025-09-01T03:53:48.832Z",
-        "createdAt": "2025-09-01T03:53:48.832Z",
-        "updatedAt": "2025-09-01T03:53:48.832Z"
+        "size": 2602,
+        "modified": "2025-08-29T03:30:04.192Z",
+        "createdAt": "2025-08-29T03:30:04.192Z",
+        "updatedAt": "2025-08-29T03:30:04.192Z"
       }
     },
     {
@@ -423,10 +423,10 @@
       "reference": "@package://resources/role/nuwa/execution/role-generation.execution.md",
       "metadata": {
         "path": "resources/role/nuwa/execution/role-generation.execution.md",
-        "size": 8412,
-        "modified": "2025-09-01T03:53:48.833Z",
-        "createdAt": "2025-09-01T03:53:48.833Z",
-        "updatedAt": "2025-09-01T03:53:48.833Z"
+        "size": 8186,
+        "modified": "2025-08-29T03:30:04.193Z",
+        "createdAt": "2025-08-29T03:30:04.192Z",
+        "updatedAt": "2025-08-29T03:30:04.193Z"
       }
     },
     {
@@ -438,10 +438,10 @@
       "reference": "@package://resources/role/nuwa/execution/visualization-enhancement.execution.md",
       "metadata": {
         "path": "resources/role/nuwa/execution/visualization-enhancement.execution.md",
-        "size": 5182,
-        "modified": "2025-09-01T03:53:48.833Z",
-        "createdAt": "2025-09-01T03:53:48.833Z",
-        "updatedAt": "2025-09-01T03:53:48.833Z"
+        "size": 5011,
+        "modified": "2025-08-29T03:30:04.193Z",
+        "createdAt": "2025-08-29T03:30:04.193Z",
+        "updatedAt": "2025-08-29T03:30:04.193Z"
       }
     },
     {
@@ -449,14 +449,14 @@
       "source": "package",
       "protocol": "role",
       "name": "女娲 - AI角色创造专家",
-      "description": "nuwa 角色",
+      "description": "<role>",
       "reference": "@package://resources/role/nuwa/nuwa.role.md",
       "metadata": {
         "path": "resources/role/nuwa/nuwa.role.md",
-        "size": 4844,
-        "modified": "2025-09-01T03:53:48.833Z",
-        "createdAt": "2025-09-01T03:53:48.833Z",
-        "updatedAt": "2025-09-01T03:53:48.833Z"
+        "size": 4758,
+        "modified": "2025-08-29T03:30:04.193Z",
+        "createdAt": "2025-08-29T03:30:04.193Z",
+        "updatedAt": "2025-08-29T03:30:04.193Z"
       }
     },
     {
@@ -468,10 +468,10 @@
       "reference": "@package://resources/role/nuwa/thought/role-creation.thought.md",
       "metadata": {
         "path": "resources/role/nuwa/thought/role-creation.thought.md",
-        "size": 5514,
-        "modified": "2025-09-01T03:53:48.834Z",
-        "createdAt": "2025-09-01T03:53:48.834Z",
-        "updatedAt": "2025-09-01T03:53:48.834Z"
+        "size": 5375,
+        "modified": "2025-08-29T03:30:04.194Z",
+        "createdAt": "2025-08-29T03:30:04.193Z",
+        "updatedAt": "2025-08-29T03:30:04.194Z"
       }
     },
     {
@@ -483,10 +483,10 @@
       "reference": "@package://resources/role/sean/execution/contradiction-analysis.execution.md",
       "metadata": {
         "path": "resources/role/sean/execution/contradiction-analysis.execution.md",
-        "size": 3454,
-        "modified": "2025-09-01T03:53:48.834Z",
-        "createdAt": "2025-09-01T03:53:48.834Z",
-        "updatedAt": "2025-09-01T03:53:48.834Z"
+        "size": 3359,
+        "modified": "2025-08-29T03:30:04.194Z",
+        "createdAt": "2025-08-29T03:30:04.194Z",
+        "updatedAt": "2025-08-29T03:30:04.194Z"
       }
     },
     {
@@ -498,10 +498,10 @@
       "reference": "@package://resources/role/sean/execution/contradiction-management-methodology.execution.md",
       "metadata": {
         "path": "resources/role/sean/execution/contradiction-management-methodology.execution.md",
-        "size": 2923,
-        "modified": "2025-09-01T03:53:48.835Z",
-        "createdAt": "2025-09-01T03:53:48.835Z",
-        "updatedAt": "2025-09-01T03:53:48.835Z"
+        "size": 2848,
+        "modified": "2025-08-29T03:30:04.194Z",
+        "createdAt": "2025-08-29T03:30:04.194Z",
+        "updatedAt": "2025-08-29T03:30:04.194Z"
       }
     },
     {
@@ -513,10 +513,10 @@
       "reference": "@package://resources/role/sean/execution/sean-decision-framework.execution.md",
       "metadata": {
         "path": "resources/role/sean/execution/sean-decision-framework.execution.md",
-        "size": 3034,
-        "modified": "2025-09-01T03:53:48.835Z",
-        "createdAt": "2025-09-01T03:53:48.835Z",
-        "updatedAt": "2025-09-01T03:53:48.835Z"
+        "size": 2959,
+        "modified": "2025-08-29T03:30:04.194Z",
+        "createdAt": "2025-08-29T03:30:04.194Z",
+        "updatedAt": "2025-08-29T03:30:04.194Z"
       }
     },
     {
@@ -528,10 +528,10 @@
       "reference": "@package://resources/role/sean/execution/template-adherence.execution.md",
       "metadata": {
         "path": "resources/role/sean/execution/template-adherence.execution.md",
-        "size": 3078,
-        "modified": "2025-09-01T03:53:48.835Z",
-        "createdAt": "2025-09-01T03:53:48.835Z",
-        "updatedAt": "2025-09-01T03:53:48.835Z"
+        "size": 2995,
+        "modified": "2025-08-29T03:30:04.194Z",
+        "createdAt": "2025-08-29T03:30:04.194Z",
+        "updatedAt": "2025-08-29T03:30:04.194Z"
       }
     },
     {
@@ -543,10 +543,10 @@
       "reference": "@package://resources/role/sean/knowledge/contradiction-methodology.knowledge.md",
       "metadata": {
         "path": "resources/role/sean/knowledge/contradiction-methodology.knowledge.md",
-        "size": 2165,
-        "modified": "2025-09-01T03:53:48.836Z",
-        "createdAt": "2025-09-01T03:53:48.836Z",
-        "updatedAt": "2025-09-01T03:53:48.836Z"
+        "size": 2106,
+        "modified": "2025-08-29T03:30:04.195Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.195Z"
       }
     },
     {
@@ -554,14 +554,14 @@
       "source": "package",
       "protocol": "knowledge",
       "name": "产品哲学知识体系",
-      "description": "product-philosophy 知识体系",
+      "description": "<reference protocol=\"knowledge\" resource=\"product-philosophy\">",
       "reference": "@package://resources/role/sean/knowledge/product-philosophy.knowledge.md",
       "metadata": {
         "path": "resources/role/sean/knowledge/product-philosophy.knowledge.md",
-        "size": 3612,
-        "modified": "2025-09-01T03:53:48.836Z",
-        "createdAt": "2025-09-01T03:53:48.836Z",
-        "updatedAt": "2025-09-01T03:53:48.836Z"
+        "size": 3518,
+        "modified": "2025-08-29T03:30:04.195Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.195Z"
       }
     },
     {
@@ -569,14 +569,14 @@
       "source": "package",
       "protocol": "knowledge",
       "name": "PromptX进化知识体系",
-      "description": "promptx-evolution 知识体系",
+      "description": "<reference protocol=\"knowledge\" resource=\"promptx-evolution\">",
       "reference": "@package://resources/role/sean/knowledge/promptx-evolution.knowledge.md",
       "metadata": {
         "path": "resources/role/sean/knowledge/promptx-evolution.knowledge.md",
-        "size": 3686,
-        "modified": "2025-09-01T03:53:48.837Z",
-        "createdAt": "2025-09-01T03:53:48.836Z",
-        "updatedAt": "2025-09-01T03:53:48.837Z"
+        "size": 3583,
+        "modified": "2025-08-29T03:30:04.195Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.195Z"
       }
     },
     {
@@ -584,14 +584,14 @@
       "source": "package",
       "protocol": "role",
       "name": "Sean - deepractice.ai 创始人 & CEO",
-      "description": "sean 角色",
+      "description": "<role>",
       "reference": "@package://resources/role/sean/sean.role.md",
       "metadata": {
         "path": "resources/role/sean/sean.role.md",
-        "size": 2746,
-        "modified": "2025-09-01T03:53:48.837Z",
-        "createdAt": "2025-09-01T03:53:48.837Z",
-        "updatedAt": "2025-09-01T03:53:48.837Z"
+        "size": 2684,
+        "modified": "2025-08-29T03:30:04.195Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.195Z"
       }
     },
     {
@@ -603,10 +603,10 @@
       "reference": "@package://resources/role/sean/thought/contradiction-methodology.thought.md",
       "metadata": {
         "path": "resources/role/sean/thought/contradiction-methodology.thought.md",
-        "size": 1871,
-        "modified": "2025-09-01T03:53:48.838Z",
-        "createdAt": "2025-09-01T03:53:48.837Z",
-        "updatedAt": "2025-09-01T03:53:48.838Z"
+        "size": 1824,
+        "modified": "2025-08-29T03:30:04.195Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.195Z"
       }
     },
     {
@@ -618,10 +618,10 @@
       "reference": "@package://resources/role/sean/thought/sean.thought.md",
       "metadata": {
         "path": "resources/role/sean/thought/sean.thought.md",
-        "size": 2341,
-        "modified": "2025-09-01T03:53:48.838Z",
-        "createdAt": "2025-09-01T03:53:48.838Z",
-        "updatedAt": "2025-09-01T03:53:48.838Z"
+        "size": 2274,
+        "modified": "2025-08-29T03:30:04.195Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.195Z"
       }
     },
     {
@@ -629,29 +629,29 @@
       "source": "package",
       "protocol": "manual",
       "name": "Filesystem 工具使用手册",
-      "description": "filesystem 使用手册",
+      "description": "<manual>",
       "reference": "@package://resources/tool/filesystem/filesystem.manual.md",
       "metadata": {
         "path": "resources/tool/filesystem/filesystem.manual.md",
-        "size": 13223,
-        "modified": "2025-09-01T03:53:48.839Z",
-        "createdAt": "2025-09-01T03:53:48.838Z",
-        "updatedAt": "2025-09-01T03:53:48.839Z"
+        "size": 12784,
+        "modified": "2025-08-29T03:30:04.196Z",
+        "createdAt": "2025-08-29T03:30:04.195Z",
+        "updatedAt": "2025-08-29T03:30:04.196Z"
       }
     },
     {
       "id": "filesystem",
       "source": "package",
       "protocol": "tool",
-      "name": "filesystem",
+      "name": "Filesystem Tool",
       "description": "filesystem 工具",
       "reference": "@package://resources/tool/filesystem/filesystem.tool.js",
       "metadata": {
         "path": "resources/tool/filesystem/filesystem.tool.js",
-        "size": 15161,
-        "modified": "2025-09-01T03:53:48.839Z",
-        "createdAt": "2025-09-01T03:53:48.839Z",
-        "updatedAt": "2025-09-01T03:53:48.839Z"
+        "size": 14684,
+        "modified": "2025-08-29T03:30:04.196Z",
+        "createdAt": "2025-08-29T03:30:04.196Z",
+        "updatedAt": "2025-08-29T03:30:04.196Z"
       }
     },
     {
@@ -664,9 +664,9 @@
       "metadata": {
         "path": "resources/tool/promptx-log-viewer/promptx-log-viewer.manual.md",
         "size": 6005,
-        "modified": "2025-09-01T07:32:46.501Z",
-        "createdAt": "2025-09-01T07:52:46.471Z",
-        "updatedAt": "2025-09-01T07:32:46.501Z"
+        "modified": "2025-09-01T10:27:46.277Z",
+        "createdAt": "2025-09-01T10:27:46.277Z",
+        "updatedAt": "2025-09-01T10:27:46.277Z"
       }
     },
     {
@@ -679,9 +679,9 @@
       "metadata": {
         "path": "resources/tool/promptx-log-viewer/promptx-log-viewer.tool.js",
         "size": 12158,
-        "modified": "2025-09-01T08:11:57.528Z",
-        "createdAt": "2025-09-01T08:11:57.528Z",
-        "updatedAt": "2025-09-01T08:11:57.528Z"
+        "modified": "2025-09-01T10:27:46.278Z",
+        "createdAt": "2025-09-01T10:27:46.277Z",
+        "updatedAt": "2025-09-01T10:27:46.278Z"
       }
     }
   ]

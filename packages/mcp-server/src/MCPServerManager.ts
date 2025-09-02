@@ -68,7 +68,7 @@ export class MCPServerManager {
     })
     
     await this.server.start()
-    logger.info(chalk.green('✅ STDIO MCP Server started successfully'))
+    logger.info(chalk.green('STDIO MCP Server started successfully'))
     logger.info(chalk.gray('📝 Ready to receive messages via standard I/O'))
   }
 
@@ -96,11 +96,11 @@ export class MCPServerManager {
     await this.server.start()
     
     // Display server information
-    logger.info(chalk.green(`✅ MCP HTTP Server started on http://${host}:${port}/mcp`))
+    logger.info(chalk.green(`MCP HTTP Server started on http://${host}:${port}/mcp`))
     logger.info('')
     logger.info(chalk.gray(`📊 Mode: ${stateless ? 'Stateless' : 'Stateful (Schema)'}`))
     logger.info(chalk.gray(`🔧 Tools: ${this.server.tools?.size || 0} registered`))
-    logger.info(chalk.gray(`✅ HTTP MCP Server started on ${host}:${port}`))
+    logger.info(chalk.gray(`HTTP MCP Server started on ${host}:${port}`))
     logger.info('')
   }
 
@@ -129,7 +129,7 @@ export class MCPServerManager {
     if (this.server && typeof this.server.stop === 'function') {
       try {
         await this.server.stop()
-        logger.info(chalk.green('✅ Server stopped gracefully'))
+        logger.info(chalk.green('Server stopped gracefully'))
       } catch (error) {
         logger.error(`Failed to stop server: ${(error as Error).message}`)
       }
@@ -146,7 +146,7 @@ export class MCPServerManager {
     
     signals.forEach(signal => {
       process.on(signal, async () => {
-        logger.info(chalk.yellow(`\n📍 Received ${signal} signal`))
+        logger.info(chalk.yellow(`\nReceived ${signal} signal`))
         await this.shutdown()
         process.exit(0)
       })
@@ -154,7 +154,7 @@ export class MCPServerManager {
 
     // Handle uncaught exceptions
     process.on('uncaughtException', async (error: Error) => {
-      logger.error(chalk.red(`❌ Uncaught exception: ${error.message}`))
+      logger.error(chalk.red(`Uncaught exception: ${error.message}`))
       if (error.stack) {
         logger.error(error.stack)
       }
@@ -164,7 +164,7 @@ export class MCPServerManager {
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', async (reason: any) => {
-      logger.error(chalk.red(`❌ Unhandled rejection: ${reason}`))
+      logger.error(chalk.red(`Unhandled rejection: ${reason}`))
       await this.shutdown()
       process.exit(1)
     })
@@ -179,7 +179,7 @@ export class MCPServerManager {
         })
         
         rl.on('SIGINT', async () => {
-          logger.info(chalk.yellow('\n📍 Received SIGINT (Ctrl+C)'))
+          logger.info(chalk.yellow('\nReceived SIGINT (Ctrl+C)'))
           await this.shutdown()
           process.exit(0)
         })

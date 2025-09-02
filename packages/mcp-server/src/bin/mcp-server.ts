@@ -2,7 +2,7 @@
 
 // 早期错误捕获 - 在任何模块加载之前
 process.on('uncaughtException', (err: Error) => {
-  console.error('❌ Fatal error during startup:', err.message)
+  console.error('Fatal error during startup:', err.message)
   if (err.stack) {
     console.error('Stack trace:', err.stack)
   }
@@ -51,7 +51,7 @@ program
         debug: options.debug
       })
     } catch (error) {
-      logger.error(`❌ MCP Server startup failed: ${(error as Error).message}`)
+      logger.error(`MCP Server startup failed: ${(error as Error).message}`)
       process.exit(1)
     }
   })
@@ -65,7 +65,7 @@ program.configureHelp({
 // 添加示例说明
 program.addHelpText('after', `
 
-${chalk.cyan('💡 PromptX MCP Server - Bridge AI applications to PromptX')}
+${chalk.cyan('PromptX MCP Server - Bridge AI applications to PromptX')}
 
 ${chalk.cyan('🚀 Quick Start:')}
   ${chalk.gray('# STDIO mode (default, suitable for most AI applications)')}

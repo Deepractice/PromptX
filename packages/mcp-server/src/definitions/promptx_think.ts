@@ -28,7 +28,7 @@ AI 负责构造的创造性部分：
 3. AI 基于 prompt 生成更完整的 Thought
 4. 循环继续，思考越来越深入
 
-## 💡 使用示例
+## 使用示例
 第一次思考：
 {
   role: "scientist",
@@ -66,7 +66,7 @@ AI 负责构造的创造性部分：
   }
 }
 
-## ⚠️ 关键约束
+## 关键约束
 - 每次都传入完整的 Thought 对象
 - 首次思考必需三个字段：goalEngram、thinkingPattern、spreadActivationCues
 - 其他要素根据思考深度逐步添加

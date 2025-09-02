@@ -120,7 +120,7 @@ export class FastMCPStdioServer {
     🐛 Debug: ${debug}
     📥 Input Stream: ${!!inputStream}
     📤 Output Stream: ${!!outputStream}
-    ⚠️  Error Stream: ${!!errorStream}`);
+     Error Stream: ${!!errorStream}`);
 
     // 保存流引用
     this.streams.input = inputStream;
@@ -174,7 +174,7 @@ export class FastMCPStdioServer {
       this.status.startTime = new Date().toISOString();
       
       // 始终输出启动信息到 info 级别
-      logger.info('✅ FastMCP Stdio Server started');
+      logger.info('FastMCP Stdio Server started');
       logger.info(`📊 Tools: ${this.tools.size} registered`);
 
       // 设置信号处理
@@ -730,9 +730,9 @@ export class FastMCPStdioServer {
         }
       };
 
-      logger.info('✅ MCP Schema validation layer enabled');
+      logger.info('MCP Schema validation layer enabled');
     } else {
-      logger.warn('⚠️ Cannot setup MCP schema validation: FastMCP executeTool method not found');
+      logger.warn('Cannot setup MCP schema validation: FastMCP executeTool method not found');
     }
   }
 }

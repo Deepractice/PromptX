@@ -202,7 +202,7 @@ export class FastMCPHttpServer {
       this.status.host = this.config.host;
       this.status.endpoint = this.config.endpoint;
       
-      logger.info(`✅ MCP HTTP Server started on http://${this.config.host}:${this.config.port}${this.config.endpoint}`);
+      logger.info(`MCP HTTP Server started on http://${this.config.host}:${this.config.port}${this.config.endpoint}`);
       logger.info(`📊 Mode: ${this.config.stateless ? 'Stateless' : 'Stateful'} (Schema)`);
       logger.info(`🔧 Tools: ${this.tools.size} registered`);
       

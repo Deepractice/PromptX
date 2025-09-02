@@ -132,7 +132,7 @@ export class MCPOutputAdapter {
       content: [
         {
           type: 'text', 
-          text: `❌ Error: ${errorMessage}\n\n${errorStack}`
+          text: `Error: ${errorMessage}\n\n${errorStack}`
         }
       ],
       isError: true
