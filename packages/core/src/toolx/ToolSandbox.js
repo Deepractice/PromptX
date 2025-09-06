@@ -8,9 +8,7 @@ const getImportx = async () => {
   return importx;
 };
 
-// 在 CommonJS 中创建 parentURL
-const { pathToFileURL } = require('url');
-const parentURL = pathToFileURL(__filename).href;
+// 移除了全局 parentURL，改为在 importx 调用时动态生成
 
 // 直接引入管理器类
 const SandboxErrorManager = require('./SandboxErrorManager');
@@ -318,8 +316,15 @@ class ToolSandbox {
         
         // 获取importx实例并加载模块
         const importFn = await getImportx();
+        
+        // 使用工具沙箱的package.json作为模块解析基础
+        const path = require('path');
+        const { pathToFileURL } = require('url');
+        const toolPackageJson = path.join(this.sandboxPath, 'package.json');
+        const toolParentURL = pathToFileURL(toolPackageJson).href;
+        
         return await importFn(moduleName, {
-          parentURL,
+          parentURL: toolParentURL,
           cache: true,
           loader: 'auto'
         });
