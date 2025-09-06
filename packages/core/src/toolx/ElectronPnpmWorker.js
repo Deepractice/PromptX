@@ -7,7 +7,7 @@
 
 const path = require('path');
 const logger = require('@promptx/logger');
-const PnpmInstaller = require('./PnpmInstaller');
+const PnpmUtils = require('./PnpmUtils');
 
 class ElectronPnpmWorker {
   /**
@@ -22,12 +22,30 @@ class ElectronPnpmWorker {
     const startTime = Date.now();
     
     try {
-      // 获取utilityProcess
-      const { utilityProcess } = require('electron');
-      
-      if (!utilityProcess || typeof utilityProcess.fork !== 'function') {
-        throw new Error('utilityProcess.fork not available in current Electron version');
+      // 获取utilityProcess - 从主进程传递的global对象中获取
+      if (!process.versions.electron) {
+        throw new Error('Not running in Electron environment');
       }
+      
+      // 检查主进程是否已配置utilityProcess
+      if (process.env.PROMPTX_UTILITY_PROCESS_AVAILABLE !== 'true') {
+        throw new Error('UtilityProcess not available from main process');
+      }
+      
+      // 从global对象获取主进程传递的utilityProcess
+      const utilityProcess = global.PROMPTX_UTILITY_PROCESS;
+      
+      if (!utilityProcess) {
+        throw new Error('UtilityProcess not found in global.PROMPTX_UTILITY_PROCESS');
+      }
+      
+      logger.debug(`[ElectronPnpmWorker] utilityProcess obtained successfully`);
+      
+      if (typeof utilityProcess.fork !== 'function') {
+        throw new Error('utilityProcess.fork is not a function - Electron version may be too old (need >= 22.0.0)');
+      }
+      
+      logger.debug(`[ElectronPnpmWorker] utilityProcess.fork is available`);
       
       // 获取worker脚本路径
       const workerPath = path.join(__dirname, 'electron-pnpm-worker-script.js');
@@ -58,7 +76,7 @@ class ElectronPnpmWorker {
           reject(new Error(`pnpm installation timeout after ${elapsed}s`));
         }, timeout);
         
-        // 监听worker消息
+        // 监听worker消息 - utilityProcess 使用不同的事件名
         worker.on('message', (message) => {
           const { type, data, error: errorMsg, details } = message;
           
@@ -122,9 +140,9 @@ class ElectronPnpmWorker {
           const installOptions = {
             workingDir,
             dependencies,
-            pnpmBinaryPath: PnpmInstaller.getPnpmBinaryPath(),
-            pnpmArgs: PnpmInstaller.getOptimizedPnpmArgs(),
-            depsList: PnpmInstaller.buildDependenciesList(dependencies)
+            pnpmBinaryPath: PnpmUtils.getPnpmBinaryPath(),
+            pnpmArgs: PnpmUtils.getOptimizedPnpmArgs(),
+            depsList: PnpmUtils.buildDependenciesList(dependencies)
           };
           
           // 发送安装命令到worker

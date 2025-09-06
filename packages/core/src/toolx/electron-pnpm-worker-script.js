@@ -7,15 +7,42 @@
 
 const { spawn } = require('child_process');
 
-// 监听来自主进程的消息
-process.on('message', async (data) => {
-  const { command, options } = data;
-  
-  if (command === 'install') {
-    await handlePnpmInstall(options);
-  } else {
-    sendError(`Unknown command: ${command}`);
+// 启动消息
+console.log('UtilityProcess worker script started');
+
+// 监听来自主进程的消息 - 使用标准的parentPort通信
+process.parentPort.on('message', async (e) => {
+  try {
+    console.log('Raw message received:', e);
+    
+    // utilityProcess 的消息格式可能直接在 e 中，或者在 e.data 中
+    const data = e.data || e;
+    
+    console.log('Processed data:', data);
+    console.log('Data type:', typeof data);
+    console.log('Data keys:', Object.keys(data || {}));
+    
+    const { command, options } = data;
+    
+    if (command === 'install') {
+      await handlePnpmInstall(options);
+    } else {
+      sendError(`Unknown command: ${command}`);
+    }
+  } catch (error) {
+    sendError(`Worker script error: ${error.message}`, { stack: error.stack });
   }
+});
+
+// 监听未捕获的错误
+process.on('uncaughtException', (error) => {
+  sendError(`Uncaught exception: ${error.message}`, { stack: error.stack });
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  sendError(`Unhandled rejection: ${reason}`, { promise: promise.toString() });
+  process.exit(1);
 });
 
 /**
@@ -61,14 +88,27 @@ function runPnpmCommand(pnpmBinaryPath, pnpmArgs, workingDir, startTime) {
   return new Promise((resolve, reject) => {
     // 使用完全纯净的Node.js环境
     const cleanEnv = {
+      // 保留必要的系统环境变量
       PATH: process.env.PATH,
+      HOME: process.env.HOME,
+      USER: process.env.USER,
+      USERPROFILE: process.env.USERPROFILE,
+      APPDATA: process.env.APPDATA,
+      LOCALAPPDATA: process.env.LOCALAPPDATA,
+      
+      // 设置Node.js和pnpm相关环境
       NODE_ENV: 'production',
       CI: '1',
-      // 关键：移除所有Electron相关环境变量
-      ELECTRON_RUN_AS_NODE: undefined,
-      ELECTRON_NODE_PATH: undefined,
-      PROMPTX_NODE_EXECUTABLE: undefined,
-      PROMPTX_DISABLE_AUTO_UPDATE: undefined
+      
+      // 设置pnpm配置
+      PNPM_HOME: process.env.PNPM_HOME,
+      
+      // 确保非交互模式
+      npm_config_yes: 'true',
+      npm_config_audit: 'false'
+      
+      // 注意：不设置任何Electron相关环境变量
+      // ELECTRON_RUN_AS_NODE、ELECTRON_NODE_PATH等被自动排除
     };
     
     // 构建完整的命令参数
@@ -77,6 +117,12 @@ function runPnpmCommand(pnpmBinaryPath, pnpmArgs, workingDir, startTime) {
     sendLog(`Executing: node ${fullArgs.join(' ')}`);
     sendLog(`Working directory: ${workingDir}`);
     
+    const pnpm = spawn('node', fullArgs, {
+      cwd: workingDir,
+      env: cleanEnv,
+      stdio: 'pipe'
+    });
+    
     // 30秒内部超时保护
     const timeout = setTimeout(() => {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -84,12 +130,6 @@ function runPnpmCommand(pnpmBinaryPath, pnpmArgs, workingDir, startTime) {
       pnpm.kill('SIGTERM');
       reject(new Error(`pnpm command timeout after ${elapsed}s`));
     }, 29000); // 比外层超时稍短
-    
-    const pnpm = spawn('node', fullArgs, {
-      cwd: workingDir,
-      env: cleanEnv,
-      stdio: 'pipe'
-    });
     
     let stdout = '';
     let stderr = '';
@@ -134,7 +174,7 @@ function runPnpmCommand(pnpmBinaryPath, pnpmArgs, workingDir, startTime) {
  * 发送日志消息到主进程
  */
 function sendLog(message) {
-  process.send({
+  process.parentPort.postMessage({
     type: 'log',
     data: message
   });
@@ -144,7 +184,7 @@ function sendLog(message) {
  * 发送成功结果到主进程
  */
 function sendSuccess(data) {
-  process.send({
+  process.parentPort.postMessage({
     type: 'success',
     data: data
   });
@@ -154,7 +194,7 @@ function sendSuccess(data) {
  * 发送错误消息到主进程
  */
 function sendError(message, details = {}) {
-  process.send({
+  process.parentPort.postMessage({
     type: 'error',
     error: message,
     details: details

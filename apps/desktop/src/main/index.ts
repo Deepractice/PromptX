@@ -98,6 +98,22 @@ class PromptXDesktopApp {
     // Also set ELECTRON_NODE_PATH for compatibility
     process.env.ELECTRON_NODE_PATH = process.execPath
     
+    // Pass utilityProcess to ToolSandbox via global object
+    try {
+      const { utilityProcess } = require('electron')
+      if (utilityProcess && typeof utilityProcess.fork === 'function') {
+        ;(global as any).PROMPTX_UTILITY_PROCESS = utilityProcess
+        process.env.PROMPTX_UTILITY_PROCESS_AVAILABLE = 'true'
+        logger.info('UtilityProcess configured for ToolSandbox')
+      } else {
+        logger.warn('UtilityProcess not available - will fallback to system pnpm')
+        process.env.PROMPTX_UTILITY_PROCESS_AVAILABLE = 'false'
+      }
+    } catch (error) {
+      logger.error(`Failed to configure UtilityProcess: ${error}`)
+      process.env.PROMPTX_UTILITY_PROCESS_AVAILABLE = 'false'
+    }
+    
     // Update PATH to include Electron directory for child processes
     const electronDir = path.dirname(process.execPath)
     const currentPath = process.env.PATH || ''

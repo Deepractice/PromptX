@@ -45,5 +45,10 @@ export default defineConfig({
     console.log('Copying ESM wrapper...')
     fs.copyFileSync('./src/index.esm.js', './dist/index.mjs')
     console.log('ESM wrapper copied to dist/index.mjs')
+    
+    // 复制 electron-pnpm-worker-script.js 到 dist
+    console.log('Copying electron-pnpm-worker-script.js...')
+    fs.copyFileSync('./src/toolx/electron-pnpm-worker-script.js', './dist/electron-pnpm-worker-script.js')
+    console.log('Worker script copied to dist/electron-pnpm-worker-script.js')
   }
 })
