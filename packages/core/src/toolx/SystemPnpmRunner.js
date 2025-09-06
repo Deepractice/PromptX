@@ -7,7 +7,7 @@
 
 const { spawn } = require('child_process');
 const logger = require('@promptx/logger');
-const PnpmInstaller = require('./PnpmInstaller');
+const PnpmUtils = require('./PnpmUtils');
 
 class SystemPnpmRunner {
   /**
@@ -20,7 +20,7 @@ class SystemPnpmRunner {
    */
   static async install({ workingDir, dependencies, timeout = 30000 }) {
     const startTime = Date.now();
-    const depsList = PnpmInstaller.buildDependenciesList(dependencies);
+    const depsList = PnpmUtils.buildDependenciesList(dependencies);
     
     logger.debug(`[SystemPnpmRunner] Installing in system Node.js environment`);
     logger.debug(`[SystemPnpmRunner] Working directory: ${workingDir}`);
@@ -28,8 +28,8 @@ class SystemPnpmRunner {
     
     return new Promise((resolve, reject) => {
       // 获取pnpm二进制路径和参数
-      const pnpmBinaryPath = PnpmInstaller.getPnpmBinaryPath();
-      const pnpmArgs = PnpmInstaller.getOptimizedPnpmArgs();
+      const pnpmBinaryPath = PnpmUtils.getPnpmBinaryPath();
+      const pnpmArgs = PnpmUtils.getOptimizedPnpmArgs();
       
       // 准备执行环境
       const cleanEnv = this.createCleanEnvironment();

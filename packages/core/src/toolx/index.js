@@ -6,6 +6,7 @@
 const ToolSandbox = require('./ToolSandbox');
 const ToolValidator = require('./ToolValidator');
 const ToolUtils = require('./ToolUtils');
+const PnpmInstaller = require('./PnpmInstaller');
 const { TOOL_INTERFACE, TOOL_ERROR_CODES, TOOL_RESULT_FORMAT, EXAMPLE_TOOL } = require('./ToolInterface');
 
 // 创建全局工具实例
@@ -109,6 +110,7 @@ module.exports = {
   ToolSandbox,
   ToolValidator,
   ToolUtils,
+  PnpmInstaller,
   
   // 接口规范
   TOOL_INTERFACE,
