@@ -39,11 +39,11 @@
     "eta": "^3.5.0",
     "fs-extra": "^11.3.0",
     "glob": "^10.4.5",
+    "is-electron": "^2.2.2",
     "level": "^8.0.1",
     "peggy": "^5.0.5",
     "pnpm": "^9.0.0"
   },
-  "devDependencies": {},
   "files": [
     "dist/**/*",
     "README.md"

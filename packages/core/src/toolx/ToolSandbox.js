@@ -1,6 +1,4 @@
-const path = require('path');
 const fs = require('fs').promises;
-const { spawn } = require('child_process');
 const vm = require('vm');
 const SandboxIsolationManager = require('./SandboxIsolationManager');
 const SandboxErrorManager = require('./SandboxErrorManager');
@@ -439,7 +437,7 @@ class ToolSandbox {
   }
 
   /**
-   * 安装依赖
+   * 安装依赖 - 使用PnpmInstaller统一处理
    */
   async installDependencies() {
     // 检查依赖是否为空（支持对象和数组格式）
@@ -448,14 +446,28 @@ class ToolSandbox {
       : this.dependencies.length > 0;
       
     if (!hasDependencies) {
+      logger.debug(`[ToolSandbox] No dependencies to install for tool ${this.toolId}`);
       return;
     }
 
-    // 1. 创建package.json
-    await this.createPackageJson();
+    // 使用PnpmInstaller统一处理，自动检测环境并选择最优方案
+    const PnpmInstaller = require('./PnpmInstaller');
     
-    // 2. 使用内置pnpm安装依赖
-    await this.runPnpmInstall();
+    // 1. 创建package.json
+    await PnpmInstaller.createPackageJson(
+      this.directoryManager.getToolboxPath(),
+      this.toolId,
+      this.dependencies
+    );
+    
+    // 2. 安装依赖（自动检测Electron vs CLI环境）
+    const result = await PnpmInstaller.install({
+      workingDir: this.directoryManager.getToolboxPath(),
+      dependencies: this.dependencies,
+      timeout: this.options.timeout || 30000
+    });
+    
+    logger.info(`[ToolSandbox] Dependencies installed via ${result.environment} in ${result.elapsed}s`);
   }
 
   /**
@@ -521,160 +533,6 @@ class ToolSandbox {
     }
   }
 
-  /**
-   * 创建package.json
-   */
-  async createPackageJson() {
-    const packageJsonPath = this.directoryManager.getPackageJsonPath();
-    
-    const packageJson = {
-      name: `toolbox-${this.toolId}`,
-      version: '1.0.0',
-      description: `Sandbox for tool: ${this.toolId}`,
-      private: true,
-      dependencies: {}
-    };
-    
-    // 直接使用 getDependencies 返回的对象格式 {"package-name": "version"}
-    logger.debug(`[ToolSandbox] Processing dependencies: ${JSON.stringify(this.dependencies)}`);
-    if (typeof this.dependencies === 'object' && !Array.isArray(this.dependencies)) {
-      // 新格式：直接使用对象
-      packageJson.dependencies = this.dependencies;
-    } else if (Array.isArray(this.dependencies)) {
-      // 兼容旧格式（数组），但应该逐步废弃
-      logger.warn(`[ToolSandbox] Tool ${this.toolId} is using deprecated array format for dependencies. Please update to object format.`);
-      for (const dep of this.dependencies) {
-        if (dep.includes('@')) {
-          const lastAtIndex = dep.lastIndexOf('@');
-          if (lastAtIndex > 0) {
-            const name = dep.substring(0, lastAtIndex);
-            const version = dep.substring(lastAtIndex + 1);
-            logger.debug(`[ToolSandbox] Parsing dependency "${dep}" => name="${name}", version="${version}"`);
-            packageJson.dependencies[name] = version;
-          } else {
-            // 只有 @ 开头，没有版本号的情况（如 @scope/package）
-            packageJson.dependencies[dep] = 'latest';
-          }
-        } else {
-          packageJson.dependencies[dep] = 'latest';
-        }
-      }
-    }
-    
-    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  }
-
-  /**
-   * 运行pnpm安装
-   */
-  async runPnpmInstall() {
-    const startTime = Date.now();
-    
-    // 构建依赖列表信息用于日志
-    let depsList = '';
-    if (typeof this.dependencies === 'object' && !Array.isArray(this.dependencies)) {
-      depsList = Object.keys(this.dependencies).map(name => `${name}@${this.dependencies[name]}`).join(', ');
-    } else if (Array.isArray(this.dependencies)) {
-      depsList = this.dependencies.join(', ');
-    }
-    
-    logger.info(`[ToolSandbox] Installing dependencies: [${depsList}]`);
-    
-    return new Promise((resolve, reject) => {
-      // 获取内置pnpm路径 - 直接从node_modules获取
-      const pnpmModulePath = require.resolve('pnpm');
-      const pnpmBinPath = path.join(path.dirname(pnpmModulePath), 'bin', 'pnpm.cjs');
-      
-      const nodeExecutable = process.env.PROMPTX_NODE_EXECUTABLE || 'node';
-      
-      // 准备子进程环境变量
-      const spawnEnv = { ...process.env };
-      
-      // 如果使用 Electron 作为 Node.js，需要设置 ELECTRON_RUN_AS_NODE
-      // 但只在这个子进程中设置，不污染主进程
-      if (nodeExecutable === process.env.PROMPTX_NODE_EXECUTABLE && nodeExecutable.includes('electron')) {
-        spawnEnv.ELECTRON_RUN_AS_NODE = '1';
-        logger.info(`[ToolSandbox] Setting ELECTRON_RUN_AS_NODE=1 for this subprocess only`);
-      }
-      
-      // Add CI=1 to environment to enable non-interactive mode
-      spawnEnv.CI = '1';
-      
-      // 构建pnpm参数数组
-      const pnpmArgs = [
-        pnpmBinPath, 
-        'install',
-        '--config.confirmModulesPurge=false',
-        '--prefer-offline',
-        '--ignore-scripts',
-        '--reporter=append-only'
-      ];
-      
-      const fullCommand = `${nodeExecutable} ${pnpmArgs.join(' ')}`;
-      
-      logger.info(`[ToolSandbox] Executing command: ${fullCommand}`);
-      logger.info(`[ToolSandbox] Working directory: ${this.directoryManager.getToolboxPath()}`);
-      logger.info(`[ToolSandbox] Using Node.js executable: ${nodeExecutable}`);
-      
-      // 30秒超时
-      const timeout = setTimeout(() => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        logger.error(`[ToolSandbox] pnpm install timeout (${elapsed}s > 30s)`);
-        logger.error(`[ToolSandbox] Command: ${fullCommand}`);
-        logger.error(`[ToolSandbox] Working directory: ${this.directoryManager.getToolboxPath()}`);
-        logger.error(`[ToolSandbox] Installing packages: [${depsList}]`);
-        logger.error(`[ToolSandbox] Stdout output: ${stdout}`);
-        logger.error(`[ToolSandbox] Stderr output: ${stderr}`);
-        pnpm.kill('SIGTERM');
-        reject(new Error(`pnpm install timeout after 30s. Command: ${fullCommand}`));
-      }, 30000);
-      
-      const pnpm = spawn(nodeExecutable, pnpmArgs, {
-        cwd: this.directoryManager.getToolboxPath(),  // 使用 toolbox 路径安装依赖
-        env: spawnEnv,  // 使用定制的环境变量
-        stdio: 'pipe'
-      });
-      
-      let stdout = '';
-      let stderr = '';
-      
-      pnpm.stdout.on('data', (data) => {
-        const output = data.toString();
-        stdout += output;
-        logger.debug(`[ToolSandbox] pnpm stdout: ${output}`);
-      });
-      
-      pnpm.stderr.on('data', (data) => {
-        const error = data.toString();
-        stderr += error;
-        logger.warn(`[ToolSandbox] pnpm stderr: ${error}`);
-      });
-      
-      pnpm.on('close', (code) => {
-        clearTimeout(timeout);
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        
-        if (code === 0) {
-          logger.info(`[ToolSandbox] Dependencies installed successfully in ${elapsed}s`);
-          logger.debug(`[ToolSandbox] Installed packages: [${depsList}]`);
-          resolve({ stdout, stderr });
-        } else {
-          logger.error(`[ToolSandbox] pnpm install failed with exit code ${code} after ${elapsed}s`);
-          logger.error(`[ToolSandbox] Command: ${fullCommand}`);
-          logger.error(`[ToolSandbox] Working directory: ${this.directoryManager.getToolboxPath()}`);
-          logger.error(`[ToolSandbox] Installing packages: [${depsList}]`);
-          logger.error(`[ToolSandbox] Stdout: ${stdout}`);
-          logger.error(`[ToolSandbox] Stderr: ${stderr}`);
-          reject(new Error(`pnpm install failed with code ${code}: ${stderr}`));
-        }
-      });
-      
-      pnpm.on('error', (error) => {
-        logger.error(`[ToolSandbox] Failed to spawn pnpm: ${error.message}`);
-        reject(new Error(`Failed to spawn pnpm: ${error.message}`));
-      });
-    });
-  }
 
   /**
    * 检测和处理 ES Module 依赖
