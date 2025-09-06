@@ -6,7 +6,8 @@ import {
   app, 
   clipboard, 
   nativeImage,
-  shell 
+  shell,
+  dialog 
 } from 'electron'
 import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
 import { ResultUtil } from '~/shared/Result'
@@ -19,6 +20,7 @@ import * as fs from 'node:fs'
 import * as logger from '@promptx/logger'
 import { createPIcon } from '~/utils/createPIcon'
 import { ResourceManager } from '~/main/ResourceManager'
+import packageJson from '../../../package.json'
 
 interface TrayMenuItem {
   id?: string
@@ -46,6 +48,8 @@ export class TrayPresenter {
     this.resourceManager = new ResourceManager()
     // Create tray icon
     this.tray = this.createTray()
+    // Load app icon for dialogs
+    this.loadAppIcon()
     
     // Setup status listener
     this.statusListener = (status) => this.updateStatus(status)
@@ -179,6 +183,15 @@ export class TrayPresenter {
 
     menuItems.push({ type: 'separator' })
 
+    // About
+    menuItems.push({
+      id: 'about',
+      label: 'About PromptX',
+      click: () => this.handleShowAbout()
+    })
+
+    menuItems.push({ type: 'separator' })
+
     // Quit
     menuItems.push({
       id: 'quit',
@@ -290,6 +303,56 @@ return
 
   handleQuit(): void {
     app.quit()
+  }
+
+  async handleShowAbout(): Promise<void> {
+    const aboutInfo = this.getAboutInfo()
+    
+    const result = await dialog.showMessageBox({
+      type: 'info',
+      title: 'About PromptX',
+      message: aboutInfo.appName,
+      detail: [
+        `Version: ${aboutInfo.version}`,
+        `Node.js: ${aboutInfo.nodeVersion}`,
+        `Electron: ${aboutInfo.electronVersion}`,
+        `Platform: ${aboutInfo.platform}`,
+        ``,
+        `Developed by Deepractice AI`,
+        `Open source under MIT license`
+      ].join('\n'),
+      buttons: ['Visit GitHub', 'OK'],
+      defaultId: 1,
+      cancelId: 1,
+      icon: this.appIcon
+    })
+
+    if (result.response === 0) {
+      // Visit GitHub
+      shell.openExternal(aboutInfo.homepage)
+    }
+  }
+
+  private loadAppIcon(): void {
+    try {
+      const iconPath = path.join(__dirname, '../../assets/icons/icon-128x128.png')
+      this.appIcon = nativeImage.createFromPath(iconPath)
+      logger.info('TrayPresenter: App icon loaded successfully')
+    } catch (error) {
+      logger.error('TrayPresenter: Failed to load app icon:', error)
+    }
+  }
+
+  private getAboutInfo() {
+    return {
+      appName: 'PromptX Desktop',
+      version: packageJson.version,
+      nodeVersion: process.version,
+      electronVersion: process.versions.electron,
+      platform: `${process.platform} ${process.arch}`,
+      homepage: packageJson.homepage,
+      author: packageJson.author.name
+    }
   }
 
   updateStatus(status: ServerStatus): void {
