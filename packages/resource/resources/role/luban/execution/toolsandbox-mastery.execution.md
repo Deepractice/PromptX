@@ -106,7 +106,7 @@ const prepResult = await sandbox.prepareDependencies();
 const result = await sandbox.execute(parameters);
 
 // 执行环境特性：
-// - 智能require：优先从沙箱node_modules加载
+// - importx统一加载：自动选择最佳加载器处理所有模块类型
 // - 参数验证：自动调用工具的validate()方法
 // - 错误隔离：沙箱异常不影响主进程
 // - 结果标准化：统一的成功/失败格式
@@ -128,7 +128,10 @@ graph LR
 ```javascript
 // 基础沙箱环境
 {
-  require: require,           // 标准require
+  importx: async (moduleName) => {
+    // 直接提供importx函数，无依赖时使用全局环境
+    return await importx(moduleName);
+  },
   module: { exports: {} },    // 模块导出
   console: console,           // 日志输出
   // ... 其他全局对象
@@ -136,10 +139,12 @@ graph LR
 
 // 智能沙箱环境（有依赖时）
 {
-  require: (moduleName) => {
-    // 优先从沙箱node_modules查找
-    const sandboxPath = '~/.promptx/toolbox/tool-id/node_modules';
-    return require.resolve(moduleName, { paths: [sandboxPath] });
+  importx: async (moduleName) => {
+    // 优先从沙箱node_modules查找，自动选择最佳加载器
+    return await importx(moduleName, {
+      cache: true,
+      loader: 'auto'  // auto/native/jiti/bundle-require等
+    });
   },
   // ... 其他环境
 }

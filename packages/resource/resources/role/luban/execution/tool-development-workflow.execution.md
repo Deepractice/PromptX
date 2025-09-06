@@ -137,7 +137,16 @@ module.exports = {
   },
   
   async execute(params) {
+    // 🚀 沙箱直接提供importx函数，统一导入所有模块
+    const lodash = await importx('lodash');
+    const axios = await importx('axios');  
+    const validator = await importx('validator');
+    
     // 核心执行逻辑
+    const validatedData = validator.escape(params.input);
+    const processedData = lodash.merge({}, params, { processed: true });
+    
+    return processedData;
   }
 };
 ```
@@ -332,15 +341,19 @@ flowchart TD
 
 **Step 3.1: 沙箱环境验证**
 ```javascript
-// 测试代码示例
-const ToolSandbox = require('./src/lib/tool/ToolSandbox');
-const ResourceManager = require('./src/lib/core/resource/resourceManager');
+// 测试代码示例 - 使用importx统一导入
+const { import: importx } = require('importx');
 
 async function testTool() {
+  // 使用importx统一导入模块
+  const ToolSandbox = await importx('./src/lib/tool/ToolSandbox');
+  const ResourceManager = await importx('./src/lib/core/resource/resourceManager');
+  
   const resourceManager = new ResourceManager();
   await resourceManager.initializeWithNewArchitecture();
   
-  const sandbox = new ToolSandbox('@tool://my-awesome-tool');
+  // 使用新的异步工厂方法创建沙箱
+  const sandbox = await ToolSandbox.create('@tool://my-awesome-tool');
   sandbox.setResourceManager(resourceManager);
   
   // 分析工具
@@ -476,9 +489,16 @@ getDependencies() {
 ### 智能错误处理
 ```javascript
 async execute(params) {
+  // 🚀 importx统一导入
+  const { import: importx } = require('importx');
+  
   try {
+    // ✅ 所有依赖统一导入
+    const axios = await importx('axios');
+    const validator = await importx('validator');
+    
     // 核心逻辑
-    return await this.processData(params);
+    return await this.processData(params, { axios, validator });
   } catch (error) {
     // 分类错误处理
     if (error.code === 'NETWORK_ERROR') {
@@ -495,14 +515,20 @@ async execute(params) {
 ### 性能优化模式
 ```javascript
 async execute(params) {
+  // 🚀 importx统一导入
+  const { import: importx } = require('importx');
+  
   // 缓存机制
   const cacheKey = this.generateCacheKey(params);
   if (this.cache.has(cacheKey)) {
     return this.cache.get(cacheKey);
   }
   
+  // ✅ 按需导入模块
+  const lodash = await importx('lodash');
+  
   // 执行逻辑
-  const result = await this.processData(params);
+  const result = await this.processData(params, { lodash });
   
   // 缓存结果
   this.cache.set(cacheKey, result);

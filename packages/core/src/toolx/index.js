@@ -3,11 +3,21 @@
  * 统一的工具框架入口文件 - ToolSandbox版本
  */
 
-const ToolSandbox = require('./ToolSandbox');
-const ToolValidator = require('./ToolValidator');
-const ToolUtils = require('./ToolUtils');
-const PnpmInstaller = require('./PnpmInstaller');
-const { TOOL_INTERFACE, TOOL_ERROR_CODES, TOOL_RESULT_FORMAT, EXAMPLE_TOOL } = require('./ToolInterface');
+// ToolSandbox 框架内部使用常规模块导入
+
+// 异步模块加载
+let ToolSandbox, ToolValidator, ToolUtils, PnpmInstaller, ToolInterface;
+
+async function initializeModules() {
+  if (!ToolSandbox) {
+    // ToolSandbox 框架内部使用常规 require()
+    ToolSandbox = require('./ToolSandbox');
+    ToolValidator = require('./ToolValidator');
+    ToolUtils = require('./ToolUtils');
+    PnpmInstaller = require('./PnpmInstaller');
+    ToolInterface = require('./ToolInterface');
+  }
+}
 
 // 创建全局工具实例
 let globalSandbox = null;
@@ -15,11 +25,12 @@ let globalSandbox = null;
 /**
  * 获取全局工具沙箱
  * @param {string} toolResource - 工具资源引用
- * @returns {ToolSandbox} 工具沙箱实例
+ * @returns {Promise<ToolSandbox>} 工具沙箱实例
  */
-function getGlobalToolSandbox(toolResource) {
+async function getGlobalToolSandbox(toolResource) {
+  await initializeModules();
   // ToolSandbox是工具特定的，不使用单例
-  return new ToolSandbox(toolResource);
+  return await ToolSandbox.create(toolResource);
 }
 
 /**
@@ -64,7 +75,7 @@ async function executeTool(toolResource, parameters = {}, resourceManager = null
     throw new Error('ResourceManager is required for ToolSandbox execution');
   }
   
-  const sandbox = getGlobalToolSandbox(toolResource);
+  const sandbox = await getGlobalToolSandbox(toolResource);
   sandbox.setResourceManager(resourceManager);
   
   try {
@@ -106,17 +117,20 @@ function getStats() {
 }
 
 module.exports = {
-  // 核心类
-  ToolSandbox,
-  ToolValidator,
-  ToolUtils,
-  PnpmInstaller,
+  // 异步模块初始化
+  initializeModules,
   
-  // 接口规范
-  TOOL_INTERFACE,
-  TOOL_ERROR_CODES,
-  TOOL_RESULT_FORMAT,
-  EXAMPLE_TOOL,
+  // 动态获取核心类（需要先调用initializeModules）
+  get ToolSandbox() { return ToolSandbox; },
+  get ToolValidator() { return ToolValidator; },
+  get ToolUtils() { return ToolUtils; },
+  get PnpmInstaller() { return PnpmInstaller; },
+  
+  // 动态获取接口规范
+  get TOOL_INTERFACE() { return ToolInterface?.TOOL_INTERFACE; },
+  get TOOL_ERROR_CODES() { return ToolInterface?.TOOL_ERROR_CODES; },
+  get TOOL_RESULT_FORMAT() { return ToolInterface?.TOOL_RESULT_FORMAT; },
+  get EXAMPLE_TOOL() { return ToolInterface?.EXAMPLE_TOOL; },
   
   // 全局实例获取器
   getGlobalToolSandbox,

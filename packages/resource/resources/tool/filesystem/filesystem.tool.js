@@ -413,7 +413,7 @@ module.exports = {
 
         case 'search_files': {
           const searchPath = resolvePath(params.path);
-          const { glob } = await this.loadModule('glob');
+          const { glob } = await importx('glob');
           
           // 构建glob模式
           const pattern = path.join(searchPath, '**', params.pattern);
@@ -463,16 +463,7 @@ module.exports = {
     }
   },
 
-  /**
-   * 动态加载模块（支持ES Module）
-   * ToolSandbox会提供这个方法
-   */
-  async loadModule(moduleName) {
-    // 这个方法会由ToolSandbox注入
-    // 支持CommonJS和ES Module的统一加载
-    if (this.require) {
-      return await this.require(moduleName);
-    }
-    throw new Error('loadModule方法未注入，请确保在ToolSandbox环境中运行');
-  }
+  // 模块加载现在使用统一的 importx 函数
+  // importx 由 ToolSandbox 在沙箱环境中提供
+  // 用法：const module = await importx('module-name')
 };

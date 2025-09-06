@@ -4,8 +4,8 @@
   "metadata": {
     "version": "2.0.0",
     "description": "package 级资源注册表",
-    "createdAt": "2025-09-06T07:17:30.483Z",
-    "updatedAt": "2025-09-06T07:17:30.483Z",
+    "createdAt": "2025-09-06T09:59:51.532Z",
+    "updatedAt": "2025-09-06T09:59:51.533Z",
     "resourceCount": 45
   },
   "resources": [
@@ -198,10 +198,10 @@
       "reference": "@package://resources/role/luban/execution/tool-development-workflow.execution.md",
       "metadata": {
         "path": "resources/role/luban/execution/tool-development-workflow.execution.md",
-        "size": 13681,
-        "modified": "2025-08-29T03:30:04.185Z",
-        "createdAt": "2025-08-29T03:30:04.184Z",
-        "updatedAt": "2025-08-29T03:30:04.185Z"
+        "size": 14652,
+        "modified": "2025-09-06T09:05:59.244Z",
+        "createdAt": "2025-09-06T09:05:59.244Z",
+        "updatedAt": "2025-09-06T09:05:59.244Z"
       }
     },
     {
@@ -213,10 +213,10 @@
       "reference": "@package://resources/role/luban/execution/toolsandbox-mastery.execution.md",
       "metadata": {
         "path": "resources/role/luban/execution/toolsandbox-mastery.execution.md",
-        "size": 6999,
-        "modified": "2025-08-29T03:30:04.185Z",
-        "createdAt": "2025-08-29T03:30:04.185Z",
-        "updatedAt": "2025-08-29T03:30:04.185Z"
+        "size": 7149,
+        "modified": "2025-09-06T09:07:20.279Z",
+        "createdAt": "2025-09-06T09:07:20.279Z",
+        "updatedAt": "2025-09-06T09:07:20.279Z"
       }
     },
     {
@@ -243,10 +243,10 @@
       "reference": "@package://resources/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
       "metadata": {
         "path": "resources/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
-        "size": 12484,
-        "modified": "2025-08-29T03:30:04.189Z",
-        "createdAt": "2025-08-29T03:30:04.187Z",
-        "updatedAt": "2025-08-29T03:30:04.189Z"
+        "size": 12747,
+        "modified": "2025-09-06T09:12:56.165Z",
+        "createdAt": "2025-09-06T09:12:56.165Z",
+        "updatedAt": "2025-09-06T09:12:56.165Z"
       }
     },
     {
@@ -288,10 +288,10 @@
       "reference": "@package://resources/role/luban/thought/engineering.thought.md",
       "metadata": {
         "path": "resources/role/luban/thought/engineering.thought.md",
-        "size": 4895,
-        "modified": "2025-08-29T03:30:04.190Z",
-        "createdAt": "2025-08-29T03:30:04.189Z",
-        "updatedAt": "2025-08-29T03:30:04.190Z"
+        "size": 4836,
+        "modified": "2025-09-06T09:12:19.728Z",
+        "createdAt": "2025-09-06T09:12:19.728Z",
+        "updatedAt": "2025-09-06T09:12:19.728Z"
       }
     },
     {
@@ -648,10 +648,10 @@
       "reference": "@package://resources/tool/filesystem/filesystem.tool.js",
       "metadata": {
         "path": "resources/tool/filesystem/filesystem.tool.js",
-        "size": 14684,
-        "modified": "2025-08-29T03:30:04.196Z",
-        "createdAt": "2025-08-29T03:30:04.196Z",
-        "updatedAt": "2025-08-29T03:30:04.196Z"
+        "size": 14452,
+        "modified": "2025-09-06T09:59:13.073Z",
+        "createdAt": "2025-09-06T09:59:13.072Z",
+        "updatedAt": "2025-09-06T09:59:13.073Z"
       }
     },
     {

@@ -173,7 +173,7 @@ class ToolError extends Error {
 **依赖选择原则**：
 - **成熟度**：选择下载量大、维护活跃的包
 - **轻量化**：避免过重的依赖，注意bundle size
-- **兼容性**：确保Node.js版本兼容
+- **一致性**：确保与PromptX生态集成
 - **安全性**：定期检查安全漏洞
 
 ### VM沙箱技术
@@ -250,53 +250,55 @@ const smartSandbox = {
 - **node-cron** `^3.0.0` - 定时任务 [CommonJS]
 - **sharp** `^0.32.0` - 图像处理 [CommonJS]
 
-### 库选择决策树（考虑模块类型）
+### 🚀 importx统一模块导入架构
 ```mermaid
 graph TD
-    A[需要功能] --> B{功能类型}
-    B -->|数据处理| C{模块偏好}
-    C -->|CommonJS| C1[lodash/ramda]
-    C -->|不限| C2[使用 loadModule 自动处理]
+    A[需要功能] --> B[统一使用importx]
+    B --> C[const { import: importx } = require('importx')]
+    C --> D[const module = await importx('module-name')]
     
-    B -->|网络请求| D{模块类型}
-    D -->|CommonJS| D1[axios ✅]
-    D -->|ES Module| D2[node-fetch/got ⚡]
+    D --> E[✅ 所有模块类型都支持]
+    E --> F[CommonJS包 ✅]
+    E --> G[ES Module包 ✅] 
+    E --> H[Node.js内置模块 ✅]
+    E --> I[第三方npm包 ✅]
     
-    B -->|终端美化| E[chalk/ora ⚡<br/>需要 loadModule]
-    B -->|文件操作| F[fs-extra/glob ✅]
-    B -->|数据验证| G[validator/joi ✅]
-    B -->|日期时间| H[moment/dayjs ✅]
-    B -->|进程管理| I[execa ⚡<br/>需要 loadModule]
-    
-    style E fill:#fff3e0
-    style I fill:#fff3e0
-    style D2 fill:#fff3e0
+    style B fill:#4caf50
+    style D fill:#2196f3
+    style E fill:#ff9800
 ```
 
-### 🆕 模块加载最佳实践
+### 🆕 importx统一模块导入架构
 ```javascript
-// ✅ 推荐：使用 loadModule 统一接口
+// 🚀 沙箱直接提供importx函数
 async execute(params) {
-  // 不需要关心包的类型
-  const lodash = await loadModule('lodash');
-  const chalk = await loadModule('chalk');
-  const axios = await loadModule('axios');
+  // ✅ 沙箱环境直接提供importx，无需require
+  const lodash = await importx('lodash');     // CommonJS ✅
+  const chalk = await importx('chalk');       // ES Module v5+ ✅  
+  const axios = await importx('axios');       // CommonJS ✅
+  const fs = await importx('fs');             // Node.js内置 ✅
+  const nanoid = await importx('nanoid');     // ES Module ✅
   
-  // 所有包都能正常工作
+  // 所有包都能正常工作，零认知负担
   const colored = chalk.blue('Hello');
   const merged = lodash.merge({}, params);
   const response = await axios.get(params.url);
+  const id = nanoid();
+  
+  return { colored, merged, response: response.data, id };
 }
 
-// ⚠️ 需要注意：某些包的版本差异
-// chalk v4 是 CommonJS，v5+ 是 ES Module
-// node-fetch v2 是 CommonJS，v3+ 是 ES Module
-// execa v5 是 CommonJS，v6+ 是 ES Module
+// 🏗️ PromptX统一架构设计
+// ✅ 沙箱环境直接提供importx函数，告别loadModule
+// ✅ 删除了复杂的ESModuleRequireSupport.js（200+行代码）
+// ✅ 开发者只需记住：await importx('module-name')
+// ✅ 包类型变更时代码无需修改
 
-// 💡 技巧：查看包的模块类型
-// 1. 查看 package.json 的 "type": "module"
-// 2. 查看是否有 "exports" 字段
-// 3. 尝试 require，如果报 ERR_REQUIRE_ESM 就是 ES Module
+// 💡 importx自动处理的复杂性
+// - 自动检测模块类型（CommonJS/ES Module/Node.js内置）
+// - 自动选择最佳加载器（auto/native/jiti/bundle-require等）
+// - 自动fallback机制，确保加载成功
+// - 内置缓存机制，提升性能
 ```
 
 ## 🛡️ 安全与最佳实践
