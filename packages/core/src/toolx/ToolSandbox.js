@@ -77,7 +77,8 @@ class ToolSandbox {
       // 管理器类已在顶部静态导入
       
       this.errorManager = new SandboxErrorManager();
-      this.isolationManager = new SandboxIsolationManager(process.cwd());
+      const promptxPath = require('path').join(require('os').homedir(), '.promptx');
+      this.isolationManager = new SandboxIsolationManager(promptxPath);
       
       this.isInitialized = true;
       this.logger.debug('[ToolSandbox] Initialized with importx');
