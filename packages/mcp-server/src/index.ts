@@ -1,18 +1,60 @@
 /**
- * @promptx/mcp-server - MCP Server implementation for PromptX
- * Provides MCP protocol support with FastMCP integration
+ * @promptx/mcp-server
+ * 
+ * MCP (Model Context Protocol) Server implementation for PromptX
+ * 
+ * 基于Issue #317的重构设计，提供：
+ * - 清晰的接口定义和职责分离
+ * - Template Method模式的基类实现
+ * - 标准输入输出和HTTP两种传输方式
+ * - 完整的生命周期管理和错误恢复
+ * - 会话管理和并发控制
+ * - 健康检查和指标收集
  */
 
-// Export all MCP server implementations
-export { FastMCPHttpServer } from './server/FastMCPHttpServer'
-export { FastMCPStdioServer } from './server/FastMCPStdioServer'
+// 导出接口类型
+export type {
+  MCPServer,
+  MCPServerOptions,
+  MCPServerFactory,
+  MCPTransport,
+  ServerState,
+  ToolHandler,
+  ToolWithHandler,
+  HealthCheckResult,
+  ServerMetrics,
+  SessionContext,
+  ErrorRecoveryStrategy
+} from '~/interfaces/MCPServer.js';
 
-// Export MCP output adapter
-export { MCPOutputAdapter } from './MCPOutputAdapter'
+// 导出服务器实现
+export { BaseMCPServer } from '~/servers/BaseMCPServer.js';
+export { StdioMCPServer } from '~/servers/StdioMCPServer.js';
+export { StreamableHttpMCPServer } from '~/servers/StreamableHttpMCPServer.js';
 
-// Export MCPServerManager for unified server management
-export { MCPServerManager } from './MCPServerManager'
-export type { MCPServerOptions } from './MCPServerManager'
+// 导出工厂类和便捷函数
+export {
+  MCPServerFactory,
+  createStdioServer,
+  createHttpServer,
+  default as serverFactory
+} from '~/servers/MCPServerFactory.js';
 
-// Export definitions
-export * as definitions from './definitions/index'
+// 重新导出SDK类型（方便使用）
+export type {
+  Tool,
+  Resource,
+  Prompt
+} from '@modelcontextprotocol/sdk/types.js';
+
+// 保留旧的导出以保持向后兼容（标记为deprecated）
+/** @deprecated Use StdioMCPServer instead */
+export { FastMCPStdioServer } from './legacy/server/FastMCPStdioServer';
+/** @deprecated Use StreamableHttpMCPServer instead */
+export { FastMCPHttpServer } from './legacy/server/FastMCPHttpServer';
+/** @deprecated Use the new server implementations */
+export { MCPOutputAdapter } from './legacy/MCPOutputAdapter';
+/** @deprecated Use MCPServerFactory instead */
+export { MCPServerManager } from './legacy/MCPServerManager';
+/** @deprecated Use definitions from the new structure */
+export * as definitions from './legacy/definitions/index';

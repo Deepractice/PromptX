@@ -28,8 +28,6 @@
   "include": ["src/**/*.ts"],
   "exclude": [
     "dist",
-    "node_modules",
-    "**/*.spec.ts",
-    "**/*.test.ts"
+    "node_modules"
   ]
 }
