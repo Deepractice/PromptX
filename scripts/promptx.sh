@@ -75,7 +75,8 @@ main() {
     local promptx_cmd=""
     
     # 判断使用哪种模式
-    if is_dev_mode; then
+    # 如果是 mcp-server 命令，始终使用开发模式
+    if [ "$1" = "mcp-server" ] || is_dev_mode; then
         # 开发模式：使用 CLI 包
         use_dev=true
         promptx_cmd="node $PROMPTX_ROOT/apps/cli/dist/promptx.js"

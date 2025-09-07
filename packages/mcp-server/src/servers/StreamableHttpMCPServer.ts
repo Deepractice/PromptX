@@ -1,31 +1,31 @@
 import express, { Express, Request, Response } from 'express';
 import { Server as HttpServer } from 'http';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { InitializeRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type { Resource } from '@modelcontextprotocol/sdk/types.js';
 import { BaseMCPServer } from '~/servers/BaseMCPServer.js';
-import type { MCPServerOptions, SessionContext } from '~/interfaces/MCPServer.js';
+import type { MCPServerOptions } from '~/interfaces/MCPServer.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { randomUUID } from 'crypto';
+
+const SESSION_ID_HEADER_NAME = "mcp-session-id";
 
 /**
  * HTTP流式MCP服务器实现
  * 
+ * 使用 MCP SDK 的 StreamableHTTPServerTransport 处理所有协议细节
  * 支持HTTP JSON-RPC和SSE（Server-Sent Events）
- * 适用于Web应用和HTTP API集成
- * 
- * 不变式：
- * 1. 每个会话独立管理
- * 2. SSE连接保持活跃
- * 3. 支持并发请求
- * 4. 会话超时自动清理
  */
 export class StreamableHttpMCPServer extends BaseMCPServer {
   private app?: Express;
   private httpServer?: HttpServer;
-  private port: number = 8080;
-  private host: string = 'localhost';
-  private corsEnabled: boolean = false;
-  private sseConnections = new Map<string, Response>();
-  private sessionTimeouts = new Map<string, NodeJS.Timeout>();
+  private port: number;
+  private host: string;
+  private corsEnabled: boolean;
+  
+  // 支持多个并发连接
+  private transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
   
   constructor(options: MCPServerOptions & {
     port?: number;
@@ -44,22 +44,16 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   protected async connectTransport(): Promise<void> {
     this.logger.info('Starting HTTP server...');
     
-    // 从选项中获取端口
-    this.port = (this.options as any).port || 8080;
-    
     // 创建Express应用
     this.app = express();
     
-    // 设置中间件
-    this.setupMiddleware();
-    
-    // 设置路由
-    this.setupRoutes();
+    // 设置Express应用 - 完全仿照官方
+    this.setupExpress();
     
     // 启动HTTP服务器
     await new Promise<void>((resolve, reject) => {
       this.httpServer = this.app!.listen(this.port, this.host, () => {
-        this.logger.info(`HTTP server listening on ${this.host}:${this.port}`);
+        this.logger.info(`HTTP server listening on http://${this.host}:${this.port}/mcp`);
         resolve();
       });
       
@@ -68,370 +62,136 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   }
   
   /**
-   * 设置中间件
+   * 设置中间件和路由 - 完全仿照官方实现
    */
-  private setupMiddleware(): void {
+  private setupExpress(): void {
     if (!this.app) return;
     
-    // JSON解析
+    // 仿照官方：只有基础的 JSON 解析
     this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
     
-    // CORS支持（如果启用）
-    if (this.corsEnabled) {
-      this.app.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, MCP-Session-Id, X-Session-Id');
-        
-        if (req.method === 'OPTIONS') {
-          res.sendStatus(204);
-        } else {
-          next();
-        }
+    // 仿照官方：使用 Router
+    const router = express.Router();
+    
+    // 仿照官方：路由定义
+    router.post('/mcp', async (req, res) => {
+      await this.handlePostRequest(req, res);
+    });
+    
+    router.get('/mcp', async (req, res) => {
+      await this.handleGetRequest(req, res);
+    });
+    
+    // 仿照官方：挂载路由
+    this.app.use('/', router);
+  }
+  
+  /**
+   * 处理 GET 请求（SSE）
+   */
+  private async handleGetRequest(req: Request, res: Response): Promise<void> {
+    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
+    
+    if (!sessionId || !this.transports[sessionId]) {
+      res.status(400).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Bad Request: invalid session ID or method.'
+        },
+        id: null
       });
+      return;
     }
     
-    // 请求日志
-    this.app.use((req, res, next) => {
-      this.logger.debug(`${req.method} ${req.path}`);
-      next();
-    });
+    this.logger.info(`Establishing SSE stream for session ${sessionId}`);
+    const transport = this.transports[sessionId];
+    
+    // 让 SDK 处理 SSE 连接
+    await transport.handleRequest(req, res);
   }
   
   /**
-   * 设置路由
+   * 处理 POST 请求（JSON-RPC）
    */
-  private setupRoutes(): void {
-    if (!this.app) return;
+  private async handlePostRequest(req: Request, res: Response): Promise<void> {
+    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
     
-    // 健康检查
-    this.app.get('/health', async (req, res) => {
-      const health = await this.healthCheck();
-      res.json({
-        ...health,
-        server: {
-          name: this.options.name,
-          version: this.options.version,
-          port: this.port
-        }
-      });
-    });
-    
-    // 主 MCP 端点 - POST 请求处理 RPC
-    this.app.post('/mcp', async (req, res) => {
-      const sessionId = req.headers['mcp-session-id'] as string || 
-                       req.headers['x-session-id'] as string;
-      
-      if (sessionId) {
-        // 使用现有会话
-        req.params.sessionId = sessionId;
-        await this.handleRPCRequest(req, res);
-      } else {
-        // 创建新会话
-        const newSessionId = this.generateSessionId();
-        req.params.sessionId = newSessionId;
-        res.setHeader('MCP-Session-Id', newSessionId);
-        await this.handleRPCRequest(req, res);
-      }
-    });
-    
-    // MCP SSE 端点 - GET 请求处理 SSE 流
-    this.app.get('/mcp', (req, res) => {
-      const sessionId = req.headers['mcp-session-id'] as string || 
-                       req.headers['x-session-id'] as string;
-      
-      if (!sessionId) {
-        res.status(400).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32000,
-            message: 'Session ID required for SSE connection'
-          }
-        });
-        return;
-      }
-      
-      req.params.sessionId = sessionId;
-      this.handleSSEConnection(req, res);
-    });
-    
-    // MCP 会话终止 - DELETE 请求
-    this.app.delete('/mcp', async (req, res) => {
-      const sessionId = req.headers['mcp-session-id'] as string || 
-                       req.headers['x-session-id'] as string;
-      
-      if (!sessionId) {
-        res.status(400).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32000,
-            message: 'Session ID required'
-          }
-        });
-        return;
-      }
-      
-      await this.destroySession(sessionId);
-      res.json({
-        jsonrpc: '2.0',
-        result: { message: 'Session terminated' }
-      });
-    });
-    
-    // 保留的便捷端点（可选）
-    this.app.get('/tools', (req, res) => {
-      res.json({ tools: this.listTools() });
-    });
-    
-    this.app.get('/resources', (req, res) => {
-      res.json({ resources: this.listResources() });
-    });
-  }
-  
-  /**
-   * 处理SSE连接
-   */
-  private handleSSEConnection(req: Request, res: Response): void {
-    const sessionId = req.params.sessionId;
-    const clientIp = req.ip || req.connection?.remoteAddress;
-    
-    this.logger.info(`[SSE_CONNECT] Session: ${sessionId}, Client: ${clientIp}`);
-    
-    // 设置SSE响应头
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no' // 禁用Nginx缓冲
-    });
-    
-    // 保存连接
-    this.sseConnections.set(sessionId, res);
-    this.logger.debug(`[SSE_ACTIVE] Active SSE connections: ${this.sseConnections.size}`);
-    
-    // 发送初始消息
-    res.write(`data: ${JSON.stringify({ type: 'connected', sessionId })}\n\n`);
-    
-    // 心跳保持连接
-    const heartbeat = setInterval(() => {
-      this.logger.debug(`[SSE_HEARTBEAT] Session: ${sessionId}`);
-      res.write(': heartbeat\n\n');
-    }, 30000);
-    
-    // 清理函数
-    const cleanup = () => {
-      clearInterval(heartbeat);
-      this.sseConnections.delete(sessionId);
-      res.end();
-      this.logger.info(`SSE connection closed: ${sessionId}`);
-    };
-    
-    // 客户端断开连接
-    res.on('close', cleanup);
-    res.on('error', cleanup);
-  }
-  
-  /**
-   * 处理RPC请求
-   */
-  private async handleRPCRequest(req: Request, res: Response): Promise<void> {
-    const sessionId = req.params.sessionId;
-    const message = req.body;
-    const clientIp = req.ip || req.connection?.remoteAddress;
-    
-    this.logger.info(`[HTTP_RPC] Session: ${sessionId}, Method: ${message.method}, ID: ${message.id}, Client: ${clientIp}`);
+    this.logger.info('=== POST Request ===');
+    this.logger.info('Headers:', JSON.stringify(req.headers, null, 2));
+    this.logger.info('Body:', JSON.stringify(req.body, null, 2));
+    this.logger.info('Session ID:', sessionId);
     
     try {
-      // 验证JSON-RPC格式
-      if (!message.jsonrpc || message.jsonrpc !== '2.0') {
-        this.logger.warn(`[HTTP_INVALID] Invalid JSON-RPC format from ${clientIp}`);
-        res.json({
-          jsonrpc: '2.0',
-          id: message.id || null,
-          error: {
-            code: -32600,
-            message: 'Invalid Request'
-          }
-        });
+      // 重用现有 transport
+      if (sessionId && this.transports[sessionId]) {
+        this.logger.info(`Reusing existing transport for session: ${sessionId}`);
+        const transport = this.transports[sessionId];
+        await transport.handleRequest(req, res, req.body);
         return;
       }
       
-      // 获取或创建会话
-      let session = this.getSession(sessionId);
-      if (!session) {
-        this.logger.info(`[SESSION_CREATE] Creating new session: ${sessionId}`);
-        session = await this.createSessionWithId(sessionId);
-      } else {
-        this.logger.debug(`[SESSION_REUSE] Reusing existing session: ${sessionId}`);
+      // 创建新 transport（仅当是 initialize 请求时）
+      if (!sessionId && this.isInitializeRequest(req.body)) {
+        this.logger.info('Creating new transport for initialize request');
+        
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID()
+        });
+        
+        await this.server.connect(transport);
+        await transport.handleRequest(req, res, req.body);
+        
+        // session ID will only be available after handling the first request
+        const newSessionId = transport.sessionId;
+        this.logger.info('Generated session ID:', newSessionId);
+        if (newSessionId) {
+          this.transports[newSessionId] = transport;
+        }
+        
+        return;
       }
       
-      // 更新会话活动时间
-      this.updateSessionActivity(sessionId);
-      
-      // 处理请求
-      let result: any;
-      
-      switch (message.method) {
-        case 'tools/list':
-          result = { tools: this.listTools() };
-          break;
-          
-        case 'resources/list':
-          result = { resources: this.listResources() };
-          break;
-          
-        case 'prompts/list':
-          result = { prompts: this.listPrompts() };
-          break;
-          
-        case 'tools/call':
-          result = await this.executeTool(
-            message.params.name,
-            message.params.arguments
-          );
-          break;
-          
-        case 'resources/read':
-          const resource = this.getResource(message.params.uri);
-          if (resource) {
-            result = await this.readResource(resource);
-          } else {
-            throw new Error(`Resource not found: ${message.params.uri}`);
-          }
-          break;
-          
-        default:
-          throw new Error(`Unknown method: ${message.method}`);
-      }
-      
-      // 发送响应
-      res.json({
+      // 无效请求
+      this.logger.info('Invalid request - no session ID and not initialize request');
+      this.logger.info('isInitializeRequest result:', this.isInitializeRequest(req.body));
+      res.status(400).json({
         jsonrpc: '2.0',
-        id: message.id,
-        result
+        error: {
+          code: -32000,
+          message: 'Bad Request: invalid session ID or method.'
+        },
+        id: randomUUID()
       });
       
-      // 通过SSE发送通知（如果有连接）
-      this.sendSSEMessage(sessionId, {
-        type: 'rpc_completed',
-        method: message.method,
-        id: message.id
-      });
-      
-    } catch (error: any) {
-      this.logger.error(`RPC error for session ${sessionId}:`, error);
-      
-      res.json({
+    } catch (error) {
+      this.logger.error('Error handling MCP request:', error);
+      res.status(500).json({
         jsonrpc: '2.0',
-        id: message.id || null,
         error: {
           code: -32603,
-          message: error.message || 'Internal error'
-        }
-      });
-      
-      // 通过SSE发送错误通知
-      this.sendSSEMessage(sessionId, {
-        type: 'rpc_error',
-        error: error.message
+          message: 'Internal server error.'
+        },
+        id: randomUUID()
       });
     }
   }
   
   /**
-   * 创建指定ID的会话
+   * 检查是否是 initialize 请求
    */
-  private async createSessionWithId(sessionId: string): Promise<SessionContext> {
-    const session: SessionContext = {
-      id: sessionId,
-      createdAt: Date.now(),
-      lastActivity: Date.now()
+  private isInitializeRequest(body: any): boolean {
+    const checkInit = (data: any) => {
+      const result = InitializeRequestSchema.safeParse(data);
+      return result.success;
     };
     
-    this.sessions.set(sessionId, session);
-    this.logger.info(`Session created: ${sessionId}`);
-    
-    // 设置会话超时
-    this.setupSessionTimeout(sessionId);
-    
-    return session;
-  }
-  
-  /**
-   * 更新会话活动时间
-   */
-  private updateSessionActivity(sessionId: string): void {
-    const session = this.sessions.get(sessionId);
-    if (session) {
-      session.lastActivity = Date.now();
-      
-      // 重置超时
-      this.setupSessionTimeout(sessionId);
-    }
-  }
-  
-  /**
-   * 设置会话超时
-   */
-  private setupSessionTimeout(sessionId: string): void {
-    // 清除现有超时
-    const existingTimeout = this.sessionTimeouts.get(sessionId);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
+    // 支持批量请求
+    if (Array.isArray(body)) {
+      return body.some(request => checkInit(request));
     }
     
-    // 设置新超时
-    const timeout = this.options.sessionTimeout || 30 * 60 * 1000; // 默认30分钟
-    const newTimeout = setTimeout(() => {
-      this.cleanupSession(sessionId);
-    }, timeout);
-    
-    this.sessionTimeouts.set(sessionId, newTimeout);
-  }
-  
-  /**
-   * 清理会话
-   */
-  private cleanupSession(sessionId: string): void {
-    this.logger.info(`[SESSION_CLEANUP] Starting cleanup for session: ${sessionId}`);
-    
-    // 关闭SSE连接
-    const sseConnection = this.sseConnections.get(sessionId);
-    if (sseConnection) {
-      this.logger.debug(`[SESSION_CLEANUP] Closing SSE connection for: ${sessionId}`);
-      sseConnection.end();
-      this.sseConnections.delete(sessionId);
-    }
-    
-    // 清除超时
-    const timeout = this.sessionTimeouts.get(sessionId);
-    if (timeout) {
-      this.logger.debug(`[SESSION_CLEANUP] Clearing timeout for: ${sessionId}`);
-      clearTimeout(timeout);
-      this.sessionTimeouts.delete(sessionId);
-    }
-    
-    // 删除会话
-    this.sessions.delete(sessionId);
-    this.logger.info(`[SESSION_CLEANUP] Session cleaned up: ${sessionId}, Active sessions: ${this.sessions.size}`);
-  }
-  
-  /**
-   * 生成会话ID
-   */
-  private generateSessionId(): string {
-    return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-  
-  /**
-   * 发送SSE消息
-   */
-  private sendSSEMessage(sessionId: string, data: any): void {
-    const connection = this.sseConnections.get(sessionId);
-    if (connection) {
-      connection.write(`data: ${JSON.stringify(data)}\n\n`);
-    }
+    return checkInit(body);
   }
   
   /**
@@ -440,17 +200,11 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   protected async disconnectTransport(): Promise<void> {
     this.logger.info('Stopping HTTP server...');
     
-    // 关闭所有SSE连接
-    for (const [sessionId, connection] of this.sseConnections) {
-      connection.end();
+    // 关闭所有 transports
+    for (const transport of Object.values(this.transports)) {
+      await transport.close();
     }
-    this.sseConnections.clear();
-    
-    // 清除所有会话超时
-    for (const timeout of this.sessionTimeouts.values()) {
-      clearTimeout(timeout);
-    }
-    this.sessionTimeouts.clear();
+    this.transports = {};
     
     // 关闭HTTP服务器
     if (this.httpServer) {
@@ -509,23 +263,5 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
       this.logger.error(`Failed to read resource: ${resource.uri}`, error);
       throw new Error(`Failed to read resource: ${error.message}`);
     }
-  }
-  
-  /**
-   * 获取服务器信息
-   */
-  getServerInfo(): any {
-    return {
-      type: 'http',
-      port: this.port,
-      endpoints: {
-        rpc: `/rpc/:sessionId`,
-        sse: `/sse/:sessionId`,
-        health: '/health',
-        tools: '/tools',
-        resources: '/resources',
-        prompts: '/prompts'
-      }
-    };
   }
 }

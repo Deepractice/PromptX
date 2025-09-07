@@ -4,8 +4,8 @@
   "metadata": {
     "version": "2.0.0",
     "description": "package 级资源注册表",
-    "createdAt": "2025-09-06T09:59:51.532Z",
-    "updatedAt": "2025-09-06T09:59:51.533Z",
+    "createdAt": "2025-09-07T04:36:39.573Z",
+    "updatedAt": "2025-09-07T04:36:39.574Z",
     "resourceCount": 45
   },
   "resources": [
@@ -199,9 +199,9 @@
       "metadata": {
         "path": "resources/role/luban/execution/tool-development-workflow.execution.md",
         "size": 14652,
-        "modified": "2025-09-06T09:05:59.244Z",
-        "createdAt": "2025-09-06T09:05:59.244Z",
-        "updatedAt": "2025-09-06T09:05:59.244Z"
+        "modified": "2025-09-06T10:36:58.726Z",
+        "createdAt": "2025-09-06T10:36:58.725Z",
+        "updatedAt": "2025-09-06T10:36:58.726Z"
       }
     },
     {
@@ -214,9 +214,9 @@
       "metadata": {
         "path": "resources/role/luban/execution/toolsandbox-mastery.execution.md",
         "size": 7149,
-        "modified": "2025-09-06T09:07:20.279Z",
-        "createdAt": "2025-09-06T09:07:20.279Z",
-        "updatedAt": "2025-09-06T09:07:20.279Z"
+        "modified": "2025-09-06T10:36:58.726Z",
+        "createdAt": "2025-09-06T10:36:58.726Z",
+        "updatedAt": "2025-09-06T10:36:58.726Z"
       }
     },
     {
@@ -244,9 +244,9 @@
       "metadata": {
         "path": "resources/role/luban/knowledge/promptx-tool-architecture.knowledge.md",
         "size": 12747,
-        "modified": "2025-09-06T09:12:56.165Z",
-        "createdAt": "2025-09-06T09:12:56.165Z",
-        "updatedAt": "2025-09-06T09:12:56.165Z"
+        "modified": "2025-09-06T10:36:58.727Z",
+        "createdAt": "2025-09-06T10:36:58.726Z",
+        "updatedAt": "2025-09-06T10:36:58.727Z"
       }
     },
     {
@@ -289,9 +289,9 @@
       "metadata": {
         "path": "resources/role/luban/thought/engineering.thought.md",
         "size": 4836,
-        "modified": "2025-09-06T09:12:19.728Z",
-        "createdAt": "2025-09-06T09:12:19.728Z",
-        "updatedAt": "2025-09-06T09:12:19.728Z"
+        "modified": "2025-09-06T10:36:58.727Z",
+        "createdAt": "2025-09-06T10:36:58.727Z",
+        "updatedAt": "2025-09-06T10:36:58.727Z"
       }
     },
     {
@@ -649,9 +649,9 @@
       "metadata": {
         "path": "resources/tool/filesystem/filesystem.tool.js",
         "size": 14452,
-        "modified": "2025-09-06T09:59:13.073Z",
-        "createdAt": "2025-09-06T09:59:13.072Z",
-        "updatedAt": "2025-09-06T09:59:13.073Z"
+        "modified": "2025-09-06T10:36:58.728Z",
+        "createdAt": "2025-09-06T10:36:58.727Z",
+        "updatedAt": "2025-09-06T10:36:58.728Z"
       }
     },
     {
