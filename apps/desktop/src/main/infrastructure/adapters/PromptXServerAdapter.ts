@@ -15,7 +15,7 @@ export class PromptXServerAdapter implements IServerPort {
 
   async start(config: ServerConfig): Promise<Result<void, ServerError>> {
     try {
-      if (this.server?.isRunning && this.server?.isRunning()) {
+      if (this.server?.getServer && this.server.getServer().isRunning()) {
         return ResultUtil.fail(ServerError.alreadyRunning())
       }
 
@@ -62,7 +62,7 @@ export class PromptXServerAdapter implements IServerPort {
 
   async stop(): Promise<Result<void, ServerError>> {
     try {
-      if (!this.server?.isRunning || !this.server.isRunning()) {
+      if (!this.server?.getServer || !this.server.getServer().isRunning()) {
         return ResultUtil.fail(ServerError.notRunning())
       }
 
@@ -88,7 +88,7 @@ export class PromptXServerAdapter implements IServerPort {
   }
 
   async restart(config: ServerConfig): Promise<Result<void, ServerError>> {
-    if (this.server?.isRunning && this.server.isRunning()) {
+    if (this.server?.getServer && this.server.getServer().isRunning()) {
       const stopResult = await this.stop()
       if (!stopResult.ok) {
         return stopResult
