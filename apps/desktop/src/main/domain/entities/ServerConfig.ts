@@ -49,7 +49,7 @@ export class ServerConfig {
   static default(): ServerConfig {
     return new ServerConfig({
       port: 5203,
-      host: 'localhost',
+      host: '127.0.0.1',
       workspace: process.cwd(),
       autoStart: false,
       updateStrategy: 'notify',

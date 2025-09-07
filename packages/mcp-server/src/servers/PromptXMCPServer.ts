@@ -142,7 +142,7 @@ export class PromptXMCPServer {
     // 显示启动信息
     if (options.transport === 'http') {
       const port = options.port || 5203;
-      const host = options.host || 'localhost';
+      const host = options.host || '127.0.0.1';
       logger.info(`HTTP Server Ready at http://${host}:${port}`);
       logger.info('Use MCP-Session-Id header for session management');
     } else {

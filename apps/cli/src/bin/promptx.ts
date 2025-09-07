@@ -177,7 +177,7 @@ program
   .description('启动MCP Server，支持Claude Desktop等AI应用接入')
   .option('-t, --transport <type>', '传输类型 (stdio|http)', 'stdio')
   .option('-p, --port <number>', 'HTTP端口号 (仅http传输)', '5203')
-  .option('--host <address>', '绑定地址 (仅http传输)', 'localhost')
+  .option('--host <address>', '绑定地址 (仅http传输)', '127.0.0.1')
   .option('--cors', '启用CORS (仅http传输)', false)
   .option('--debug', '启用调试模式', false)
   .action(async (options) => {

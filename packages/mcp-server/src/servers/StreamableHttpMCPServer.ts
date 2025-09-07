@@ -1,7 +1,13 @@
 import express, { Express, Request, Response } from 'express';
 import { Server as HttpServer } from 'http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { InitializeRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { 
+  InitializeRequestSchema,
+  LoggingMessageNotification,
+  JSONRPCNotification,
+  JSONRPCError,
+  Notification
+} from '@modelcontextprotocol/sdk/types.js';
 import type { Resource } from '@modelcontextprotocol/sdk/types.js';
 import { BaseMCPServer } from '~/servers/BaseMCPServer.js';
 import type { MCPServerOptions } from '~/interfaces/MCPServer.js';
@@ -34,7 +40,7 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   }) {
     super(options);
     this.port = options.port || 8080;
-    this.host = options.host || 'localhost';
+    this.host = options.host || '127.0.0.1';  // 使用 IPv4 避免 IPv6 问题
     this.corsEnabled = options.corsEnabled || false;
   }
   
@@ -93,22 +99,80 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
     
     if (!sessionId || !this.transports[sessionId]) {
-      res.status(400).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32000,
-          message: 'Bad Request: invalid session ID or method.'
-        },
-        id: null
-      });
+      res.status(400).json(
+        this.createErrorResponse('Bad Request: invalid session ID or method.')
+      );
       return;
     }
     
     this.logger.info(`Establishing SSE stream for session ${sessionId}`);
     const transport = this.transports[sessionId];
-    
-    // 让 SDK 处理 SSE 连接
     await transport.handleRequest(req, res);
+    await this.streamMessages(transport);
+    
+    return;
+  }
+  
+  /**
+   * 发送 SSE 流消息 - 完全复制官方实现
+   */
+  private async streamMessages(transport: StreamableHTTPServerTransport): Promise<void> {
+    try {
+      // 基于 LoggingMessageNotificationSchema 触发客户端的 setNotificationHandler
+      const message = {
+        method: 'notifications/message',
+        params: { level: 'info', data: 'SSE Connection established' }
+      };
+      
+      this.sendNotification(transport, message);
+      
+      let messageCount = 0;
+      
+      const interval = setInterval(async () => {
+        messageCount++;
+        
+        const data = `Message ${messageCount} at ${new Date().toISOString()}`;
+        
+        const message = {
+          method: 'notifications/message',
+          params: { level: 'info', data: data }
+        };
+        
+        try {
+          this.sendNotification(transport, message);
+          
+          if (messageCount === 2) {
+            clearInterval(interval);
+            
+            const message = {
+              method: 'notifications/message',
+              params: { level: 'info', data: 'Streaming complete!' }
+            };
+            
+            this.sendNotification(transport, message);
+          }
+        } catch (error) {
+          this.logger.error('Error sending message:', error);
+          clearInterval(interval);
+        }
+      }, 1000);
+    } catch (error) {
+      this.logger.error('Error sending message:', error);
+    }
+  }
+  
+  /**
+   * 发送通知 - 完全复制官方实现
+   */
+  private async sendNotification(
+    transport: StreamableHTTPServerTransport,
+    notification: any
+  ): Promise<void> {
+    const rpcNotification = {
+      ...notification,
+      jsonrpc: '2.0'
+    };
+    await transport.send(rpcNotification);
   }
   
   /**
@@ -118,9 +182,9 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
     
     this.logger.info('=== POST Request ===');
-    this.logger.info('Headers:', JSON.stringify(req.headers, null, 2));
-    this.logger.info('Body:', JSON.stringify(req.body, null, 2));
-    this.logger.info('Session ID:', sessionId);
+    this.logger.info(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
+    this.logger.info(`Body: ${JSON.stringify(req.body, null, 2)}`);
+    this.logger.info(`Session ID: ${sessionId}`);
     
     try {
       // 重用现有 transport
@@ -140,11 +204,12 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
         });
         
         await this.server.connect(transport);
+        
         await transport.handleRequest(req, res, req.body);
         
         // session ID will only be available after handling the first request
         const newSessionId = transport.sessionId;
-        this.logger.info('Generated session ID:', newSessionId);
+        this.logger.info(`Generated session ID: ${newSessionId}`);
         if (newSessionId) {
           this.transports[newSessionId] = transport;
         }
@@ -154,7 +219,7 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
       
       // 无效请求
       this.logger.info('Invalid request - no session ID and not initialize request');
-      this.logger.info('isInitializeRequest result:', this.isInitializeRequest(req.body));
+      this.logger.info(`isInitializeRequest result: ${this.isInitializeRequest(req.body)}`);
       res.status(400).json({
         jsonrpc: '2.0',
         error: {
@@ -178,20 +243,31 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   }
   
   /**
-   * 检查是否是 initialize 请求
+   * 检查是否是 initialize 请求 - 完全复制官方实现
    */
   private isInitializeRequest(body: any): boolean {
-    const checkInit = (data: any) => {
+    const isInitial = (data: any) => {
       const result = InitializeRequestSchema.safeParse(data);
       return result.success;
     };
-    
-    // 支持批量请求
     if (Array.isArray(body)) {
-      return body.some(request => checkInit(request));
+      return body.some((request) => isInitial(request));
     }
-    
-    return checkInit(body);
+    return isInitial(body);
+  }
+  
+  /**
+   * 创建错误响应 - 完全复制官方实现
+   */
+  private createErrorResponse(message: string): any {
+    return {
+      jsonrpc: '2.0',
+      error: {
+        code: -32000,
+        message: message
+      },
+      id: randomUUID()
+    };
   }
   
   /**

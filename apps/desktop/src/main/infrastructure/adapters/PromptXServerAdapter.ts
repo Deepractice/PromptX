@@ -117,7 +117,7 @@ export class PromptXServerAdapter implements IServerPort {
     }
 
     // PromptXMCPServer 的配置存储在 options 中
-    const host = this.server.options?.host || 'localhost'
+    const host = this.server.options?.host || '127.0.0.1'
     const port = this.server.options?.port || 5203
     const address = `http://${host}:${port}/mcp`
     return ResultUtil.ok(address)
