@@ -14,8 +14,11 @@ import chalk from 'chalk'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { MCPServerManager } from '../index.js'
 import logger from '@promptx/logger'
+import { StdioMCPServer } from '../servers/StdioMCPServer.js'
+import { StreamableHttpMCPServer } from '../servers/StreamableHttpMCPServer.js'
+import { allTools } from '../tools/index.js'
+import type { MCPServer } from '../interfaces/MCPServer.js'
 
 // Get package.json
 const __filename = fileURLToPath(import.meta.url)
@@ -41,17 +44,77 @@ program
   .action(async (options) => {
     try {
       logger.info(chalk.cyan(`PromptX MCP Server v${packageJson.version}`))
+      logger.info(`Transport: ${options.transport}`)
       
-      // Use MCPServerManager for unified server management
-      await MCPServerManager.launch({
-        transport: options.transport as 'stdio' | 'http',
-        port: parseInt(options.port),
-        host: options.host,
-        cors: options.cors,
-        debug: options.debug
+      let server: MCPServer;
+      
+      // 创建服务器实例
+      if (options.transport === 'stdio') {
+        server = new StdioMCPServer({
+          name: 'promptx-mcp-server',
+          version: packageJson.version
+        });
+        
+        logger.info('Starting STDIO server...')
+      } else if (options.transport === 'http') {
+        const port = parseInt(options.port);
+        server = new StreamableHttpMCPServer({
+          name: 'promptx-mcp-server',
+          version: packageJson.version,
+          port,
+          host: options.host,
+          corsEnabled: options.cors
+        });
+        
+        logger.info(`Starting HTTP server on ${options.host}:${port}...`)
+      } else {
+        throw new Error(`Unknown transport type: ${options.transport}`)
+      }
+      
+      // 注册所有工具
+      allTools.forEach(tool => {
+        server.registerTool(tool)
       })
+      logger.info(`Registered ${allTools.length} tools`)
+      
+      // 启动服务器
+      await server.start()
+      logger.info(chalk.green('✓ MCP Server started successfully'))
+      
+      // 处理退出信号
+      const shutdown = async (signal: string) => {
+        logger.info(`\nReceived ${signal}, shutting down gracefully...`)
+        try {
+          await server.gracefulShutdown(5000)
+          logger.info(chalk.green('✓ Server stopped cleanly'))
+          process.exit(0)
+        } catch (error) {
+          logger.error('Error during shutdown:', error)
+          process.exit(1)
+        }
+      }
+      
+      process.on('SIGINT', () => shutdown('SIGINT'))
+      process.on('SIGTERM', () => shutdown('SIGTERM'))
+      
+      // HTTP 模式下显示连接信息
+      if (options.transport === 'http') {
+        logger.info(chalk.cyan('\nHTTP Server Ready:'))
+        logger.info(`  URL: http://${options.host}:${options.port}`)
+        logger.info(`  CORS: ${options.cors ? 'Enabled' : 'Disabled'}`)
+        logger.info(chalk.gray('\n  Endpoints:'))
+        logger.info(chalk.gray('  POST /mcp - Send JSON-RPC requests'))
+        logger.info(chalk.gray('  GET /mcp - SSE stream (requires session)'))
+        logger.info(chalk.gray('  DELETE /mcp - Terminate session'))
+        logger.info(chalk.gray('  GET /health - Health check'))
+        logger.info(chalk.gray('\n  Use MCP-Session-Id header for session management'))
+      }
+      
     } catch (error) {
       logger.error(`MCP Server startup failed: ${(error as Error).message}`)
+      if (options.debug && (error as Error).stack) {
+        logger.error((error as Error).stack)
+      }
       process.exit(1)
     }
   })
@@ -65,17 +128,17 @@ program.configureHelp({
 // 添加示例说明
 program.addHelpText('after', `
 
-${chalk.cyan('PromptX MCP Server - Bridge AI applications to PromptX')}
-
-${chalk.cyan('Quick Start:')}
-  ${chalk.gray('# STDIO mode (default, suitable for most AI applications)')}
+${chalk.cyan('Examples:')}
+  ${chalk.gray('# STDIO mode (default, for AI applications)')}
   npx @promptx/mcp-server
 
-  ${chalk.gray('# HTTP mode (suitable for web applications and remote connections)')}
+  ${chalk.gray('# HTTP mode (for web applications)')}
   npx @promptx/mcp-server --transport http --port 5203
 
-${chalk.cyan('AI Application Configuration:')}
-  ${chalk.gray('# Claude Desktop configuration example')}
+  ${chalk.gray('# HTTP mode with CORS')}
+  npx @promptx/mcp-server --transport http --port 5203 --cors
+
+${chalk.cyan('Claude Desktop Configuration:')}
   {
     "mcpServers": {
       "promptx": {

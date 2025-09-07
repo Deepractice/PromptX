@@ -107,29 +107,74 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
       });
     });
     
-    // SSE端点
-    this.app.get('/sse/:sessionId', (req, res) => {
+    // 主 MCP 端点 - POST 请求处理 RPC
+    this.app.post('/mcp', async (req, res) => {
+      const sessionId = req.headers['mcp-session-id'] as string || 
+                       req.headers['x-session-id'] as string;
+      
+      if (sessionId) {
+        // 使用现有会话
+        req.params.sessionId = sessionId;
+        await this.handleRPCRequest(req, res);
+      } else {
+        // 创建新会话
+        const newSessionId = this.generateSessionId();
+        req.params.sessionId = newSessionId;
+        res.setHeader('MCP-Session-Id', newSessionId);
+        await this.handleRPCRequest(req, res);
+      }
+    });
+    
+    // MCP SSE 端点 - GET 请求处理 SSE 流
+    this.app.get('/mcp', (req, res) => {
+      const sessionId = req.headers['mcp-session-id'] as string || 
+                       req.headers['x-session-id'] as string;
+      
+      if (!sessionId) {
+        res.status(400).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32000,
+            message: 'Session ID required for SSE connection'
+          }
+        });
+        return;
+      }
+      
+      req.params.sessionId = sessionId;
       this.handleSSEConnection(req, res);
     });
     
-    // RPC端点
-    this.app.post('/rpc/:sessionId', async (req, res) => {
-      await this.handleRPCRequest(req, res);
+    // MCP 会话终止 - DELETE 请求
+    this.app.delete('/mcp', async (req, res) => {
+      const sessionId = req.headers['mcp-session-id'] as string || 
+                       req.headers['x-session-id'] as string;
+      
+      if (!sessionId) {
+        res.status(400).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32000,
+            message: 'Session ID required'
+          }
+        });
+        return;
+      }
+      
+      await this.destroySession(sessionId);
+      res.json({
+        jsonrpc: '2.0',
+        result: { message: 'Session terminated' }
+      });
     });
     
-    // 工具列表
+    // 保留的便捷端点（可选）
     this.app.get('/tools', (req, res) => {
       res.json({ tools: this.listTools() });
     });
     
-    // 资源列表
     this.app.get('/resources', (req, res) => {
       res.json({ resources: this.listResources() });
-    });
-    
-    // 提示词列表
-    this.app.get('/prompts', (req, res) => {
-      res.json({ prompts: this.listPrompts() });
     });
   }
   
@@ -359,6 +404,13 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     // 删除会话
     this.sessions.delete(sessionId);
     this.logger.info(`[SESSION_CLEANUP] Session cleaned up: ${sessionId}, Active sessions: ${this.sessions.size}`);
+  }
+  
+  /**
+   * 生成会话ID
+   */
+  private generateSessionId(): string {
+    return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
   /**

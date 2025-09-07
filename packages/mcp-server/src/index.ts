@@ -48,13 +48,14 @@ export type {
 } from '@modelcontextprotocol/sdk/types.js';
 
 // 保留旧的导出以保持向后兼容（标记为deprecated）
-/** @deprecated Use StdioMCPServer instead */
-export { FastMCPStdioServer } from './legacy/server/FastMCPStdioServer';
-/** @deprecated Use StreamableHttpMCPServer instead */
-export { FastMCPHttpServer } from './legacy/server/FastMCPHttpServer';
-/** @deprecated Use the new server implementations */
-export { MCPOutputAdapter } from './legacy/MCPOutputAdapter';
-/** @deprecated Use MCPServerFactory instead */
-export { MCPServerManager } from './legacy/MCPServerManager';
-/** @deprecated Use definitions from the new structure */
-export * as definitions from './legacy/definitions/index';
+// TODO: 修复 legacy 代码的构建问题后再启用
+// /** @deprecated Use StdioMCPServer instead */
+// export { FastMCPStdioServer } from './legacy/server/FastMCPStdioServer';
+// /** @deprecated Use StreamableHttpMCPServer instead */
+// export { FastMCPHttpServer } from './legacy/server/FastMCPHttpServer';
+// /** @deprecated Use the new server implementations */
+// export { MCPOutputAdapter } from './legacy/MCPOutputAdapter';
+// /** @deprecated Use MCPServerFactory instead */
+// export { MCPServerManager } from './legacy/MCPServerManager';
+// /** @deprecated Use definitions from the new structure */
+// export * as definitions from './legacy/definitions/index';
