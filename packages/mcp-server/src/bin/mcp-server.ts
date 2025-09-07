@@ -15,10 +15,7 @@ import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import logger from '@promptx/logger'
-import { StdioMCPServer } from '../servers/StdioMCPServer.js'
-import { StreamableHttpMCPServer } from '../servers/StreamableHttpMCPServer.js'
-import { allTools } from '../tools/index.js'
-import type { MCPServer } from '../interfaces/MCPServer.js'
+import { PromptXMCPServer } from '../servers/PromptXMCPServer.js'
 
 // Get package.json
 const __filename = fileURLToPath(import.meta.url)
@@ -44,71 +41,16 @@ program
   .action(async (options) => {
     try {
       logger.info(chalk.cyan(`PromptX MCP Server v${packageJson.version}`))
-      logger.info(`Transport: ${options.transport}`)
       
-      let server: MCPServer;
-      
-      // 创建服务器实例
-      if (options.transport === 'stdio') {
-        server = new StdioMCPServer({
-          name: 'promptx-mcp-server',
-          version: packageJson.version
-        });
-        
-        logger.info('Starting STDIO server...')
-      } else if (options.transport === 'http') {
-        const port = parseInt(options.port);
-        server = new StreamableHttpMCPServer({
-          name: 'promptx-mcp-server',
-          version: packageJson.version,
-          port,
-          host: options.host,
-          corsEnabled: options.cors
-        });
-        
-        logger.info(`Starting HTTP server on ${options.host}:${port}...`)
-      } else {
-        throw new Error(`Unknown transport type: ${options.transport}`)
-      }
-      
-      // 注册所有工具
-      allTools.forEach(tool => {
-        server.registerTool(tool)
+      // 使用 PromptXMCPServer 统一启动
+      await PromptXMCPServer.launch({
+        transport: options.transport as 'stdio' | 'http',
+        version: packageJson.version,
+        port: parseInt(options.port),
+        host: options.host,
+        corsEnabled: options.cors,
+        debug: options.debug
       })
-      logger.info(`Registered ${allTools.length} tools`)
-      
-      // 启动服务器
-      await server.start()
-      logger.info(chalk.green('✓ MCP Server started successfully'))
-      
-      // 处理退出信号
-      const shutdown = async (signal: string) => {
-        logger.info(`\nReceived ${signal}, shutting down gracefully...`)
-        try {
-          await server.gracefulShutdown(5000)
-          logger.info(chalk.green('✓ Server stopped cleanly'))
-          process.exit(0)
-        } catch (error) {
-          logger.error('Error during shutdown:', error)
-          process.exit(1)
-        }
-      }
-      
-      process.on('SIGINT', () => shutdown('SIGINT'))
-      process.on('SIGTERM', () => shutdown('SIGTERM'))
-      
-      // HTTP 模式下显示连接信息
-      if (options.transport === 'http') {
-        logger.info(chalk.cyan('\nHTTP Server Ready:'))
-        logger.info(`  URL: http://${options.host}:${options.port}`)
-        logger.info(`  CORS: ${options.cors ? 'Enabled' : 'Disabled'}`)
-        logger.info(chalk.gray('\n  Endpoints:'))
-        logger.info(chalk.gray('  POST /mcp - Send JSON-RPC requests'))
-        logger.info(chalk.gray('  GET /mcp - SSE stream (requires session)'))
-        logger.info(chalk.gray('  DELETE /mcp - Terminate session'))
-        logger.info(chalk.gray('  GET /health - Health check'))
-        logger.info(chalk.gray('\n  Use MCP-Session-Id header for session management'))
-      }
       
     } catch (error) {
       logger.error(`MCP Server startup failed: ${(error as Error).message}`)

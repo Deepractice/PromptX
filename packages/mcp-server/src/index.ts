@@ -40,6 +40,10 @@ export {
   default as serverFactory
 } from '~/servers/MCPServerFactory.js';
 
+// 导出 PromptX 集成服务器
+export { PromptXMCPServer, MCPServerManager } from '~/servers/PromptXMCPServer.js';
+export type { PromptXServerOptions } from '~/servers/PromptXMCPServer.js';
+
 // 重新导出SDK类型（方便使用）
 export type {
   Tool,

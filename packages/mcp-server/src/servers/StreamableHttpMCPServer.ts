@@ -22,11 +22,20 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   private app?: Express;
   private httpServer?: HttpServer;
   private port: number = 8080;
+  private host: string = 'localhost';
+  private corsEnabled: boolean = false;
   private sseConnections = new Map<string, Response>();
   private sessionTimeouts = new Map<string, NodeJS.Timeout>();
   
-  constructor(options: MCPServerOptions) {
+  constructor(options: MCPServerOptions & {
+    port?: number;
+    host?: string;
+    corsEnabled?: boolean;
+  }) {
     super(options);
+    this.port = options.port || 8080;
+    this.host = options.host || 'localhost';
+    this.corsEnabled = options.corsEnabled || false;
   }
   
   /**
@@ -49,8 +58,8 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     
     // 启动HTTP服务器
     await new Promise<void>((resolve, reject) => {
-      this.httpServer = this.app!.listen(this.port, () => {
-        this.logger.info(`HTTP server listening on port ${this.port}`);
+      this.httpServer = this.app!.listen(this.port, this.host, () => {
+        this.logger.info(`HTTP server listening on ${this.host}:${this.port}`);
         resolve();
       });
       
@@ -68,18 +77,20 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     
-    // CORS支持
-    this.app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      
-      if (req.method === 'OPTIONS') {
-        res.sendStatus(204);
-      } else {
-        next();
-      }
-    });
+    // CORS支持（如果启用）
+    if (this.corsEnabled) {
+      this.app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, MCP-Session-Id, X-Session-Id');
+        
+        if (req.method === 'OPTIONS') {
+          res.sendStatus(204);
+        } else {
+          next();
+        }
+      });
+    }
     
     // 请求日志
     this.app.use((req, res, next) => {
