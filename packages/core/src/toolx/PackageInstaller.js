@@ -107,6 +107,84 @@ class PackageInstaller {
   }
   
   /**
+   * Windows 平台特殊处理：处理文件锁定问题
+   * @private
+   * @param {string} targetPath - 目标路径
+   * @param {string} packageName - 包名（用于日志）
+   * @returns {Promise<boolean>} 是否成功处理
+   */
+  static async _handleWindowsFileLock(targetPath, packageName) {
+    const logger = require('@promptx/logger');
+    
+    logger.debug(`[PackageInstaller] Windows file lock handling for ${packageName} at ${targetPath}`);
+    
+    try {
+      // 检查目标路径是否存在
+      const exists = await fs.access(targetPath).then(() => true).catch(() => false);
+      
+      if (!exists) {
+        logger.debug(`[PackageInstaller] Target path does not exist, no cleanup needed`);
+        return true;
+      }
+      
+      logger.warn(`[PackageInstaller] Target path exists, attempting to rename for ${packageName}`);
+      
+      // 生成临时路径名
+      const tempPath = `${targetPath}_old_${Date.now()}`;
+      
+      try {
+        // 尝试重命名目录（避免直接删除）
+        await fs.rename(targetPath, tempPath);
+        logger.info(`[PackageInstaller] Successfully renamed ${targetPath} to ${tempPath}`);
+        
+        // 异步清理旧目录（不阻塞安装）
+        setImmediate(() => {
+          fs.rm(tempPath, { recursive: true, force: true, maxRetries: 3 })
+            .then(() => {
+              logger.debug(`[PackageInstaller] Successfully cleaned up temporary directory ${tempPath}`);
+            })
+            .catch(err => {
+              logger.debug(`[PackageInstaller] Failed to clean temporary directory ${tempPath}: ${err.message}`);
+              logger.debug(`[PackageInstaller] This is expected on Windows and can be ignored`);
+            });
+        });
+        
+        return true;
+      } catch (renameError) {
+        // 重命名失败，说明文件被锁定
+        logger.error(`[PackageInstaller] Failed to rename ${targetPath}: ${renameError.message}`);
+        
+        // 尝试等待一段时间后重试
+        logger.info(`[PackageInstaller] Waiting 500ms for file handles to release...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 再次尝试重命名
+        try {
+          const retryTempPath = `${targetPath}_old_${Date.now()}`;
+          await fs.rename(targetPath, retryTempPath);
+          logger.info(`[PackageInstaller] Retry succeeded, renamed to ${retryTempPath}`);
+          
+          // 异步清理
+          setImmediate(() => {
+            fs.rm(retryTempPath, { recursive: true, force: true })
+              .catch(() => {/* ignore cleanup errors */});
+          });
+          
+          return true;
+        } catch (retryError) {
+          logger.error(`[PackageInstaller] Retry failed: ${retryError.message}`);
+          logger.error(`[PackageInstaller] Package ${packageName} may be locked by another process`);
+          logger.error(`[PackageInstaller] Possible causes: IDE, antivirus, Windows Search indexing`);
+          return false;
+        }
+      }
+    } catch (error) {
+      logger.error(`[PackageInstaller] Unexpected error in Windows file lock handling: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
    * 安装单个包
    * @param {string} nodeModulesPath - node_modules目录路径
    * @param {string} name - 包名
@@ -116,6 +194,7 @@ class PackageInstaller {
    */
   static async installPackage(nodeModulesPath, name, version, timeout = 30000) {
     const spec = `${name}@${version}`;
+    const logger = require('@promptx/logger');
     
     // 处理作用域包的目录结构
     let targetPath;
@@ -126,6 +205,24 @@ class PackageInstaller {
       targetPath = path.join(scopePath, pkgName);
     } else {
       targetPath = path.join(nodeModulesPath, name);
+    }
+    
+    // Windows 平台特殊处理
+    if (process.platform === 'win32') {
+      logger.debug(`[PackageInstaller] Detected Windows platform, checking for file locks`);
+      const handled = await this._handleWindowsFileLock(targetPath, name);
+      if (!handled) {
+        logger.warn(`[PackageInstaller] Skipping installation of ${name} due to file lock`);
+        // 返回一个基本的结果对象，避免中断整个安装流程
+        return {
+          name: name,
+          version: version,
+          path: targetPath,
+          type: 'commonjs',
+          skipped: true,
+          reason: 'file_locked'
+        };
+      }
     }
     
     // 设置超时
