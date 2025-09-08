@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  promptx:
+    image: deepracticexs/promptx:latest
+    ports:
+      - "5203:5203"
+    volumes:
+      # Data stored in PROMPTX_DATA or .promptx folder next to docker-compose.yml
+      - ${PROMPTX_DATA:-./.promptx}:/root/.promptx
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

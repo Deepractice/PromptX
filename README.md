@@ -103,6 +103,15 @@ AI:   Provides in-depth product strategy advice as a professional product manage
 }
 ```
 
+### 🐳 Method 3: Docker (Production Ready)
+**Deploy PromptX with Docker for production environments:**
+
+```bash
+docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:latest
+```
+
+📚 **[Full Docker Documentation →](./docker/README.md)**
+
 ---
 
 ## 🎨 **Nuwa Creation Workshop - Making Everyone an AI Role Designer**

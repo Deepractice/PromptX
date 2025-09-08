@@ -101,6 +101,15 @@ AI：   以专业产品经理身份，提供深度产品策略建议
 }
 ```
 
+### 🐳 方式三：Docker（生产就绪）
+**使用Docker部署PromptX到生产环境：**
+
+```bash
+docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:latest
+```
+
+📚 **[完整Docker文档 →](./docker/README.md)**
+
 ---
 
 ## 🎨 **女娲创造工坊 - 让每个人都成为AI角色设计师**
