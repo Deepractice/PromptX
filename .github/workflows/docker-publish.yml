@@ -1,0 +1,94 @@
+name: Docker Build and Publish
+
+on:
+  push:
+    tags:
+      # Only match formal version tags (e.g., @promptx/mcp-server@1.14.0)
+      # Will not match beta/alpha versions (e.g., @promptx/mcp-server@1.14.0-beta.1)
+      - '@promptx/mcp-server@[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Extract version from tag
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Extract version from @promptx/mcp-server@1.14.0
+          TAG="${{ github.ref_name }}"
+          VERSION=$(echo "$TAG" | sed 's/@promptx\/mcp-server@//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building Docker image for version: $VERSION"
+      
+      # Wait for npm package to be available
+      - name: Wait for npm package availability
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Waiting for @promptx/mcp-server@$VERSION to be available on npm..."
+          
+          for i in {1..20}; do
+            if npm view @promptx/mcp-server@$VERSION version 2>/dev/null; then
+              echo "✅ Package @promptx/mcp-server@$VERSION is available"
+              break
+            fi
+            
+            if [ $i -eq 20 ]; then
+              echo "❌ Timeout waiting for npm package"
+              exit 1
+            fi
+            
+            echo "Attempt $i/20: Package not yet available, waiting 30s..."
+            sleep 30
+          done
+      
+      # Login to Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      
+      # Set up Docker Buildx for multi-platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # Set up QEMU for multi-platform builds
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      # Build and push Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            deepracticexs/promptx:${{ steps.version.outputs.version }}
+            deepracticexs/promptx:latest
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+          cache-from: type=registry,ref=deepracticexs/promptx:buildcache
+          cache-to: type=registry,ref=deepracticexs/promptx:buildcache,mode=max
+      
+      # Output summary
+      - name: Summary
+        run: |
+          echo "## Docker Image Published 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tags**:" >> $GITHUB_STEP_SUMMARY
+          echo "  - \`deepracticexs/promptx:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "  - \`deepracticexs/promptx:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Usage" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
