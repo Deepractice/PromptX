@@ -70,7 +70,7 @@ AI:   Provides in-depth product strategy advice as a professional product manage
 ### 🎯 Method 1: PromptX Client (Recommended)
 **For all users - One-click launch, zero configuration**
 
-1. **[Download Client](https://github.com/Deepractice/PromptX/releases)** - Supports Windows, Mac, Linux
+1. **[Download Client](https://github.com/Deepractice/PromptX/releases/latest)** - Supports Windows, Mac, Linux
 2. **Start HTTP Service** - Open client, automatically runs MCP server
 3. **Configure AI Application** - Add the following configuration to your Claude/Cursor or other AI tools:
    ```json

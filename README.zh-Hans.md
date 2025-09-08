@@ -70,7 +70,7 @@ AI：   以专业产品经理身份，提供深度产品策略建议
 ### 🎯 方式一：PromptX 客户端（推荐）
 **适合所有用户 - 一键启动，零配置**
 
-1. **[下载客户端](https://github.com/Deepractice/PromptX/releases)** - 支持 Windows、Mac、Linux
+1. **[下载客户端](https://github.com/Deepractice/PromptX/releases/latest)** - 支持 Windows、Mac、Linux
 2. **启动HTTP服务** - 打开客户端，自动运行MCP服务器
 3. **配置AI应用** - 将以下配置添加到你的Claude/Cursor等AI工具：
    ```json
