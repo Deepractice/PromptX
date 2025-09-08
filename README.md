@@ -14,7 +14,8 @@
   </p>
 
   <p>
-    <a href="README_CN.md">中文</a> | 
+    <a href="README.zh-Hans.md">简体中文</a> | 
+    <a href="README.zh-Hant.md">繁體中文</a> | 
     <strong><a href="README.md">English</a></strong> | 
     <a href="https://github.com/Deepractice/PromptX/issues">Issues</a>
   </p>
