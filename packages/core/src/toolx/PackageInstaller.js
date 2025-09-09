@@ -1,18 +1,19 @@
 /**
- * PackageInstaller - 基于 pacote API 的现代包管理器
+ * PackageInstaller - 基于 Arborist 的完整依赖管理器
  * 
- * 使用npm官方pacote API，支持所有现代npm包特性
- * 替代@pnpm/core，解决依赖地狱和现代包兼容性问题
+ * 使用 npm 官方的 @npmcli/arborist，提供与 npm install 完全一致的行为
+ * 自动处理所有传递依赖、版本冲突、循环依赖等复杂场景
+ * 修复 issue #332：传递依赖未自动安装的问题
  */
 
 const path = require('path');
 const fs = require('fs').promises;
+const os = require('os');
 const logger = require('@promptx/logger');
-const pacote = require('pacote');
 
 class PackageInstaller {
   /**
-   * 统一的pacote安装入口 - 保持向后兼容的API
+   * 统一的包安装入口 - 使用 Arborist 替代 pacote
    * @param {Object} options - 安装选项
    * @param {string} options.workingDir - 工作目录
    * @param {Object|Array} options.dependencies - 依赖列表
@@ -25,7 +26,7 @@ class PackageInstaller {
     // 构建依赖列表字符串用于日志
     const depsList = this.buildDependenciesList(dependencies);
     
-    logger.info(`[PackageInstaller] Starting installation via pacote API: [${depsList}]`);
+    logger.info(`[PackageInstaller] Starting installation via Arborist: [${depsList}]`);
     logger.debug(`[PackageInstaller] Working directory: ${workingDir}`);
     
     try {
@@ -55,46 +56,60 @@ class PackageInstaller {
       // 规范化依赖格式
       const normalizedDeps = this.normalizeDependencies(dependencies);
       
-      // 创建node_modules目录
-      const nodeModulesPath = path.join(workingDir, 'node_modules');
-      await fs.mkdir(nodeModulesPath, { recursive: true });
-      
-      logger.debug(`[PackageInstaller] Installing ${Object.keys(normalizedDeps).length} dependencies`);
-      
-      // 使用pacote逐个安装依赖
-      const installResults = {};
-      const installPromises = [];
-      
-      for (const [name, version] of Object.entries(normalizedDeps)) {
-        const installPromise = this.installPackage(nodeModulesPath, name, version, timeout)
-          .then(result => {
-            installResults[name] = result;
-            logger.debug(`[PackageInstaller] ✓ ${name}@${result.version} installed`);
-          })
-          .catch(error => {
-            logger.error(`[PackageInstaller] ✗ Failed to install ${name}: ${error.message}`);
-            throw new Error(`Failed to install ${name}: ${error.message}`);
-          });
-          
-        installPromises.push(installPromise);
-      }
-      
-      // 并行安装所有依赖
-      await Promise.all(installPromises);
-      
-      // 更新package.json中的dependencies
+      // 更新 manifest 的 dependencies
       manifest.dependencies = { ...manifest.dependencies, ...normalizedDeps };
       await fs.writeFile(packageJsonPath, JSON.stringify(manifest, null, 2));
       
+      logger.debug(`[PackageInstaller] Installing ${Object.keys(normalizedDeps).length} dependencies using Arborist`);
+      
+      // 使用 Arborist 安装所有依赖（包括传递依赖）
+      const Arborist = require('@npmcli/arborist');
+      
+      const arb = new Arborist({
+        path: workingDir,
+        registry: 'https://registry.npmjs.org/',
+        cache: path.join(os.homedir(), '.npm', '_cacache'),
+        save: false,  // 不需要再次更新 package.json
+        omit: [],     // 安装所有依赖
+        force: false,
+        fund: false,
+        audit: false,
+        legacyPeerDeps: true  // 兼容旧包
+      });
+      
+      // 执行安装 - Arborist 会自动处理所有传递依赖
+      await arb.reify({
+        add: Object.entries(normalizedDeps).map(([name, version]) => `${name}@${version}`)
+      });
+      
+      // 加载实际安装的包信息
+      const tree = await arb.loadActual();
+      const installedPackages = [];
+      const installResults = {};
+      
+      // 收集安装的包信息
+      for (const [name, node] of tree.children) {
+        if (node && node.package) {
+          installedPackages.push(name);
+          installResults[name] = {
+            name: node.package.name,
+            version: node.package.version,
+            path: node.path
+          };
+          logger.debug(`[PackageInstaller] ✓ ${name}@${node.package.version} installed`);
+        }
+      }
+      
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       logger.info(`[PackageInstaller] Installation completed successfully in ${elapsed}s`);
+      logger.info(`[PackageInstaller] Installed ${installedPackages.length} packages with all transitive dependencies`);
       
       return {
         success: true,
         elapsed: elapsed,
         manifest: manifest,
-        environment: 'pacote-api',
-        installedPackages: Object.keys(installResults),
+        environment: 'arborist',
+        installedPackages: installedPackages,
         results: installResults
       };
       
@@ -102,7 +117,7 @@ class PackageInstaller {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       logger.error(`[PackageInstaller] Installation failed after ${elapsed}s: ${error.message}`);
       
-      throw new Error(`pacote installation failed: ${error.message}`);
+      throw new Error(`Arborist installation failed: ${error.message}`);
     }
   }
   
