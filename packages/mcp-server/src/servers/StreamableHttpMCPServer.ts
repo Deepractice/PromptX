@@ -14,6 +14,7 @@ import type { MCPServerOptions } from '~/interfaces/MCPServer.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
+import packageJson from '../../package.json' assert { type: 'json' };
 
 const SESSION_ID_HEADER_NAME = "mcp-session-id";
 
@@ -79,6 +80,11 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     // 仿照官方：使用 Router
     const router = express.Router();
     
+    // 健康检查端点 - 在其他路由之前定义
+    router.get('/health', (req, res) => {
+      this.handleHealthCheck(req, res);
+    });
+    
     // 仿照官方：路由定义
     router.post('/mcp', async (req, res) => {
       await this.handlePostRequest(req, res);
@@ -90,6 +96,35 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     
     // 仿照官方：挂载路由
     this.app.use('/', router);
+  }
+  
+  /**
+   * 处理健康检查请求
+   * 
+   * 形式化保证：
+   * - 无副作用（幂等性）
+   * - O(1)时间复杂度
+   * - 始终返回有效JSON
+   */
+  private handleHealthCheck(req: Request, res: Response): void {
+    const healthStatus = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'mcp-server',
+      uptime: process.uptime(),
+      version: this.getVersion(),
+      transport: 'http',
+      sessions: Object.keys(this.transports).length
+    };
+    
+    res.status(200).json(healthStatus);
+  }
+  
+  /**
+   * 获取服务版本信息
+   */
+  private getVersion(): string {
+    return packageJson.version || 'unknown';
   }
   
   /**
