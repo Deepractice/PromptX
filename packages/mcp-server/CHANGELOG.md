@@ -1,5 +1,20 @@
 # @promptx/mcp-server
 
+## 1.14.1
+
+### Patch Changes
+
+- [#334](https://github.com/Deepractice/PromptX/pull/334) [`abcff55`](https://github.com/Deepractice/PromptX/commit/abcff55b916b7db73e668023a964fba467cc8cb6) Thanks [@deepracticexs](https://github.com/deepracticexs)! - feat: 添加 /health 健康检查端点
+
+  - 新增 GET /health 端点用于服务健康检查
+  - 返回服务状态、版本、运行时间、会话数等监控信息
+  - 支持部署和监控系统的健康检查需求
+  - 修复 issue #331
+
+- Updated dependencies [[`4a6ab6b`](https://github.com/Deepractice/PromptX/commit/4a6ab6b579101921ba29f2a551bb24c75f579de1)]:
+  - @promptx/core@1.14.1
+  - @promptx/logger@1.14.1
+
 ## 1.14.0
 
 ### Patch Changes

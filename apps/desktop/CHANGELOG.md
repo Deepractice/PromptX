@@ -1,5 +1,13 @@
 # @promptx/desktop
 
+## 1.14.1
+
+### Patch Changes
+
+- Updated dependencies [[`4a6ab6b`](https://github.com/Deepractice/PromptX/commit/4a6ab6b579101921ba29f2a551bb24c75f579de1), [`abcff55`](https://github.com/Deepractice/PromptX/commit/abcff55b916b7db73e668023a964fba467cc8cb6)]:
+  - @promptx/core@1.14.1
+  - @promptx/mcp-server@1.14.1
+
 ## 1.14.0
 
 ### Minor Changes
