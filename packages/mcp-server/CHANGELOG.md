@@ -1,5 +1,27 @@
 # @promptx/mcp-server
 
+## 1.14.2
+
+### Patch Changes
+
+- [#339](https://github.com/Deepractice/PromptX/pull/339) [`94483a8`](https://github.com/Deepractice/PromptX/commit/94483a8426e726e76a7cb7700f53377ae29d9aec) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Fix critical memory leak and remove all error recovery mechanisms
+
+  - Remove recursive retry logic that caused activeRequests to grow infinitely
+  - Delete ErrorRecoveryStrategy and all recovery mechanisms
+  - Remove 'recoverable' field from MCPError
+  - Delete shouldRetry() and retry counter
+  - Remove recover() method from interface
+  - Simplify error handling to fail-fast principle
+  - Remove RECOVERABLE severity level
+  - Fix issue #338 where recursive retries caused 17000+ pending requests
+
+  This prevents hidden retry loops and makes error handling transparent.
+  Recovery/retry logic should be handled by callers, not buried in the framework.
+
+- Updated dependencies []:
+  - @promptx/core@1.14.2
+  - @promptx/logger@1.14.2
+
 ## 1.14.1
 
 ### Patch Changes

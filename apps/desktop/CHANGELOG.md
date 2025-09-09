@@ -1,5 +1,22 @@
 # @promptx/desktop
 
+## 1.14.2
+
+### Patch Changes
+
+- [#337](https://github.com/Deepractice/PromptX/pull/337) [`9385a49`](https://github.com/Deepractice/PromptX/commit/9385a49aba66540853a2fda6ddc9a168217534fa) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Fix auto-update detection issue (#336)
+
+  - Remove manual "Check for Updates" button from tray menu to avoid user confusion
+  - Add comprehensive ASCII-only logging for auto-updater events
+  - Simplify update manager to rely on automatic 1-hour update checks
+  - Clean up unused dialog and icon loading code
+
+  The manual update check button was ineffective due to update-electron-app's stateless design. When users selected "Later" on an update, the library wouldn't re-prompt for the same version. This change removes the confusing button and adds detailed logging to track update status transparently.
+
+- Updated dependencies [[`94483a8`](https://github.com/Deepractice/PromptX/commit/94483a8426e726e76a7cb7700f53377ae29d9aec)]:
+  - @promptx/mcp-server@1.14.2
+  - @promptx/core@1.14.2
+
 ## 1.14.1
 
 ### Patch Changes

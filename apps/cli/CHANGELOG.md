@@ -1,5 +1,14 @@
 # @promptx/cli
 
+## 1.14.2
+
+### Patch Changes
+
+- Updated dependencies [[`94483a8`](https://github.com/Deepractice/PromptX/commit/94483a8426e726e76a7cb7700f53377ae29d9aec)]:
+  - @promptx/mcp-server@1.14.2
+  - @promptx/core@1.14.2
+  - @promptx/logger@1.14.2
+
 ## 1.14.1
 
 ### Patch Changes
