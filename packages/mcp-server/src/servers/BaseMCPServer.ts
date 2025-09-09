@@ -387,65 +387,22 @@ export abstract class BaseMCPServer implements MCPServer {
     }
     
     const startTime = Date.now();
-    this.activeRequests++;
-    this.metrics.requestCount++;
     
-    this.logger.info(`[TOOL_EXEC_START] Tool: ${name}, Request #${this.metrics.requestCount}, Active: ${this.activeRequests}`);
+    this.logger.info(`[TOOL_EXEC_START] Tool: ${name}`);
     this.logger.debug(`[TOOL_ARGS] ${name}:`, args);
     
     try {
       const result = await tool.handler(args);
       
-      // 更新响应时间指标
       const responseTime = Date.now() - startTime;
-      this.updateAvgResponseTime(responseTime);
-      
       this.logger.info(`[TOOL_EXEC_SUCCESS] Tool: ${name}, Time: ${responseTime}ms`);
       this.logger.debug(`[TOOL_RESULT] ${name}:`, result);
       
       return result;
     } catch (error: any) {
-      this.metrics.errorCount++;
-      
-      // 包装为MCPError
-      const mcpError = new ToolExecutionError(
-        name,
-        error.message || 'Unknown error',
-        {
-          cause: error,
-          context: { args, startTime }
-        }
-      );
-      
-      // 收集错误
-      globalErrorCollector.collect(mcpError);
-      
-      // 尝试恢复
-      if (this.errorRecoveryStrategy && mcpError.shouldRetry()) {
-        this.logger.info(`[TOOL_EXEC_RETRY] Attempting recovery for tool: ${name}`);
-        
-        try {
-          await this.errorRecoveryStrategy.recover(mcpError, {
-            resetTool: async (toolName: string) => {
-              // 工具重置逻辑（如果需要）
-              this.logger.debug(`[TOOL_RESET] Resetting tool: ${toolName}`);
-            }
-          });
-          
-          // 重试执行
-          globalErrorCollector.recordRecoveryAttempt(true);
-          return await this.executeTool(name, args);
-        } catch (recoveryError) {
-          globalErrorCollector.recordRecoveryAttempt(false);
-          this.logger.error(`[TOOL_EXEC_RECOVERY_FAILED] Tool: ${name}`, recoveryError);
-        }
-      }
-      
-      this.logger.error(`[TOOL_EXEC_ERROR] Tool: ${name}`, mcpError);
-      throw mcpError;
-    } finally {
-      this.activeRequests--;
-      this.logger.debug(`[TOOL_EXEC_END] Active requests: ${this.activeRequests}`);
+      // 直接失败，不重试，不计数，简单明了
+      this.logger.error(`[TOOL_EXEC_ERROR] Tool: ${name}`, error);
+      throw error;
     }
   }
   
