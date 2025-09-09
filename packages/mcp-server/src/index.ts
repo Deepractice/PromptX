@@ -23,8 +23,7 @@ export type {
   ToolWithHandler,
   HealthCheckResult,
   ServerMetrics,
-  SessionContext,
-  ErrorRecoveryStrategy
+  SessionContext
 } from '~/interfaces/MCPServer.js';
 
 // 导出服务器实现

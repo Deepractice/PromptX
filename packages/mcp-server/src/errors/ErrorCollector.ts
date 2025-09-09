@@ -36,8 +36,6 @@ export class ErrorCollector {
   private errors: MCPError[] = [];
   private maxErrors: number;
   private windowSize: number; // 时间窗口（毫秒）
-  private recoveryAttempts: number = 0;
-  private recoverySuccesses: number = 0;
   
   // 错误阈值触发器
   private thresholds: Map<string, { count: number; action: () => void }> = new Map();
@@ -62,7 +60,7 @@ export class ErrorCollector {
       : new MCPError(
           error.message,
           'UNKNOWN_ERROR',
-          ErrorSeverity.RECOVERABLE,
+          ErrorSeverity.WARNING,
           ErrorCategory.INTERNAL,
           { cause: error }
         );
@@ -81,15 +79,6 @@ export class ErrorCollector {
     }
   }
   
-  /**
-   * 记录恢复尝试
-   */
-  recordRecoveryAttempt(success: boolean): void {
-    this.recoveryAttempts++;
-    if (success) {
-      this.recoverySuccesses++;
-    }
-  }
   
   /**
    * 获取错误统计
@@ -111,9 +100,6 @@ export class ErrorCollector {
         category: e.category
       })),
       errorRate: this.calculateErrorRate(recentErrors),
-      recoveryRate: this.recoveryAttempts > 0 
-        ? this.recoverySuccesses / this.recoveryAttempts 
-        : 0
     };
     
     return stats;
@@ -135,8 +121,6 @@ export class ErrorCollector {
    */
   clear(): void {
     this.errors = [];
-    this.recoveryAttempts = 0;
-    this.recoverySuccesses = 0;
   }
   
   /**
@@ -249,7 +233,6 @@ export class ErrorCollector {
   private groupBySeverity(errors: MCPError[]): Record<ErrorSeverity, number> {
     const result = {
       [ErrorSeverity.WARNING]: 0,
-      [ErrorSeverity.RECOVERABLE]: 0,
       [ErrorSeverity.CRITICAL]: 0,
       [ErrorSeverity.FATAL]: 0
     };

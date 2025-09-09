@@ -143,12 +143,6 @@ export interface MCPServer {
    */
   gracefulShutdown(timeoutMs: number): Promise<void>;
   
-  /**
-   * 从错误状态恢复
-   * 前置条件：state === 'ERROR'
-   * 后置条件：state === 'RUNNING' || state === 'STOPPED'
-   */
-  recover(): Promise<void>;
   
   /**
    * 检查服务器是否运行中
@@ -322,22 +316,3 @@ export interface MCPServerFactory {
   createServer(type: 'stdio' | 'http', options: MCPServerOptions): MCPServer;
 }
 
-/**
- * 错误恢复策略
- */
-export interface ErrorRecoveryStrategy {
-  /**
-   * 判断错误是否可恢复
-   */
-  isRecoverable(error: Error): boolean;
-  
-  /**
-   * 执行恢复
-   */
-  recover(error: Error, context: any): Promise<void>;
-  
-  /**
-   * 获取重试延迟
-   */
-  getRetryDelay(attemptNumber: number): number;
-}

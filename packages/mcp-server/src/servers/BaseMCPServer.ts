@@ -17,8 +17,7 @@ import type {
   ToolWithHandler,
   HealthCheckResult,
   ServerMetrics,
-  SessionContext,
-  ErrorRecoveryStrategy
+  SessionContext
 } from '~/interfaces/MCPServer.js';
 import { 
   MCPError, 
@@ -27,7 +26,6 @@ import {
   ErrorHelper,
   ErrorSeverity 
 } from '~/errors/MCPError.js';
-import { ExponentialBackoffStrategy } from '~/errors/ErrorRecoveryStrategies.js';
 import { globalErrorCollector } from '~/errors/ErrorCollector.js';
 
 /**
@@ -68,21 +66,12 @@ export abstract class BaseMCPServer implements MCPServer {
     uptime: 0
   };
   
-  // 错误恢复
-  protected errorRecoveryStrategy?: ErrorRecoveryStrategy;
+  // 最后错误（用于诊断）
   protected lastError?: Error;
-  protected retryCount = 0;
   
   constructor(options: MCPServerOptions) {
     this.options = options;
     this.logger = options.logger || logger;
-    
-    // 初始化错误恢复策略
-    this.errorRecoveryStrategy = new ExponentialBackoffStrategy({
-      baseDelay: 1000,
-      maxDelay: 30000,
-      maxRetries: 3
-    });
     
     // 设置错误阈值
     this.setupErrorThresholds();
@@ -285,41 +274,7 @@ export abstract class BaseMCPServer implements MCPServer {
     }
   }
   
-  async recover(): Promise<void> {
-    if (this.state !== 'ERROR') {
-      throw new Error('Can only recover from ERROR state');
-    }
-    
-    if (this.state === 'FATAL_ERROR') {
-      throw new Error('Cannot recover from fatal error');
-    }
-    
-    this.logger.info('Attempting to recover from error...');
-    
-    if (this.errorRecoveryStrategy && this.lastError) {
-      if (!this.errorRecoveryStrategy.isRecoverable(this.lastError)) {
-        this.setState('FATAL_ERROR');
-        throw new Error('Error is not recoverable');
-      }
-      
-      const delay = this.errorRecoveryStrategy.getRetryDelay(++this.retryCount);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
-      try {
-        await this.errorRecoveryStrategy.recover(this.lastError, this);
-        this.setState('RUNNING');
-        this.retryCount = 0;
-        this.logger.info('Successfully recovered from error');
-      } catch (error) {
-        this.logger.error('Recovery failed', error);
-        throw error;
-      }
-    } else {
-      // 默认恢复策略：重启
-      await this.stop();
-      await this.start();
-    }
-  }
+  // 删除recover方法 - 错误就是错误，不要自动恢复
   
   isRunning(): boolean {
     return this.state === 'RUNNING';

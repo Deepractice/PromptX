@@ -10,8 +10,6 @@
 export enum ErrorSeverity {
   /** 可忽略的警告 */
   WARNING = 'warning',
-  /** 可恢复的错误 */
-  RECOVERABLE = 'recoverable',
   /** 需要人工干预的错误 */
   CRITICAL = 'critical',
   /** 致命错误，需要重启 */
@@ -50,16 +48,12 @@ export class MCPError extends Error {
   public readonly severity: ErrorSeverity;
   /** 错误类别 */
   public readonly category: ErrorCategory;
-  /** 是否可恢复 */
-  public readonly recoverable: boolean;
   /** 错误上下文 */
   public readonly context?: any;
   /** 错误发生时间 */
   public readonly timestamp: number;
   /** 原始错误 */
   public readonly cause?: Error;
-  /** 重试次数 */
-  public retryCount: number = 0;
   
   constructor(
     message: string,
@@ -69,7 +63,6 @@ export class MCPError extends Error {
     options?: {
       cause?: Error;
       context?: any;
-      recoverable?: boolean;
     }
   ) {
     super(message);
@@ -81,9 +74,6 @@ export class MCPError extends Error {
     this.context = options?.context;
     this.timestamp = Date.now();
     
-    // 根据严重程度判断是否可恢复
-    this.recoverable = options?.recoverable ?? 
-      (severity === ErrorSeverity.WARNING || severity === ErrorSeverity.RECOVERABLE);
     
     // 保持原始堆栈信息
     if (options?.cause && options.cause.stack) {
@@ -130,19 +120,6 @@ export class MCPError extends Error {
     };
   }
   
-  /**
-   * 判断是否应该重试
-   */
-  shouldRetry(maxRetries: number = 3): boolean {
-    return this.recoverable && this.retryCount < maxRetries;
-  }
-  
-  /**
-   * 增加重试次数
-   */
-  incrementRetry(): void {
-    this.retryCount++;
-  }
 }
 
 /**
@@ -153,7 +130,7 @@ export class NetworkError extends MCPError {
     super(
       message,
       'NETWORK_ERROR',
-      ErrorSeverity.RECOVERABLE,
+      ErrorSeverity.WARNING,
       ErrorCategory.NETWORK,
       options
     );
@@ -189,7 +166,7 @@ export class ToolExecutionError extends MCPError {
     super(
       `Tool '${toolName}' execution failed: ${message}`,
       'TOOL_EXECUTION_ERROR',
-      ErrorSeverity.RECOVERABLE,
+      ErrorSeverity.WARNING,
       ErrorCategory.TOOL_EXECUTION,
       { ...options, context: { ...options?.context, toolName } }
     );
@@ -209,7 +186,7 @@ export class ResourceAccessError extends MCPError {
     super(
       `Resource '${resourceUri}' access failed: ${message}`,
       'RESOURCE_ACCESS_ERROR',
-      ErrorSeverity.RECOVERABLE,
+      ErrorSeverity.WARNING,
       ErrorCategory.RESOURCE_ACCESS,
       { ...options, context: { ...options?.context, resourceUri } }
     );
@@ -229,7 +206,7 @@ export class SessionError extends MCPError {
     super(
       `Session '${sessionId}' error: ${message}`,
       'SESSION_ERROR',
-      ErrorSeverity.RECOVERABLE,
+      ErrorSeverity.WARNING,
       ErrorCategory.SESSION,
       { ...options, context: { ...options?.context, sessionId } }
     );
@@ -300,7 +277,7 @@ export class ErrorHelper {
     return new MCPError(
       error.message,
       'WRAPPED_ERROR',
-      ErrorSeverity.RECOVERABLE,
+      ErrorSeverity.WARNING,
       category,
       { cause: error }
     );
