@@ -167,13 +167,6 @@ export class TrayPresenter {
       click: () => this.handleShowLogs()
     })
 
-    // Check for updates
-    menuItems.push({
-      id: 'update',
-      label: this.updateManager.isUpdateAvailable() ? 'Update Available!' : 'Check for Updates',
-      click: () => this.handleCheckUpdate()
-    })
-
     // Settings (future)
     menuItems.push({
       id: 'settings',
@@ -291,15 +284,6 @@ return
     })
   }
 
-  handleCheckUpdate(): void {
-    logger.info('TrayPresenter: handleCheckUpdate called')
-    try {
-      this.updateManager.checkForUpdatesManual()
-      logger.info('TrayPresenter: checkForUpdatesManual called successfully')
-    } catch (error) {
-      logger.error('TrayPresenter: Error calling checkForUpdatesManual:', error)
-    }
-  }
 
   handleQuit(): void {
     app.quit()

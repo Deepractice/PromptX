@@ -28,18 +28,18 @@ files:
 mac:
   category: public.app-category.developer-tools
   icon: assets/icons/icon.icns
-  hardenedRuntime: false  # 本地测试关闭强化运行时
+  hardenedRuntime: true  # 启用强化运行时以匹配生产环境
   gatekeeperAssess: false
-  # 完全跳过签名
-  identity: null
-  notarize: false
+  # 使用公司证书签名
+  identity: "CHINGHO YANG (2L3974JGL8)"
+  notarize: false  # 本地测试暂不公证
   # 只打 ZIP 包，不打 DMG
   target:
     - target: zip
       arch: [arm64]  # 只打当前架构，更快
 
-# 关闭所有签名
-forceCodeSigning: false
+# 启用代码签名
+forceCodeSigning: true
 
 # 禁用 npm rebuild，加快速度
 npmRebuild: false

@@ -1,24 +1,11 @@
 import { updateElectronApp } from 'update-electron-app'
-import { dialog, app, nativeImage } from 'electron'
+import { app } from 'electron'
 import * as logger from '@promptx/logger'
-import * as path from 'node:path'
 
 export class UpdateManager {
-  private appIcon: Electron.NativeImage | undefined
 
   constructor() {
-    this.loadAppIcon()
     this.setupUpdater()
-  }
-
-  private loadAppIcon(): void {
-    try {
-      const iconPath = path.join(__dirname, '../../assets/icons/icon-128x128.png')
-      this.appIcon = nativeImage.createFromPath(iconPath)
-      logger.info('UpdateManager: App icon loaded successfully')
-    } catch (error) {
-      logger.error('UpdateManager: Failed to load app icon:', error)
-    }
   }
 
   private setupUpdater(): void {
@@ -36,6 +23,46 @@ export class UpdateManager {
       })
       
       logger.info('UpdateManager: Auto-updater initialized with update-electron-app')
+      logger.info('UpdateManager: Update check interval set to 1 hour')
+      logger.info('UpdateManager: Repository: Deepractice/PromptX')
+      
+      // Setup detailed event listeners using electron's autoUpdater
+      const { autoUpdater } = require('electron')
+      
+      autoUpdater.on('checking-for-update', () => {
+        logger.info('UpdateManager: Checking for update...')
+      })
+      
+      autoUpdater.on('update-available', (info: any) => {
+        logger.info('UpdateManager: Update available - version:', info.version)
+        if (info.releaseDate) {
+          logger.info('UpdateManager: Release date:', info.releaseDate)
+        }
+      })
+      
+      autoUpdater.on('update-not-available', () => {
+        logger.info('UpdateManager: Current version is up-to-date')
+      })
+      
+      autoUpdater.on('download-progress', (progressObj: any) => {
+        const percent = Math.round(progressObj.percent)
+        const transferred = Math.round(progressObj.transferred / 1024 / 1024 * 100) / 100
+        const total = Math.round(progressObj.total / 1024 / 1024 * 100) / 100
+        logger.info(`UpdateManager: Download progress: ${percent}% (${transferred}MB / ${total}MB)`)
+      })
+      
+      autoUpdater.on('update-downloaded', (releaseNotes: string, releaseName: string) => {
+        logger.info('UpdateManager: Update downloaded successfully')
+        logger.info('UpdateManager: Release name:', releaseName)
+        if (releaseNotes) {
+          logger.info('UpdateManager: Release notes available')
+        }
+      })
+      
+      autoUpdater.on('error', (error: any) => {
+        logger.error('UpdateManager: Auto-updater error:', error.message || error.toString())
+      })
+      
     } catch (error) {
       logger.error('UpdateManager: Failed to initialize auto-updater:', error)
     }
@@ -50,42 +77,21 @@ export class UpdateManager {
     }
   }
 
-  // Manual check for updates (from tray menu) - simplified
+  // Manual check for updates (deprecated - button removed from UI)
   async checkForUpdatesManual(): Promise<void> {
-    logger.info('UpdateManager: Manual update check called')
+    logger.info('UpdateManager: Manual update check called (deprecated)')
+    logger.info('UpdateManager: Auto-updater runs every 1 hour automatically')
+    logger.info('UpdateManager: Check logs for update status and progress')
     
     if (!app.isPackaged) {
-      this.showDevModeNotification()
+      logger.info('UpdateManager: Running in development mode - updates disabled')
       return
     }
-
-    // For update-electron-app, manual checking is handled automatically
-    // Just show a message that updates are being checked in the background
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'PromptX Update Check',
-      message: 'Checking for Updates',
-      detail: 'PromptX is checking for updates in the background. You will be notified if an update is available.',
-      buttons: ['OK'],
-      icon: this.appIcon
-    })
+    
+    // No longer show dialogs - rely on automatic updates and logging
+    logger.info('UpdateManager: Manual check completed - relying on automatic updates')
   }
 
-  private showDevModeNotification(): void {
-    logger.info('UpdateManager: Showing dev mode dialog')
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'PromptX Development Mode',
-      message: 'Update Check',
-      detail: 'Auto-updater is disabled in development mode.\n\nTo test updates, build and package the app first.',
-      buttons: ['OK'],
-      icon: this.appIcon
-    }).then(() => {
-      logger.info('UpdateManager: Dev mode dialog closed')
-    }).catch((error) => {
-      logger.error('UpdateManager: Error showing dev mode dialog:', error)
-    })
-  }
 
   // Legacy methods for tray menu compatibility
   isUpdateAvailable(): boolean {
