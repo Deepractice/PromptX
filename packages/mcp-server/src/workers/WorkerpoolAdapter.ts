@@ -1,4 +1,5 @@
 import * as workerpool from 'workerpool';
+import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { 
   ToolWorkerPool, 
@@ -32,7 +33,8 @@ export class WorkerpoolAdapter implements ToolWorkerPool {
       return;
     }
     
-    // 使用 new URL 获取 worker.js 的路径（构建后 worker.ts 会变成 worker.js）
+    // tsup 会把 worker.ts 编译到 dist/worker.js
+    // WorkerpoolAdapter 会在某个 chunk 文件中，所以用相对路径找 worker.js
     const workerPath = fileURLToPath(new URL('./worker.js', import.meta.url));
     
     this.pool = workerpool.pool(workerPath, {
@@ -60,10 +62,9 @@ export class WorkerpoolAdapter implements ToolWorkerPool {
     try {
       logger.debug(`Executing tool '${tool.name}' in worker pool`);
       
-      // 准备执行数据
+      // 准备执行数据（只传递工具名和参数）
       const taskData = {
         toolName: tool.name,
-        handlerString: tool.handler.toString(),
         args
       };
       

@@ -1,7 +1,11 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/bin/mcp-server.ts'],
+  entry: {
+    index: 'src/index.ts',
+    'mcp-server': 'src/bin/mcp-server.ts',  // 平铺到 dist/mcp-server.js
+    'worker': 'src/workers/worker.ts'  // 平铺到 dist/worker.js
+  },
   format: ['esm'],
   dts: false, // 暂时禁用，有类型错误需要修复
   sourcemap: true,

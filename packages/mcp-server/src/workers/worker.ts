@@ -1,32 +1,38 @@
 import * as workerpool from 'workerpool';
 import logger from '@promptx/logger';
+import { allTools } from '../tools/index.js';
+import type { ToolWithHandler } from '../interfaces/MCPServer.js';
 
 interface TaskData {
   toolName: string;
-  handlerString: string;
   args: any;
 }
+
+/**
+ * 创建工具映射表
+ */
+const toolsMap = new Map<string, ToolWithHandler>();
+allTools.forEach(tool => {
+  toolsMap.set(tool.name, tool);
+});
 
 /**
  * 执行工具 handler
  */
 async function executeTool(taskData: TaskData): Promise<any> {
-  const { toolName, handlerString, args } = taskData;
+  const { toolName, args } = taskData;
   
   try {
     logger.debug(`[Worker ${process.pid}] Executing tool: ${toolName}`);
     
-    // 重建 handler 函数
-    // 使用 Function 构造器而不是 eval，更安全
-    const handler = new Function('return ' + handlerString)();
-    
-    // 确保 handler 是函数
-    if (typeof handler !== 'function') {
-      throw new Error(`Invalid handler for tool ${toolName}: not a function`);
+    // 从映射表中获取工具
+    const tool = toolsMap.get(toolName);
+    if (!tool) {
+      throw new Error(`Tool not found: ${toolName}`);
     }
     
-    // 执行 handler
-    const result = await handler(args);
+    // 直接执行 handler（保留了所有依赖）
+    const result = await tool.handler(args);
     
     logger.debug(`[Worker ${process.pid}] Tool ${toolName} completed`);
     return result;

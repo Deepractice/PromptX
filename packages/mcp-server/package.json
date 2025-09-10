@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "mcp-server": "./dist/bin/mcp-server.js"
+    "mcp-server": "./dist/mcp-server.js"
   },
   "scripts": {
     "build": "tsup",
