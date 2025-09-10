@@ -1,16 +1,23 @@
 import express, { Express, Request, Response } from 'express';
 import { Server as HttpServer } from 'http';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { 
   InitializeRequestSchema,
   LoggingMessageNotification,
   JSONRPCNotification,
   JSONRPCError,
-  Notification
+  Notification,
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  ListResourcesRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+  ReadResourceRequestSchema
 } from '@modelcontextprotocol/sdk/types.js';
-import type { Resource } from '@modelcontextprotocol/sdk/types.js';
+import type { Resource, Tool, Prompt } from '@modelcontextprotocol/sdk/types.js';
 import { BaseMCPServer } from '~/servers/BaseMCPServer.js';
-import type { MCPServerOptions } from '~/interfaces/MCPServer.js';
+import type { MCPServerOptions, ToolWithHandler } from '~/interfaces/MCPServer.js';
 import { WorkerpoolAdapter } from '~/workers/index.js';
 import type { ToolWorkerPool } from '~/interfaces/ToolWorkerPool.js';
 import * as fs from 'fs/promises';
@@ -34,8 +41,9 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   private corsEnabled: boolean;
   private workerPool: ToolWorkerPool;
   
-  // 支持多个并发连接
-  private transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
+  // 支持多个并发连接 - 每个session独立的Server和Transport实例
+  private servers: Map<string, Server> = new Map();
+  private transports: Map<string, StreamableHTTPServerTransport> = new Map();
   
   constructor(options: MCPServerOptions & {
     port?: number;
@@ -79,6 +87,106 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
       });
       
       this.httpServer.on('error', reject);
+    });
+  }
+  
+  /**
+   * 获取或创建session对应的Server实例
+   * 
+   * 形式化规约：
+   * 前置条件：sessionId ≠ null ∧ sessionId ≠ ""
+   * 后置条件：返回的Server是sessionId唯一对应的
+   * 不变式：servers.get(sessionId) 存在 ⟺ transports.get(sessionId) 存在
+   */
+  private getOrCreateServer(sessionId: string): Server {
+    // 断言：sessionId必须有效
+    if (!sessionId) {
+      throw new Error('SessionId cannot be null or empty');
+    }
+    
+    // 如果已存在，直接返回
+    if (this.servers.has(sessionId)) {
+      return this.servers.get(sessionId)!;
+    }
+    
+    // 创建新的Server实例（注意：不监听端口）
+    const server = new Server(
+      {
+        name: this.options.name,
+        version: this.options.version
+      },
+      {
+        capabilities: {
+          tools: {},
+          resources: {},
+          prompts: {}
+        }
+      }
+    );
+    
+    // 为这个Server注册处理器（独立副本）
+    this.setupServerHandlers(server);
+    
+    // 保存Server实例
+    this.servers.set(sessionId, server);
+    this.logger.info(`Created new Server instance for session: ${sessionId}`);
+    
+    return server;
+  }
+  
+  /**
+   * 为Server实例设置请求处理器
+   * 注意：这些处理器是每个Server独立的
+   */
+  private setupServerHandlers(server: Server): void {
+    // 工具列表请求
+    server.setRequestHandler(ListToolsRequestSchema, async () => {
+      this.logger.debug('Handling list tools request');
+      return {
+        tools: Array.from(this.tools.values()).map(({ handler, ...tool }) => tool)
+      };
+    });
+    
+    // 工具调用请求
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      this.logger.debug(`Handling tool call: ${request.params.name}`);
+      return this.executeTool(request.params.name, request.params.arguments);
+    });
+    
+    // 资源列表请求
+    server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      this.logger.debug('Handling list resources request');
+      return {
+        resources: Array.from(this.resources.values())
+      };
+    });
+    
+    // 读取资源请求
+    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      this.logger.debug(`Handling read resource: ${request.params.uri}`);
+      const resource = this.resources.get(request.params.uri);
+      if (!resource) {
+        throw new Error(`Resource not found: ${request.params.uri}`);
+      }
+      return this.readResource(resource);
+    });
+    
+    // 提示词列表请求
+    server.setRequestHandler(ListPromptsRequestSchema, async () => {
+      this.logger.debug('Handling list prompts request');
+      return {
+        prompts: Array.from(this.prompts.values())
+      };
+    });
+    
+    // 获取提示词请求
+    server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+      this.logger.debug(`Handling get prompt: ${request.params.name}`);
+      const prompt = this.prompts.get(request.params.name);
+      if (!prompt) {
+        throw new Error(`Prompt not found: ${request.params.name}`);
+      }
+      return { prompt };
     });
   }
   
@@ -128,7 +236,9 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
       uptime: process.uptime(),
       version: this.getVersion(),
       transport: 'http',
-      sessions: Object.keys(this.transports).length
+      sessions: this.servers.size,  // 显示当前活跃的session数量
+      servers: this.servers.size,   // 独立Server实例数量
+      transports: this.transports.size  // Transport实例数量
     };
     
     res.status(200).json(healthStatus);
@@ -143,15 +253,33 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   
   /**
    * 处理 GET 请求（SSE）
+   * 使用独立的Server实例处理SSE连接
    */
   private async handleGetRequest(req: Request, res: Response): Promise<void> {
     const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
     
-    if (!sessionId || !this.transports[sessionId]) {
+    if (!sessionId) {
       res.status(400).json(
-        this.createErrorResponse('Bad Request: invalid session ID or method.')
+        this.createErrorResponse('Bad Request: session ID required for SSE.')
       );
       return;
+    }
+    
+    // 确保session存在（获取或创建Server和Transport）
+    if (!this.transports.has(sessionId)) {
+      this.logger.info(`Session ${sessionId} not found for SSE, creating...`);
+      
+      // 获取或创建Server
+      const server = this.getOrCreateServer(sessionId);
+      
+      // 创建Transport
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => sessionId
+      });
+      
+      // 连接
+      await server.connect(transport);
+      this.transports.set(sessionId, transport);
     }
     
     this.logger.info(`Establishing SSE stream for session ${sessionId}`);
@@ -178,9 +306,10 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     req.on('close', () => {
       this.logger.info(`SSE connection closed for session ${sessionId}`);
       clearInterval(heartbeatInterval);
+      // 注意：暂时不清理session，因为客户端可能重连
     });
     
-    const transport = this.transports[sessionId];
+    const transport = this.transports.get(sessionId)!;
     await transport.handleRequest(req, res);
     await this.streamMessages(transport);
     
@@ -251,6 +380,7 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   
   /**
    * 处理 POST 请求（JSON-RPC）
+   * 使用独立的Server实例处理每个session
    */
   private async handlePostRequest(req: Request, res: Response): Promise<void> {
     const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
@@ -261,33 +391,60 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     this.logger.info(`Session ID: ${sessionId}`);
     
     try {
-      // 重用现有 transport
-      if (sessionId && this.transports[sessionId]) {
-        this.logger.info(`Reusing existing transport for session: ${sessionId}`);
-        const transport = this.transports[sessionId];
+      // 处理已有session的请求
+      if (sessionId && this.transports.has(sessionId)) {
+        this.logger.info(`Reusing existing Server and Transport for session: ${sessionId}`);
+        const transport = this.transports.get(sessionId)!;
         await transport.handleRequest(req, res, req.body);
         return;
       }
       
-      // 创建新 transport（仅当是 initialize 请求时）
+      // 处理initialize请求（创建新session）
       if (!sessionId && this.isInitializeRequest(req.body)) {
-        this.logger.info('Creating new transport for initialize request');
+        this.logger.info('Creating new session for initialize request');
         
+        // 生成新的session ID
+        const newSessionId = randomUUID();
+        
+        // 获取或创建该session的Server
+        const server = this.getOrCreateServer(newSessionId);
+        
+        // 创建新的Transport
         const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID()
+          sessionIdGenerator: () => newSessionId
         });
         
-        await this.server.connect(transport);
+        // 连接Server和Transport
+        await server.connect(transport);
         
+        // 保存Transport（Server已在getOrCreateServer中保存）
+        this.transports.set(newSessionId, transport);
+        
+        // 处理请求
         await transport.handleRequest(req, res, req.body);
         
-        // session ID will only be available after handling the first request
-        const newSessionId = transport.sessionId;
-        this.logger.info(`Generated session ID: ${newSessionId}`);
-        if (newSessionId) {
-          this.transports[newSessionId] = transport;
-        }
+        this.logger.info(`New session created: ${newSessionId}`);
+        return;
+      }
+      
+      // 处理带session ID但Transport不存在的情况（可能是服务器重启）
+      if (sessionId && !this.transports.has(sessionId)) {
+        this.logger.info(`Session ${sessionId} not found, recreating...`);
         
+        // 获取或创建Server
+        const server = this.getOrCreateServer(sessionId);
+        
+        // 创建新的Transport
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => sessionId
+        });
+        
+        // 连接
+        await server.connect(transport);
+        this.transports.set(sessionId, transport);
+        
+        // 处理请求
+        await transport.handleRequest(req, res, req.body);
         return;
       }
       
@@ -350,11 +507,15 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
   protected async disconnectTransport(): Promise<void> {
     this.logger.info('Stopping HTTP server...');
     
-    // 关闭所有 transports
-    for (const transport of Object.values(this.transports)) {
+    // 关闭所有 transports 和 servers
+    for (const [sessionId, transport] of this.transports.entries()) {
+      this.logger.info(`Closing transport for session: ${sessionId}`);
       await transport.close();
     }
-    this.transports = {};
+    
+    // 清理所有servers（不需要显式关闭，因为它们不监听端口）
+    this.servers.clear();
+    this.transports.clear();
     
     // 关闭HTTP服务器
     if (this.httpServer) {
@@ -373,6 +534,26 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     this.logger.info('Worker pool terminated');
     
     this.app = undefined;
+  }
+  
+  /**
+   * 清理特定session的资源
+   * 可以在session超时或客户端断开时调用
+   */
+  private async cleanupSession(sessionId: string): Promise<void> {
+    this.logger.info(`Cleaning up session: ${sessionId}`);
+    
+    // 关闭Transport
+    const transport = this.transports.get(sessionId);
+    if (transport) {
+      await transport.close();
+      this.transports.delete(sessionId);
+    }
+    
+    // 移除Server（垃圾回收会处理）
+    this.servers.delete(sessionId);
+    
+    this.logger.info(`Session cleaned up: ${sessionId}`);
   }
   
   /**
