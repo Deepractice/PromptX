@@ -1,5 +1,23 @@
 # @promptx/mcp-server
 
+## 1.15.0
+
+### Minor Changes
+
+- [#344](https://github.com/Deepractice/PromptX/pull/344) [`16ee7ee`](https://github.com/Deepractice/PromptX/commit/16ee7eec70925629dd2aec47997f3db0eb70c74c) Thanks [@deepracticexs](https://github.com/deepracticexs)! - feat: implement Worker Pool architecture for tool execution isolation
+
+  - Added Worker Pool pattern to execute all tools in isolated processes
+  - Prevents long-running tools from blocking SSE heartbeat and main event loop
+  - Implemented using workerpool library with 2-4 configurable worker processes
+  - All tools now run in separate child processes for better stability
+  - Fixes SSE heartbeat interruption issue (#341)
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/core@1.15.0
+  - @promptx/logger@1.15.0
+
 ## 1.14.2
 
 ### Patch Changes
