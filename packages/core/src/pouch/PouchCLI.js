@@ -26,7 +26,7 @@ class PouchCLI {
     // 批量注册所有命令
     this.registry.registerBatch({
       init: commands.InitCommand,
-      welcome: commands.WelcomeCommand,
+      discover: commands.DiscoverCommand,
       action: commands.ActionCommand,
       learn: commands.LearnCommand,
       recall: commands.RecallCommand,

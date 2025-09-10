@@ -137,7 +137,7 @@ ${JSON.stringify(actualToolResult, null, 2)}
         {
           action: 'view_available_tools', 
           description: '查看可用工具',
-          method: 'promptx welcome'
+          method: 'promptx discover'
         }
       ]
     }

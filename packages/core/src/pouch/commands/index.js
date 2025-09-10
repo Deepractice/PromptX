@@ -3,7 +3,7 @@
  */
 
 const InitCommand = require('./InitCommand')
-const WelcomeCommand = require('./WelcomeCommand')
+const DiscoverCommand = require('./DiscoverCommand')
 const ActionCommand = require('./ActionCommand')
 const LearnCommand = require('./LearnCommand')
 const RecallCommand = require('./RecallCommand')
@@ -13,7 +13,7 @@ const ToolCommand = require('./ToolCommand')
 
 module.exports = {
   InitCommand,
-  WelcomeCommand,
+  DiscoverCommand,
   ActionCommand,
   LearnCommand,
   RecallCommand,

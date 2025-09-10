@@ -1,9 +1,9 @@
 const BaseArea = require('../BaseArea')
 
 /**
- * WelcomeHeaderArea - 欢迎信息头部区域
+ * DiscoverHeaderArea - 发现信息头部区域
  */
-class WelcomeHeaderArea extends BaseArea {
+class DiscoverHeaderArea extends BaseArea {
   constructor(stats) {
     super('WELCOME_HEADER_AREA')
     this.stats = stats
@@ -20,4 +20,4 @@ class WelcomeHeaderArea extends BaseArea {
   }
 }
 
-module.exports = WelcomeHeaderArea
+module.exports = DiscoverHeaderArea

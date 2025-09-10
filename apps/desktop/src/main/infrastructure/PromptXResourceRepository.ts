@@ -5,13 +5,13 @@ const require = createRequire(import.meta.url)
 
 /**
  * PromptX Resource Repository - 基础设施层实现
- * 直接使用 WelcomeCommand 获取完整的资源数据
+ * 直接使用 DiscoverCommand 获取完整的资源数据
  */
 export class PromptXResourceRepository implements ResourceRepository {
   private resourcesCache: Resource[] | null = null
   private cacheTimestamp: number = 0
   private readonly CACHE_TTL = 5000 // 5秒缓存
-  private welcomeCommand: any = null
+  private discoverCommand: any = null
 
   async findAll(): Promise<Resource[]> {
     return this.getResourcesWithCache()
@@ -92,30 +92,30 @@ export class PromptXResourceRepository implements ResourceRepository {
     return this.resourcesCache
   }
 
-  private getWelcomeCommand() {
-    if (!this.welcomeCommand) {
-      // 动态导入 WelcomeCommand from core package
+  private getDiscoverCommand() {
+    if (!this.discoverCommand) {
+      // 动态导入 DiscoverCommand from core package
       const core = require('@promptx/core')
-      const { WelcomeCommand } = core.pouch.commands
-      this.welcomeCommand = new WelcomeCommand()
+      const { DiscoverCommand } = core.pouch.commands
+      this.discoverCommand = new DiscoverCommand()
     }
-    return this.welcomeCommand
+    return this.discoverCommand
   }
 
   private async fetchResourcesFromPromptX(): Promise<Resource[]> {
     try {
-      const welcomeCommand = this.getWelcomeCommand()
+      const discoverCommand = this.getDiscoverCommand()
       
       // 刷新所有资源
-      await welcomeCommand.refreshAllResources()
+      await discoverCommand.refreshAllResources()
       
       // 加载角色和工具注册表 - 这里已经只获取 role 和 tool 类型
-      const roleRegistry = await welcomeCommand.loadRoleRegistry()
-      const toolRegistry = await welcomeCommand.loadToolRegistry()
+      const roleRegistry = await discoverCommand.loadRoleRegistry()
+      const toolRegistry = await discoverCommand.loadToolRegistry()
       
       // 按来源分组
-      const roleCategories = welcomeCommand.categorizeBySource(roleRegistry)
-      const toolCategories = welcomeCommand.categorizeBySource(toolRegistry)
+      const roleCategories = discoverCommand.categorizeBySource(roleRegistry)
+      const toolCategories = discoverCommand.categorizeBySource(toolRegistry)
       
       console.log('roleCategories structure:', Object.keys(roleCategories), 
         'system:', Array.isArray(roleCategories.system), 

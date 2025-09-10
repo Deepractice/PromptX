@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 测试 WelcomeCommand 的系统角色加载
+ * 测试 DiscoverCommand 的系统角色加载
  * 直接使用源代码，不需要重启 MCP Server
  */
 
@@ -17,15 +17,15 @@ Module._resolveFilename = function(request, parent, isMain) {
   return originalResolveFilename.call(this, request, parent, isMain)
 }
 
-async function testWelcome() {
-  console.log('🧪 测试 WelcomeCommand 系统角色加载...\n')
+async function testDiscover() {
+  console.log('🧪 测试 DiscoverCommand 系统角色加载...\n')
   
   try {
     // 直接加载源代码
-    const WelcomeCommand = require('../src/pouch/commands/WelcomeCommand')
+    const DiscoverCommand = require('../src/pouch/commands/DiscoverCommand')
     
-    console.log('1️⃣ 创建 WelcomeCommand 实例...')
-    const command = new WelcomeCommand()
+    console.log('1️⃣ 创建 DiscoverCommand 实例...')
+    const command = new DiscoverCommand()
     
     console.log('2️⃣ 执行 execute() 方法...')
     const result = await command.execute({})
@@ -108,4 +108,4 @@ async function testWelcome() {
 }
 
 // 运行测试
-testWelcome()
+testDiscover()

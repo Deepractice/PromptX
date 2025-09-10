@@ -84,11 +84,11 @@ class PouchStateMachine {
    */
   getAvailableTransitions () {
     const transitions = {
-      initial: ['init', 'welcome'],
-      initialized: ['welcome', 'action', 'learn'],
+      initial: ['init', 'discover'],
+      initialized: ['discover', 'action', 'learn'],
       discovering: ['action', 'learn', 'init'],
-      activated: ['learn', 'recall', 'welcome'],
-      learned: ['action', 'recall', 'welcome'],
+      activated: ['learn', 'recall', 'discover'],
+      learned: ['action', 'recall', 'discover'],
       recalled: ['action', 'learn', 'remember']
     }
 
@@ -100,7 +100,7 @@ class PouchStateMachine {
     }
 
     // 默认可转换状态
-    return ['welcome', 'init']
+    return ['discover', 'init']
   }
 
   /**

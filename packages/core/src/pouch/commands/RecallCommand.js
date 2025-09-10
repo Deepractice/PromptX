@@ -35,7 +35,7 @@ class RecallCommand extends BasePouchCommand {
         'error: 缺少必填参数 role',
         ['使用方法：recall 角色ID [查询关键词]',
          '示例：recall java-developer "React Hooks"',
-         '通过 welcome 工具查看所有可用角色']
+         '通过 discover 工具查看所有可用角色']
       ))
       this.registerLayer(roleLayer)
       return

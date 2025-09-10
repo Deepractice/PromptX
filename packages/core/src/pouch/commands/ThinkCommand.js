@@ -229,7 +229,7 @@ think writer '{"goalEngram": {...}, "thinkingPattern": "creative", "spreadActiva
     if (!hasThought) {
       return {
         currentState: 'think_awaiting_input',
-        availableTransitions: ['action', 'welcome'],
+        availableTransitions: ['action', 'discover'],
         nextActions: [
           {
             name: '激活角色',
@@ -240,7 +240,7 @@ think writer '{"goalEngram": {...}, "thinkingPattern": "creative", "spreadActiva
           {
             name: '查看角色',
             description: '查看可用角色列表',
-            method: 'MCP PromptX welcome 工具',
+            method: 'MCP PromptX discover 工具',
             priority: 'medium'
           }
         ]

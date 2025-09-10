@@ -39,7 +39,7 @@ class ActionCommand extends BasePouchCommand {
       const roleLayer = new RoleLayer()
       roleLayer.addRoleArea(new StateArea(
         'error',
-        ['使用 MCP PromptX 工具的 action 功能激活角色', '使用 MCP PromptX 工具的 welcome 功能查看可用角色']
+        ['使用 MCP PromptX 工具的 action 功能激活角色', '使用 MCP PromptX 工具的 discover 功能查看可用角色']
       ))
       this.registerLayer(roleLayer)
       return
@@ -62,7 +62,7 @@ class ActionCommand extends BasePouchCommand {
         const roleLayer = new RoleLayer()
         roleLayer.addRoleArea(new StateArea(
           `error: 角色 "${roleId}" 不存在`,
-          ['使用 welcome 功能查看所有可用角色', '使用正确的角色ID重试']
+          ['使用 discover 功能查看所有可用角色', '使用正确的角色ID重试']
         ))
         this.registerLayer(roleLayer)
         return
@@ -114,7 +114,7 @@ class ActionCommand extends BasePouchCommand {
       const roleLayer = new RoleLayer()
       roleLayer.addRoleArea(new StateArea(
         `error: ${error.message}`,
-        ['查看可用角色：使用 welcome 功能', '确认角色名称后重试']
+        ['查看可用角色：使用 discover 功能', '确认角色名称后重试']
       ))
       this.registerLayer(roleLayer)
     }

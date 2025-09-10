@@ -98,7 +98,7 @@ class InitCommand extends BasePouchCommand {
     // 2. 基础环境准备 - 现在可以安全使用项目路径
     await this.ensurePromptXDirectory(projectPath)
 
-    // 3. 项目级注册表现在由 WelcomeCommand 在需要时生成
+    // 3. 项目级注册表现在由 DiscoverCommand 在需要时生成
     const registryStats = { 
       message: `✅ 项目资源目录已准备就绪
    📂 目录: .promptx/resource
@@ -106,7 +106,7 @@ class InitCommand extends BasePouchCommand {
       totalResources: 0 
     }
 
-    // 4. ResourceManager 的刷新现在由 WelcomeCommand 负责
+    // 4. ResourceManager 的刷新现在由 DiscoverCommand 负责
     // init 只负责项目环境初始化，不负责资源发现
 
     // 生成配置文件名

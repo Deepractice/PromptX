@@ -4,7 +4,7 @@ import { MCPOutputAdapter } from '~/utils/MCPOutputAdapter.js';
 const outputAdapter = new MCPOutputAdapter();
 
 /**
- * Welcome 工具 - 展示所有可用的AI专业角色和工具
+ * Discover 工具 - 展示所有可用的AI专业角色和工具
  * 
  * 为AI提供完整的专业服务选项清单，包括可激活的角色和可调用的工具。
  */
@@ -36,7 +36,7 @@ export const discoverTool: ToolWithHandler = {
 - 👤 用户角色/工具：用户自定义创建的资源
 
 你应该:
-1. 项目开始时先用welcome查看可用角色和工具
+1. 项目开始时先用discover查看可用角色和工具
 2. 根据任务需求选择合适的角色激活
 3. 发现工具后通过manual链接学习使用方法
 4. 记住常用角色ID和工具名便于快速调用
@@ -72,8 +72,8 @@ export const discoverTool: ToolWithHandler = {
       throw new Error('CLI not available in @promptx/core');
     }
     
-    // 执行 welcome 命令
-    const result = await cli.execute('welcome', []);
+    // 执行 discover 命令
+    const result = await cli.execute('discover', []);
     
     // 使用 OutputAdapter 格式化输出
     return outputAdapter.convertToMCPFormat(result);

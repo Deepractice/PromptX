@@ -1,7 +1,7 @@
 const BasePouchCommand = require('../BasePouchCommand')
-const WelcomeHeaderArea = require('../areas/welcome/WelcomeHeaderArea')
-const RoleListArea = require('../areas/welcome/RoleListArea')
-const ToolListArea = require('../areas/welcome/ToolListArea')
+const DiscoverHeaderArea = require('../areas/discover/DiscoverHeaderArea')
+const RoleListArea = require('../areas/discover/RoleListArea')
+const ToolListArea = require('../areas/discover/ToolListArea')
 const StateArea = require('../areas/common/StateArea')
 const fs = require('fs-extra')
 const path = require('path')
@@ -15,11 +15,11 @@ const UserDiscovery = require('../../resource/discovery/UserDiscovery')
 const logger = require('@promptx/logger')
 
 /**
- * 欢迎命令
+ * 发现命令
  * 负责展示可用的AI角色和工具
  * 使用Area架构组装输出
  */
-class WelcomeCommand extends BasePouchCommand {
+class DiscoverCommand extends BasePouchCommand {
   constructor () {
     super()
     // 使用全局单例 ResourceManager
@@ -46,7 +46,7 @@ class WelcomeCommand extends BasePouchCommand {
     const stats = this.calculateStats(roleCategories, toolCategories)
     
     // 注册Areas
-    const headerArea = new WelcomeHeaderArea(stats)
+    const headerArea = new DiscoverHeaderArea(stats)
     this.registerArea(headerArea)
     
     const roleArea = new RoleListArea(roleCategories)
@@ -55,7 +55,7 @@ class WelcomeCommand extends BasePouchCommand {
     const toolArea = new ToolListArea(toolCategories)
     this.registerArea(toolArea)
     
-    const stateArea = new StateArea('welcome_completed')
+    const stateArea = new StateArea('discover_completed')
     this.registerArea(stateArea)
   }
   
@@ -71,7 +71,7 @@ class WelcomeCommand extends BasePouchCommand {
     }
     
     const items = Object.values(registry)
-    logger.info(`[WelcomeCommand] 开始分类 ${items.length} 个资源`)
+    logger.info(`[DiscoverCommand] 开始分类 ${items.length} 个资源`)
     
     // 统计各种 source 值
     const sourceCounts = {}
@@ -79,7 +79,7 @@ class WelcomeCommand extends BasePouchCommand {
       const src = item.source || 'undefined'
       sourceCounts[src] = (sourceCounts[src] || 0) + 1
     })
-    logger.info(`[WelcomeCommand] 原始 source 分布: ${JSON.stringify(sourceCounts)}`)
+    logger.info(`[DiscoverCommand] 原始 source 分布: ${JSON.stringify(sourceCounts)}`)
     
     items.forEach(item => {
       const source = this.normalizeSource(item.source)
@@ -88,7 +88,7 @@ class WelcomeCommand extends BasePouchCommand {
       }
     })
     
-    logger.info(`[WelcomeCommand] 分类结果: system=${categories.system.length}, project=${categories.project.length}, user=${categories.user.length}`)
+    logger.info(`[DiscoverCommand] 分类结果: system=${categories.system.length}, project=${categories.project.length}, user=${categories.user.length}`)
     
     return categories
   }
@@ -98,7 +98,7 @@ class WelcomeCommand extends BasePouchCommand {
    */
   normalizeSource(source) {
     const logger = require('@promptx/logger')
-    logger.info(`[WelcomeCommand] normalizeSource 输入: "${source}" (类型: ${typeof source})`)
+    logger.info(`[DiscoverCommand] normalizeSource 输入: "${source}" (类型: ${typeof source})`)
     
     // 转换为小写进行比较
     const lowerSource = String(source).toLowerCase()
@@ -106,10 +106,10 @@ class WelcomeCommand extends BasePouchCommand {
     if (lowerSource === 'user') return 'user'
     if (lowerSource === 'project') return 'project'
     if (['package', 'merged', 'fallback', 'system'].includes(lowerSource)) {
-      logger.info(`[WelcomeCommand] normalizeSource: "${source}" -> "system"`)
+      logger.info(`[DiscoverCommand] normalizeSource: "${source}" -> "system"`)
       return 'system'
     }
-    logger.info(`[WelcomeCommand] normalizeSource: "${source}" -> "system" (默认)`)
+    logger.info(`[DiscoverCommand] normalizeSource: "${source}" -> "system" (默认)`)
     return 'system'
   }
   
@@ -138,7 +138,7 @@ class WelcomeCommand extends BasePouchCommand {
 
   /**
    * 刷新所有资源（注册表文件 + ResourceManager）
-   * 这是 welcome 命令的核心功能，确保能发现所有最新的资源
+   * 这是 discover 命令的核心功能，确保能发现所有最新的资源
    */
   async refreshAllResources() {
     try {
@@ -151,20 +151,20 @@ class WelcomeCommand extends BasePouchCommand {
       if (await fs.pathExists(userRegistryPath)) {
         const registry = await fs.readJson(userRegistryPath)
         const tools = registry.resources?.filter(r => r.protocol === 'tool').map(r => r.id) || []
-        logger.info(`[WelcomeCommand] 用户注册表中的工具: ${tools.join(', ') || '无'}`)
+        logger.info(`[DiscoverCommand] 用户注册表中的工具: ${tools.join(', ') || '无'}`)
       }
       
       // 2. 刷新 ResourceManager，重新加载所有资源
-      logger.info('[WelcomeCommand] Refreshing ResourceManager to discover new resources...')
+      logger.info('[DiscoverCommand] Refreshing ResourceManager to discover new resources...')
       await this.resourceManager.initializeWithNewArchitecture()
       
       // 🔍 Knuth调试：验证ResourceManager加载结果
       const loadedTools = this.resourceManager.registryData.getResourcesByProtocol('tool')
-      logger.info(`[WelcomeCommand] ResourceManager加载的工具: ${loadedTools.map(t => t.id).join(', ') || '无'}`)
+      logger.info(`[DiscoverCommand] ResourceManager加载的工具: ${loadedTools.map(t => t.id).join(', ') || '无'}`)
       
     } catch (error) {
-      logger.warn('[WelcomeCommand] 资源刷新失败:', error.message)
-      // 不抛出错误，确保 welcome 命令能继续执行
+      logger.warn('[DiscoverCommand] 资源刷新失败:', error.message)
+      // 不抛出错误，确保 discover 命令能继续执行
     }
   }
 
@@ -174,30 +174,30 @@ class WelcomeCommand extends BasePouchCommand {
    */
   async refreshAllRegistries() {
     try {
-      logger.info('[WelcomeCommand] 开始刷新所有注册表...')
+      logger.info('[DiscoverCommand] 开始刷新所有注册表...')
       
       // 1. 刷新项目级注册表（如果在项目环境中）
       // 项目级注册表是可选的，可能没有初始化项目
       try {
         const currentProject = ProjectManager.getCurrentProject()
         if (currentProject && currentProject.initialized) {
-          logger.info('[WelcomeCommand] 刷新项目级注册表...')
+          logger.info('[DiscoverCommand] 刷新项目级注册表...')
           const projectDiscovery = new ProjectDiscovery()
           await projectDiscovery.generateRegistry()
         }
       } catch (projectError) {
         // 项目未初始化是正常情况，不需要报错
-        logger.debug('[WelcomeCommand] 项目未初始化，跳过项目级注册表刷新')
+        logger.debug('[DiscoverCommand] 项目未初始化，跳过项目级注册表刷新')
       }
       
       // 2. 刷新用户级注册表（这个是必须的）
-      logger.info('[WelcomeCommand] 刷新用户级注册表...')
+      logger.info('[DiscoverCommand] 刷新用户级注册表...')
       const userDiscovery = new UserDiscovery()
       await userDiscovery.generateRegistry()
       
-      logger.info('[WelcomeCommand] 注册表刷新完成')
+      logger.info('[DiscoverCommand] 注册表刷新完成')
     } catch (error) {
-      logger.warn('[WelcomeCommand] 注册表刷新失败:', error.message)
+      logger.warn('[DiscoverCommand] 注册表刷新失败:', error.message)
       // 不抛出错误，继续使用现有注册表
     }
   }
@@ -207,7 +207,7 @@ class WelcomeCommand extends BasePouchCommand {
    * @returns {Promise<Object>} 角色注册信息（按来源分类）
    */
   async loadRoleRegistry () {
-    logger.info('[WelcomeCommand] Loading role registry...')
+    logger.info('[DiscoverCommand] Loading role registry...')
     
     // 资源刷新已经在 assembleAreas 中的 refreshAllResources 完成
     // 这里直接使用ResourceManager的注册表
@@ -222,7 +222,7 @@ class WelcomeCommand extends BasePouchCommand {
       registry[role.id] = role
     })
     
-    logger.info(`[WelcomeCommand] Found ${Object.keys(registry).length} roles`)
+    logger.info(`[DiscoverCommand] Found ${Object.keys(registry).length} roles`)
     return registry
   }
   
@@ -246,7 +246,7 @@ class WelcomeCommand extends BasePouchCommand {
       registry[tool.id] = tool
     })
     
-    logger.info(`[WelcomeCommand] Found ${Object.keys(registry).length} tools`)
+    logger.info(`[DiscoverCommand] Found ${Object.keys(registry).length} tools`)
     return registry
   }
   
@@ -271,4 +271,4 @@ class WelcomeCommand extends BasePouchCommand {
   }
 }
 
-module.exports = WelcomeCommand
+module.exports = DiscoverCommand

@@ -26,7 +26,7 @@ const COMMAND_PREFIX = getCommandPrefix()
 // 静态命令常量
 const COMMANDS = {
   INIT: `${COMMAND_PREFIX} init`,
-  WELCOME: `${COMMAND_PREFIX} welcome`,
+  DISCOVER: `${COMMAND_PREFIX} discover`,
   ACTION: `${COMMAND_PREFIX} action`,
   LEARN: `${COMMAND_PREFIX} learn`,
   RECALL: `${COMMAND_PREFIX} recall`,
