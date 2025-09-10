@@ -5,7 +5,7 @@ const BaseArea = require('../BaseArea')
  */
 class DiscoverHeaderArea extends BaseArea {
   constructor(stats) {
-    super('WELCOME_HEADER_AREA')
+    super('DISCOVER_HEADER_AREA')
     this.stats = stats
   }
 

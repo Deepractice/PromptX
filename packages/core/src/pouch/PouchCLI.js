@@ -116,7 +116,7 @@ class PouchCLI {
 
 💡 使用示例:
         ${COMMANDS.INIT}              # 初始化工作环境
-        ${COMMANDS.WELCOME}           # 发现可用角色
+        ${COMMANDS.DISCOVER}          # 发现可用角色
         ${COMMANDS.ACTION} copywriter # 激活文案专家
         ${COMMANDS.LEARN} scrum       # 学习敏捷知识
         ${COMMANDS.RECALL} frontend   # 检索前端记忆
