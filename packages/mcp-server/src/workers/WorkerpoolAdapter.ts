@@ -1,5 +1,5 @@
 import * as workerpool from 'workerpool';
-import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { 
   ToolWorkerPool, 
   PoolStats, 
@@ -32,8 +32,8 @@ export class WorkerpoolAdapter implements ToolWorkerPool {
       return;
     }
     
-    // 注意：构建后 worker.ts 会变成 worker.js
-    const workerPath = path.join(__dirname, 'worker.js');
+    // 使用 new URL 获取 worker.js 的路径（构建后 worker.ts 会变成 worker.js）
+    const workerPath = fileURLToPath(new URL('./worker.js', import.meta.url));
     
     this.pool = workerpool.pool(workerPath, {
       minWorkers: this.options.minWorkers,
