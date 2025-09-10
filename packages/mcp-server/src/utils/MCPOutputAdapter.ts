@@ -67,9 +67,9 @@ export class MCPOutputAdapter {
    * 标准化输入，将各种类型转换为字符串
    */
   private normalizeInput(input: any): string {
-    // 处理null和undefined
+    // 处理null和undefined - 不应该静默失败
     if (input === null || input === undefined) {
-      return ''
+      throw new Error('Tool execution returned null or undefined - execution likely failed. Please check tool logs for details.')
     }
     
     // 处理字符串
@@ -112,16 +112,18 @@ export class MCPOutputAdapter {
   }
   
   /**
-   * 清理文本，确保MCP兼容性
+   * 清理文本，确保MCP兼容性和JSON安全
    */
   private sanitizeText(text: string): string {
     if (!text) return ''
     
-    // 保留原始文本，包括emoji和特殊字符
-    // 只处理可能导致JSON解析问题的字符
+    // 确保文本在JSON中安全传输
+    // 1. 移除所有控制字符（除了换行和制表符）
+    // 2. 不需要转义引号和反斜杠，因为JSON.stringify会处理
     return text
-      .replace(/\x00/g, '') // 移除null字符
-      .replace(/\r\n/g, '\n') // 统一换行符
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // 移除控制字符（保留\t\n\r）
+      .replace(/\r\n/g, '\n') // 统一换行符为Unix格式
+      .replace(/\r/g, '\n')   // 处理单独的\r
       .trim()
   }
   

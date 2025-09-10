@@ -141,6 +141,31 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
     }
     
     this.logger.info(`Establishing SSE stream for session ${sessionId}`);
+    
+    // 设置 SSE 必需的响应头
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // 禁用 Nginx 缓冲
+    
+    // 启动心跳机制 - 每 20 秒发送一次
+    const heartbeatInterval = setInterval(() => {
+      try {
+        // SSE 心跳格式：注释行
+        res.write(':heartbeat\n\n');
+        this.logger.info(`Sent SSE heartbeat for session ${sessionId}`);
+      } catch (error) {
+        this.logger.error(`Failed to send heartbeat for session ${sessionId}: ${error}`);
+        clearInterval(heartbeatInterval);
+      }
+    }, 20000); // 20 秒间隔
+    
+    // 监听连接关闭事件
+    req.on('close', () => {
+      this.logger.info(`SSE connection closed for session ${sessionId}`);
+      clearInterval(heartbeatInterval);
+    });
+    
     const transport = this.transports[sessionId];
     await transport.handleRequest(req, res);
     await this.streamMessages(transport);
@@ -187,12 +212,12 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
             this.sendNotification(transport, message);
           }
         } catch (error) {
-          this.logger.error('Error sending message:', error);
+          this.logger.error(`Error sending message: ${error}`);
           clearInterval(interval);
         }
       }, 1000);
     } catch (error) {
-      this.logger.error('Error sending message:', error);
+      this.logger.error(`Error sending message: ${error}`);
     }
   }
   
@@ -265,7 +290,7 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
       });
       
     } catch (error) {
-      this.logger.error('Error handling MCP request:', error);
+      this.logger.error(`Error handling MCP request: ${error}`);
       res.status(500).json({
         jsonrpc: '2.0',
         error: {
@@ -371,7 +396,7 @@ export class StreamableHttpMCPServer extends BaseMCPServer {
         throw new Error(`Unsupported resource protocol: ${uri.protocol}`);
       }
     } catch (error: any) {
-      this.logger.error(`Failed to read resource: ${resource.uri}`, error);
+      this.logger.error(`Failed to read resource: ${resource.uri} - ${error}`);
       throw new Error(`Failed to read resource: ${error.message}`);
     }
   }
