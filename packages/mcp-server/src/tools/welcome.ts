@@ -8,9 +8,9 @@ const outputAdapter = new MCPOutputAdapter();
  * 
  * 为AI提供完整的专业服务选项清单，包括可激活的角色和可调用的工具。
  */
-export const welcomeTool: ToolWithHandler = {
-  name: 'welcome',
-  description: `🎭 [专业服务清单] 展示所有可用的AI专业角色和工具
+export const discoverTool: ToolWithHandler = {
+  name: 'discover',
+  description: `🎯 [探索AI潜能] 发现你的AI可以成为什么 - 探索可用角色与工具
 为AI提供完整的专业服务选项清单，包括可激活的角色和可调用的工具。
 
 何时使用此工具:
@@ -43,10 +43,22 @@ export const welcomeTool: ToolWithHandler = {
 5. 为用户推荐最适合当前任务的角色或工具
 6. 关注新增资源（特别是项目级和用户级）
 7. 理解不同来源资源的优先级和适用场景
-8. 工具使用前必须先learn其manual文档`,
+8. 工具使用前必须先learn其manual文档
+
+聚焦参数说明:
+- 'all' (默认): 展示所有资源
+- 'roles': 仅展示可激活的角色
+- 'tools': 仅展示可用的工具`,
   inputSchema: {
     type: 'object',
-    properties: {}
+    properties: {
+      focus: {
+        type: 'string',
+        description: "聚焦范围：'all'(所有)、'roles'(角色)或'tools'(工具)",
+        enum: ['all', 'roles', 'tools'],
+        default: 'all'
+      }
+    }
   },
   handler: async () => {
     // 动态导入 @promptx/core
