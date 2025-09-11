@@ -1,5 +1,21 @@
 # @promptx/cli
 
+## 1.17.2
+
+### Patch Changes
+
+- [#359](https://github.com/Deepractice/PromptX/pull/359) [`f5891a6`](https://github.com/Deepractice/PromptX/commit/f5891a60d66dfaabf56ba12deb2ac7326d288025) Thanks [@deepracticexs](https://github.com/deepracticexs)! - refactor: Replace Chinese log messages with English
+
+  - Replace all Chinese console and logger messages with English equivalents
+  - Improve international accessibility of the codebase
+  - Prevent potential character encoding issues
+  - Maintain same log levels and debugging context
+
+- Updated dependencies [[`f5891a6`](https://github.com/Deepractice/PromptX/commit/f5891a60d66dfaabf56ba12deb2ac7326d288025)]:
+  - @promptx/core@1.17.2
+  - @promptx/mcp-server@1.17.2
+  - @promptx/logger@1.17.2
+
 ## 1.17.1
 
 ### Patch Changes
