@@ -21,6 +21,7 @@ export class UpdateStateMachine {
     
     // Download flow
     { from: [UpdateState.UPDATE_AVAILABLE], to: UpdateState.DOWNLOADING },
+    { from: [UpdateState.UPDATE_AVAILABLE], to: UpdateState.READY_TO_INSTALL }, // Auto-download may skip downloading state
     { from: [UpdateState.DOWNLOADING], to: UpdateState.READY_TO_INSTALL },
     
     // After install/restart
