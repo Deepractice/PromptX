@@ -52,7 +52,7 @@ export interface UpdateError extends Error {
 export interface AppUpdater {
   checkForUpdates(): Promise<UpdateCheckResult>
   downloadUpdate(): Promise<void>
-  quitAndInstall(): void
+  quitAndInstall(): void | Promise<void>
   
   getCurrentState(): UpdateState
   isUpdateAvailable(): boolean

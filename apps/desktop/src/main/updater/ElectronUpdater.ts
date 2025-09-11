@@ -26,6 +26,7 @@ export class ElectronUpdater implements AppUpdater {
   private retryCount = 0
   private maxRetries = 3
   private retryDelay = 5000
+  private initPromise: Promise<void>
 
   constructor(options: UpdaterOptions = {}) {
     this.options = {
@@ -37,15 +38,46 @@ export class ElectronUpdater implements AppUpdater {
     
     this.stateMachine = new UpdateStateMachine()
     this.storage = new UpdaterStorage()
-    this.initializeUpdater()
+    this.initPromise = this.initializeUpdater().catch(error => {
+      logger.error('ElectronUpdater: Failed to initialize:', error)
+      throw error
+    })
   }
 
   private async initializeUpdater(): Promise<void> {
-    // 动态导入 electron-updater
-    const pkg = await import('electron-updater')
-    autoUpdater = pkg.autoUpdater
-    
+    // 先初始化存储
     await this.storage.init()
+    
+    // 动态导入 electron-updater (CommonJS 模块)
+    try {
+      const electronUpdater = await import('electron-updater')
+      // 使用解构访问 autoUpdater - 这是 ESM 兼容性的解决方案
+      const { autoUpdater: updater } = electronUpdater as any
+      autoUpdater = updater || electronUpdater.autoUpdater || electronUpdater.default?.autoUpdater
+      
+      logger.info('ElectronUpdater: Module loaded:', {
+        hasDefault: !!electronUpdater.default,
+        hasAutoUpdater: !!electronUpdater.autoUpdater,
+        keys: Object.keys(electronUpdater)
+      })
+      
+      if (!autoUpdater) {
+        // 尝试另一种方式
+        autoUpdater = (electronUpdater as any).autoUpdater
+      }
+      
+      logger.info('ElectronUpdater: autoUpdater loaded successfully:', !!autoUpdater)
+    } catch (error) {
+      logger.error('ElectronUpdater: Failed to import electron-updater:', error)
+      throw error
+    }
+    
+    // 确保 autoUpdater 已加载
+    if (!autoUpdater) {
+      throw new Error('autoUpdater failed to load - tried all import methods')
+    }
+    
+    // 现在可以安全使用 autoUpdater
     await this.restoreState()
     this.setupAutoUpdater()
     this.bindEvents()
@@ -74,6 +106,12 @@ export class ElectronUpdater implements AppUpdater {
   private setupAutoUpdater(): void {
     autoUpdater.autoDownload = this.options.autoDownload ?? false
     autoUpdater.autoInstallOnAppQuit = this.options.autoInstallOnAppQuit ?? true
+    
+    // 开发模式下强制检查更新
+    if (!app.isPackaged) {
+      autoUpdater.forceDevUpdateConfig = true
+      logger.info('ElectronUpdater: Force dev update config enabled')
+    }
     
     // 设置下载缓存路径
     ;(autoUpdater as any).downloadedUpdateHelper = {
@@ -227,21 +265,40 @@ export class ElectronUpdater implements AppUpdater {
   }
 
   async checkForUpdates(): Promise<UpdateCheckResult> {
+    // 等待初始化完成
+    await this.initPromise
+    
+    logger.info('ElectronUpdater: checkForUpdates called, isPackaged:', app.isPackaged)
+    
     if (!app.isPackaged) {
-      logger.info('ElectronUpdater: Skipping update check in development mode')
+      logger.info('ElectronUpdater: Running in development mode, attempting check anyway for testing')
+      // 开发模式下也尝试检查，用于测试
+    }
+    
+    if (!autoUpdater) {
+      logger.error('ElectronUpdater: autoUpdater is not initialized')
       return { updateAvailable: false }
     }
     
     try {
       this.retryCount = 0
+      logger.info('ElectronUpdater: Calling autoUpdater.checkForUpdatesAndNotify()...')
       const result = await autoUpdater.checkForUpdatesAndNotify()
+      
+      logger.info('ElectronUpdater: Check result:', {
+        hasResult: !!result,
+        hasUpdateInfo: !!result?.updateInfo,
+        currentVersion: app.getVersion(),
+        updateVersion: result?.updateInfo?.version
+      })
       
       return {
         updateAvailable: result?.updateInfo != null,
         updateInfo: result?.updateInfo ? this.normalizeUpdateInfo(result.updateInfo) : undefined
       }
     } catch (error) {
-      logger.error('ElectronUpdater: Check for updates failed:', error)
+      logger.error('ElectronUpdater: Check for updates failed:', error instanceof Error ? error.message : String(error))
+      logger.error('ElectronUpdater: Error details:', error)
       return {
         updateAvailable: false,
         error: error as Error
@@ -250,6 +307,8 @@ export class ElectronUpdater implements AppUpdater {
   }
 
   async downloadUpdate(): Promise<void> {
+    await this.initPromise
+    
     if (this.stateMachine.getCurrentState() !== UpdateState.AVAILABLE) {
       throw new Error('No update available to download')
     }
@@ -262,7 +321,9 @@ export class ElectronUpdater implements AppUpdater {
     }
   }
 
-  quitAndInstall(): void {
+  async quitAndInstall(): Promise<void> {
+    await this.initPromise
+    
     if (this.stateMachine.getCurrentState() !== UpdateState.DOWNLOADED) {
       logger.warn('ElectronUpdater: Cannot install - update not downloaded')
       return
