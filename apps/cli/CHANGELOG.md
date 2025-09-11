@@ -1,5 +1,50 @@
 # @promptx/cli
 
+## 1.16.0
+
+### Minor Changes
+
+- [#347](https://github.com/Deepractice/PromptX/pull/347) [`eb7a2be`](https://github.com/Deepractice/PromptX/commit/eb7a2be1ef4fffed97a9dc20eaaacd9065fc0e01) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 重命名 Welcome 为 Discover，更准确地反映功能定位
+
+  ### 主要更改
+
+  #### @promptx/core
+
+  - 将 `WelcomeCommand` 重命名为 `DiscoverCommand`
+  - 将 `WelcomeHeaderArea` 重命名为 `DiscoverHeaderArea`
+  - 将 `welcome` 文件夹重命名为 `discover`
+  - 更新常量 `WELCOME` 为 `DISCOVER`
+  - 更新状态 `welcome_completed` 为 `discover_completed`
+
+  #### @promptx/mcp-server
+
+  - 将 `welcomeTool` 重命名为 `discoverTool`
+  - 更新工具描述，强调"探索 AI 潜能"的核心价值
+  - 添加 `focus` 参数支持，允许按需筛选角色或工具
+  - 更新 action 工具中的相关引用
+
+  #### @promptx/cli
+
+  - CLI 命令从 `welcome` 改为 `discover`
+  - 更新帮助文档和示例
+
+  #### @promptx/desktop
+
+  - 更新 `PromptXResourceRepository` 中的相关引用
+
+  ### 影响
+
+  - **Breaking Change**: CLI 命令 `promptx welcome` 需要改为 `promptx discover`
+  - MCP 工具名从 `promptx_welcome` 改为 `promptx_discover`
+  - 所有文档和注释中的 Welcome 相关内容都已更新
+
+### Patch Changes
+
+- Updated dependencies [[`68b8304`](https://github.com/Deepractice/PromptX/commit/68b8304a5d5e7569f3534f6cfe52348c457b0ce9), [`57f430d`](https://github.com/Deepractice/PromptX/commit/57f430d2af2c904f74054e623169963be62783c5), [`eb7a2be`](https://github.com/Deepractice/PromptX/commit/eb7a2be1ef4fffed97a9dc20eaaacd9065fc0e01)]:
+  - @promptx/mcp-server@1.16.0
+  - @promptx/core@1.16.0
+  - @promptx/logger@1.16.0
+
 ## 1.15.1
 
 ### Patch Changes

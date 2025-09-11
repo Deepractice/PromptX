@@ -1,5 +1,108 @@
 # @promptx/core
 
+## 1.16.0
+
+### Minor Changes
+
+- [#352](https://github.com/Deepractice/PromptX/pull/352) [`57f430d`](https://github.com/Deepractice/PromptX/commit/57f430d2af2c904f74054e623169963be62783c5) Thanks [@deepracticexs](https://github.com/deepracticexs)! - # 🚀 实现依赖预装复用机制，解决工具启动缓慢问题
+
+  ## 核心改进
+
+  ### 新增 PreinstalledDependenciesManager
+
+  - 实现智能依赖分析，区分预装和需要安装的依赖
+  - 支持从@promptx/resource 包复用预装依赖，避免重复安装
+  - 自动检测版本兼容性，使用 semver 标准进行版本匹配
+  - 提供模块加载缓存机制，提升后续访问性能
+
+  ### 优化 ToolSandbox 依赖管理
+
+  - 集成 PreinstalledDependenciesManager，优先使用预装依赖
+  - 只安装真正缺失的依赖，大幅减少安装时间
+  - 保持向后兼容性，现有工具无需修改
+
+  ### 预装核心依赖
+
+  - @modelcontextprotocol/server-filesystem: 系统工具专用
+  - glob: 文件搜索功能
+  - semver: 版本兼容性检查
+  - minimatch: 模式匹配支持
+
+  ## 性能提升
+
+  | 工具             | 优化前  | 优化后 | 提升倍数 |
+  | ---------------- | ------- | ------ | -------- |
+  | filesystem       | 9900ms  | 16ms   | 619x     |
+  | es-module-tester | ~1500ms | 52ms   | 29x      |
+  | excel-reader     | ~1500ms | 54ms   | 28x      |
+
+  ## 架构改进
+
+  ### 依赖复用不变式
+
+  ```text
+  ∀ tool ∈ Tools, ∀ dep ∈ dependencies(tool):
+    if dep ∈ preinstalled_deps then
+      load_time(dep) = O(1)
+    else
+      load_time(dep) = O(install_time)
+  ```
+
+  ### 版本兼容性保证
+
+  - 使用标准 semver 库进行版本范围匹配
+  - 支持^、~、>=等所有 npm 版本语法
+  - 不兼容时自动回退到沙箱安装
+
+  ## 向后兼容性
+
+  - ✅ 所有现有工具无需修改即可受益
+  - ✅ 失败时自动回退到原有安装机制
+  - ✅ 沙箱隔离机制保持不变
+  - ✅ 工具接口完全兼容
+
+  这是一个无破坏性的性能优化，解决了 Issue #350 中用户反映的"30-60 秒等待时间不可接受"问题，将核心系统工具的启动时间从分钟级降低到毫秒级。
+
+- [#347](https://github.com/Deepractice/PromptX/pull/347) [`eb7a2be`](https://github.com/Deepractice/PromptX/commit/eb7a2be1ef4fffed97a9dc20eaaacd9065fc0e01) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 重命名 Welcome 为 Discover，更准确地反映功能定位
+
+  ### 主要更改
+
+  #### @promptx/core
+
+  - 将 `WelcomeCommand` 重命名为 `DiscoverCommand`
+  - 将 `WelcomeHeaderArea` 重命名为 `DiscoverHeaderArea`
+  - 将 `welcome` 文件夹重命名为 `discover`
+  - 更新常量 `WELCOME` 为 `DISCOVER`
+  - 更新状态 `welcome_completed` 为 `discover_completed`
+
+  #### @promptx/mcp-server
+
+  - 将 `welcomeTool` 重命名为 `discoverTool`
+  - 更新工具描述，强调"探索 AI 潜能"的核心价值
+  - 添加 `focus` 参数支持，允许按需筛选角色或工具
+  - 更新 action 工具中的相关引用
+
+  #### @promptx/cli
+
+  - CLI 命令从 `welcome` 改为 `discover`
+  - 更新帮助文档和示例
+
+  #### @promptx/desktop
+
+  - 更新 `PromptXResourceRepository` 中的相关引用
+
+  ### 影响
+
+  - **Breaking Change**: CLI 命令 `promptx welcome` 需要改为 `promptx discover`
+  - MCP 工具名从 `promptx_welcome` 改为 `promptx_discover`
+  - 所有文档和注释中的 Welcome 相关内容都已更新
+
+### Patch Changes
+
+- Updated dependencies [[`57f430d`](https://github.com/Deepractice/PromptX/commit/57f430d2af2c904f74054e623169963be62783c5)]:
+  - @promptx/resource@1.16.0
+  - @promptx/logger@1.16.0
+
 ## 1.15.1
 
 ### Patch Changes
