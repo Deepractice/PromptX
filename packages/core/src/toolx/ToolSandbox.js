@@ -1,4 +1,4 @@
-// importx 是 ESM-only 包，需要动态导入
+// importx is ESM-only package, needs dynamic import
 let importx = null;
 const getImportx = async () => {
   if (!importx) {
@@ -8,52 +8,52 @@ const getImportx = async () => {
   return importx;
 };
 
-// 移除了全局 parentURL，改为在 importx 调用时动态生成
+// Removed global parentURL, changed to dynamically generate when calling importx
 
-// 直接引入管理器类
+// Directly import manager classes
 const SandboxErrorManager = require('./SandboxErrorManager');
 const ToolDirectoryManager = require('./ToolDirectoryManager'); 
 const SandboxIsolationManager = require('./SandboxIsolationManager');
 
 /**
- * ToolSandbox - 工具沙箱环境管理器
+ * ToolSandbox - Tool sandbox environment manager
  * 
- * 完全基于importx的统一模块加载架构：
- * - @tool:// 协议定位工具
- * - @user://.promptx/toolbox 沙箱隔离
- * - 自动依赖管理
- * - 可复用的执行环境
- * - 统一的importx模块加载
+ * Unified module loading architecture completely based on importx:
+ * - @tool:// protocol for tool location
+ * - @user://.promptx/toolbox sandbox isolation
+ * - Automatic dependency management
+ * - Reusable execution environment
+ * - Unified importx module loading
  */
 class ToolSandbox {
   constructor(toolReference, options = {}) {
     this.toolReference = toolReference;  // @tool://url-validator
-    this.resourceManager = null;         // ResourceManager实例
-    this.toolId = null;                  // 工具ID，如 url-validator
-    this.toolContent = null;             // 工具文件内容
-    this.toolInstance = null;            // 工具实例
-    this.dependencies = [];              // 依赖列表
-    this.directoryManager = null;        // 目录管理器
-    this.sandboxPath = null;             // 沙箱目录路径（保留用于兼容）
-    this.sandboxContext = null;          // VM沙箱上下文
-    this.isolationManager = null;        // 沙箱隔离管理器
-    this.errorManager = null;            // 智能错误管理器
+    this.resourceManager = null;         // ResourceManager instance
+    this.toolId = null;                  // Tool ID, e.g. url-validator
+    this.toolContent = null;             // Tool file content
+    this.toolInstance = null;            // Tool instance
+    this.dependencies = [];              // Dependency list
+    this.directoryManager = null;        // Directory manager
+    this.sandboxPath = null;             // Sandbox directory path (kept for compatibility)
+    this.sandboxContext = null;          // VM sandbox context
+    this.isolationManager = null;        // Sandbox isolation manager
+    this.errorManager = null;            // Smart error manager
     
-    // 异步加载的模块
+    // Asynchronously loaded modules
     this.fs = null;
     this.vm = null;
     this.logger = null;
     
-    // 状态标志
+    // Status flags
     this.isAnalyzed = false;
     this.isPrepared = false;
     this.isInitialized = false;
     
-    // 配置选项
+    // Configuration options
     this.options = {
       timeout: 30000,
       enableDependencyInstall: true,
-      rebuild: false,  // 强制重建沙箱（用于处理异常情况）
+      rebuild: false,  // Force rebuild sandbox (for handling exceptional situations)
       ...options
     };
   }

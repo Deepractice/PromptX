@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// 早期错误捕获 - 在任何模块加载之前
+// Early error capturing - before any module loading
 process.on('uncaughtException', (err: Error) => {
   console.error('Fatal error during startup:', err.message)
   if (err.stack) {
@@ -31,80 +31,94 @@ const { getGlobalServerEnvironment } = ServerEnvironment
 const { getGlobalProjectManager } = ProjectManager
 const serverEnv = getGlobalServerEnvironment()
 if (!serverEnv.isInitialized()) {
-  // CLI模式使用特殊的transport标识
+  // CLI mode uses special transport identifier
   serverEnv.initialize({ transport: 'cli' })
-  logger.debug('CLI模式：ServerEnvironment已初始化')
+  logger.debug('CLI mode: ServerEnvironment initialized')
 }
 
-// CLI模式自动恢复最近的项目配置
+// Automatically restore recent project configuration for CLI mode
 async function restoreProjectForCLI() {
   try {
     const projectManager = getGlobalProjectManager()
     const cwd = process.cwd()
     
-    // 尝试获取当前目录的项目实例
+    // Try to get project instances for the current directory
     const instances = await projectManager.getProjectInstances(cwd)
     if (instances.length > 0) {
-      // 找到最近的CLI模式实例，如果没有就用第一个
+      // Find the latest CLI mode instance, or use the first one if none found
       const cliInstance = instances.find(i => i.transport === 'cli') || instances[0]
       
-      // 恢复项目状态
+      // Restore project state
       ProjectManager.setCurrentProject(
         cliInstance.projectPath,
         cliInstance.mcpId,
         cliInstance.ideType,
         cliInstance.transport
       )
-      logger.debug(`CLI模式：已恢复项目配置 - ${cliInstance.projectPath}`)
+      logger.debug(`CLI mode: Project configuration restored - ${cliInstance.projectPath}`)
     }
   } catch (error) {
-    // 静默处理错误，不影响CLI使用
-    logger.debug(`CLI模式：无法恢复项目配置 - ${error.message}`)
+    // Handle errors silently, don't affect CLI usage
+    logger.debug(`CLI mode: Unable to restore project configuration - ${error.message}`)
   }
 }
 
-// 创建主程序
+// Display banner function
+function displayBanner() {
+  console.log(chalk.cyan(`
+ ____                           _    __  __
+|  _ \\ _ __ ___  _ __ ___  _ __ | |_ \\ \\/ /
+| |_) | '__/ _ \\| '_ \` _ \\| '_ \\| __| \\  / 
+|  __/| | | (_) | | | | | | |_) | |_  /  \\ 
+|_|   |_|  \\___/|_| |_| |_| .__/ \\__|/_/\\_\\
+                          |_|              
+`))
+  console.log(chalk.yellow('PromptX Pouch Framework - AI use CLI get prompt for AI'))
+  console.log('')
+}
+
+// Create main program
 const program = new Command()
 
-// 需要在命令执行前完成项目恢复
+// Need to complete project restoration before command execution
 async function ensureProjectRestored() {
   try {
-    // 使用正确的静态方法检查
+    // Use correct static method check
     if (!ProjectManager.isInitialized || !ProjectManager.isInitialized()) {
       await restoreProjectForCLI()
     }
   } catch (error) {
-    // 如果检查失败，也尝试恢复
+    // If check fails, also try to restore
     await restoreProjectForCLI()
   }
 }
 
-// 设置程序信息
+// Set program information
 program
   .name('promptx')
   .description(packageJson.description)
   .version(packageJson.version, '-v, --version', 'display version number')
 
-// 五大核心锦囊命令
+// Five core pouch commands
 program
   .command('init [workspacePath]')
-  .description('init锦囊 - 初始化工作环境，传达系统基本诺记')
+  .description('init pouch - initialize work environment, communicate system basic promises')
   .action(async (workspacePath, options) => {
-    // 如果提供了workspacePath，将其作为workingDirectory参数传递
+    // If workspacePath is provided, pass it as workingDirectory parameter
     const args = workspacePath ? { workingDirectory: workspacePath } : {}
     await cli.execute('init', [args])
   })
 
 program
   .command('discover')
-  .description('discover锦囊 - 发现并展示所有可用的AI角色和领域专家')
+  .description('discover pouch - discover and display all available AI roles and domain experts')
   .action(async (options) => {
     await cli.execute('discover', [])
   })
 
 program
   .command('action <role>')
-  .description('action锦囊 - 激活特定AI角色，获取专业提示词')
+  .description('action pouch - activate specific AI role, obtain professional prompts')
   .action(async (role, options) => {
     await ensureProjectRestored()
     await cli.execute('action', [role])
@@ -112,74 +126,74 @@ program
 
 program
   .command('learn [resourceUrl]')
-  .description('learn锦囊 - 学习指定协议的资源内容(thought://、execution://等)')
+  .description('learn pouch - learn resource content of specified protocols (thought://, execution://, etc.)')
   .action(async (resourceUrl, options) => {
     await cli.execute('learn', resourceUrl ? [resourceUrl] : [])
   })
 
 program
   .command('recall [query]')
-  .description('recall锦囊 - AI主动从记忆中检索相关的专业知识')
+  .description('recall pouch - AI actively retrieves relevant professional knowledge from memory')
   .action(async (query, options) => {
     await cli.execute('recall', query ? [query] : [])
   })
 
 program
   .command('remember [content...]')
-  .description('remember锦囊 - AI主动内化知识和经验到记忆体系')
+  .description('remember pouch - AI actively internalizes knowledge and experience into memory system')
   .action(async (content, options) => {
     const args = content || []
     await cli.execute('remember', args)
   })
 
 
-// ToolX命令
+// ToolX command
 program
   .command('toolx <arguments>')
-  .description('toolx锦囊 - 执行PromptX工具体系(ToolX)中的JavaScript功能')
+  .description('toolx pouch - execute JavaScript functions in PromptX tool ecosystem (ToolX)')
   .action(async (argumentsJson, options) => {
     try {
       let args = {};
       
-      // 支持两种调用方式：
-      // 1. 从MCP传来的对象（通过cli.execute调用）
-      // 2. 从CLI传来的JSON字符串（直接命令行调用）
+      // Support two calling methods:
+      // 1. Object from MCP (called via cli.execute)
+      // 2. JSON string from CLI (direct command line call)
       if (typeof argumentsJson === 'object') {
         args = argumentsJson;
       } else if (typeof argumentsJson === 'string') {
         try {
           args = JSON.parse(argumentsJson);
         } catch (error) {
-          console.error('参数解析错误，请提供有效的JSON格式');
-          console.error('格式示例: \'{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 25, "b": 37}}\'');
+          console.error('Parameter parsing error, please provide valid JSON format');
+          console.error('Format example: \'{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 25, "b": 37}}\'');
           process.exit(1);
         }
       }
       
-      // 验证必需参数
+      // Validate required parameters
       if (!args.tool_resource || !args.parameters) {
-        console.error('缺少必需参数');
-        console.error('必需参数: tool_resource (工具资源引用), parameters (工具参数)');
-        console.error('格式示例: \'{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 25, "b": 37}}\'');
+        console.error('Missing required parameters');
+        console.error('Required parameters: tool_resource (tool resource reference), parameters (tool parameters)');
+        console.error('Format example: \'{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 25, "b": 37}}\'');
         process.exit(1);
       }
       
       await cli.execute('toolx', args);
     } catch (error) {
-      console.error(`ToolX命令执行失败: ${error.message}`);
+      console.error(`ToolX command execution failed: ${error.message}`);
       process.exit(1);
     }
   })
 
-// MCP Server命令
+// MCP Server command
 program
   .command('mcp-server')
-  .description('启动MCP Server，支持Claude Desktop等AI应用接入')
-  .option('-t, --transport <type>', '传输类型 (stdio|http)', 'stdio')
-  .option('-p, --port <number>', 'HTTP端口号 (仅http传输)', '5203')
-  .option('--host <address>', '绑定地址 (仅http传输)', '127.0.0.1')
-  .option('--cors', '启用CORS (仅http传输)', false)
-  .option('--debug', '启用调试模式', false)
+  .description('Start MCP Server, support AI applications like Claude Desktop to connect')
+  .option('-t, --transport <type>', 'Transport type (stdio|http)', 'stdio')
+  .option('-p, --port <number>', 'HTTP port number (http transport only)', '5203')
+  .option('--host <address>', 'Bind address (http transport only)', '127.0.0.1')
+  .option('--cors', 'Enable CORS (http transport only)', false)
+  .option('--debug', 'Enable debug mode', false)
   .action(async (options) => {
     try {
       logger.info(chalk.cyan(`Starting MCP Server via PromptX CLI...`))
@@ -199,90 +213,90 @@ program
     }
   })
 
-// 全局错误处理
+// Global error handling
 program.configureHelp({
   helpWidth: 100,
   sortSubcommands: true
 })
 
-// 添加示例说明
+// Add example descriptions
 program.addHelpText('after', `
 
-${chalk.cyan('PromptX 锦囊框架 - AI use CLI get prompt for AI')}
+${chalk.cyan('PromptX Pouch Framework - AI use CLI get prompt for AI')}
 
-${chalk.cyan('六大核心命令:')}
-  ${chalk.cyan('init')}   → 初始化环境，传达系统协议
-  ${chalk.yellow('discover')}  → 发现可用角色和领域专家  
-  ${chalk.red('action')} → 激活特定角色，获取专业能力
-  ${chalk.blue('learn')}  → 深入学习领域知识体系
-  ${chalk.green('recall')} → AI主动检索应用记忆
-  ${chalk.magenta('remember')} → AI主动内化知识增强记忆
-  ${chalk.cyan('toolx')} → 执行PromptX工具体系(ToolX)，AI智能行动
-  ${chalk.blue('mcp-server')} → 启动MCP Server，连接AI应用
+${chalk.cyan('Six Core Commands:')}
+  ${chalk.cyan('init')}   → Initialize environment, communicate system protocols
+  ${chalk.yellow('discover')}  → Discover available roles and domain experts  
+  ${chalk.red('action')} → Activate specific role, obtain professional capabilities
+  ${chalk.blue('learn')}  → Deep learning domain knowledge systems
+  ${chalk.green('recall')} → AI actively retrieves applied memory
+  ${chalk.magenta('remember')} → AI actively internalizes knowledge to enhance memory
+  ${chalk.cyan('toolx')} → Execute PromptX tool ecosystem (ToolX), AI intelligent actions
+  ${chalk.blue('mcp-server')} → Start MCP Server, connect AI applications
 
-${chalk.cyan('示例:')}
-  ${chalk.gray('# 1. 初始化锦囊系统')}
+${chalk.cyan('Examples:')}
+  ${chalk.gray('# 1. Initialize pouch system')}
   promptx init
 
-  ${chalk.gray('# 2. 发现可用角色')}
+  ${chalk.gray('# 2. Discover available roles')}
   promptx discover
 
-  ${chalk.gray('# 3. 激活专业角色')}
+  ${chalk.gray('# 3. Activate professional roles')}
   promptx action copywriter
   promptx action scrum-master
 
-  ${chalk.gray('# 4. 学习领域知识')}
+  ${chalk.gray('# 4. Learn domain knowledge')}
   promptx learn scrum
   promptx learn copywriter
 
-  ${chalk.gray('# 5. 检索相关经验')}
+  ${chalk.gray('# 5. Retrieve relevant experience')}
   promptx recall agile
   promptx recall
   
-  ${chalk.gray('# 6. AI内化专业知识')}
-  promptx remember "每日站会控制在15分钟内"
-  promptx remember "测试→预发布→生产"
+  ${chalk.gray('# 6. AI internalizes professional knowledge')}
+  promptx remember "Control daily standup within 15 minutes"
+  promptx remember "Test → Pre-production → Production"
 
-  ${chalk.gray('# 7. 执行JavaScript工具')}
+  ${chalk.gray('# 7. Execute JavaScript tools')}
   promptx toolx '{"tool_resource": "@tool://calculator", "parameters": {"operation": "add", "a": 2, "b": 3}}'
   promptx toolx '{"tool_resource": "@tool://send-email", "parameters": {"to": "test@example.com", "subject": "Hello", "content": "Test"}}'
 
-  ${chalk.gray('# 8. 启动MCP服务')}
-  promptx mcp-server                    # stdio传输(默认)
-  promptx mcp-server -t http -p 3000    # HTTP传输(Streamable HTTP)
+  ${chalk.gray('# 8. Start MCP service')}
+  promptx mcp-server                    # stdio transport (default)
+  promptx mcp-server -t http -p 3000    # HTTP transport (Streamable HTTP)
 
-${chalk.cyan('PATEOAS状态机:')}
-  每个锦囊输出都包含 PATEOAS 导航，引导 AI 发现下一步操作
-  即使 AI 忘记上文，仍可通过锦囊独立执行
+${chalk.cyan('PATEOAS State Machine:')}
+  Each pouch output contains PATEOAS navigation, guiding AI to discover next operations
+  Even if AI forgets context, can still execute independently through pouches
 
-${chalk.cyan('核心理念:')}
-  • 锦囊自包含：每个命令包含完整执行信息
-  • 串联无依赖：AI忘记上文也能继续执行
-  • 分阶段专注：每个锦囊专注单一任务
-  • Prompt驱动：输出引导AI发现下一步
+${chalk.cyan('Core Philosophy:')}
+  • Self-contained pouches: Each command contains complete execution information
+  • Chain without dependencies: AI can continue execution even forgetting context
+  • Phased focus: Each pouch focuses on single task
+  • Prompt-driven: Output guides AI to discover next steps
 
-${chalk.cyan('MCP集成:')}
-  • AI应用连接：通过MCP协议连接Claude Desktop等AI应用
-  • 标准化接口：遵循Model Context Protocol标准
-  • 无环境依赖：解决CLI环境配置问题
+${chalk.cyan('MCP Integration:')}
+  • AI application connection: Connect AI applications like Claude Desktop via MCP protocol
+  • Standardized interface: Follow Model Context Protocol standard
+  • Environment independent: Solve CLI environment configuration issues
 
-${chalk.cyan('更多信息:')}
+${chalk.cyan('More Information:')}
   GitHub: ${chalk.underline('https://github.com/Deepractice/PromptX')}
-  组织:   ${chalk.underline('https://github.com/Deepractice')}
+  Organization: ${chalk.underline('https://github.com/Deepractice')}
 `)
 
-// 处理未知命令
+// Handle unknown commands
 program.on('command:*', () => {
-  logger.error(`错误: 未知命令 '${program.args.join(' ')}'`)
+  logger.error(`Error: Unknown command '${program.args.join(' ')}'`)
   logger.info('')
   program.help()
 })
 
-// 如果没有参数，显示banner和帮助
+// If no arguments, display banner and help
 if (process.argv.length === 2) {
   displayBanner()
   program.help()
 }
 
-// 解析命令行参数
+// Parse command line arguments
 program.parse(process.argv)

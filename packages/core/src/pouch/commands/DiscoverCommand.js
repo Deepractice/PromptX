@@ -71,7 +71,7 @@ class DiscoverCommand extends BasePouchCommand {
     }
     
     const items = Object.values(registry)
-    logger.info(`[DiscoverCommand] 开始分类 ${items.length} 个资源`)
+    logger.info(`[DiscoverCommand] Starting to categorize ${items.length} resources`)
     
     // 统计各种 source 值
     const sourceCounts = {}
@@ -79,7 +79,7 @@ class DiscoverCommand extends BasePouchCommand {
       const src = item.source || 'undefined'
       sourceCounts[src] = (sourceCounts[src] || 0) + 1
     })
-    logger.info(`[DiscoverCommand] 原始 source 分布: ${JSON.stringify(sourceCounts)}`)
+    logger.info(`[DiscoverCommand] Original source distribution: ${JSON.stringify(sourceCounts)}`)
     
     items.forEach(item => {
       const source = this.normalizeSource(item.source)
@@ -88,7 +88,7 @@ class DiscoverCommand extends BasePouchCommand {
       }
     })
     
-    logger.info(`[DiscoverCommand] 分类结果: system=${categories.system.length}, project=${categories.project.length}, user=${categories.user.length}`)
+    logger.info(`[DiscoverCommand] Categorization result: system=${categories.system.length}, project=${categories.project.length}, user=${categories.user.length}`)
     
     return categories
   }
@@ -98,7 +98,7 @@ class DiscoverCommand extends BasePouchCommand {
    */
   normalizeSource(source) {
     const logger = require('@promptx/logger')
-    logger.info(`[DiscoverCommand] normalizeSource 输入: "${source}" (类型: ${typeof source})`)
+    logger.info(`[DiscoverCommand] normalizeSource input: "${source}" (type: ${typeof source})`)
     
     // 转换为小写进行比较
     const lowerSource = String(source).toLowerCase()
@@ -109,7 +109,7 @@ class DiscoverCommand extends BasePouchCommand {
       logger.info(`[DiscoverCommand] normalizeSource: "${source}" -> "system"`)
       return 'system'
     }
-    logger.info(`[DiscoverCommand] normalizeSource: "${source}" -> "system" (默认)`)
+    logger.info(`[DiscoverCommand] normalizeSource: "${source}" -> "system" (default)`)
     return 'system'
   }
   
@@ -151,7 +151,7 @@ class DiscoverCommand extends BasePouchCommand {
       if (await fs.pathExists(userRegistryPath)) {
         const registry = await fs.readJson(userRegistryPath)
         const tools = registry.resources?.filter(r => r.protocol === 'tool').map(r => r.id) || []
-        logger.info(`[DiscoverCommand] 用户注册表中的工具: ${tools.join(', ') || '无'}`)
+        logger.info(`[DiscoverCommand] Tools in user registry: ${tools.join(', ') || 'none'}`)
       }
       
       // 2. 刷新 ResourceManager，重新加载所有资源
@@ -160,10 +160,10 @@ class DiscoverCommand extends BasePouchCommand {
       
       // 🔍 Knuth调试：验证ResourceManager加载结果
       const loadedTools = this.resourceManager.registryData.getResourcesByProtocol('tool')
-      logger.info(`[DiscoverCommand] ResourceManager加载的工具: ${loadedTools.map(t => t.id).join(', ') || '无'}`)
+      logger.info(`[DiscoverCommand] Tools loaded by ResourceManager: ${loadedTools.map(t => t.id).join(', ') || 'none'}`)
       
     } catch (error) {
-      logger.warn('[DiscoverCommand] 资源刷新失败:', error.message)
+      logger.warn('[DiscoverCommand] Resource refresh failed:', error.message)
       // 不抛出错误，确保 discover 命令能继续执行
     }
   }
@@ -174,30 +174,30 @@ class DiscoverCommand extends BasePouchCommand {
    */
   async refreshAllRegistries() {
     try {
-      logger.info('[DiscoverCommand] 开始刷新所有注册表...')
+      logger.info('[DiscoverCommand] Starting to refresh all registries...')
       
       // 1. 刷新项目级注册表（如果在项目环境中）
       // 项目级注册表是可选的，可能没有初始化项目
       try {
         const currentProject = ProjectManager.getCurrentProject()
         if (currentProject && currentProject.initialized) {
-          logger.info('[DiscoverCommand] 刷新项目级注册表...')
+          logger.info('[DiscoverCommand] Refreshing project-level registry...')
           const projectDiscovery = new ProjectDiscovery()
           await projectDiscovery.generateRegistry()
         }
       } catch (projectError) {
         // 项目未初始化是正常情况，不需要报错
-        logger.debug('[DiscoverCommand] 项目未初始化，跳过项目级注册表刷新')
+        logger.debug('[DiscoverCommand] Project not initialized, skipping project-level registry refresh')
       }
       
       // 2. 刷新用户级注册表（这个是必须的）
-      logger.info('[DiscoverCommand] 刷新用户级注册表...')
+      logger.info('[DiscoverCommand] Refreshing user-level registry...')
       const userDiscovery = new UserDiscovery()
       await userDiscovery.generateRegistry()
       
-      logger.info('[DiscoverCommand] 注册表刷新完成')
+      logger.info('[DiscoverCommand] Registry refresh completed')
     } catch (error) {
-      logger.warn('[DiscoverCommand] 注册表刷新失败:', error.message)
+      logger.warn('[DiscoverCommand] Registry refresh failed:', error.message)
       // 不抛出错误，继续使用现有注册表
     }
   }

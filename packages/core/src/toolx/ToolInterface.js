@@ -186,7 +186,7 @@ class ExampleTool {
 
   // 可选：清理资源
   cleanup() {
-    console.log('清理资源');
+    console.log('Cleaning up resources');
   }
 }
 

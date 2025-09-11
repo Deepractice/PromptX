@@ -27,8 +27,8 @@ class ThinkCommand extends BasePouchCommand {
     }
 
     try {
-      logger.info('🤔 [ThinkCommand] 开始思考流程')
-      logger.info(`🧠 [ThinkCommand] 角色: ${role}, 模式: ${thought.thinkingPattern || '未指定'}`)
+      logger.info('🤔 [ThinkCommand] Starting thinking process')
+      logger.info(`🧠 [ThinkCommand] Role: ${role}, Pattern: ${thought.thinkingPattern || 'not specified'}`)
       
       // 处理 spreadActivationCues：如果是字符串，转换为数组
       if (thought.spreadActivationCues && typeof thought.spreadActivationCues === 'string') {
@@ -49,12 +49,12 @@ class ThinkCommand extends BasePouchCommand {
       // 使用 CognitionManager 进行思考
       const prompt = await this.cognitionManager.think(role, thought)
 
-      logger.info(' [ThinkCommand] 思考指导生成完成')
+      logger.info(' [ThinkCommand] Thinking guidance generation completed')
       return this.formatThinkResponse(thought, prompt, role)
       
     } catch (error) {
-      logger.error(` [ThinkCommand] 思考失败: ${error.message}`)
-      logger.error(` [ThinkCommand] 错误堆栈:\n${error.stack}`)
+      logger.error(` [ThinkCommand] Thinking failed: ${error.message}`)
+      logger.error(` [ThinkCommand] Error stack:\n${error.stack}`)
       
       return `❌ 思考失败：${error.message}
 
@@ -96,7 +96,7 @@ ${error.stack}
           throw new Error('thought必须是对象格式')
         }
       } catch (error) {
-        logger.error(` [ThinkCommand] 解析thought参数失败: ${error.message}`)
+        logger.error(` [ThinkCommand] Failed to parse thought parameter: ${error.message}`)
         thought = null
       }
     }

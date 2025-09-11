@@ -195,15 +195,15 @@ class SandboxIsolationManager {
       // 3. 边界检查（暂时禁用，将来需要时再启用）
       // if (!resolved.startsWith(boundary)) {
       //   // 记录详细信息用于调试
-      //   logger.error(`[SandboxFS] 文件访问越权尝试：
-      //     输入路径: ${inputPath}
-      //     解析结果: ${resolved}
-      //     允许边界: ${boundary}
-      //     调用栈: ${new Error().stack}
+      //   logger.error(`[SandboxFS] File access permission violation attempt:
+      //     Input path: ${inputPath}
+      //     Resolved result: ${resolved}
+      //     Allowed boundary: ${boundary}
+      //     Call stack: ${new Error().stack}
       //   `);
       //   
       //   throw new Error(
-      //     `[SandboxFS] 文件访问被拒绝：路径 "${inputPath}" 超出工作目录边界 ${boundary}`
+      //     `[SandboxFS] File access denied: path "${inputPath}" exceeds working directory boundary ${boundary}`
       //   );
       // }
       
@@ -286,7 +286,7 @@ class SandboxIsolationManager {
             const resolved = target.resolve(...args);
             // 如果解析结果超出边界，记录警告
             if (!resolved.startsWith(boundary)) {
-              logger.warn(`[SandboxPath] path.resolve 尝试越权: ${resolved}`);
+              logger.warn(`[SandboxPath] path.resolve permission violation attempt: ${resolved}`);
             }
             return resolved;
           };

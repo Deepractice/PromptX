@@ -142,7 +142,7 @@ class PouchStateMachine {
 
       await fs.writeJson(configPath, config, { spaces: 2 })
     } catch (error) {
-      console.error('保存状态失败:', error)
+      console.error('Failed to save state:', error)
     }
   }
 
@@ -183,7 +183,7 @@ class PouchStateMachine {
         }
       }
     } catch (error) {
-      console.error('加载状态失败:', error)
+      console.error('Failed to load state:', error)
     }
   }
 

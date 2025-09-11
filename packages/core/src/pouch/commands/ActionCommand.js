@@ -46,7 +46,7 @@ class ActionCommand extends BasePouchCommand {
     }
 
     try {
-      logger.debug(`[ActionCommand] 开始激活角色: ${roleId}`)
+      logger.debug(`[ActionCommand] Starting to activate role: ${roleId}`)
       
       // 初始化 ResourceManager
       if (!this.resourceManager.initialized) {
@@ -55,10 +55,10 @@ class ActionCommand extends BasePouchCommand {
       
       // 获取角色信息
       const roleInfo = await this.getRoleInfo(roleId)
-      logger.debug(`[ActionCommand] getRoleInfo结果:`, roleInfo)
+      logger.debug(`[ActionCommand] getRoleInfo result:`, roleInfo)
       
       if (!roleInfo) {
-        logger.warn(`[ActionCommand] 角色 "${roleId}" 不存在！`)
+        logger.warn(`[ActionCommand] Role "${roleId}" does not exist!`)
         const roleLayer = new RoleLayer()
         roleLayer.addRoleArea(new StateArea(
           `error: 角色 "${roleId}" 不存在`,
@@ -73,7 +73,7 @@ class ActionCommand extends BasePouchCommand {
 
       // 加载记忆网络
       const mind = await this.loadMemories(roleId)
-      logger.debug(`[ActionCommand] 加载的 Mind:`, {
+      logger.debug(`[ActionCommand] Loaded Mind:`, {
         hasMind: !!mind,
         nodeCount: mind?.activatedCues?.size || 0,
         connectionCount: mind?.connections?.length || 0
@@ -125,25 +125,25 @@ class ActionCommand extends BasePouchCommand {
    * 获取角色信息
    */
   async getRoleInfo(roleId) {
-    logger.debug(`[ActionCommand] getRoleInfo调用，角色ID: ${roleId}`)
+    logger.debug(`[ActionCommand] getRoleInfo called, role ID: ${roleId}`)
     
     try {
-      logger.debug(`[ActionCommand] 调用loadResource前，ResourceManager状态:`, {
+      logger.debug(`[ActionCommand] ResourceManager state before loadResource call:`, {
         initialized: this.resourceManager.initialized
       })
       
       const result = await this.resourceManager.loadResource(`@role://${roleId}`)
       
-      logger.debug(`[ActionCommand] loadResource返回:`, result)
+      logger.debug(`[ActionCommand] loadResource returned:`, result)
       
       if (!result || !result.success) {
-        logger.warn(`[ActionCommand] 未找到角色资源: @role://${roleId}`)
+        logger.warn(`[ActionCommand] Role resource not found: @role://${roleId}`)
         return null
       }
 
       const content = result.content
       if (!content) {
-        logger.warn(`[ActionCommand] 角色资源内容为空: @role://${roleId}`)
+        logger.warn(`[ActionCommand] Role resource content is empty: @role://${roleId}`)
         return null
       }
 
@@ -154,7 +154,7 @@ class ActionCommand extends BasePouchCommand {
         metadata: result.metadata || {}
       }
     } catch (error) {
-      logger.error(`[ActionCommand] 获取角色信息失败:`, {
+      logger.error(`[ActionCommand] Failed to get role information:`, {
         message: error.message,
         stack: error.stack,
         name: error.name,
@@ -239,7 +239,7 @@ class ActionCommand extends BasePouchCommand {
   async loadMemories(roleId) {
     try {
       logger.info(`[ActionCommand] loadMemories called for role: ${roleId}`)
-      logger.debug(`[ActionCommand] 开始加载角色 ${roleId} 的认知数据`)
+      logger.debug(`[ActionCommand] Starting to load cognitive data for role ${roleId}`)
       
       // 使用 CognitionManager 获取 Mind 对象
       logger.info(`[ActionCommand] About to call cognitionManager.prime`)
@@ -247,11 +247,11 @@ class ActionCommand extends BasePouchCommand {
       logger.info(`[ActionCommand] cognitionManager.prime returned:`, mind)
       
       if (!mind) {
-        logger.warn(`[ActionCommand] 未找到角色 ${roleId} 的认知数据`)
+        logger.warn(`[ActionCommand] Cognitive data not found for role ${roleId}`)
         return null
       }
       
-      logger.debug(`[ActionCommand] 加载的 Mind 对象:`, {
+      logger.debug(`[ActionCommand] Loaded Mind object:`, {
         hasMind: !!mind,
         nodeCount: mind.activatedCues?.size || 0,
         connectionCount: mind.connections?.length || 0
@@ -259,7 +259,7 @@ class ActionCommand extends BasePouchCommand {
       
       return mind
     } catch (error) {
-      logger.warn(`[ActionCommand] 加载角色 ${roleId} 的认知数据失败:`, error)
+      logger.warn(`[ActionCommand] Failed to load cognitive data for role ${roleId}:`, error)
       return null
     }
   }

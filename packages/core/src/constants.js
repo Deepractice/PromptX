@@ -1,16 +1,16 @@
 /**
- * PromptX 系统常量配置
- * 统一管理命令格式、路径等配置信息
+ * PromptX system constants configuration
+ * Unified management of command formats, paths and other configuration information
  */
 
-// 包名配置（支持新旧两个包名）
+// Package name configuration (supports both new and old package names)
 const PACKAGE_NAMES = {
-  CURRENT: '@promptx/cli',    // 当前使用的包名
-  LEGACY: 'dpml-prompt',       // 旧版包名（向后兼容）
-  ALL: ['@promptx/cli', 'dpml-prompt']  // 所有支持的包名
+  CURRENT: '@promptx/cli',    // Currently used package name
+  LEGACY: 'dpml-prompt',       // Legacy package name (backward compatibility)
+  ALL: ['@promptx/cli', 'dpml-prompt']  // All supported package names
 }
 
-// 根据环境变量决定命令前缀
+// Determine command prefix based on environment variables
 function getCommandPrefix() {
   const env = process.env.PROMPTX_ENV
   
@@ -23,7 +23,7 @@ function getCommandPrefix() {
 
 const COMMAND_PREFIX = getCommandPrefix()
 
-// 静态命令常量
+// Static command constants
 const COMMANDS = {
   INIT: `${COMMAND_PREFIX} init`,
   DISCOVER: `${COMMAND_PREFIX} discover`,
@@ -34,7 +34,7 @@ const COMMANDS = {
   HELP: `${COMMAND_PREFIX} help`
 }
 
-// 带参数的命令构建函数
+// Command building functions with parameters
 const buildCommand = {
   action: (roleId) => `${COMMAND_PREFIX} action ${roleId}`,
   learn: (resource) => `${COMMAND_PREFIX} learn ${resource}`,
@@ -42,7 +42,7 @@ const buildCommand = {
   remember: (content = '<content>') => `${COMMAND_PREFIX} remember${content !== '<content>' ? ' "' + content + '"' : ' <content>'}`
 }
 
-// 为了向后兼容，保留函数式API
+// Keep functional API for backward compatibility
 function getCommands() {
   return COMMANDS
 }
@@ -57,7 +57,7 @@ function detectCommandPrefix() {
 
 
 
-// 系统路径配置（静态）
+// System path configuration (static)
 const PATHS = {
   POUCH_DIR: '.promptx',
   MEMORY_DIR: '.promptx/memory',
@@ -65,10 +65,10 @@ const PATHS = {
   MEMORY_FILE: '.promptx/memory/declarative.md'
 }
 
-// 版本信息
+// Version information
 const VERSION = '0.0.1'
 
-// 系统状态
+// System states
 const STATES = {
   INITIALIZED: 'initialized',
   ROLE_DISCOVERY: 'role_discovery',
@@ -78,21 +78,21 @@ const STATES = {
   RECALL_WAITING: 'recall-waiting'
 }
 
-// 导出
+// Exports
 module.exports = {
-  // 固定命令前缀
+  // Fixed command prefix
   COMMAND_PREFIX,
   
-  // 命令常量
+  // Command constants
   COMMANDS,
   buildCommand,
   
-  // 向后兼容的函数式API
+  // Backward compatible functional API
   getCommands,
   getBuildCommand,
   detectCommandPrefix,
   
-  // 其他静态常量
+  // Other static constants
   PATHS,
   PACKAGE_NAMES,
   VERSION,
