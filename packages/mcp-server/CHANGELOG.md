@@ -1,5 +1,19 @@
 # @promptx/mcp-server
 
+## 1.17.1
+
+### Patch Changes
+
+- [`c7ed9a1`](https://github.com/Deepractice/PromptX/commit/c7ed9a113e0465e2955ad1d11ad511a2f327440d) Thanks [@deepracticexs](https://github.com/deepracticexs)! - refactor: 优化 Docker 发布流程
+
+  - 将 Docker 发布集成到主发布工作流中
+  - 修复 workflow_run 触发不稳定的问题
+  - 确保 Docker 镜像在 npm 包发布成功后自动构建
+
+- Updated dependencies [[`c7ed9a1`](https://github.com/Deepractice/PromptX/commit/c7ed9a113e0465e2955ad1d11ad511a2f327440d)]:
+  - @promptx/core@1.17.1
+  - @promptx/logger@1.17.1
+
 ## 1.17.0
 
 ### Patch Changes
