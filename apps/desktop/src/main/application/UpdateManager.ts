@@ -79,6 +79,13 @@ export class UpdateManager {
   }
 
   async autoCheckAndDownload(): Promise<void> {
+    // Check if update is already downloaded
+    const currentState = this.updater.getCurrentState()
+    if (currentState === UpdateState.READY_TO_INSTALL) {
+      logger.info('UpdateManager: Update already downloaded and ready to install')
+      return // Skip auto-check, update is ready
+    }
+
     logger.info('UpdateManager: Starting automatic check and download')
     try {
       const result = await this.checkForUpdates()

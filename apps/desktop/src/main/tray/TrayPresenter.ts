@@ -197,9 +197,10 @@ export class TrayPresenter {
         break
         
       case 'ready-to-install':
+        const version = updateInfo?.version || ''
         menuItems.push({
           id: 'install-update',
-          label: 'Install Update',
+          label: version ? `Install Update (${version})` : 'Install Update',
           click: () => this.handleInstallUpdate()
         })
         break
