@@ -198,9 +198,9 @@ export class TrayPresenter {
         
       case 'ready-to-install':
         menuItems.push({
-          id: 'restart-install',
-          label: 'Restart and Install Update',
-          click: () => this.handleRestartAndInstall()
+          id: 'install-update',
+          label: 'Install Update',
+          click: () => this.handleInstallUpdate()
         })
         break
         
@@ -344,9 +344,10 @@ return
     await this.updateManager.downloadUpdate()
   }
 
-  handleRestartAndInstall(): void {
-    logger.info('Restart and install triggered from tray menu')
-    this.updateManager.quitAndInstall()
+  handleInstallUpdate(): void {
+    logger.info('Install update triggered from tray menu')
+    // Call manual check which will show install dialog if ready
+    this.updateManager.checkForUpdatesManual()
   }
 
   async handleShowAbout(): Promise<void> {

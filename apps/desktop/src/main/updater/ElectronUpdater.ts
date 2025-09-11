@@ -271,8 +271,8 @@ export class ElectronUpdater implements AppUpdater {
     
     try {
       this.retryCount = 0
-      logger.info('ElectronUpdater: Calling autoUpdater.checkForUpdatesAndNotify()...')
-      const result = await autoUpdater.checkForUpdatesAndNotify()
+      logger.info('ElectronUpdater: Calling autoUpdater.checkForUpdates()...')
+      const result = await autoUpdater.checkForUpdates()
       
       logger.info('ElectronUpdater: Check result:', {
         hasResult: !!result,

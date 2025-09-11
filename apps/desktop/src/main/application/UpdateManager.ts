@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from 'electron'
+import { BrowserWindow, dialog } from 'electron'
 import * as logger from '@promptx/logger'
 import { createUpdater } from '../updater'
 import { UpdateState, UpdateEvent } from '../updater/types'
@@ -6,14 +6,14 @@ import { UpdateState, UpdateEvent } from '../updater/types'
 export class UpdateManager {
   public readonly updater = createUpdater({
     repo: 'Deepractice/PromptX',
-    autoDownload: true,
+    autoDownload: true, // Auto-download when update is found
     autoInstallOnAppQuit: true,
-    checkInterval: 3600000 // 1 hour
+    checkInterval: 0 // No periodic checks, only on startup and manual
   })
-
+  
   constructor() {
     this.setupEventListeners()
-    this.checkForUpdates()
+    // No automatic operations - all actions must be triggered explicitly
   }
 
   private setupEventListeners(): void {
@@ -41,11 +41,7 @@ export class UpdateManager {
     this.updater.on('update-downloaded', (info) => {
       logger.info('UpdateManager: Update downloaded, ready to install')
       this.sendToAllWindows('update-downloaded', info)
-      
-      // Optional: show dialog to prompt user to restart
-      if (app.isPackaged) {
-        this.showUpdateDialog()
-      }
+      // No automatic dialog - let UI or user decide what to do
     })
 
     this.updater.on('error', (error) => {
@@ -65,28 +61,9 @@ export class UpdateManager {
     })
   }
 
-  private showUpdateDialog(): void {
-    const response = dialog.showMessageBoxSync({
-      type: 'info',
-      title: 'Update Downloaded',
-      message: 'A new version has been downloaded. Would you like to restart the app now?',
-      buttons: ['Restart Now', 'Later'],
-      defaultId: 0,
-      cancelId: 1
-    })
+  // Removed automatic dialog - all UI interactions should be triggered explicitly
 
-    if (response === 0) {
-      this.updater.quitAndInstall()
-    }
-  }
-
-  async checkForUpdates(): Promise<void> {
-    // Temporarily commented to allow development mode testing
-    // if (!app.isPackaged) {
-    //   logger.info('UpdateManager: Skipping update check in development mode')
-    //   return
-    // }
-
+  async checkForUpdates(): Promise<any> {
     try {
       const result = await this.updater.checkForUpdates()
       if (result.updateAvailable) {
@@ -94,27 +71,39 @@ export class UpdateManager {
       } else {
         logger.info('UpdateManager: No updates available')
       }
+      return result
     } catch (error) {
       logger.error('UpdateManager: Check for updates failed:', error)
+      throw error
+    }
+  }
+
+  async autoCheckAndDownload(): Promise<void> {
+    logger.info('UpdateManager: Starting automatic check and download')
+    try {
+      const result = await this.checkForUpdates()
+      if (result.updateAvailable) {
+        logger.info('UpdateManager: Update available, starting download')
+        await this.downloadUpdate()
+      }
+    } catch (error) {
+      logger.error('UpdateManager: Auto check and download failed:', error)
     }
   }
 
   async checkForUpdatesManual(): Promise<void> {
     logger.info('UpdateManager: Manual update check requested')
     
-    // Temporarily commented to allow development mode testing
-    // if (!app.isPackaged) {
-    //   dialog.showMessageBox({
-    //     type: 'info',
-    //     title: 'Development Mode',
-    //     message: 'Update feature is not available in development mode'
-    //   })
-    //   return
-    // }
-
     const state = this.updater.getCurrentState()
     
-    if (state === UpdateState.CHECKING || state === UpdateState.DOWNLOADING) {
+    // If already downloaded, ask to install
+    if (state === UpdateState.READY_TO_INSTALL) {
+      this.showInstallDialog()
+      return
+    }
+    
+    // If checking or downloading, show progress
+    if (state === UpdateState.CHECKING) {
       dialog.showMessageBox({
         type: 'info',
         title: 'Check for Updates',
@@ -122,11 +111,28 @@ export class UpdateManager {
       })
       return
     }
+    
+    if (state === UpdateState.DOWNLOADING) {
+      const progress = this.updater.getProgress()
+      const percent = progress ? Math.round(progress.percent) : 0
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Downloading Update',
+        message: `Downloading update... ${percent}%`
+      })
+      return
+    }
 
+    // Perform check and download if available
     try {
       const result = await this.updater.checkForUpdates()
       
-      if (!result.updateAvailable) {
+      if (result.updateAvailable) {
+        // Auto-download when manually checking
+        await this.downloadUpdate()
+        // After download, show install dialog
+        this.showInstallDialog()
+      } else {
         dialog.showMessageBox({
           type: 'info',
           title: 'Check for Updates',
@@ -139,6 +145,24 @@ export class UpdateManager {
         title: 'Update Check Failed',
         message: `Failed to check for updates: ${error}`
       })
+    }
+  }
+
+  private showInstallDialog(): void {
+    const updateInfo = this.updater.getUpdateInfo()
+    const version = updateInfo?.version || 'new version'
+    
+    const response = dialog.showMessageBoxSync({
+      type: 'info',
+      title: 'Update Ready',
+      message: `Version ${version} is ready to install. Would you like to restart and install now?`,
+      buttons: ['Restart Now', 'Later'],
+      defaultId: 0,
+      cancelId: 1
+    })
+
+    if (response === 0) {
+      this.quitAndInstall()
     }
   }
 
@@ -168,5 +192,11 @@ export class UpdateManager {
 
   getProgress() {
     return this.updater.getProgress()
+  }
+
+  showInstallDialogIfReady(): void {
+    if (this.updater.getCurrentState() === UpdateState.READY_TO_INSTALL) {
+      this.showInstallDialog()
+    }
   }
 }

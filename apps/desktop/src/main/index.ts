@@ -76,11 +76,11 @@ class PromptXDesktopApp {
       logger.error('Failed to auto-start server:', error)
     }
 
-    // Check for updates after initialization (non-blocking)
-    logger.info('Scheduling update check...')
+    // Auto check and download updates on startup (non-blocking)
+    logger.info('Scheduling automatic update check and download...')
     setTimeout(() => {
-      this.updateManager?.checkForUpdates()
-    }, 3000) // Check for updates 3 seconds after startup
+      this.updateManager?.autoCheckAndDownload()
+    }, 5000) // Delay 5 seconds to let app fully initialize
   }
 
   private setupNodeEnvironment(): void {
