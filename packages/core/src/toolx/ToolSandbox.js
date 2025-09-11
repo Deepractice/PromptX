@@ -217,10 +217,40 @@ class ToolSandbox {
       // 1. 确保沙箱目录存在
       await this.directoryManager.ensureDirectories();
 
-      // 2. 如果有依赖，安装它们
+      // 2. 如果有依赖，智能处理它们
       if (Object.keys(this.dependencies).length > 0) {
-        this.logger.debug(`[ToolSandbox] Installing dependencies: ${JSON.stringify(this.dependencies)}`);
-        await this.installDependencies();
+        // 使用PreinstalledDependenciesManager分析依赖
+        try {
+          const { analyzeToolDependencies } = require('@promptx/resource');
+          const analysis = analyzeToolDependencies(this.dependencies);
+          
+          this.logger.info(
+            `[ToolSandbox] Dependency analysis: ` +
+            `${Object.keys(analysis.preinstalled).length} preinstalled, ` +
+            `${Object.keys(analysis.required).length} need installation`
+          );
+          
+          // 记录预装依赖的来源
+          for (const [dep, source] of Object.entries(analysis.sources)) {
+            this.logger.debug(`[ToolSandbox] Using preinstalled: ${dep} from ${source}`);
+          }
+          
+          // 只安装真正需要的依赖
+          if (Object.keys(analysis.required).length > 0) {
+            this.logger.debug(`[ToolSandbox] Installing required dependencies: ${JSON.stringify(analysis.required)}`);
+            // 临时替换dependencies，只安装需要的
+            const originalDeps = this.dependencies;
+            this.dependencies = analysis.required;
+            await this.installDependencies();
+            this.dependencies = originalDeps; // 恢复原始依赖列表
+          } else {
+            this.logger.info('[ToolSandbox] All dependencies are preinstalled, skipping installation!');
+          }
+        } catch (error) {
+          // 如果依赖分析失败，降级到原始行为
+          this.logger.warn(`[ToolSandbox] Dependency analysis failed, falling back to full install: ${error.message}`);
+          await this.installDependencies();
+        }
       } else {
         this.logger.debug('[ToolSandbox] No dependencies to install');
       }

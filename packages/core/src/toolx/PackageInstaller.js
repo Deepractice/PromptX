@@ -13,6 +13,43 @@ const logger = require('@promptx/logger');
 
 class PackageInstaller {
   /**
+   * 获取最优的npm registry
+   * 自动检测用户地区，选择最快的镜像源
+   */
+  static async getOptimalRegistry() {
+    try {
+      // 1. 检查环境变量中的用户配置
+      const userRegistry = process.env.NPM_REGISTRY || process.env.npm_config_registry;
+      if (userRegistry) {
+        logger.info(`[PackageInstaller] Using user configured registry: ${userRegistry}`);
+        return userRegistry;
+      }
+
+      // 2. 检测是否在中国地区（基于时区）
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const isChina = timezone?.includes('Shanghai') || 
+                     timezone?.includes('Hong_Kong') ||
+                     timezone?.includes('Beijing') ||
+                     timezone?.includes('Chongqing');
+      
+      if (isChina) {
+        // 中国地区使用淘宝镜像
+        const chinaRegistry = 'https://registry.npmmirror.com';
+        logger.info(`[PackageInstaller] Detected China timezone (${timezone}), using mirror: ${chinaRegistry}`);
+        return chinaRegistry;
+      }
+
+      // 3. 默认使用官方源
+      const defaultRegistry = 'https://registry.npmjs.org/';
+      logger.debug(`[PackageInstaller] Using default registry: ${defaultRegistry}`);
+      return defaultRegistry;
+      
+    } catch (error) {
+      logger.warn(`[PackageInstaller] Failed to detect optimal registry: ${error.message}`);
+      return 'https://registry.npmjs.org/';
+    }
+  }
+  /**
    * 统一的包安装入口 - 使用 Arborist 替代 pacote
    * @param {Object} options - 安装选项
    * @param {string} options.workingDir - 工作目录
@@ -65,9 +102,12 @@ class PackageInstaller {
       // 使用 Arborist 安装所有依赖（包括传递依赖）
       const Arborist = require('@npmcli/arborist');
       
+      // 获取最优的registry
+      const registry = await this.getOptimalRegistry();
+      
       const arb = new Arborist({
         path: workingDir,
-        registry: 'https://registry.npmjs.org/',
+        registry: registry,
         cache: path.join(os.homedir(), '.npm', '_cacache'),
         save: false,  // 不需要再次更新 package.json
         omit: [],     // 安装所有依赖

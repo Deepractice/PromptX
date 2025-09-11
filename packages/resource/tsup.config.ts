@@ -21,6 +21,11 @@ export default defineConfig({
       console.log('🔍 Discovering resources...')
       execSync('node scripts/generate-registry.js', { stdio: 'inherit' })
       
+      // 复制package.json到dist（与编译后的文件同级）
+      console.log('📦 Copying package.json to dist...')
+      copyFileSync('package.json', 'dist/package.json')
+      console.log('✓ Package.json copied successfully')
+      
       // 复制资源文件到 dist
       console.log('📦 Copying resources to dist...')
       if (existsSync('resources')) {

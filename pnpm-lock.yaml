@@ -174,12 +174,21 @@ importers:
 
   packages/resource:
     dependencies:
+      '@modelcontextprotocol/server-filesystem':
+        specifier: ^2025.8.21
+        version: 2025.8.21(zod@3.25.76)
       '@promptx/logger':
         specifier: workspace:*
         version: link:../logger
+      diff:
+        specifier: ^5.1.0
+        version: 5.2.0
       glob:
         specifier: ^10.4.5
         version: 10.4.5
+      minimatch:
+        specifier: ^10.0.1
+        version: 10.0.3
 
 packages:
 
@@ -1016,6 +1025,10 @@ packages:
   '@modelcontextprotocol/sdk@1.17.5':
     resolution: {integrity: sha512-QakrKIGniGuRVfWBdMsDea/dx1PNE739QJ7gCM41s9q+qaCYTHCdsIBXQVVXry3mfWAiaM9kT22Hyz53Uw8mfg==}
     engines: {node: '>=18'}
+
+  '@modelcontextprotocol/server-filesystem@2025.8.21':
+    resolution: {integrity: sha512-Kk+E+lAuAQPLhrJlrsboEdwTBxWU0DYfsuELIuP3Nvfn8Kvd72BU6KVjhEa5EjbC4YckQDCxH9VJK47x6psxow==}
+    hasBin: true
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2008,6 +2021,10 @@ packages:
 
   detect-node@2.1.0:
     resolution: {integrity: sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==}
+
+  diff@5.2.0:
+    resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
+    engines: {node: '>=0.3.1'}
 
   dir-compare@4.2.0:
     resolution: {integrity: sha512-2xMCmOoMrdQIPHdsTawECdNPwlVFB9zGcz3kuhmBO6U3oU+UQjsue0i8ayLKpgBcm+hcXPMVSGUN9d+pvJ6+VQ==}
@@ -5853,6 +5870,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@modelcontextprotocol/server-filesystem@2025.8.21(zod@3.25.76)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.17.5
+      diff: 5.2.0
+      glob: 10.4.5
+      minimatch: 10.0.3
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - supports-color
+      - zod
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -6971,6 +6999,8 @@ snapshots:
 
   detect-node@2.1.0:
     optional: true
+
+  diff@5.2.0: {}
 
   dir-compare@4.2.0:
     dependencies:

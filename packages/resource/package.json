@@ -22,7 +22,10 @@
   },
   "dependencies": {
     "@promptx/logger": "workspace:*",
-    "glob": "^10.4.5"
+    "glob": "^10.4.5",
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
+    "diff": "^5.1.0",
+    "minimatch": "^10.0.1"
   },
   "publishConfig": {
     "access": "public"

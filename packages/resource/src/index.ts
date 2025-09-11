@@ -2,6 +2,11 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { promises as fsPromises } from 'fs'
 import type { Resource, ResourceRegistry, ResourcePackage } from './types'
+import { 
+  PreinstalledDependenciesManager,
+  getPreinstalledDependenciesManager,
+  analyzeToolDependencies
+} from './PreinstalledDependenciesManager'
 
 const logger = require('@promptx/logger')
 
@@ -240,9 +245,19 @@ module.exports = {
   ...resourcePackage,
   packageResource,
   PackageResource,
-  registry
+  registry,
+  PreinstalledDependenciesManager,
+  getPreinstalledDependenciesManager,
+  analyzeToolDependencies
 }
 
 // ES Module 导出
-export { registry, packageResource, PackageResource }
+export { 
+  registry, 
+  packageResource, 
+  PackageResource,
+  PreinstalledDependenciesManager,
+  getPreinstalledDependenciesManager,
+  analyzeToolDependencies
+}
 export default resourcePackage
