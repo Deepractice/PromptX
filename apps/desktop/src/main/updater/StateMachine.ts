@@ -12,18 +12,26 @@ export class UpdateStateMachine {
   private state: UpdateState = UpdateState.IDLE
   private listeners: Map<UpdateEvent, Set<UpdateCallback>> = new Map()
   private transitions: StateTransition[] = [
+    // Start checking
     { from: [UpdateState.IDLE, UpdateState.ERROR], to: UpdateState.CHECKING },
-    { from: [UpdateState.CHECKING], to: UpdateState.AVAILABLE },
-    { from: [UpdateState.CHECKING], to: UpdateState.NOT_AVAILABLE },
-    { from: [UpdateState.AVAILABLE], to: UpdateState.DOWNLOADING },
-    { from: [UpdateState.DOWNLOADING], to: UpdateState.DOWNLOADED },
-    { from: [UpdateState.DOWNLOADED], to: UpdateState.IDLE },
     
+    // Check results
+    { from: [UpdateState.CHECKING], to: UpdateState.UPDATE_AVAILABLE },
+    { from: [UpdateState.CHECKING], to: UpdateState.IDLE }, // No update available
+    
+    // Download flow
+    { from: [UpdateState.UPDATE_AVAILABLE], to: UpdateState.DOWNLOADING },
+    { from: [UpdateState.DOWNLOADING], to: UpdateState.READY_TO_INSTALL },
+    
+    // After install/restart
+    { from: [UpdateState.READY_TO_INSTALL], to: UpdateState.IDLE },
+    
+    // Error handling
     { 
       from: [
         UpdateState.CHECKING, 
         UpdateState.DOWNLOADING, 
-        UpdateState.AVAILABLE
+        UpdateState.UPDATE_AVAILABLE
       ], 
       to: UpdateState.ERROR 
     }

@@ -1,11 +1,10 @@
 export enum UpdateState {
-  IDLE = 'idle',
-  CHECKING = 'checking',
-  AVAILABLE = 'available',
-  NOT_AVAILABLE = 'not-available',
-  DOWNLOADING = 'downloading',
-  DOWNLOADED = 'downloaded',
-  ERROR = 'error'
+  IDLE = 'idle',                  // Can check for updates
+  CHECKING = 'checking',          // Checking for updates
+  UPDATE_AVAILABLE = 'update-available', // Update found, can download
+  DOWNLOADING = 'downloading',     // Downloading update
+  READY_TO_INSTALL = 'ready-to-install', // Downloaded, ready to restart
+  ERROR = 'error'                 // Error occurred
 }
 
 export interface UpdateInfo {

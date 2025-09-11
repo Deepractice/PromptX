@@ -135,14 +135,14 @@ export class ElectronUpdater implements AppUpdater {
     autoUpdater.on('update-available', (info: any) => {
       logger.info('ElectronUpdater: Update available:', info.version)
       this.updateInfo = this.normalizeUpdateInfo(info)
-      this.stateMachine.transition(UpdateState.AVAILABLE)
+      this.stateMachine.transition(UpdateState.UPDATE_AVAILABLE)
       this.stateMachine.emit('update-available', this.updateInfo)
     })
     
     autoUpdater.on('update-not-available', (info: any) => {
       logger.info('ElectronUpdater: Current version is up-to-date')
       this.updateInfo = null
-      this.stateMachine.transition(UpdateState.NOT_AVAILABLE)
+      this.stateMachine.transition(UpdateState.IDLE)
       this.stateMachine.emit('update-not-available', info)
     })
     
@@ -165,7 +165,7 @@ export class ElectronUpdater implements AppUpdater {
     
     autoUpdater.on('update-downloaded', (info: any) => {
       logger.info('ElectronUpdater: Update downloaded successfully')
-      this.stateMachine.transition(UpdateState.DOWNLOADED)
+      this.stateMachine.transition(UpdateState.READY_TO_INSTALL)
       this.stateMachine.emit('update-downloaded', info)
     })
     
@@ -298,7 +298,7 @@ export class ElectronUpdater implements AppUpdater {
   async downloadUpdate(): Promise<void> {
     await this.initPromise
     
-    if (this.stateMachine.getCurrentState() !== UpdateState.AVAILABLE) {
+    if (this.stateMachine.getCurrentState() !== UpdateState.UPDATE_AVAILABLE) {
       throw new Error('No update available to download')
     }
     
@@ -313,7 +313,7 @@ export class ElectronUpdater implements AppUpdater {
   async quitAndInstall(): Promise<void> {
     await this.initPromise
     
-    if (this.stateMachine.getCurrentState() !== UpdateState.DOWNLOADED) {
+    if (this.stateMachine.getCurrentState() !== UpdateState.READY_TO_INSTALL) {
       logger.warn('ElectronUpdater: Cannot install - update not downloaded')
       return
     }
@@ -327,9 +327,9 @@ export class ElectronUpdater implements AppUpdater {
   }
 
   isUpdateAvailable(): boolean {
-    return this.stateMachine.getCurrentState() === UpdateState.AVAILABLE ||
+    return this.stateMachine.getCurrentState() === UpdateState.UPDATE_AVAILABLE ||
            this.stateMachine.getCurrentState() === UpdateState.DOWNLOADING ||
-           this.stateMachine.getCurrentState() === UpdateState.DOWNLOADED
+           this.stateMachine.getCurrentState() === UpdateState.READY_TO_INSTALL
   }
 
   getUpdateInfo(): UpdateInfo | null {
