@@ -45,13 +45,13 @@ export class ElectronUpdater implements AppUpdater {
   }
 
   private async initializeUpdater(): Promise<void> {
-    // 先初始化存储
+    // Initialize storage first
     await this.storage.init()
     
-    // 动态导入 electron-updater (CommonJS 模块)
+    // Dynamically import electron-updater (CommonJS module)
     try {
       const electronUpdater = await import('electron-updater')
-      // 使用解构访问 autoUpdater - 这是 ESM 兼容性的解决方案
+      // Use destructuring to access autoUpdater - this is the ESM compatibility solution
       const { autoUpdater: updater } = electronUpdater as any
       autoUpdater = updater || electronUpdater.autoUpdater || electronUpdater.default?.autoUpdater
       
@@ -62,7 +62,7 @@ export class ElectronUpdater implements AppUpdater {
       })
       
       if (!autoUpdater) {
-        // 尝试另一种方式
+        // Try another way
         autoUpdater = (electronUpdater as any).autoUpdater
       }
       
@@ -72,12 +72,12 @@ export class ElectronUpdater implements AppUpdater {
       throw error
     }
     
-    // 确保 autoUpdater 已加载
+    // Ensure autoUpdater is loaded
     if (!autoUpdater) {
       throw new Error('autoUpdater failed to load - tried all import methods')
     }
     
-    // 现在可以安全使用 autoUpdater
+    // Now it's safe to use autoUpdater
     await this.restoreState()
     this.setupAutoUpdater()
     this.bindEvents()
@@ -89,9 +89,9 @@ export class ElectronUpdater implements AppUpdater {
     if (state) {
       logger.info('ElectronUpdater: Restoring state:', state.currentState)
       
-      // 恢复状态机
+      // Restore state machine
       if (state.currentState === UpdateState.DOWNLOADING) {
-        // electron-updater 会自动恢复下载
+        // electron-updater will automatically resume download
         this.stateMachine.transition(UpdateState.CHECKING)
       } else if (state.currentState === UpdateState.ERROR) {
         this.stateMachine.transition(UpdateState.IDLE)
@@ -107,17 +107,6 @@ export class ElectronUpdater implements AppUpdater {
     autoUpdater.autoDownload = this.options.autoDownload ?? false
     autoUpdater.autoInstallOnAppQuit = this.options.autoInstallOnAppQuit ?? true
     
-    // 开发模式下强制检查更新
-    if (!app.isPackaged) {
-      autoUpdater.forceDevUpdateConfig = true
-      logger.info('ElectronUpdater: Force dev update config enabled')
-    }
-    
-    // 设置下载缓存路径
-    ;(autoUpdater as any).downloadedUpdateHelper = {
-      cacheDir: this.storage.getCachePath()
-    }
-    
     if (this.options.feedURL) {
       autoUpdater.setFeedURL(this.options.feedURL)
     } else if (this.options.repo) {
@@ -132,7 +121,7 @@ export class ElectronUpdater implements AppUpdater {
   }
 
   private bindEvents(): void {
-    // 监听状态变化以持久化
+    // Listen to state changes for persistence
     this.stateMachine.on('state-changed', async () => {
       await this.saveState()
     })
@@ -265,14 +254,14 @@ export class ElectronUpdater implements AppUpdater {
   }
 
   async checkForUpdates(): Promise<UpdateCheckResult> {
-    // 等待初始化完成
+    // Wait for initialization to complete
     await this.initPromise
     
     logger.info('ElectronUpdater: checkForUpdates called, isPackaged:', app.isPackaged)
     
     if (!app.isPackaged) {
-      logger.info('ElectronUpdater: Running in development mode, attempting check anyway for testing')
-      // 开发模式下也尝试检查，用于测试
+      logger.warn('ElectronUpdater: Running in development mode')
+      return { updateAvailable: false }
     }
     
     if (!autoUpdater) {

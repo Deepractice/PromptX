@@ -17,7 +17,7 @@ export class UpdateManager {
   }
 
   private setupEventListeners(): void {
-    // 监听更新事件，可以发送到渲染进程
+    // Listen to update events, can send to renderer process
     this.updater.on('checking-for-update', () => {
       logger.info('UpdateManager: Checking for updates...')
       this.sendToAllWindows('update-checking')
@@ -42,7 +42,7 @@ export class UpdateManager {
       logger.info('UpdateManager: Update downloaded, ready to install')
       this.sendToAllWindows('update-downloaded', info)
       
-      // 可选：显示对话框提示用户重启
+      // Optional: show dialog to prompt user to restart
       if (app.isPackaged) {
         this.showUpdateDialog()
       }
@@ -68,9 +68,9 @@ export class UpdateManager {
   private showUpdateDialog(): void {
     const response = dialog.showMessageBoxSync({
       type: 'info',
-      title: '更新已下载',
-      message: '新版本已下载完成，是否立即重启应用？',
-      buttons: ['立即重启', '稍后'],
+      title: 'Update Downloaded',
+      message: 'A new version has been downloaded. Would you like to restart the app now?',
+      buttons: ['Restart Now', 'Later'],
       defaultId: 0,
       cancelId: 1
     })
@@ -81,7 +81,7 @@ export class UpdateManager {
   }
 
   async checkForUpdates(): Promise<void> {
-    // 临时注释，允许开发模式测试
+    // Temporarily commented to allow development mode testing
     // if (!app.isPackaged) {
     //   logger.info('UpdateManager: Skipping update check in development mode')
     //   return
@@ -102,12 +102,12 @@ export class UpdateManager {
   async checkForUpdatesManual(): Promise<void> {
     logger.info('UpdateManager: Manual update check requested')
     
-    // 临时注释，允许开发模式测试
+    // Temporarily commented to allow development mode testing
     // if (!app.isPackaged) {
     //   dialog.showMessageBox({
     //     type: 'info',
-    //     title: '开发模式',
-    //     message: '更新功能在开发模式下不可用'
+    //     title: 'Development Mode',
+    //     message: 'Update feature is not available in development mode'
     //   })
     //   return
     // }
@@ -117,8 +117,8 @@ export class UpdateManager {
     if (state === UpdateState.CHECKING || state === UpdateState.DOWNLOADING) {
       dialog.showMessageBox({
         type: 'info',
-        title: '检查更新',
-        message: '正在检查更新，请稍候...'
+        title: 'Check for Updates',
+        message: 'Checking for updates, please wait...'
       })
       return
     }
@@ -129,15 +129,15 @@ export class UpdateManager {
       if (!result.updateAvailable) {
         dialog.showMessageBox({
           type: 'info',
-          title: '检查更新',
-          message: '当前已是最新版本'
+          title: 'Check for Updates',
+          message: 'You are already running the latest version'
         })
       }
     } catch (error) {
       dialog.showMessageBox({
         type: 'error',
-        title: '检查更新失败',
-        message: `无法检查更新: ${error}`
+        title: 'Update Check Failed',
+        message: `Failed to check for updates: ${error}`
       })
     }
   }
