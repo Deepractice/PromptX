@@ -75,3 +75,10 @@ npmRebuild: false
 
 # 生成更新元数据文件
 generateUpdatesFilesForAllChannels: true
+
+# 发布配置
+publish:
+  - provider: github
+    owner: Deepractice
+    repo: PromptX
+    releaseType: release

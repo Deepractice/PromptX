@@ -176,6 +176,13 @@ export class TrayPresenter {
 
     menuItems.push({ type: 'separator' })
 
+    // Check for Updates
+    menuItems.push({
+      id: 'check-updates',
+      label: 'Check for Updates...',
+      click: () => this.handleCheckForUpdates()
+    })
+
     // About
     menuItems.push({
       id: 'about',
@@ -287,6 +294,11 @@ return
 
   handleQuit(): void {
     app.quit()
+  }
+
+  async handleCheckForUpdates(): Promise<void> {
+    logger.info('Manual update check triggered from tray menu')
+    await this.updateManager.checkForUpdatesManual()
   }
 
   async handleShowAbout(): Promise<void> {
