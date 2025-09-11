@@ -180,15 +180,15 @@ importers:
       '@promptx/logger':
         specifier: workspace:*
         version: link:../logger
-      diff:
-        specifier: ^5.1.0
-        version: 5.2.0
       glob:
-        specifier: ^10.4.5
+        specifier: ^10.3.10
         version: 10.4.5
       minimatch:
         specifier: ^10.0.1
         version: 10.0.3
+      semver:
+        specifier: ^7.7.2
+        version: 7.7.2
 
 packages:
 

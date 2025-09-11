@@ -163,12 +163,20 @@ graph TD
 | source | string | 源路径 | "resource/old.md" |
 | destination | string | 目标路径 | "resource/new.md" |
 
-### search_files - 搜索文件
+### search_files - 搜索文件（支持完整 Glob 模式）
 | 参数名 | 类型 | 描述 | 示例 |
 |--------|------|------|------|
 | path | string | 搜索起始路径 | "resource/" |
-| pattern | string | 搜索模式 | "*.md" |
-| excludePatterns | string[] | 可选，排除模式 | ["test/*", "backup/*"] |
+| pattern | string | Glob搜索模式，支持所有标准glob语法 | "*.md", "**/*.js", "role/**/*.{md,txt}" |
+| excludePatterns | string[] | 可选，排除模式（支持glob） | ["node_modules/**", ".*", "**/test/**"] |
+
+**Glob 模式支持**：
+- `*` - 匹配单个目录层级的任意字符
+- `**` - 匹配多个目录层级
+- `?` - 匹配单个字符
+- `[abc]` - 匹配方括号内任意字符
+- `{js,ts}` - 匹配大括号内任一选项
+- `!(pattern)` - 排除匹配模式
 
 ### get_file_info - 获取文件信息
 | 参数名 | 类型 | 描述 | 示例 |
@@ -243,12 +251,36 @@ graph TD
   "destination": "resource/role/assistant/assistant.role.md"
 }
 
-// 搜索Markdown文件
+// 搜索Markdown文件（基础）
 {
   "method": "search_files",
   "path": "resource/",
   "pattern": "*.md",
-  "excludePatterns": ["node_modules/*", ".*"]
+  "excludePatterns": ["node_modules/**", ".*"]
+}
+
+// 搜索多种文件类型
+{
+  "method": "search_files",
+  "path": "resource/",
+  "pattern": "**/*.{js,ts,md}",
+  "excludePatterns": ["**/test/**", "**/node_modules/**"]
+}
+
+// 搜索特定目录下的角色文件
+{
+  "method": "search_files",
+  "path": "resource/role/",
+  "pattern": "**/*.role.md",
+  "excludePatterns": ["**/backup/**"]
+}
+
+// 复杂模式：搜索除测试外的所有JS/TS文件
+{
+  "method": "search_files",
+  "path": "resource/tool/",
+  "pattern": "**/*.{tool.js,manual.md}",
+  "excludePatterns": ["**/test/**", "**/*.test.*", "**/*.spec.*"]
 }
 
 // 获取文件信息

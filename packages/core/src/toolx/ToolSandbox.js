@@ -339,15 +339,25 @@ class ToolSandbox {
       this.sandboxContext = this.vm.createContext(this.createBasicSandboxEnvironment());
     }
 
-    // 统一的模块加载函数 - 使用importx
+    // 统一的模块加载函数 - 使用importx，支持预装包和沙箱包的双重解析
     this.sandboxContext.importx = async (moduleName) => {
       try {
         this.logger.debug(`[ToolSandbox] Loading module: ${moduleName}`);
         
-        // 获取importx实例并加载模块
-        const importFn = await getImportx();
+        // 先尝试从预装包获取
+        const { getPreinstalledDependenciesManager } = require('@promptx/resource');
+        const preinstalledManager = getPreinstalledDependenciesManager();
         
-        // 使用工具沙箱的package.json作为模块解析基础
+        // 使用新的 getPreinstalledModule 方法直接获取模块
+        const preinstalledModule = await preinstalledManager.getPreinstalledModule(moduleName);
+        if (preinstalledModule) {
+          this.logger.debug(`[ToolSandbox] Using preinstalled module: ${moduleName}`);
+          return preinstalledModule;
+        }
+        
+        // 如果不是预装的包，使用 importx 从沙箱加载
+        this.logger.debug(`[ToolSandbox] Loading user-installed module: ${moduleName}`);
+        const importFn = await getImportx();
         const path = require('path');
         const { pathToFileURL } = require('url');
         const toolPackageJson = path.join(this.sandboxPath, 'package.json');

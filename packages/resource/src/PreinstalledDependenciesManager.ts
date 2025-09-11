@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const logger = require('@promptx/logger');
+const semver = require('semver');
 
 interface DependencyInfo {
   version: string;
@@ -26,10 +27,12 @@ interface DependencyAnalysis {
 export class PreinstalledDependenciesManager {
   private availableDependencies: Map<string, DependencyInfo>;
   private packagePaths: Map<string, string>;
+  private loadedModules: Map<string, any>; // 缓存已加载的模块
 
   constructor() {
     this.availableDependencies = new Map();
     this.packagePaths = new Map();
+    this.loadedModules = new Map();
     this.scanPreinstalledDependencies();
   }
 
@@ -143,62 +146,28 @@ export class PreinstalledDependenciesManager {
 
   /**
    * 检查版本兼容性
-   * 使用npm的版本范围规则进行精确匹配
+   * 使用标准的 semver 库进行版本匹配
    */
   private isVersionCompatible(available: string, requested: string): boolean {
-    // 如果请求的是 * 或 latest，总是兼容
+    // 处理特殊情况
     if (requested === '*' || requested === 'latest') {
       return true;
     }
 
-    // 清理版本号（去掉workspace:*等特殊标记）
     if (requested.startsWith('workspace:')) {
       return false; // workspace依赖不能复用
     }
 
-    // 如果版本完全相同，直接返回true
-    if (available === requested) {
-      return true;
-    }
-
-    // 处理常见的版本范围模式
     try {
-      // 提取实际版本号（去掉范围符号）
+      // 清理版本号，去掉前缀（semver.coerce会处理）
       const availableClean = available.replace(/^[\^~>=<]/, '').trim();
-      const requestedClean = requested.replace(/^[\^~>=<]/, '').trim();
       
-      // 解析版本号
-      const parseVersion = (v: string) => {
-        const parts = v.split('.').map(p => parseInt(p, 10) || 0);
-        return { major: parts[0], minor: parts[1] || 0, patch: parts[2] || 0 };
-      };
-      
-      const avail = parseVersion(availableClean);
-      const req = parseVersion(requestedClean);
-      
-      // 根据请求的版本范围类型进行匹配
-      if (requested.startsWith('^')) {
-        // ^ 允许兼容的更新（相同主版本号）
-        return avail.major === req.major && 
-               (avail.minor > req.minor || 
-                (avail.minor === req.minor && avail.patch >= req.patch));
-      } else if (requested.startsWith('~')) {
-        // ~ 允许补丁级别的更新（相同主版本号和次版本号）
-        return avail.major === req.major && 
-               avail.minor === req.minor && 
-               avail.patch >= req.patch;
-      } else if (requested.includes('>=')) {
-        // >= 最低版本要求
-        return avail.major > req.major ||
-               (avail.major === req.major && avail.minor > req.minor) ||
-               (avail.major === req.major && avail.minor === req.minor && avail.patch >= req.patch);
-      } else {
-        // 精确版本匹配
-        return availableClean === requestedClean;
-      }
+      // 使用 semver.satisfies 进行标准的版本范围匹配
+      // 这个函数会正确处理 ^, ~, >=, > 等所有npm版本范围语法
+      return semver.satisfies(availableClean, requested);
     } catch (error) {
-      // 如果解析失败，进行保守的字符串比较
-      logger.debug(`[PreinstalledDeps] Version parsing failed for ${available} vs ${requested}, using conservative match`);
+      // 如果semver无法解析，回退到精确匹配
+      logger.debug(`[PreinstalledDeps] Semver failed for ${available} vs ${requested}: ${(error as Error).message}`);
       return available === requested;
     }
   }
@@ -209,6 +178,133 @@ export class PreinstalledDependenciesManager {
   public getPreinstalledPath(depName: string): string | null {
     const info = this.availableDependencies.get(depName);
     return info?.location || null;
+  }
+
+  /**
+   * 获取预装的模块实例
+   * 直接加载并缓存预装的模块，供 ToolSandbox 使用
+   */
+  public async getPreinstalledModule(moduleName: string): Promise<any | null> {
+    // 检查是否是预装的包
+    if (!this.isPreinstalled(moduleName)) {
+      return null;
+    }
+
+    // 检查缓存（使用完整的模块名作为缓存键）
+    if (this.loadedModules.has(moduleName)) {
+      logger.debug(`[PreinstalledDeps] Returning cached module: ${moduleName}`);
+      return this.loadedModules.get(moduleName);
+    }
+
+    try {
+      logger.info(`[PreinstalledDeps] Loading preinstalled module: ${moduleName}`);
+      
+      // 创建一个从 @promptx/resource 位置的 require
+      // 这样可以正确解析预装在 resource 包中的依赖
+      const { createRequire } = require('module');
+      // 使用源目录的package.json路径，因为node_modules在源目录
+      const sourceDir = path.resolve(__dirname, '..'); // 从dist回到packages/resource
+      const resourcePackageJson = path.join(sourceDir, 'package.json');
+      
+      // 验证文件是否存在
+      if (!fs.existsSync(resourcePackageJson)) {
+        logger.error(`[PreinstalledDeps] package.json not found at: ${resourcePackageJson}`);
+        logger.error(`[PreinstalledDeps] __dirname is: ${__dirname}`);
+        logger.error(`[PreinstalledDeps] sourceDir is: ${sourceDir}`);
+        throw new Error(`package.json not found at: ${resourcePackageJson}`);
+      }
+      
+      logger.info(`[PreinstalledDeps] Using package.json at: ${resourcePackageJson}`);
+      const requireFromResource = createRequire(resourcePackageJson);
+      
+      // 获取模块的实际路径
+      const modulePath = requireFromResource.resolve(moduleName);
+      logger.debug(`[PreinstalledDeps] Module resolved to: ${modulePath}`);
+      
+      // 检查包的类型（通过读取其 package.json）
+      let isESModule = false;
+      try {
+        // 找到模块的 package.json
+        const moduleDir = path.dirname(modulePath);
+        let currentDir = moduleDir;
+        
+        // 向上查找 package.json
+        while (currentDir !== path.dirname(currentDir)) {
+          const pkgPath = path.join(currentDir, 'package.json');
+          if (fs.existsSync(pkgPath)) {
+            const pkgContent = fs.readFileSync(pkgPath, 'utf8');
+            const pkg = JSON.parse(pkgContent);
+            if (pkg.name === moduleName) {
+              isESModule = pkg.type === 'module';
+              logger.debug(`[PreinstalledDeps] Module ${moduleName} is ${isESModule ? 'ESM' : 'CommonJS'}`);
+              break;
+            }
+          }
+          currentDir = path.dirname(currentDir);
+        }
+      } catch (e) {
+        logger.debug(`[PreinstalledDeps] Could not determine module type, assuming CommonJS`);
+      }
+      
+      let module;
+      if (isESModule) {
+        // ES Module - 使用 import
+        logger.debug(`[PreinstalledDeps] Loading as ES Module: ${moduleName}`);
+        module = await import(modulePath);
+      } else {
+        // CommonJS - 使用 require
+        logger.debug(`[PreinstalledDeps] Loading as CommonJS: ${moduleName}`);
+        module = requireFromResource(moduleName);
+      }
+      
+      // 缓存并返回
+      this.loadedModules.set(moduleName, module);
+      logger.info(`[PreinstalledDeps] Successfully loaded ${isESModule ? 'ESM' : 'CommonJS'} module: ${moduleName}`);
+      return module;
+      
+    } catch (error: any) {
+      logger.error(`[PreinstalledDeps] Failed to load module ${moduleName}: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * 获取模块解析的基础路径
+   * 用于 importx 从 @promptx/resource 位置解析预装的包
+   */
+  public getModuleResolutionPath(): string {
+    // 返回 @promptx/resource 的 package.json 路径
+    // importx 将从这里解析预装的包
+    return path.join(__dirname, 'package.json');
+  }
+
+  /**
+   * 检查模块是否预装
+   */
+  public isPreinstalled(moduleName: string): boolean {
+    // 处理带路径的模块名（如 @modelcontextprotocol/server-filesystem/dist/lib.js）
+    // 提取包名进行检查
+    const packageName = this.extractPackageName(moduleName);
+    return this.availableDependencies.has(packageName);
+  }
+  
+  /**
+   * 从模块路径中提取包名
+   */
+  private extractPackageName(moduleName: string): string {
+    // 处理 @scope/package/path 格式
+    if (moduleName.startsWith('@')) {
+      const parts = moduleName.split('/');
+      if (parts.length >= 2) {
+        return `${parts[0]}/${parts[1]}`;
+      }
+    }
+    // 处理 package/path 格式
+    const firstSlash = moduleName.indexOf('/');
+    if (firstSlash > 0) {
+      return moduleName.substring(0, firstSlash);
+    }
+    return moduleName;
   }
 
   /**
