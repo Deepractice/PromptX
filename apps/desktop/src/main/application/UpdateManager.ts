@@ -4,7 +4,7 @@ import { createUpdater } from '../updater'
 import { UpdateState, UpdateEvent } from '../updater/types'
 
 export class UpdateManager {
-  private updater = createUpdater({
+  public readonly updater = createUpdater({
     repo: 'Deepractice/PromptX',
     autoDownload: true,
     autoInstallOnAppQuit: true,
@@ -160,5 +160,13 @@ export class UpdateManager {
 
   quitAndInstall(): void {
     this.updater.quitAndInstall()
+  }
+
+  getUpdateInfo() {
+    return this.updater.getUpdateInfo()
+  }
+
+  getProgress() {
+    return this.updater.getProgress()
   }
 }

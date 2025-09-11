@@ -37,6 +37,7 @@ export class TrayPresenter {
   private logsWindow: BrowserWindow | null = null
   private statusListener: (status: ServerStatus) => void
   private resourceManager: ResourceManager
+  private appIcon: nativeImage | undefined
 
   constructor(
     private readonly startServerUseCase: StartServerUseCase,
@@ -55,9 +56,19 @@ export class TrayPresenter {
     this.statusListener = (status) => this.updateStatus(status)
     this.serverPort.onStatusChange(this.statusListener)
 
-    // Setup update listener
+    // Setup update listeners to refresh menu on state changes
     this.updateManager.onUpdateAvailable(() => {
-      this.initializeMenu() // Refresh menu when update is available
+      this.initializeMenu()
+    })
+    
+    // Listen to all state changes to update menu
+    this.updateManager.updater.on('state-changed', () => {
+      this.initializeMenu()
+    })
+    
+    // Listen to download progress to update menu
+    this.updateManager.updater.on('download-progress', () => {
+      this.initializeMenu()
     })
     
     // Initialize menu
@@ -78,27 +89,6 @@ export class TrayPresenter {
     return tray
   }
 
-  private getIconPath(status: ServerStatus): string {
-    // TODO: Add actual icon paths
-    const iconName = this.getIconName(status)
-    return path.join(__dirname, '..', '..', '..', 'assets', 'icons', iconName)
-  }
-
-  private getIconName(status: ServerStatus): string {
-    switch (status) {
-      case ServerStatus.RUNNING:
-        return 'tray-running.png'
-      case ServerStatus.STOPPED:
-        return 'tray-stopped.png'
-      case ServerStatus.STARTING:
-      case ServerStatus.STOPPING:
-        return 'tray-loading.png'
-      case ServerStatus.ERROR:
-        return 'tray-error.png'
-      default:
-        return 'tray-default.png'
-    }
-  }
 
   private async initializeMenu(): Promise<void> {
     const menuItems = await this.buildMenu()
@@ -176,12 +166,60 @@ export class TrayPresenter {
 
     menuItems.push({ type: 'separator' })
 
-    // Check for Updates
-    menuItems.push({
-      id: 'check-updates',
-      label: 'Check for Updates...',
-      click: () => this.handleCheckForUpdates()
-    })
+    // Update-related menu items based on state
+    const updateState = this.updateManager.getUpdateState()
+    const updateInfo = this.updateManager.getUpdateInfo()
+    
+    switch (updateState) {
+      case 'checking':
+        menuItems.push({
+          id: 'checking',
+          label: 'Checking for Updates...',
+          enabled: false
+        })
+        break
+        
+      case 'update-available':
+        menuItems.push({
+          id: 'download-update',
+          label: `Download Update (${updateInfo?.version})`,
+          click: () => this.handleDownloadUpdate()
+        })
+        break
+        
+      case 'downloading':
+        const progress = this.updateManager.getProgress()
+        menuItems.push({
+          id: 'downloading',
+          label: `Downloading... ${progress ? Math.round(progress.percent) + '%' : ''}`,
+          enabled: false
+        })
+        break
+        
+      case 'ready-to-install':
+        menuItems.push({
+          id: 'restart-install',
+          label: 'Restart and Install Update',
+          click: () => this.handleRestartAndInstall()
+        })
+        break
+        
+      case 'error':
+        menuItems.push({
+          id: 'retry-update',
+          label: 'Retry Update Check',
+          click: () => this.handleCheckForUpdates()
+        })
+        break
+        
+      default: // idle
+        menuItems.push({
+          id: 'check-updates',
+          label: 'Check for Updates...',
+          click: () => this.handleCheckForUpdates()
+        })
+        break
+    }
 
     // About
     menuItems.push({
@@ -299,6 +337,16 @@ return
   async handleCheckForUpdates(): Promise<void> {
     logger.info('Manual update check triggered from tray menu')
     await this.updateManager.checkForUpdatesManual()
+  }
+
+  async handleDownloadUpdate(): Promise<void> {
+    logger.info('Download update triggered from tray menu')
+    await this.updateManager.downloadUpdate()
+  }
+
+  handleRestartAndInstall(): void {
+    logger.info('Restart and install triggered from tray menu')
+    this.updateManager.quitAndInstall()
   }
 
   async handleShowAbout(): Promise<void> {
