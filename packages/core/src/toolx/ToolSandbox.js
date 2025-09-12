@@ -338,6 +338,21 @@ class ToolSandbox {
       this.logger.debug('[ToolSandbox] Creating basic sandbox without dependencies');
       this.sandboxContext = this.vm.createContext(this.createBasicSandboxEnvironment());
     }
+    
+    // 在创建 importx 之前，先将 polyfills 注入到全局
+    // 这样所有通过 importx 动态加载的模块都能访问到这些 polyfills
+    if (typeof global.File === 'undefined' && this.sandboxContext.File) {
+      global.File = this.sandboxContext.File;
+      this.logger.info('[ToolSandbox] Injected File polyfill to global');
+    }
+    if (typeof global.Blob === 'undefined' && this.sandboxContext.Blob) {
+      global.Blob = this.sandboxContext.Blob;
+      this.logger.info('[ToolSandbox] Injected Blob polyfill to global');
+    }
+    if (typeof global.FormData === 'undefined' && this.sandboxContext.FormData) {
+      global.FormData = this.sandboxContext.FormData;
+      this.logger.info('[ToolSandbox] Injected FormData polyfill to global');
+    }
 
     // 统一的模块加载函数 - 使用importx，支持预装包和沙箱包的双重解析
     this.sandboxContext.importx = async (moduleName) => {

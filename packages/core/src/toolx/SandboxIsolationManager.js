@@ -1,6 +1,7 @@
 const path = require('path');
 const Module = require('module');
 const logger = require('@promptx/logger');
+const ElectronPolyfills = require('./ElectronPolyfills');
 
 /**
  * SandboxIsolationManager - 统一管理所有沙箱隔离逻辑
@@ -22,6 +23,7 @@ class SandboxIsolationManager {
       ...options
     };
     this.isolatedContext = null;
+    this.electronPolyfills = new ElectronPolyfills();
   }
 
   /**
@@ -52,7 +54,10 @@ class SandboxIsolationManager {
       // 5. 注入受限的 fs（直接可用）
       fs: this.createRestrictedFS(),
       
-      // 6. 阻止动态代码执行
+      // 6. 注入Electron polyfills（如果需要）
+      ...this.electronPolyfills.getPolyfills(),
+      
+      // 7. 阻止动态代码执行
       eval: () => {
         throw new Error('[SandboxIsolation] eval is not allowed in sandbox');
       },
