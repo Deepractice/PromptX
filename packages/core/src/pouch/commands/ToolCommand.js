@@ -40,36 +40,49 @@ class ToolCommand extends BasePouchCommand {
       logger.info('[ToolCommand] args 类型:', Array.isArray(args) ? 'Array' : typeof args);
       
       if (Array.isArray(args)) {
-        // 从CLI调用时，args是数组：[tool_resource, parameters, ...options]
+        // 从CLI调用时，args是数组：[tool_resource, mode?, parameters?, ...options]
         logger.info('[ToolCommand] 数组参数长度:', args.length);
         logger.info('[ToolCommand] args[0]:', args[0]);
-        logger.info('[ToolCommand] args[1] 类型:', typeof args[1]);
-        logger.info('[ToolCommand] args[1] 值:', args[1]);
         
+        toolArgs = {
+          tool_resource: args[0]
+        };
+        
+        // 解析mode和parameters
         if (args.length >= 2) {
-          // 如果 parameters 是 JSON 字符串，解析它
-          let parameters = args[1];
-          if (typeof parameters === 'string') {
-            logger.info('[ToolCommand] 尝试解析 JSON 字符串参数');
-            try {
-              parameters = JSON.parse(parameters);
-              logger.info('[ToolCommand] JSON 解析成功:', parameters);
-            } catch (e) {
-              logger.warn('[ToolCommand] JSON 解析失败，保持原样:', e.message);
-              // 如果解析失败，保持原样（可能是其他格式的字符串参数）
+          // 检查第二个参数是否是mode
+          const validModes = ['execute', 'manual', 'configure', 'rebuild'];
+          if (validModes.includes(args[1])) {
+            toolArgs.mode = args[1];
+            // 如果有第三个参数，它是parameters
+            if (args.length >= 3) {
+              let parameters = args[2];
+              if (typeof parameters === 'string') {
+                try {
+                  parameters = JSON.parse(parameters);
+                } catch (e) {
+                  // 保持原样
+                }
+              }
+              toolArgs.parameters = parameters;
             }
+          } else {
+            // 第二个参数是parameters（默认execute模式）
+            let parameters = args[1];
+            if (typeof parameters === 'string') {
+              try {
+                parameters = JSON.parse(parameters);
+              } catch (e) {
+                // 保持原样
+              }
+            }
+            toolArgs.parameters = parameters;
           }
-          
-          toolArgs = {
-            tool_resource: args[0],
-            parameters: parameters,
-            rebuild: args.includes('--rebuild'),
-            timeout: this.extractTimeout(args)
-          };
-          logger.info('[ToolCommand] 构建的 toolArgs:', toolArgs);
-        } else {
-          throw new Error('Invalid arguments: expected [tool_resource, parameters]');
         }
+        
+        // 提取timeout
+        toolArgs.timeout = this.extractTimeout(args);
+        logger.info('[ToolCommand] 构建的 toolArgs:', toolArgs);
       } else {
         // 从其他方式调用时，args已经是对象格式
         toolArgs = args;
@@ -79,34 +92,84 @@ class ToolCommand extends BasePouchCommand {
       // 执行工具调用
       const result = await this.executeToolInternal(toolArgs)
       
-      // 格式化响应 - 检查工具内部执行状态
+      // 根据mode格式化不同的响应
       if (result.success) {
-        // 检查工具内部是否也成功
-        const actualToolResult = result.result
-        console.log('[DEBUG] actualToolResult structure:', JSON.stringify(actualToolResult, null, 2))
-        const isToolInternalSuccess = this.isToolInternalSuccess(actualToolResult)
-        console.log('[DEBUG] isToolInternalSuccess result:', isToolInternalSuccess)
+        const mode = result.mode || 'execute'
         
-        if (isToolInternalSuccess) {
-          return `🔧 Tool执行成功
+        switch(mode) {
+          case 'manual':
+            return `📚 工具手册
 
 📋 工具资源: ${result.tool_resource}
-📊 执行结果:
+
+${result.result.manual}
+
+⏱️ 加载时间: ${result.metadata.execution_time_ms}ms`
+          
+          case 'configure':
+            if (result.result.action === 'get') {
+              // 显示配置状态
+              const vars = result.result.variables
+              const summary = result.result.summary
+              let output = `🔧 环境变量配置状态
+
+📋 工具资源: ${result.tool_resource}
+📁 配置文件: ${result.result.envPath}
+
+📊 配置摘要:
+- 总计: ${summary.total} 个变量
+- 已配置: ${summary.configured} 个
+- 必需: ${summary.required} 个
+- 缺失: ${summary.missing} 个
+
+📝 变量详情:
+`
+              for (const [key, info] of Object.entries(vars)) {
+                const status = info.configured ? '✅' : (info.required ? '❌' : '⭕')
+                const value = info.configured ? info.value : (info.default ? `默认: ${info.default}` : '未设置')
+                output += `${status} ${key}: ${value}\n   ${info.description || ''}\n`
+              }
+              
+              return output
+            } else {
+              // 设置/清除操作
+              return `🔧 环境变量配置
+
+📋 工具资源: ${result.tool_resource}
+✅ 操作: ${result.result.action}
+📝 结果: ${result.result.message}
+${result.result.configured ? `📋 已配置: ${result.result.configured.join(', ')}` : ''}
+
+⏱️ 执行时间: ${result.metadata.execution_time_ms}ms`
+            }
+          
+          case 'rebuild':
+          case 'execute':
+          default:
+            // 检查工具内部执行状态
+            const actualToolResult = result.result
+            const isToolInternalSuccess = this.isToolInternalSuccess(actualToolResult)
+            
+            if (isToolInternalSuccess) {
+              return `🔧 Tool${mode === 'rebuild' ? '重建并' : ''}执行成功
+
+📋 工具资源: ${result.tool_resource}
+${mode === 'rebuild' ? '♻️ 模式: 强制重建\n' : ''}📊 执行结果:
 ${JSON.stringify(actualToolResult, null, 2)}
 
 ⏱️ 性能指标:
 - 执行时间: ${result.metadata.execution_time_ms}ms
-- 时间戳: ${result.metadata.timestamp}
-- 版本: ${result.metadata.version}`
-        } else {
-          // ToolSandbox成功，但工具内部失败
-          const internalError = this.extractToolInternalError(actualToolResult)
-          return this.formatToolInternalError(result.tool_resource, internalError, result.metadata)
+- 时间戳: ${result.metadata.timestamp}`
+            } else {
+              const internalError = this.extractToolInternalError(actualToolResult)
+              return this.formatToolInternalError(result.tool_resource, internalError, result.metadata)
+            }
         }
       } else {
         return `❌ Tool执行失败
 
 📋 工具资源: ${result.tool_resource}
+🔧 模式: ${result.mode || 'execute'}
 ❌ 错误信息: ${result.error.message}
 🏷️ 错误类型: ${result.error.type}
 🔢 错误代码: ${result.error.code}
@@ -144,17 +207,16 @@ ${JSON.stringify(actualToolResult, null, 2)}
   }
 
   /**
-   * 内部工具执行方法 - 使用ToolSandbox三阶段执行流程
+   * 内部工具执行方法 - 支持多种执行模式
    * @param {Object} args - 命令参数
    * @param {string} args.tool_resource - 工具资源引用，格式：@tool://tool-name
-   * @param {Object} args.parameters - 传递给工具的参数
-   * @param {boolean} args.rebuild - 是否强制重建沙箱（默认false）
+   * @param {string} args.mode - 执行模式：execute/manual/configure/rebuild（默认execute）
+   * @param {Object} args.parameters - 传递给工具的参数（含义根据mode不同而不同）
    * @param {number} args.timeout - 工具执行超时时间（毫秒，默认30000ms）
    * @returns {Promise<Object>} 执行结果
    */
   async executeToolInternal(args) {
     const startTime = Date.now()
-    let sandbox = null
     
     try {
       logger.info('[ToolCommand] executeToolInternal 接收到的 args:', JSON.stringify(args, null, 2))
@@ -162,79 +224,166 @@ ${JSON.stringify(actualToolResult, null, 2)}
       // 1. 参数验证
       this.validateArguments(args)
       
-      const { tool_resource, parameters, rebuild = false, timeout = 30000 } = args
+      const { tool_resource, mode = 'execute', parameters = {}, timeout = 30000 } = args
       
-      logger.info('[ToolCommand] 解构后的 parameters:', JSON.stringify(parameters, null, 2))
-      logger.info('[ToolCommand] parameters 类型:', typeof parameters)
-      logger.debug(`[PromptXTool] 开始执行工具: ${tool_resource}`)
+      logger.info('[ToolCommand] 执行模式 mode:', mode)
+      logger.debug(`[PromptXTool] 开始执行工具: ${tool_resource}, 模式: ${mode}`)
       
-      // 2. 构建沙箱选项并创建ToolSandbox实例
-      const sandboxOptions = { rebuild, timeout }
-      logger.debug(`[PromptXTool] 沙箱选项:`, sandboxOptions)
-      sandbox = new ToolSandbox(tool_resource, sandboxOptions)
+      // 2. 根据mode分发到不同的处理方法
+      switch(mode) {
+        case 'execute':
+          return await this.executeNormalMode(tool_resource, parameters, timeout, startTime)
+        
+        case 'manual':
+          return await this.executeManualMode(tool_resource, startTime)
+        
+        case 'configure':
+          return await this.executeConfigureMode(tool_resource, parameters, startTime)
+        
+        case 'rebuild':
+          return await this.executeRebuildMode(tool_resource, parameters, timeout, startTime)
+        
+        default:
+          throw new Error(`Unsupported mode: ${mode}. Supported modes: execute, manual, configure, rebuild`)
+      }
       
-      // 3. 设置ResourceManager
+    } catch (error) {
+      // 格式化错误结果
+      logger.error(`[PromptXTool] 工具执行失败: ${error.message}`, error)
+      return this.formatErrorResult(error, args.tool_resource, startTime)
+    }
+  }
+
+  /**
+   * Execute模式 - 正常执行工具
+   */
+  async executeNormalMode(tool_resource, parameters, timeout, startTime) {
+    let sandbox = null
+    
+    try {
+      // 创建沙箱
+      sandbox = new ToolSandbox(tool_resource, { timeout })
       const resourceManager = await this.getResourceManager()
       sandbox.setResourceManager(resourceManager)
       
-      // 4. ToolSandbox三阶段执行流程
-      logger.debug(`[PromptXTool] Phase 1: 分析工具`)
+      // 三阶段执行
+      logger.debug(`[PromptXTool] Execute模式: Phase 1 - 分析工具`)
       const analysisResult = await sandbox.analyze()
       
-      logger.debug(`[PromptXTool] Phase 2: 准备依赖`, { dependencies: analysisResult.dependencies })
+      logger.debug(`[PromptXTool] Execute模式: Phase 2 - 准备依赖`)
       await sandbox.prepareDependencies()
       
-      logger.debug(`[PromptXTool] Phase 3: 执行工具`)
-      logger.info('[ToolCommand] 传递给 sandbox.execute 的 parameters:', JSON.stringify(parameters, null, 2))
-      logger.info('[ToolCommand] parameters 的类型:', typeof parameters)
+      logger.debug(`[PromptXTool] Execute模式: Phase 3 - 执行工具`)
       const result = await sandbox.execute(parameters)
       
-      // 5. 格式化成功结果 
       return this.formatSuccessResult(result, tool_resource, startTime)
       
+    } finally {
+      if (sandbox) await sandbox.cleanup()
+    }
+  }
+
+  /**
+   * Manual模式 - 查看工具手册
+   */
+  async executeManualMode(tool_resource, startTime) {
+    try {
+      const resourceManager = await this.getResourceManager()
+      
+      // 从tool_resource提取工具ID
+      const toolId = tool_resource.replace('@tool://', '')
+      const manualResource = `@manual://${toolId}`
+      
+      logger.debug(`[PromptXTool] Manual模式: 加载手册 ${manualResource}`)
+      const result = await resourceManager.loadResource(manualResource)
+      
+      if (!result.success) {
+        throw new Error(`Failed to load manual: ${result.error?.message || 'Manual not found'}`)
+      }
+      
+      return {
+        success: true,
+        tool_resource: tool_resource,
+        mode: 'manual',
+        result: {
+          manual: result.content,
+          toolId: toolId
+        },
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          timestamp: new Date().toISOString()
+        }
+      }
     } catch (error) {
-      // 6. 智能错误处理 - 检查是否可以自动重试
-      if (error.intelligentError && this.isAutoRetryable(error.intelligentError)) {
-        logger.info(`[PromptXTool] 检测到可自动恢复错误，尝试自动重试: ${error.intelligentError.type}`)
-        
-        try {
-          // 清理当前沙箱
-          await sandbox.cleanup()
-          
-          // 使用重试参数重新创建沙箱
-          const retryParameters = error.intelligentError.agentInstructions.retryParameters
-          const retryArgs = { ...args, ...retryParameters }
-          
-          logger.debug(`[PromptXTool] 自动重试参数:`, retryArgs)
-          
-          // 递归调用（但限制重试次数）
-          if (!args._retryCount) args._retryCount = 0
-          if (args._retryCount < 1) { // 最多重试1次
-            retryArgs._retryCount = args._retryCount + 1
-            logger.info(`[PromptXTool] 开始自动重试 (${retryArgs._retryCount}/1)`)
-            return await this.executeToolInternal(retryArgs)
-          } else {
-            logger.warn(`[PromptXTool] 已达到最大重试次数，停止重试`)
-          }
-        } catch (retryError) {
-          logger.error(`[PromptXTool] 自动重试失败: ${retryError.message}`)
-          // 使用重试错误而不是原始错误
-          error = retryError
+      throw error
+    }
+  }
+
+  /**
+   * Configure模式 - 配置环境变量
+   */
+  async executeConfigureMode(tool_resource, parameters, startTime) {
+    let sandbox = null
+    
+    try {
+      // 创建沙箱（只需要analyze阶段）
+      sandbox = new ToolSandbox(tool_resource)
+      const resourceManager = await this.getResourceManager()
+      sandbox.setResourceManager(resourceManager)
+      
+      // 只执行分析阶段获取toolId和路径
+      logger.debug(`[PromptXTool] Configure模式: 分析工具`)
+      await sandbox.analyze()
+      
+      // 调用沙箱的配置方法
+      const result = await sandbox.configureEnvironment(parameters)
+      
+      return {
+        success: true,
+        tool_resource: tool_resource,
+        mode: 'configure',
+        result: result,
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          timestamp: new Date().toISOString()
         }
       }
       
-      // 7. 格式化错误结果  
-      logger.error(`[PromptXTool] 工具执行失败: ${error.message}`, error)
-      return this.formatErrorResult(error, args.tool_resource, startTime)
     } finally {
-      // 7. 清理沙箱资源
-      if (sandbox) {
-        try {
-          await sandbox.cleanup()
-        } catch (cleanupError) {
-          logger.warn(`[PromptXTool] 沙箱清理失败: ${cleanupError.message}`)
-        }
-      }
+      if (sandbox) await sandbox.cleanup()
+    }
+  }
+
+  /**
+   * Rebuild模式 - 强制重建后执行
+   */
+  async executeRebuildMode(tool_resource, parameters, timeout, startTime) {
+    let sandbox = null
+    
+    try {
+      // 创建沙箱，设置rebuild标志
+      sandbox = new ToolSandbox(tool_resource, { timeout, rebuild: true })
+      const resourceManager = await this.getResourceManager()
+      sandbox.setResourceManager(resourceManager)
+      
+      // 先清理旧沙箱
+      logger.debug(`[PromptXTool] Rebuild模式: 清理旧沙箱`)
+      await sandbox.clearSandbox(true)  // true表示删除目录
+      
+      // 重新执行三阶段
+      logger.debug(`[PromptXTool] Rebuild模式: Phase 1 - 分析工具`)
+      const analysisResult = await sandbox.analyze()
+      
+      logger.debug(`[PromptXTool] Rebuild模式: Phase 2 - 准备依赖（强制重装）`)
+      await sandbox.prepareDependencies()
+      
+      logger.debug(`[PromptXTool] Rebuild模式: Phase 3 - 执行工具`)
+      const result = await sandbox.execute(parameters)
+      
+      return this.formatSuccessResult(result, tool_resource, startTime)
+      
+    } finally {
+      if (sandbox) await sandbox.cleanup()
     }
   }
 
@@ -255,9 +404,23 @@ ${JSON.stringify(actualToolResult, null, 2)}
       throw new Error('Invalid tool_resource format. Must start with @tool://')
     }
 
-    if (!args.parameters || typeof args.parameters !== 'object') {
-      throw new Error('Missing or invalid parameters. Must be an object')
+    // mode参数验证
+    if (args.mode) {
+      const validModes = ['execute', 'manual', 'configure', 'rebuild']
+      if (!validModes.includes(args.mode)) {
+        throw new Error(`Invalid mode: ${args.mode}. Valid modes are: ${validModes.join(', ')}`)
+      }
     }
+
+    // parameters验证根据mode不同而不同
+    if (args.mode === 'execute' || args.mode === 'rebuild' || !args.mode) {
+      // execute和rebuild模式需要parameters是对象
+      if (args.parameters !== undefined && typeof args.parameters !== 'object') {
+        throw new Error('Parameters must be an object for execute/rebuild mode')
+      }
+    }
+    // manual模式不需要parameters
+    // configure模式parameters可选（为空时查看配置）
   }
 
   /**

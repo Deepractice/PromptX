@@ -276,6 +276,131 @@ class ToolSandbox {
   }
 
   /**
+   * 配置环境变量
+   * @param {Object} params - 配置参数
+   * @returns {Promise<Object>} 配置结果
+   */
+  async configureEnvironment(params = {}) {
+    await this.ensureInitialized();
+    
+    if (!this.isAnalyzed) {
+      throw new Error('Tool must be analyzed before configuring. Call analyze() first.');
+    }
+    
+    const ToolEnvironment = require('./ToolEnvironment');
+    const env = new ToolEnvironment(this.toolId, this.sandboxPath);
+    
+    try {
+      // 如果params为空，返回当前配置和元信息
+      if (!params || Object.keys(params).length === 0) {
+        this.logger.debug(`[ToolSandbox] Getting current environment configuration for ${this.toolId}`);
+        
+        // 获取工具声明的环境变量
+        let declaredVars = [];
+        if (this.toolInstance && typeof this.toolInstance.getMetadata === 'function') {
+          const metadata = this.toolInstance.getMetadata();
+          declaredVars = metadata.envVars || [];
+        }
+        
+        // 获取当前配置的环境变量
+        const currentVars = await env.getAll();
+        
+        // 构建状态信息
+        const status = {};
+        for (const varDef of declaredVars) {
+          const value = currentVars[varDef.name];
+          status[varDef.name] = {
+            required: varDef.required || false,
+            configured: value !== undefined,
+            value: value ? '***' : undefined, // 脱敏显示
+            description: varDef.description,
+            default: varDef.default
+          };
+        }
+        
+        // 检查是否有未声明但已配置的变量
+        for (const key of Object.keys(currentVars)) {
+          if (!status[key]) {
+            status[key] = {
+              required: false,
+              configured: true,
+              value: '***',
+              description: 'User defined variable',
+              undeclared: true
+            };
+          }
+        }
+        
+        return {
+          action: 'get',
+          toolId: this.toolId,
+          envPath: env.envPath,
+          variables: status,
+          summary: {
+            total: Object.keys(status).length,
+            configured: Object.values(status).filter(v => v.configured).length,
+            required: Object.values(status).filter(v => v.required).length,
+            missing: Object.values(status).filter(v => v.required && !v.configured).length
+          }
+        };
+      }
+      
+      // 特殊操作
+      if (params._action === 'clear') {
+        this.logger.info(`[ToolSandbox] Clearing all environment variables for ${this.toolId}`);
+        await env.clear();
+        return {
+          action: 'clear',
+          success: true,
+          message: 'All environment variables cleared'
+        };
+      }
+      
+      if (params._action === 'delete' && params._keys) {
+        this.logger.info(`[ToolSandbox] Deleting environment variables for ${this.toolId}`);
+        const deleted = [];
+        for (const key of params._keys) {
+          if (await env.delete(key)) {
+            deleted.push(key);
+          }
+        }
+        return {
+          action: 'delete',
+          success: true,
+          deleted: deleted
+        };
+      }
+      
+      // 设置环境变量
+      this.logger.info(`[ToolSandbox] Setting environment variables for ${this.toolId}`);
+      const configured = [];
+      for (const [key, value] of Object.entries(params)) {
+        if (!key.startsWith('_')) { // 忽略以_开头的特殊参数
+          await env.set(key, value);
+          configured.push(key);
+        }
+      }
+      
+      return {
+        action: 'set',
+        success: true,
+        configured: configured,
+        envPath: env.envPath,
+        message: `Configured ${configured.length} environment variable(s)`
+      };
+      
+    } catch (error) {
+      const enhancedError = this.errorManager.analyzeError(error, {
+        phase: 'configure',
+        toolId: this.toolId,
+        params: params
+      });
+      this.logger.error(`[ToolSandbox] Configuration failed: ${enhancedError.message}`);
+      throw enhancedError;
+    }
+  }
+
+  /**
    * 执行工具
    */
   async execute(params = {}) {

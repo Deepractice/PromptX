@@ -5,75 +5,83 @@ const outputAdapter = new MCPOutputAdapter();
 
 export const toolxTool: ToolWithHandler = {
   name: 'toolx',
-  description: `🔧 [ToolX执行器] 执行PromptX工具体系(ToolX)中的JavaScript功能
-基于PromptX工具生态系统，提供安全可控的工具执行环境。
+  description: `🔧 [ToolX多模式执行器] 执行、配置、查看PromptX工具体系中的JavaScript工具
+基于PromptX工具生态系统，提供安全可控的工具执行环境，支持多种操作模式。
 
-何时使用此工具:
-- 已通过promptx_learn学习了@manual://工具名并理解其功能
-- 用户明确要求使用某个工具解决具体问题
-- 当前任务正好匹配工具的设计用途
-- 所有必需参数都已准备就绪
-- 确认这是解决问题的最佳工具选择
+🎯 四种执行模式:
+1. execute（默认）- 执行工具的业务逻辑
+2. manual - 查看工具的使用手册
+3. configure - 配置工具的环境变量
+4. rebuild - 强制重建沙箱后执行
+
+📋 使用场景示例:
+
+【执行工具】mode: 'execute' 或省略
+- 正常执行工具功能
+- 需要传递业务参数
+- 示例: {tool_resource: '@tool://text-analyzer', parameters: {text: 'hello'}}
+
+【查看手册】mode: 'manual'
+- 查看工具的完整使用说明
+- 不需要parameters参数
+- 示例: {tool_resource: '@tool://text-analyzer', mode: 'manual'}
+
+【配置环境】mode: 'configure'
+- 设置API密钥、账号密码等环境变量
+- parameters为空时查看当前配置状态
+- 示例: {tool_resource: '@tool://email-manager', mode: 'configure', parameters: {EMAIL: 'user@gmail.com'}}
+
+【重建执行】mode: 'rebuild'
+- 遇到依赖问题时强制重建沙箱
+- 清理旧环境并重新安装依赖
+- 示例: {tool_resource: '@tool://text-analyzer', mode: 'rebuild', parameters: {text: 'hello'}}
 
 核心执行能力:
 - 动态加载和执行JavaScript工具模块
+- 工具级环境变量隔离管理
 - 自动处理工具依赖的npm包安装
 - 提供隔离的执行沙箱环境
-- 支持异步工具执行和超时控制
-- 完整的错误捕获和友好提示
-- 工具执行状态的实时监控
-- 参数验证和类型检查
+- 支持查看工具手册文档
+- 配置管理敏感信息（API Keys等）
 
-使用前置条件:
-- 必须先使用promptx_learn学习@manual://工具名
-- 完全理解工具的功能、参数和返回值格式
-- 确认工具适用于当前的使用场景
-- 准备好所有必需的参数值
-
-执行流程规范:
-1. 识别需求 → 2. learn manual → 3. 理解功能 → 4. 准备参数 → 5. 执行工具
-
-严格禁止:
-- 未学习manual就直接调用工具
-- 基于猜测使用工具
-- 将工具用于非设计用途
-- 忽略工具的使用限制和边界
+使用建议:
+1. 首次使用工具前，先用 mode: 'manual' 查看手册
+2. 需要API密钥的工具，先用 mode: 'configure' 配置
+3. 遇到依赖错误时，尝试 mode: 'rebuild' 重建环境
+4. 日常使用直接调用或用 mode: 'execute'
 
 你应该:
-1. 永远遵循"先学习后使用"的原则
-2. 仔细阅读manual中的参数说明和示例
-3. 根据manual中的最佳实践使用工具
-4. 处理工具返回的错误并给出建议
-5. 向用户解释工具的执行过程和结果
-6. 在工具执行失败时参考manual的故障排除
-7. 记录工具使用经验供后续参考
-8. 推荐相关工具形成完整解决方案`,
+1. 根据用户需求选择合适的mode
+2. 配置环境变量时注意保护敏感信息
+3. 出现问题时尝试rebuild模式
+4. 查看manual了解工具的完整功能`,
   inputSchema: {
     type: 'object',
     properties: {
       tool_resource: {
         type: 'string',
-        description: '工具资源引用，格式：@tool://tool-name，如@tool://calculator',
+        description: '工具资源引用，格式：@tool://tool-name',
         pattern: '^@tool://.+'
+      },
+      mode: {
+        type: 'string',
+        enum: ['execute', 'manual', 'configure', 'rebuild'],
+        description: '执行模式：execute(执行工具), manual(查看手册), configure(配置环境变量), rebuild(重建沙箱)',
+        default: 'execute'
       },
       parameters: {
         type: 'object',
-        description: '传递给工具的参数对象'
-      },
-      rebuild: {
-        type: 'boolean',
-        description: '是否强制重建沙箱（默认false）。用于处理异常情况如node_modules损坏、权限问题等。正常情况下会自动检测依赖变化',
-        default: false
+        description: '传递给工具的参数对象（根据mode不同含义不同）'
       },
       timeout: {
         type: 'number',
-        description: '工具执行超时时间（毫秒），默认30000ms',
+        description: '工具执行超时时间（毫秒），默认30000ms，仅execute和rebuild模式使用',
         default: 30000
       }
     },
-    required: ['tool_resource', 'parameters']
+    required: ['tool_resource']
   },
-  handler: async (args: { tool_resource: string; parameters: any; rebuild?: boolean; timeout?: number }) => {
+  handler: async (args: { tool_resource: string; mode?: string; parameters?: any; timeout?: number }) => {
     const core = await import('@promptx/core');
     const coreExports = core.default || core;
     const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
@@ -82,9 +90,23 @@ export const toolxTool: ToolWithHandler = {
       throw new Error('CLI not available in @promptx/core');
     }
     
-    const cliArgs = [args.tool_resource, JSON.stringify(args.parameters)];
-    if (args.rebuild) cliArgs.push('--rebuild');
-    if (args.timeout) cliArgs.push('--timeout', args.timeout.toString());
+    // 构建CLI参数
+    const cliArgs = [args.tool_resource];
+    
+    // 添加mode（如果指定且不是默认的execute）
+    if (args.mode && args.mode !== 'execute') {
+      cliArgs.push(args.mode);
+    }
+    
+    // 添加parameters（如果有）
+    if (args.parameters) {
+      cliArgs.push(JSON.stringify(args.parameters));
+    }
+    
+    // 添加timeout
+    if (args.timeout) {
+      cliArgs.push('--timeout', args.timeout.toString());
+    }
     
     const result = await cli.execute('toolx', cliArgs);
     return outputAdapter.convertToMCPFormat(result);
