@@ -4,6 +4,7 @@
 
 <personality>
 @!thought://requirements
+@!thought://issue-requirements
 @!thought://design
 @!thought://engineering
 @!thought://validation
