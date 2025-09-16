@@ -286,6 +286,43 @@ class ToolSandbox {
     }
 
     try {
+      // 环境变量自动检查（排除配置类操作）
+      const configActions = ['configure', 'config', 'setup', 'init', 'check', 'info'];
+      const isConfigAction = params.action && configActions.includes(params.action.toLowerCase());
+      
+      if (!isConfigAction && typeof this.toolInstance.getMetadata === 'function') {
+        const metadata = this.toolInstance.getMetadata();
+        if (metadata.envVars && Array.isArray(metadata.envVars)) {
+          this.logger.debug(`[ToolSandbox] Checking environment variables for ${this.toolId}`);
+          const ToolEnvironment = require('./ToolEnvironment');
+          const env = new ToolEnvironment(this.toolId, this.sandboxPath);
+          
+          for (const varDef of metadata.envVars) {
+            if (varDef.required) {
+              const value = await env.get(varDef.name);
+              if (!value) {
+                this.logger.warn(`[ToolSandbox] Missing required environment variable: ${varDef.name}`);
+                // 返回格式符合 ToolCommand 的预期
+                return {
+                  success: false,
+                  error: {
+                    code: 'MISSING_ENV_VAR',
+                    message: `缺少必需的环境变量: ${varDef.name}`,
+                    details: {
+                      missing: varDef.name,
+                      description: varDef.description || `请配置 ${varDef.name}`,
+                      instruction: `请使用 action: "configure" 配置环境变量，或直接编辑 ${env.envPath} 文件`,
+                      envPath: env.envPath
+                    }
+                  }
+                };
+              }
+            }
+          }
+          this.logger.debug(`[ToolSandbox] All required environment variables are configured`);
+        }
+      }
+      
       // 参数验证
       if (typeof this.toolInstance.validate === 'function') {
         const validation = this.toolInstance.validate(params);
@@ -304,6 +341,15 @@ class ToolSandbox {
       
       script.runInContext(context);
       const exported = context.module.exports;
+      
+      // 注入 getEnvironment 方法，让工具可以访问环境变量
+      const ToolEnvironment = require('./ToolEnvironment');
+      const toolboxPath = this.sandboxPath;
+      const toolId = this.toolId;
+      
+      exported.getEnvironment = function() {
+        return new ToolEnvironment(toolId, toolboxPath);
+      };
       
       // 执行工具的execute方法
       const result = await exported.execute(params);

@@ -48,6 +48,7 @@ flowchart TD
 - 分析现有解决方案的不足
 - 确定工具的核心价值主张
 - 明确功能边界和使用场景
+- **识别配置需求**：哪些信息不应该硬编码在工具中
 
 **Step 1.2: 技术方案选择**
 ```mermaid
@@ -63,7 +64,73 @@ flowchart TD
 - 坚守Node.js生态，绝不使用pip/conda等
 - 遇到无解时，与用户讨论功能简化
 
-**Step 1.3: 工具说明书设计**
+**Step 1.3: 环境变量识别与设计**
+
+**识别哪些信息需要环境变量**：
+```mermaid
+flowchart TD
+    A[工具需要的信息] --> B{是否敏感信息?}
+    B -->|是| C[必须用环境变量]
+    B -->|否| D{是否因环境而异?}
+    D -->|是| E[应该用环境变量]
+    D -->|否| F{用户是否需要配置?}
+    F -->|是| G[建议用环境变量]
+    F -->|否| H[可以硬编码]
+    
+    C --> I[required: true]
+    E --> J[提供 default 值]
+    G --> J
+```
+
+**典型的环境变量场景**：
+- ✅ **必须环境变量**：
+  - API Keys、密钥、Token
+  - 数据库密码、连接串
+  - 私钥、证书
+  
+- ✅ **建议环境变量**：
+  - API 端点 URL（开发/生产环境不同）
+  - 超时设置、重试次数
+  - 调试开关、日志级别
+  
+- ❌ **不需要环境变量**：
+  - 算法参数、业务逻辑常量
+  - 固定的数据格式、正则表达式
+  - 工具内部使用的常量
+
+**环境变量声明示例**：
+```javascript
+getMetadata() {
+  return {
+    name: 'tool-name',
+    description: '工具描述',
+    version: '1.0.0',
+    
+    // 声明环境变量需求
+    envVars: [
+      // 敏感信息 - 必需
+      { 
+        name: 'API_KEY',
+        required: true,
+        description: 'API认证密钥'
+      },
+      // 环境相关 - 提供默认值
+      { 
+        name: 'API_ENDPOINT',
+        default: 'https://api.example.com',
+        description: '服务端点URL'
+      },
+      // 行为配置 - 可选
+      { 
+        name: 'DEBUG_MODE',
+        default: 'false',
+        description: '调试模式开关'
+      }
+    ]
+  };
+}
+
+**Step 1.4: 工具说明书设计**
 ```xml
 <!-- {tool-name}.manual.md 模板 -->
 <manual>

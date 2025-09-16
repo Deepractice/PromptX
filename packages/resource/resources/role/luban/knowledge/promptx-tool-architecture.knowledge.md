@@ -301,6 +301,200 @@ async execute(params) {
 // - 内置缓存机制，提升性能
 ```
 
+## 🔐 环境变量管理系统
+
+### 核心设计理念
+- **声明式配置**：工具必须在 `getMetadata()` 中预先声明需要的环境变量
+- **工具级隔离**：每个工具拥有独立的 `.env` 文件，位于 `~/.promptx/toolbox/{toolId}/.env`
+- **敏感信息安全**：API Keys、密钥、认证信息等通过环境变量管理，而非硬编码
+
+### 典型使用场景
+
+#### 1. API 认证信息
+```javascript
+envVars: [
+  { name: 'OPENAI_API_KEY', required: true, description: 'OpenAI API 密钥' },
+  { name: 'GITHUB_TOKEN', required: true, description: 'GitHub 访问令牌' },
+  { name: 'DB_CONNECTION_STRING', required: true, description: '数据库连接串' }
+]
+```
+
+#### 2. 服务端点配置
+```javascript
+envVars: [
+  { name: 'API_ENDPOINT', default: 'https://api.example.com', description: 'API 端点' },
+  { name: 'WEBHOOK_URL', description: 'Webhook 回调地址' },
+  { name: 'PROXY_SERVER', description: '代理服务器地址' }
+]
+```
+
+#### 3. 工具行为配置
+```javascript
+envVars: [
+  { name: 'TIMEOUT', default: '30000', description: '请求超时时间(ms)' },
+  { name: 'MAX_RETRIES', default: '3', description: '最大重试次数' },
+  { name: 'DEBUG_MODE', default: 'false', description: '调试模式开关' }
+]
+```
+
+### 环境变量声明规范
+
+```javascript
+module.exports = {
+  getMetadata() {
+    return {
+      name: 'openai-assistant',
+      description: 'OpenAI API 集成工具',
+      version: '1.0.0',
+      
+      // 声明需要的环境变量
+      envVars: [
+        { 
+          name: 'OPENAI_API_KEY',        // 环境变量名（建议大写+下划线）
+          required: true,                 // 是否必需
+          description: 'OpenAI API密钥'   // 用途说明
+        },
+        { 
+          name: 'OPENAI_MODEL',
+          default: 'gpt-4',               // 提供默认值
+          description: '默认使用的模型'
+        },
+        { 
+          name: 'API_TIMEOUT',
+          default: '30000',               
+          description: '请求超时时间(毫秒)'
+        }
+      ]
+    };
+  }
+};
+```
+
+### getEnvironment() API 完整使用
+
+```javascript
+async execute(params) {
+  // 获取环境变量管理器
+  const env = this.getEnvironment();
+  
+  // ===== 读取操作 =====
+  const apiKey = await env.get('OPENAI_API_KEY');
+  if (!apiKey) {
+    return {
+      error: '缺少必需的配置',
+      message: '请先设置 OPENAI_API_KEY 环境变量',
+      instruction: '使用 set 操作配置: {"action": "set", "key": "OPENAI_API_KEY", "value": "sk-..."}'
+    };
+  }
+  
+  // 使用默认值
+  const model = await env.get('OPENAI_MODEL') || 'gpt-4';
+  const timeout = parseInt(await env.get('API_TIMEOUT') || '30000');
+  
+  // ===== 写入操作 =====
+  if (params.action === 'configure') {
+    // 交互式配置
+    await env.set('OPENAI_API_KEY', params.apiKey);
+    await env.set('OPENAI_MODEL', params.model || 'gpt-4');
+    
+    return { 
+      success: true, 
+      message: '配置已保存到 .env 文件' 
+    };
+  }
+  
+  // ===== 批量操作 =====
+  // 获取所有环境变量
+  const allVars = await env.getAll();
+  
+  // 批量设置
+  await env.setAll({
+    'OPENAI_API_KEY': 'sk-...',
+    'OPENAI_MODEL': 'gpt-4',
+    'API_TIMEOUT': '60000'
+  });
+  
+  // 删除不需要的变量
+  await env.delete('OLD_API_KEY');
+  
+  // ===== 使用配置执行实际逻辑 =====
+  const openai = await importx('openai');
+  const client = new openai.OpenAI({ 
+    apiKey: apiKey,
+    timeout: timeout 
+  });
+  
+  const response = await client.chat.completions.create({
+    model: model,
+    messages: params.messages
+  });
+  
+  return response;
+}
+```
+
+### 环境变量管理最佳实践
+
+#### 1. 配置验证模式
+```javascript
+async execute(params) {
+  // 首次运行时检查配置
+  const env = this.getEnvironment();
+  const metadata = this.getMetadata();
+  
+  // 验证必需的环境变量
+  for (const varDef of metadata.envVars) {
+    if (varDef.required) {
+      const value = await env.get(varDef.name);
+      if (!value) {
+        return {
+          needConfig: true,
+          missing: varDef.name,
+          description: varDef.description,
+          action: '请先配置必需的环境变量'
+        };
+      }
+    }
+  }
+  
+  // 配置完整，继续执行
+  // ...
+}
+```
+
+#### 2. 敏感信息处理
+```javascript
+// 永远不要在日志中打印敏感信息
+const apiKey = await env.get('API_KEY');
+console.log(`Using API Key: ${apiKey.substring(0, 4)}****`); // 脱敏显示
+
+// 错误信息中也要注意脱敏
+try {
+  // API 调用
+} catch (error) {
+  // 清理错误信息中的敏感数据
+  const safeError = error.message.replace(apiKey, '***KEY***');
+  throw new Error(safeError);
+}
+```
+
+#### 3. 配置迁移支持
+```javascript
+// 支持从旧配置迁移
+async function migrateConfig() {
+  const env = this.getEnvironment();
+  
+  // 检查旧的配置名称
+  const oldKey = await env.get('OPENAI_KEY');
+  if (oldKey && !await env.get('OPENAI_API_KEY')) {
+    // 迁移到新名称
+    await env.set('OPENAI_API_KEY', oldKey);
+    await env.delete('OPENAI_KEY');
+    console.log('配置已迁移: OPENAI_KEY -> OPENAI_API_KEY');
+  }
+}
+```
+
 ## 🛡️ 安全与最佳实践
 
 ### 安全编程原则
