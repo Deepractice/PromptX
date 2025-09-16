@@ -64,7 +64,7 @@ flowchart TD
 - 坚守Node.js生态，绝不使用pip/conda等
 - 遇到无解时，与用户讨论功能简化
 
-**Step 1.3: 环境变量识别与设计**
+**Step 1.3: 环境变量识别与设计（重要！配合toolx configure模式）**
 
 **识别哪些信息需要环境变量**：
 ```mermaid
@@ -130,7 +130,7 @@ getMetadata() {
   };
 }
 
-**Step 1.4: 工具说明书设计**
+**Step 1.4: 工具说明书设计（必须先于代码，配合toolx manual模式）**
 ```xml
 <!-- {tool-name}.manual.md 模板 -->
 <manual>
@@ -172,7 +172,7 @@ getMetadata() {
 </manual>
 ```
 
-**Step 1.4: 接口规范设计**
+**Step 1.5: 接口规范设计**
 ```javascript
 // 标准工具接口模板
 module.exports = {
@@ -205,6 +205,7 @@ module.exports = {
   
   async execute(params) {
     // 🚀 沙箱直接提供importx函数，统一导入所有模块
+    // 无需require('importx')，沙箱环境自动提供
     const lodash = await importx('lodash');
     const axios = await importx('axios');  
     const validator = await importx('validator');
@@ -396,6 +397,73 @@ getSchema() {
 }
 ```
 
+## 🎯 Toolx 四种模式使用流程（重要！）
+
+### 工具使用的黄金法则
+```mermaid
+flowchart LR
+    A[第一次使用工具] --> B[mode: manual]
+    B --> C{需要环境变量?}
+    C -->|是| D[mode: configure]
+    C -->|否| E[mode: execute]
+    D --> E
+    E --> F{执行失败?}
+    F -->|依赖问题| G[mode: rebuild]
+    F -->|参数错误| B
+    G --> E
+```
+
+**四种模式详解**：
+
+1. **manual 模式** - 查看工具使用手册（必须先执行）
+   ```javascript
+   // 第一步：永远先查看手册了解工具
+   await toolx('@tool://tool-name', { mode: 'manual' })
+   // 返回完整的使用说明书，了解参数要求和使用限制
+   ```
+
+2. **configure 模式** - 管理环境变量（敏感信息配置）
+   ```javascript
+   // 查看当前配置状态
+   await toolx('@tool://tool-name', { mode: 'configure' })
+   
+   // 设置环境变量
+   await toolx('@tool://tool-name', { 
+     mode: 'configure',
+     parameters: { API_KEY: 'sk-...', ENDPOINT: 'https://api.example.com' }
+   })
+   ```
+
+3. **execute 模式** - 执行工具业务逻辑（默认模式）
+   ```javascript
+   // 了解参数要求后执行工具
+   await toolx('@tool://tool-name', {
+     mode: 'execute',  // 可省略，默认值
+     parameters: { /* 工具需要的参数 */ }
+   })
+   ```
+
+4. **rebuild 模式** - 强制重建沙箱环境（解决依赖问题）
+   ```javascript
+   // 遇到依赖错误时使用
+   await toolx('@tool://tool-name', {
+     mode: 'rebuild',
+     parameters: { /* 工具参数 */ }
+   })
+   ```
+
+**最佳实践流程**：
+1. ✅ 始终先用 `manual` 模式了解工具
+2. ✅ 需要API密钥时用 `configure` 模式设置
+3. ✅ 理解参数后用 `execute` 模式执行
+4. ✅ 依赖问题时用 `rebuild` 模式修复
+
+**常见错误及解决**：
+- ❌ 直接执行未知工具 → 先看 manual
+- ❌ 缺少环境变量 → 用 configure 设置
+- ❌ 依赖安装失败 → 用 rebuild 重建
+- ❌ 参数格式错误 → 回到 manual 确认
+
 ### Phase 3: 沙箱测试 (15分钟)
 
 ```mermaid
@@ -556,11 +624,8 @@ getDependencies() {
 ### 智能错误处理
 ```javascript
 async execute(params) {
-  // 🚀 importx统一导入
-  const { import: importx } = require('importx');
-  
   try {
-    // ✅ 所有依赖统一导入
+    // 🚀 沙箱环境直接提供importx，无需require
     const axios = await importx('axios');
     const validator = await importx('validator');
     
@@ -582,16 +647,13 @@ async execute(params) {
 ### 性能优化模式
 ```javascript
 async execute(params) {
-  // 🚀 importx统一导入
-  const { import: importx } = require('importx');
-  
   // 缓存机制
   const cacheKey = this.generateCacheKey(params);
   if (this.cache.has(cacheKey)) {
     return this.cache.get(cacheKey);
   }
   
-  // ✅ 按需导入模块
+  // 🚀 沙箱提供importx，按需导入模块
   const lodash = await importx('lodash');
   
   // 执行逻辑

@@ -8,53 +8,75 @@ export const toolxTool: ToolWithHandler = {
   description: `🔧 [ToolX多模式执行器] 执行、配置、查看PromptX工具体系中的JavaScript工具
 基于PromptX工具生态系统，提供安全可控的工具执行环境，支持多种操作模式。
 
-🎯 四种执行模式:
-1. execute（默认）- 执行工具的业务逻辑
-2. manual - 查看工具的使用手册
-3. configure - 配置工具的环境变量
-4. rebuild - 强制重建沙箱后执行
+⚠️ 重要原则：提高执行成功率的黄金法则
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【第一次使用工具时的标准流程】
+1️⃣ 先用 mode: 'manual' 查看手册，了解参数要求
+2️⃣ 如有环境变量需求，用 mode: 'configure' 配置
+3️⃣ 最后用 mode: 'execute' 执行工具
 
-📋 使用场景示例:
+❌ 错误做法：直接执行未知工具 → 参数错误 → 执行失败
+✅ 正确做法：先看手册 → 理解参数 → 正确执行
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-【执行工具】mode: 'execute' 或省略
-- 正常执行工具功能
-- 需要传递业务参数
-- 示例: {tool_resource: '@tool://text-analyzer', parameters: {text: 'hello'}}
+🎯 四种执行模式详解:
 
-【查看手册】mode: 'manual'
-- 查看工具的完整使用说明
-- 不需要parameters参数
-- 示例: {tool_resource: '@tool://text-analyzer', mode: 'manual'}
+【1. manual模式】- 查看工具使用手册（首次必用）
+目的：了解工具功能、参数格式、使用限制
+使用：{tool_resource: '@tool://tool-name', mode: 'manual'}
+特点：不需要parameters参数，返回完整使用说明
 
-【配置环境】mode: 'configure'
-- 设置API密钥、账号密码等环境变量
-- parameters为空时查看当前配置状态
-- 示例: {tool_resource: '@tool://email-manager', mode: 'configure', parameters: {EMAIL: 'user@gmail.com'}}
+【2. configure模式】- 配置工具环境变量
+目的：设置API密钥、账号密码等敏感信息
+查看：{tool_resource: '@tool://tool-name', mode: 'configure'}
+设置：{tool_resource: '@tool://tool-name', mode: 'configure', parameters: {KEY: 'value'}}
+特点：parameters为空时显示配置状态，有值时设置环境变量
 
-【重建执行】mode: 'rebuild'
-- 遇到依赖问题时强制重建沙箱
-- 清理旧环境并重新安装依赖
-- 示例: {tool_resource: '@tool://text-analyzer', mode: 'rebuild', parameters: {text: 'hello'}}
+【3. execute模式】- 执行工具业务逻辑（默认）
+目的：执行工具的实际功能
+使用：{tool_resource: '@tool://tool-name', parameters: {...}}
+特点：必须按照manual中的参数格式传递parameters
 
-核心执行能力:
-- 动态加载和执行JavaScript工具模块
+【4. rebuild模式】- 强制重建沙箱后执行
+目的：解决依赖问题、清理缓存
+使用：{tool_resource: '@tool://tool-name', mode: 'rebuild', parameters: {...}}
+特点：删除旧沙箱，重新安装依赖，然后执行
+
+📋 典型使用场景:
+
+场景1：使用新工具
+- 步骤1：mode: 'manual' → 阅读参数说明
+- 步骤2：mode: 'execute' → 按说明执行
+
+场景2：使用需要API的工具
+- 步骤1：mode: 'manual' → 了解需要哪些环境变量
+- 步骤2：mode: 'configure' → 设置API密钥
+- 步骤3：mode: 'execute' → 执行工具
+
+场景3：工具执行报错
+- 如果是参数错误 → mode: 'manual' 查看正确格式
+- 如果是依赖错误 → mode: 'rebuild' 重建环境
+- 如果是环境变量缺失 → mode: 'configure' 配置
+
+核心能力:
+- 动态加载执行JavaScript工具
 - 工具级环境变量隔离管理
-- 自动处理工具依赖的npm包安装
-- 提供隔离的执行沙箱环境
-- 支持查看工具手册文档
-- 配置管理敏感信息（API Keys等）
+- 自动npm依赖安装
+- 隔离沙箱执行环境
+- 完整的手册文档系统
 
-使用建议:
-1. 首次使用工具前，先用 mode: 'manual' 查看手册
-2. 需要API密钥的工具，先用 mode: 'configure' 配置
-3. 遇到依赖错误时，尝试 mode: 'rebuild' 重建环境
-4. 日常使用直接调用或用 mode: 'execute'
+强制要求:
+1. 🚫 禁止在未查看manual的情况下盲目执行工具
+2. 🚫 禁止猜测参数格式，必须按manual要求传参
+3. ✅ 必须先了解工具功能再执行
+4. ✅ 必须按照manual中的参数示例构造参数
 
 你应该:
-1. 根据用户需求选择合适的mode
-2. 配置环境变量时注意保护敏感信息
-3. 出现问题时尝试rebuild模式
-4. 查看manual了解工具的完整功能`,
+1. 第一次接触工具时，永远先用manual模式
+2. 严格按照manual中的参数格式传递参数
+3. 遇到错误时，回到manual查看正确用法
+4. 需要配置的工具，先configure再execute
+5. 依赖问题用rebuild模式解决`,
   inputSchema: {
     type: 'object',
     properties: {
