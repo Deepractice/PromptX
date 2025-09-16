@@ -125,56 +125,6 @@ try {
 }
 ```
 
-### Node.js生态精通
-```javascript
-// ES6+特性应用
-const { promisify } = require('util');
-const fs = require('fs').promises;
-
-// 异步编程模式
-async function processData(data) {
-  try {
-    const result = await Promise.all(
-      data.map(item => processItem(item))
-    );
-    return result;
-  } catch (error) {
-    throw new Error(`Processing failed: ${error.message}`);
-  }
-}
-
-// 错误处理最佳实践
-class ToolError extends Error {
-  constructor(message, code, details) {
-    super(message);
-    this.name = 'ToolError';
-    this.code = code;
-    this.details = details;
-  }
-}
-```
-
-### 依赖管理精通
-```json
-// package.json最佳实践
-{
-  "name": "toolbox-text-analyzer",
-  "version": "1.0.0",
-  "description": "Sandbox for tool: text-analyzer",
-  "private": true,
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "axios": "^1.6.0",
-    "validator": "^13.11.0"
-  }
-}
-```
-
-**依赖选择原则**：
-- **成熟度**：选择下载量大、维护活跃的包
-- **轻量化**：避免过重的依赖，注意bundle size
-- **一致性**：确保与PromptX生态集成
-- **安全性**：定期检查安全漏洞
 
 ### VM沙箱技术
 ```javascript
@@ -214,41 +164,16 @@ const smartSandbox = {
 };
 ```
 
-## 📚 工具库生态
+## 📚 重要工具库参考
 
-### 常用工具库分类（标注模块类型）
+### 常用依赖选择（PromptX工具常用）
+- **lodash** `^4.17.21` - 工具函数库 [CommonJS]
+- **axios** `^1.6.0` - HTTP请求 [CommonJS]
+- **validator** `^13.11.0` - 数据验证 [CommonJS]
+- **chalk** `^5.3.0` - 终端输出 [ES Module] ⚡
+- **fs-extra** `^11.1.0` - 文件操作 [CommonJS]
 
-**🔧 工具函数库**
-- **lodash** `^4.17.21` - 全功能工具函数库 [CommonJS]
-- **ramda** `^0.29.0` - 函数式编程工具 [CommonJS]
-- **validator** `^13.11.0` - 数据验证工具 [CommonJS]
-
-**🌐 网络请求库**
-- **axios** `^1.6.0` - HTTP客户端库 [CommonJS]
-- **node-fetch** `^3.3.0` - Fetch API实现 [ES Module] ⚡
-- **got** `^13.0.0` - 轻量HTTP请求库 [ES Module] ⚡
-
-**📄 文件处理库**
-- **fs-extra** `^11.1.0` - 增强文件系统操作 [CommonJS]
-- **glob** `^10.3.0` - 文件模式匹配 [CommonJS]
-- **chokidar** `^3.5.0` - 文件监控 [CommonJS]
-
-**📊 数据处理库**
-- **moment** `^2.29.0` - 日期时间处理 [CommonJS]
-- **dayjs** `^1.11.0` - 轻量日期库 [CommonJS]
-- **mathjs** `^11.11.0` - 数学计算库 [CommonJS]
-- **csv-parser** `^3.0.0` - CSV文件解析 [CommonJS]
-
-**⚡ ES Module 包（需要 loadModule）**
-- **chalk** `^5.3.0` - 终端颜色输出 [ES Module] ⚡
-- **execa** `^8.0.1` - 子进程执行 [ES Module] ⚡
-- **nanoid** `^5.0.4` - ID 生成器 [ES Module] ⚡
-- **ora** `^7.0.1` - 终端加载动画 [ES Module] ⚡
-
-**📧 服务集成库**
-- **nodemailer** `^6.9.0` - 邮件发送 [CommonJS]
-- **node-cron** `^3.0.0` - 定时任务 [CommonJS]
-- **sharp** `^0.32.0` - 图像处理 [CommonJS]
+⚡ ES Module包需要用 `await importx()` 加载
 
 ### 🚀 importx统一模块导入架构
 ```mermaid
@@ -495,104 +420,6 @@ async function migrateConfig() {
 }
 ```
 
-## 🛡️ 安全与最佳实践
-
-### 安全编程原则
-```javascript
-// 输入验证
-function validateInput(input) {
-  if (typeof input !== 'string') {
-    throw new Error('输入必须是字符串');
-  }
-  
-  if (input.length > 10000) {
-    throw new Error('输入内容过长');
-  }
-  
-  // 防止代码注入
-  if (/[<>'"&]/.test(input)) {
-    throw new Error('输入包含危险字符');
-  }
-  
-  return true;
-}
-
-// 错误信息安全
-function safeErrorMessage(error) {
-  // 不暴露敏感信息
-  const safeMessage = error.message.replace(
-    /\/Users\/[^\/]+/g, '~/***'
-  );
-  return safeMessage;
-}
-
-// 资源限制
-function executeWithTimeout(fn, timeout = 30000) {
-  return Promise.race([
-    fn(),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('执行超时')), timeout)
-    )
-  ]);
-}
-```
-
-### 性能优化模式
-```javascript
-// 缓存机制
-const cache = new Map();
-function memoize(fn) {
-  return function(...args) {
-    const key = JSON.stringify(args);
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
-    const result = fn.apply(this, args);
-    cache.set(key, result);
-    return result;
-  };
-}
-
-// 批处理优化
-function batchProcess(items, batchSize = 10) {
-  const batches = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    batches.push(items.slice(i, i + batchSize));
-  }
-  return batches;
-}
-
-// 资源池管理
-class ResourcePool {
-  constructor(createFn, maxSize = 10) {
-    this.createFn = createFn;
-    this.maxSize = maxSize;
-    this.pool = [];
-    this.active = new Set();
-  }
-  
-  async acquire() {
-    if (this.pool.length > 0) {
-      const resource = this.pool.pop();
-      this.active.add(resource);
-      return resource;
-    }
-    
-    if (this.active.size < this.maxSize) {
-      const resource = await this.createFn();
-      this.active.add(resource);
-      return resource;
-    }
-    
-    throw new Error('资源池已满');
-  }
-  
-  release(resource) {
-    this.active.delete(resource);
-    this.pool.push(resource);
-  }
-}
-```
 
 ## 🔄 协议系统深度理解
 
@@ -630,68 +457,5 @@ const resourceData = registryData.findResourceById('text-analyzer', 'tool');
 // 查找ID为'text-analyzer'且protocol为'tool'的资源
 ```
 
-## 📈 监控与调试
-
-### 调试技巧
-```javascript
-// 沙箱状态监控
-function debugSandbox(sandbox) {
-  console.log('沙箱状态:', {
-    toolId: sandbox.toolId,
-    isAnalyzed: sandbox.isAnalyzed,
-    isPrepared: sandbox.isPrepared,
-    dependencies: sandbox.dependencies,
-    sandboxPath: sandbox.sandboxPath
-  });
-}
-
-// 性能监控
-function profileExecution(fn, name) {
-  return async (...args) => {
-    const start = process.hrtime.bigint();
-    const result = await fn(...args);
-    const end = process.hrtime.bigint();
-    const duration = Number(end - start) / 1000000; // 转换为毫秒
-    console.log(`${name} 执行耗时: ${duration.toFixed(2)}ms`);
-    return result;
-  };
-}
-
-// 错误追踪
-function trackError(error, context) {
-  console.error('错误详情:', {
-    message: error.message,
-    stack: error.stack,
-    context: context,
-    timestamp: new Date().toISOString()
-  });
-}
-```
-
-### 日志系统
-```javascript
-const logger = {
-  debug: (message, data) => {
-    if (process.env.DEBUG) {
-      console.log(`[DEBUG] ${message}`, data);
-    }
-  },
-  
-  info: (message, data) => {
-    console.log(`[INFO] ${message}`, data);
-  },
-  
-  warn: (message, data) => {
-    console.warn(`[WARN] ${message}`, data);
-  },
-  
-  error: (message, error) => {
-    console.error(`[ERROR] ${message}`, {
-      message: error.message,
-      stack: error.stack
-    });
-  }
-};
-```
 
 </knowledge>
