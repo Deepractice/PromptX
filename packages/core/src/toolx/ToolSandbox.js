@@ -11,7 +11,7 @@ const getImportx = async () => {
 // Removed global parentURL, changed to dynamically generate when calling importx
 
 // Directly import manager classes
-const SandboxErrorManager = require('./SandboxErrorManager');
+const { ToolErrorManager } = require('./errors');
 const ToolDirectoryManager = require('./ToolDirectoryManager'); 
 const SandboxIsolationManager = require('./SandboxIsolationManager');
 
@@ -74,7 +74,7 @@ class ToolSandbox {
       
       // 管理器类已在顶部静态导入
       
-      this.errorManager = new SandboxErrorManager();
+      this.errorManager = new ToolErrorManager();
       const promptxPath = require('path').join(require('os').homedir(), '.promptx');
       this.isolationManager = new SandboxIsolationManager(promptxPath);
       
@@ -582,13 +582,22 @@ class ToolSandbox {
       return result;
 
     } catch (error) {
+      // 获取工具定义的业务错误
+      const businessErrors = (this.toolInstance && typeof this.toolInstance.getBusinessErrors === 'function') ?
+        this.toolInstance.getBusinessErrors() : [];
+      
       const enhancedError = this.errorManager.analyzeError(error, {
         phase: 'execute',
         toolId: this.toolId,
         params: params,
-        sandboxPath: this.sandboxPath
+        schema: this.schema,
+        metadata: this.metadata,
+        dependencies: this.dependencies,
+        sandboxPath: this.sandboxPath,
+        businessErrors: businessErrors,
+        environment: this.toolInstance?.api?.environment || {}
       });
-      this.logger.error(`[ToolSandbox] Execution failed: ${enhancedError.message}`);
+      this.logger.error(`[ToolSandbox] Execution failed: ${enhancedError.code}`);
       throw enhancedError;
     }
   }

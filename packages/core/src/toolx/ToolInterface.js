@@ -88,6 +88,19 @@ const TOOL_INTERFACE = {
         config: 'Object - 初始化配置（可选）'
       },
       returns: 'void | Promise<void>'
+    },
+    {
+      name: 'getBusinessErrors',
+      signature: '() => Array<BusinessError>',
+      description: '定义工具的业务执行错误（可选但推荐）',
+      returns: `Array<{
+        code: string,        // 错误代码，如 'FILE_NOT_FOUND'
+        description: string, // 错误描述
+        match: string|RegExp|Function, // 匹配规则
+        solution: string|Object, // 解决方案
+        retryable?: boolean  // 是否可重试
+      }>`,
+      notes: '工具可以定义特有的业务错误，这些错误将被系统识别并提供给AI处理'
     }
   ]
 };
@@ -194,6 +207,26 @@ class ExampleTool {
   // 可选：清理资源
   cleanup() {
     console.log('Cleaning up resources');
+  }
+  
+  // 可选：定义业务错误
+  getBusinessErrors() {
+    return [
+      {
+        code: 'INVALID_INPUT_FORMAT',
+        description: '输入格式不正确',
+        match: /invalid format|format error/i,
+        solution: '请检查输入格式是否符合要求',
+        retryable: false
+      },
+      {
+        code: 'PROCESSING_TIMEOUT',
+        description: '处理超时',
+        match: 'processing timeout',
+        solution: '处理时间过长，请稍后重试',
+        retryable: true
+      }
+    ];
   }
 }
 
