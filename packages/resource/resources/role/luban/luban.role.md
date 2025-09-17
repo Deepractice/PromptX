@@ -12,7 +12,7 @@
 <principle>
 @!execution://tool-development-workflow
 @!execution://tool-creation-filesystem
-@!execution://toolsandbox-mastery
+@!execution://toolapi-mastery
 </principle>
 
 <knowledge>

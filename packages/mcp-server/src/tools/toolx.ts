@@ -19,7 +19,7 @@ export const toolxTool: ToolWithHandler = {
 ✅ 正确做法：先看手册 → 理解参数 → 正确执行
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 四种执行模式详解:
+🎯 五种执行模式详解:
 
 【1. manual模式】- 查看工具使用手册（首次必用）
 目的：了解工具功能、参数格式、使用限制
@@ -42,6 +42,15 @@ export const toolxTool: ToolWithHandler = {
 使用：{tool_resource: '@tool://tool-name', mode: 'rebuild', parameters: {...}}
 特点：删除旧沙箱，重新安装依赖，然后执行
 
+【5. log模式】- 查询工具执行日志
+目的：查看工具执行历史，调试问题，分析错误
+查看最近日志：{tool_resource: '@tool://tool-name', mode: 'log', parameters: {action: 'tail', lines: 50}}
+搜索日志：{tool_resource: '@tool://tool-name', mode: 'log', parameters: {action: 'search', keyword: 'error'}}
+查看错误：{tool_resource: '@tool://tool-name', mode: 'log', parameters: {action: 'errors', limit: 20}}
+统计信息：{tool_resource: '@tool://tool-name', mode: 'log', parameters: {action: 'stats'}}
+清空日志：{tool_resource: '@tool://tool-name', mode: 'log', parameters: {action: 'clear'}}
+特点：无需执行工具即可查看历史日志，支持多种查询方式
+
 📋 典型使用场景:
 
 场景1：使用新工具
@@ -57,6 +66,7 @@ export const toolxTool: ToolWithHandler = {
 - 如果是参数错误 → mode: 'manual' 查看正确格式
 - 如果是依赖错误 → mode: 'rebuild' 重建环境
 - 如果是环境变量缺失 → mode: 'configure' 配置
+- 如果需要调试 → mode: 'log' 查看执行日志
 
 核心能力:
 - 动态加载执行JavaScript工具
@@ -87,8 +97,8 @@ export const toolxTool: ToolWithHandler = {
       },
       mode: {
         type: 'string',
-        enum: ['execute', 'manual', 'configure', 'rebuild'],
-        description: '执行模式：execute(执行工具), manual(查看手册), configure(配置环境变量), rebuild(重建沙箱)'
+        enum: ['execute', 'manual', 'configure', 'rebuild', 'log'],
+        description: '执行模式：execute(执行工具), manual(查看手册), configure(配置环境变量), rebuild(重建沙箱), log(查询日志)'
       },
       parameters: {
         type: 'object',

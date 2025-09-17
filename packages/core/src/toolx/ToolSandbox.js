@@ -287,8 +287,10 @@ class ToolSandbox {
       throw new Error('Tool must be analyzed before configuring. Call analyze() first.');
     }
     
-    const ToolEnvironment = require('./ToolEnvironment');
-    const env = new ToolEnvironment(this.toolId, this.sandboxPath);
+    // 创建 ToolAPI 实例来管理环境变量
+    const ToolAPI = require('./api/ToolAPI');
+    const api = new ToolAPI(this.toolId, this.sandboxPath, this.resourceManager);
+    const env = api.environment;
     
     try {
       // 如果params为空，返回当前配置和元信息
@@ -401,6 +403,103 @@ class ToolSandbox {
   }
 
   /**
+   * 查询工具日志
+   * @param {Object} params - 查询参数
+   * @returns {Promise<Object>} 查询结果
+   */
+  async queryLogs(params = {}) {
+    await this.ensureInitialized();
+    
+    if (!this.isAnalyzed) {
+      throw new Error('Tool must be analyzed before querying logs. Call analyze() first.');
+    }
+    
+    const ToolLoggerQuery = require('./ToolLoggerQuery');
+    const logQuery = new ToolLoggerQuery(this.toolId, this.sandboxPath);
+    
+    try {
+      const { action = 'tail', ...options } = params;
+      
+      switch (action) {
+        case 'tail':
+          // 获取最近的日志
+          const lines = options.lines || 50;
+          return {
+            success: true,
+            action: 'tail',
+            logs: await logQuery.tail(lines),
+            count: lines
+          };
+          
+        case 'search':
+          // 搜索日志
+          if (!options.keyword) {
+            throw new Error('Search action requires keyword parameter');
+          }
+          return {
+            success: true,
+            action: 'search',
+            keyword: options.keyword,
+            logs: await logQuery.search(options.keyword, options),
+            options
+          };
+          
+        case 'errors':
+          // 获取错误日志
+          const limit = options.limit || 50;
+          return {
+            success: true,
+            action: 'errors',
+            logs: await logQuery.getErrors(limit),
+            limit
+          };
+          
+        case 'stats':
+          // 获取统计信息
+          return {
+            success: true,
+            action: 'stats',
+            stats: await logQuery.getStats()
+          };
+          
+        case 'timeRange':
+          // 按时间范围查询
+          if (!options.startTime || !options.endTime) {
+            throw new Error('Time range action requires startTime and endTime parameters');
+          }
+          return {
+            success: true,
+            action: 'timeRange',
+            startTime: options.startTime,
+            endTime: options.endTime,
+            logs: await logQuery.getByTimeRange(options.startTime, options.endTime)
+          };
+          
+        case 'clear':
+          // 清空日志
+          const cleared = await logQuery.clear();
+          return {
+            success: cleared,
+            action: 'clear',
+            message: cleared ? 'Logs cleared successfully' : 'Failed to clear logs'
+          };
+          
+        default:
+          throw new Error(`Unknown log query action: ${action}`);
+      }
+      
+    } catch (error) {
+      const enhancedError = this.errorManager.analyzeError(error, {
+        phase: 'queryLogs',
+        toolId: this.toolId,
+        params: params
+      });
+      this.logger.error(`[ToolSandbox] Log query failed: ${enhancedError.message}`);
+      throw enhancedError;
+    }
+  }
+
+  /**
    * 执行工具
    */
   async execute(params = {}) {
@@ -419,8 +518,10 @@ class ToolSandbox {
         const metadata = this.toolInstance.getMetadata();
         if (metadata.envVars && Array.isArray(metadata.envVars)) {
           this.logger.debug(`[ToolSandbox] Checking environment variables for ${this.toolId}`);
-          const ToolEnvironment = require('./ToolEnvironment');
-          const env = new ToolEnvironment(this.toolId, this.sandboxPath);
+          // 使用已创建的 ToolAPI 实例
+          const ToolAPI = require('./api/ToolAPI');
+          const api = new ToolAPI(this.toolId, this.sandboxPath, this.resourceManager);
+          const env = api.environment;
           
           for (const varDef of metadata.envVars) {
             if (varDef.required) {
@@ -467,14 +568,10 @@ class ToolSandbox {
       script.runInContext(context);
       const exported = context.module.exports;
       
-      // 注入 getEnvironment 方法，让工具可以访问环境变量
-      const ToolEnvironment = require('./ToolEnvironment');
-      const toolboxPath = this.sandboxPath;
-      const toolId = this.toolId;
-      
-      exported.getEnvironment = function() {
-        return new ToolEnvironment(toolId, toolboxPath);
-      };
+      // 创建并注入统一的 ToolAPI 实例 - 这是唯一的注入点
+      const ToolAPI = require('./api/ToolAPI');
+      const toolAPI = new ToolAPI(this.toolId, this.sandboxPath, this.resourceManager);
+      exported.api = toolAPI;
       
       // 执行工具的execute方法
       const result = await exported.execute(params);

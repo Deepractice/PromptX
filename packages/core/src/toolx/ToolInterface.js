@@ -46,11 +46,11 @@ const TOOL_INTERFACE = {
   // 可选实现的方法
   optional: [
     {
-      name: 'getEnvironment',
-      signature: '() => ToolEnvironment',
-      description: '获取环境变量管理实例（可选，由ToolSandbox自动注入）',
-      returns: 'ToolEnvironment - 环境变量管理实例，提供 get/set/delete/clear/getAll 等方法',
-      notes: '此方法由 ToolSandbox 自动注入，工具无需实现。通过 this.getEnvironment() 调用获取环境变量管理器。'
+      name: 'api',
+      signature: 'ToolAPI',
+      description: '统一的工具API接口（由ToolSandbox自动注入）',
+      returns: 'ToolAPI - 提供environment, logger, storage, cache, metrics等所有运行时服务',
+      notes: '此对象由 ToolSandbox 自动注入，工具无需实现。通过 this.api 访问所有运行时功能。'
     },
     {
       name: 'getPackage',

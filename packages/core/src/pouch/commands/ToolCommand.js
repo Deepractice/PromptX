@@ -243,8 +243,11 @@ ${JSON.stringify(actualToolResult, null, 2)}
         case 'rebuild':
           return await this.executeRebuildMode(tool_resource, parameters, timeout, startTime)
         
+        case 'log':
+          return await this.executeLogMode(tool_resource, parameters, startTime)
+        
         default:
-          throw new Error(`Unsupported mode: ${mode}. Supported modes: execute, manual, configure, rebuild`)
+          throw new Error(`Unsupported mode: ${mode}. Supported modes: execute, manual, configure, rebuild, log`)
       }
       
     } catch (error) {
@@ -388,6 +391,33 @@ ${JSON.stringify(actualToolResult, null, 2)}
   }
 
   /**
+   * Log模式 - 查询工具执行日志
+   */
+  async executeLogMode(tool_resource, parameters, startTime) {
+    let sandbox = null
+    
+    try {
+      // 创建沙箱（不需要执行，只需要查询日志）
+      sandbox = new ToolSandbox(tool_resource)
+      const resourceManager = await this.getResourceManager()
+      sandbox.setResourceManager(resourceManager)
+      
+      // 只需要分析工具以获取toolId和sandboxPath
+      logger.debug(`[PromptXTool] Log模式: 分析工具以获取日志路径`)
+      await sandbox.analyze()
+      
+      // 查询日志
+      logger.debug(`[PromptXTool] Log模式: 查询日志，参数:`, parameters)
+      const result = await sandbox.queryLogs(parameters)
+      
+      return this.formatSuccessResult(result, tool_resource, startTime)
+      
+    } finally {
+      if (sandbox) await sandbox.cleanup()
+    }
+  }
+
+  /**
    * 验证命令参数
    * @param {Object} args - 命令参数
    */
@@ -406,7 +436,7 @@ ${JSON.stringify(actualToolResult, null, 2)}
 
     // mode参数验证
     if (args.mode) {
-      const validModes = ['execute', 'manual', 'configure', 'rebuild']
+      const validModes = ['execute', 'manual', 'configure', 'rebuild', 'log']
       if (!validModes.includes(args.mode)) {
         throw new Error(`Invalid mode: ${args.mode}. Valid modes are: ${validModes.join(', ')}`)
       }
