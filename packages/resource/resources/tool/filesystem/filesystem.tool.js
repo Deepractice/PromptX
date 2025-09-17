@@ -36,8 +36,7 @@ module.exports = {
       version: '2.0.0',
       category: 'system',
       author: '鲁班',
-      tags: ['file', 'system', 'io', 'mcp'],
-      manual: '@manual://filesystem'
+      tags: ['file', 'system', 'io', 'mcp']
     };
   },
 
@@ -99,6 +98,14 @@ module.exports = {
    * 参数验证
    */
   validate(params) {
+    // 首先检查params是否存在
+    if (!params || typeof params !== 'object') {
+      return { 
+        valid: false, 
+        errors: ['参数必须是一个对象'] 
+      };
+    }
+    
     if (!params.method) {
       return { 
         valid: false, 

@@ -7,7 +7,7 @@
 - **单一注入点**：工具只通过 exported.api 获得所有功能
 - **延迟加载**：服务只在使用时创建实例
 - **目录结构**：API相关都在 toolx/api/ 目录
-- **不再兼容**：没有 getEnvironment() 方法，只有 api 对象
+- **统一访问**：通过 api.environment 访问环境变量
 </constraint>
 
 <rule>
@@ -64,7 +64,7 @@ async execute(parameters) {
     // 使用日志
     api.logger.info('开始处理', { params: parameters });
     
-    // 访问环境变量
+    // 访问环境变量（基于Schema定义）
     const apiKey = await api.environment.get('API_KEY');
     if (!apiKey) {
         api.logger.error('缺少API密钥');

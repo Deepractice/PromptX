@@ -83,86 +83,74 @@ flowchart TD
 - 避免引入复杂依赖
 - 遇到复杂需求时，先简化再实现
 
-**Step 1.3: 环境变量识别与设计（重要！配合toolx configure模式）**
+**Step 1.3: Schema设计（参数与环境变量）**
 
-**识别哪些信息需要环境变量**：
+**Schema统一管理所有输入**：
 ```mermaid
 flowchart TD
-    A[工具需要的信息] --> B{是否敏感信息?}
-    B -->|是| C[必须用环境变量]
-    B -->|否| D{是否因环境而异?}
-    D -->|是| E[应该用环境变量]
-    D -->|否| F{用户是否需要配置?}
-    F -->|是| G[建议用环境变量]
-    F -->|否| H[可以硬编码]
-    
-    C --> I[required: true]
-    E --> J[提供 default 值]
-    G --> J
+    A[工具输入] --> B[parameters: 执行参数]
+    A --> C[environment: 环境变量]
+    B --> D[运行时动态传入]
+    C --> E[配置后持久化]
 ```
 
-**典型的环境变量场景**：
-- ✅ **必须环境变量**：
-  - API Keys、密钥、Token
-  - 数据库密码、连接串
-  - 私钥、证书
-  
-- ✅ **建议环境变量**：
-  - API 端点 URL（开发/生产环境不同）
-  - 超时设置、重试次数
-  - 调试开关、日志级别
-  
-- ❌ **不需要环境变量**：
-  - 算法参数、业务逻辑常量
-  - 固定的数据格式、正则表达式
-  - 工具内部使用的常量
-
-**环境变量声明示例**：
+**完整Schema结构**：
 ```javascript
-getMetadata() {
+getSchema() {
   return {
-    // 核心标识
-    id: 'tool-id',                   // 工具唯一标识
-    name: '工具名称',              // 工具显示名称（可中文）
-    description: '一句话说明工具功能', // 简洁描述
-    version: '1.0.0',
-    
-    // 适用场景（新增）
-    scenarios: [
-      '适合使用的场景1',
-      '适合使用的场景2'
-    ],
-    
-    // 限制说明（新增）
-    limitations: [
-      '不适用的场景1',
-      '功能限制说明'
-    ],
-    
-    // 环境变量需求（可选）
-    envVars: [
-      { 
-        name: 'API_KEY',
-        required: true,
-        description: 'API认证密钥'
+    // 执行参数Schema
+    parameters: {
+      type: 'object',
+      properties: {
+        input: { 
+          type: 'string',
+          description: '输入数据'
+        },
+        format: { 
+          type: 'string',
+          enum: ['json', 'xml', 'text'],
+          default: 'json'
+        }
       },
-      { 
-        name: 'API_ENDPOINT',
-        default: 'https://api.example.com',
-        description: '服务端点URL'
-      }
-    ]
+      required: ['input']
+    },
+    
+    // 环境变量Schema
+    environment: {
+      type: 'object',
+      properties: {
+        API_KEY: { 
+          type: 'string',
+          description: 'API密钥'
+        },
+        API_ENDPOINT: {
+          type: 'string',
+          description: '服务端点',
+          default: 'https://api.example.com'
+        },
+        TIMEOUT: {
+          type: 'number',
+          description: '超时时间(ms)',
+          default: 30000,
+          minimum: 1000,
+          maximum: 60000
+        }
+      },
+      required: ['API_KEY']
+    }
   };
 }
 
 **Step 1.4: 工具元信息设计**
 ```javascript
-// 通过getMetadata提供完整的工具信息
+// 通过getMetadata提供工具基本信息（不包含环境变量）
 getMetadata() {
   return {
     id: 'tool-name',           // 工具标识
     name: '工具名称',         // 显示名称
     description: '一句话描述工具功能',
+    version: '1.0.0',
+    category: 'utility',
     scenarios: [               // 适用场景
       '适合使用的场景描述'
     ],
@@ -197,8 +185,16 @@ module.exports = {
   
   getSchema() {
     return {
-      type: 'object',
-      properties: { /* JSON Schema */ }
+      parameters: {               // 执行参数
+        type: 'object',
+        properties: { /* 参数定义 */ },
+        required: ['必需参数']
+      },
+      environment: {              // 环境变量
+        type: 'object',
+        properties: { /* 环境变量定义 */ },
+        required: ['必需环境变量']
+      }
     };
   },
   
@@ -469,7 +465,7 @@ getDependencies() {
 3. 清单里没有？→ 严格按黄金标准评估
 4. 不符合标准？→ 重新设计，避免使用
 
-**Step 2.5: 元信息定义**
+**Step 2.5: 接口实现细节**
 ```javascript
 getMetadata() {
   return {
@@ -484,7 +480,7 @@ getMetadata() {
     author: '鲁班',
     tags: ['tool', 'automation', 'utility'],
     
-    // 使用指导（新增）
+    // 使用指导
     scenarios: [
       '适合处理文本数据',
       '需要批量操作时',
@@ -498,26 +494,38 @@ getMetadata() {
     ]
   };
 }
-```
 
-**Step 2.6: Schema定义**
-```javascript
 getSchema() {
   return {
-    type: 'object',
-    properties: {
-      input: {
-        type: 'string',
-        description: '输入参数描述'
-      },
-      options: {
-        type: 'object',
-        properties: {
-          format: { type: 'string', default: 'json' }
+    // 参数Schema
+    parameters: {
+      type: 'object',
+      properties: {
+        input: {
+          type: 'string',
+          description: '输入数据'
+        },
+        options: {
+          type: 'object',
+          properties: {
+            format: { type: 'string', default: 'json' }
+          }
         }
-      }
+      },
+      required: ['input']
     },
-    required: ['input']
+    
+    // 环境变量Schema（如果需要）
+    environment: {
+      type: 'object',
+      properties: {
+        API_KEY: {
+          type: 'string',
+          description: 'API密钥'
+        }
+      },
+      required: ['API_KEY']
+    }
   };
 }
 ```

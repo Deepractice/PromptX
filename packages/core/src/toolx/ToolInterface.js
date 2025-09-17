@@ -53,26 +53,11 @@ const TOOL_INTERFACE = {
       notes: '此对象由 ToolSandbox 自动注入，工具无需实现。通过 this.api 访问所有运行时功能。'
     },
     {
-      name: 'getPackage',
+      name: 'getDependencies',
       signature: '() => Object',
-      description: '获取工具包信息（可选，用于依赖管理）',
-      returns: {
-        directory: 'string - 工具目录路径',
-        dependencies: 'Object - 依赖对象，格式：{包名: 版本}',
-        packageJson: 'Object - package.json内容（可选）'
-      }
-    },
-    {
-      name: 'validate',
-      signature: '(parameters: Object) => Object',
-      description: '验证参数（可选，有默认实现）',
-      parameters: {
-        parameters: 'Object - 待验证参数'
-      },
-      returns: {
-        valid: 'boolean - 验证是否通过',
-        errors: 'Array<string> - 错误信息列表'
-      }
+      description: '声明工具依赖（可选）',
+      returns: 'Object - 依赖对象，格式：{包名: 版本}',
+      notes: '声明工具需要的npm包依赖，系统会自动安装'
     },
     {
       name: 'cleanup',
@@ -185,23 +170,12 @@ class ExampleTool {
     return result;
   }
 
-  // 可选：声明依赖（新格式：对象）
+  // 可选：声明依赖
   getDependencies() {
     return {
       'lodash': '^4.17.21',
       'axios': '^1.6.0'
     };
-  }
-
-  // 可选：自定义参数验证
-  validate(parameters) {
-    const errors = [];
-    
-    if (!parameters.input || parameters.input.trim() === '') {
-      errors.push('input不能为空');
-    }
-    
-    return { valid: errors.length === 0, errors };
   }
 
   // 可选：清理资源

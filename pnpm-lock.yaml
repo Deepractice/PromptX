@@ -111,6 +111,9 @@ importers:
       '@promptx/resource':
         specifier: workspace:*
         version: link:../resource
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
       env-paths:
         specifier: 2.2.1
         version: 2.2.1

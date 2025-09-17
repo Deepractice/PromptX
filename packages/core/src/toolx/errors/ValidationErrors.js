@@ -57,12 +57,34 @@ const VALIDATION_ERRORS = {
     code: 'PARAM_OUT_OF_RANGE',
     category: 'VALIDATION',
     description: '参数值超出允许范围',
-    identify: (error) => {
+    identify: (error, context) => {
+      // 检查验证结果中的enum错误
+      if (context.validationResult && !context.validationResult.valid) {
+        if (context.validationResult.enumErrors && context.validationResult.enumErrors.length > 0) {
+          return true;
+        }
+        return context.validationResult.errors.some(e => 
+          e.includes('must be one of') || 
+          e.includes('enum') ||
+          e.includes('>= ') || 
+          e.includes('<= '));
+      }
       return /out of range|exceeds maximum|below minimum/i.test(error.message) ||
              error.message.includes('enum') ||
-             error.message.includes('not in allowed values');
+             error.message.includes('not in allowed values') ||
+             error.message.includes('must be one of');
     },
     getSolution: (error, context) => {
+      const enumErrors = context.validationResult?.enumErrors || [];
+      if (enumErrors.length > 0) {
+        const enumError = enumErrors[0];
+        return {
+          message: `参数 ${enumError.param} 的值无效`,
+          detail: `当前值: "${enumError.value}"\n允许的值: ${enumError.allowed.join(', ')}`,
+          example: `将 ${enumError.param} 设置为: ${enumError.allowed[0]}`,
+          autoRecoverable: false
+        };
+      }
       return {
         message: '参数值超出允许范围',
         detail: '请检查参数值是否在允许的范围内',
@@ -136,67 +158,107 @@ const VALIDATION_ERRORS = {
 };
 
 /**
- * 基于 schema 自动验证参数
+ * 基于 schema 自动验证参数（使用Ajv）
+ * 将Ajv验证结果转换为统一错误体系格式
  */
 function validateAgainstSchema(params, schema) {
-  const errors = [];
-  const missing = [];
-  const typeErrors = [];
+  const Ajv = require('ajv');
+  const ajv = new Ajv({ 
+    allErrors: true,      // 收集所有错误
+    verbose: true,        // 包含详细信息
+    strict: false,        // 允许额外的schema关键字
+    coerceTypes: false    // 不自动转换类型
+  });
   
   if (!schema || !schema.properties) {
-    return { valid: true };
+    return { valid: true, errors: [], missing: [], typeErrors: [] };
   }
   
-  // 检查必需参数
-  if (schema.required && Array.isArray(schema.required)) {
-    for (const required of schema.required) {
-      if (params[required] === undefined || params[required] === null) {
-        missing.push(required);
-        errors.push(`Missing required parameter: ${required}`);
+  try {
+    const validate = ajv.compile(schema);
+    const valid = validate(params);
+    
+    if (valid) {
+      return { valid: true, errors: [], missing: [], typeErrors: [] };
+    }
+    
+    // 将Ajv错误转换为统一格式
+    const errors = [];
+    const missing = [];
+    const typeErrors = [];
+    const enumErrors = [];
+    
+    for (const error of validate.errors) {
+      const field = error.instancePath ? error.instancePath.substring(1) : error.params?.missingProperty;
+      
+      switch (error.keyword) {
+        case 'required':
+          missing.push(error.params.missingProperty);
+          errors.push(`Missing required parameter: ${error.params.missingProperty}`);
+          break;
+          
+        case 'type':
+          typeErrors.push({ 
+            param: field, 
+            expected: error.schema, 
+            actual: typeof error.data 
+          });
+          errors.push(`Parameter ${field} should be ${error.schema} but got ${typeof error.data}`);
+          break;
+          
+        case 'enum': {
+          enumErrors.push({
+            param: field,
+            value: error.data,
+            allowed: error.schema
+          });
+          errors.push(`Parameter ${field} must be one of: ${error.schema.join(', ')}`);
+          break;
+        }
+          
+        case 'minimum':
+          errors.push(`Parameter ${field} must be >= ${error.schema}`);
+          break;
+          
+        case 'maximum':
+          errors.push(`Parameter ${field} must be <= ${error.schema}`);
+          break;
+          
+        case 'minLength':
+          errors.push(`Parameter ${field} length must be >= ${error.schema}`);
+          break;
+          
+        case 'maxLength':
+          errors.push(`Parameter ${field} length must be <= ${error.schema}`);
+          break;
+          
+        case 'pattern':
+          errors.push(`Parameter ${field} does not match required pattern`);
+          break;
+          
+        default:
+          errors.push(error.message || `Parameter ${field} validation failed`);
       }
     }
+    
+    return {
+      valid: false,
+      errors,
+      missing,
+      typeErrors,
+      enumErrors,
+      ajvErrors: validate.errors  // 保留原始错误供调试
+    };
+    
+  } catch (err) {
+    // Schema编译失败
+    return {
+      valid: false,
+      errors: [`Schema compilation error: ${err.message}`],
+      missing: [],
+      typeErrors: []
+    };
   }
-  
-  // 检查类型
-  for (const [key, def] of Object.entries(schema.properties)) {
-    if (params[key] !== undefined && params[key] !== null) {
-      const actualType = typeof params[key];
-      const expectedType = def.type;
-      
-      if (expectedType && actualType !== expectedType) {
-        // 特殊处理 array 类型
-        if (expectedType === 'array' && !Array.isArray(params[key])) {
-          typeErrors.push({ param: key, expected: 'array', actual: actualType });
-          errors.push(`Parameter ${key} should be array but got ${actualType}`);
-        } else if (expectedType !== 'array' && actualType !== expectedType) {
-          typeErrors.push({ param: key, expected: expectedType, actual: actualType });
-          errors.push(`Parameter ${key} should be ${expectedType} but got ${actualType}`);
-        }
-      }
-      
-      // 检查枚举值
-      if (def.enum && !def.enum.includes(params[key])) {
-        errors.push(`Parameter ${key} must be one of: ${def.enum.join(', ')}`);
-      }
-      
-      // 检查范围
-      if (typeof params[key] === 'number') {
-        if (def.minimum !== undefined && params[key] < def.minimum) {
-          errors.push(`Parameter ${key} must be >= ${def.minimum}`);
-        }
-        if (def.maximum !== undefined && params[key] > def.maximum) {
-          errors.push(`Parameter ${key} must be <= ${def.maximum}`);
-        }
-      }
-    }
-  }
-  
-  return {
-    valid: errors.length === 0,
-    errors,
-    missing,
-    typeErrors
-  };
 }
 
 /**
