@@ -218,6 +218,19 @@ module.exports = {
     const processedData = lodash.merge({}, params, { processed: true });
     
     return processedData;
+  },
+  
+  // 可选但推荐：定义业务错误
+  getBusinessErrors() {
+    return [
+      {
+        code: 'CUSTOM_ERROR_CODE',
+        description: '错误的描述',
+        match: 'error keyword',  // 或 /regex/ 或 function
+        solution: '解决方案说明',
+        retryable: false
+      }
+    ];
   }
 };
 ```
@@ -252,7 +265,74 @@ await filesystem.create_directory({
 // └── {tool-name}.tool.js      # 工具执行代码
 ```
 
-**Step 2.2: 核心功能实现**
+**Step 2.2: 业务错误定义（重要！）**
+
+⚠️ **错误分类说明**：
+- **VALIDATION错误**：参数验证、环境变量等，系统自动处理，无需定义
+- **BUSINESS错误**：工具特有的业务逻辑错误，需要通过`getBusinessErrors()`定义
+- **DEVELOPMENT错误**：代码问题，系统自动检测
+- **SYSTEM错误**：环境问题，系统自动处理
+
+```javascript
+getBusinessErrors() {
+  return [
+    // API调用相关错误
+    {
+      code: 'API_RATE_LIMIT',
+      description: 'API调用频率超限',
+      match: /rate limit|too many requests/i,  // 正则匹配
+      solution: '等待 {retryAfter} 秒后重试',
+      retryable: true
+    },
+    {
+      code: 'API_AUTH_FAILED',
+      description: 'API认证失败',
+      match: '401',  // 简单字符串匹配
+      solution: '检查API密钥是否正确配置',
+      retryable: false
+    },
+    
+    // 文件处理相关错误
+    {
+      code: 'FILE_NOT_FOUND',
+      description: '文件不存在',
+      match: (error) => error.code === 'ENOENT',  // 函数匹配
+      solution: '检查文件路径: {filepath}',
+      retryable: false
+    },
+    {
+      code: 'FILE_TOO_LARGE',
+      description: '文件超过大小限制',
+      match: /file.*too.*large/i,
+      solution: '文件大小不能超过10MB',
+      retryable: false
+    },
+    
+    // 远程服务错误
+    {
+      code: 'SERVICE_UNAVAILABLE',
+      description: '远程服务不可用',
+      match: /ECONNREFUSED|503/,
+      solution: '服务暂时不可用，请稍后重试',
+      retryable: true
+    }
+  ];
+}
+```
+
+**定义原则**：
+1. ✅ 只定义工具特有的业务错误
+2. ✅ 不要定义参数验证错误（系统自动处理）
+3. ✅ 不要定义依赖缺失错误（系统自动处理）
+4. ✅ 每个错误都要有清晰的解决方案
+5. ✅ 正确设置`retryable`标记
+
+**匹配方式选择**：
+- **字符串**：最简单，用于精确匹配错误信息
+- **正则**：灵活匹配，用于模式匹配
+- **函数**：最强大，可以检查error对象的任何属性
+
+**Step 2.3: 核心功能实现**
 基于Phase 1的设计，实现工具的核心逻辑：
 
 ```javascript
@@ -283,7 +363,7 @@ async execute(params) {
 }
 ```
 
-**Step 2.3: 高成功率依赖选择原则**
+**Step 2.4: 高成功率依赖选择原则**
 
 ```mermaid
 flowchart TD
@@ -389,7 +469,7 @@ getDependencies() {
 3. 清单里没有？→ 严格按黄金标准评估
 4. 不符合标准？→ 重新设计，避免使用
 
-**Step 2.4: 元信息定义**
+**Step 2.5: 元信息定义**
 ```javascript
 getMetadata() {
   return {
@@ -420,7 +500,7 @@ getMetadata() {
 }
 ```
 
-**Step 2.5: Schema定义**
+**Step 2.6: Schema定义**
 ```javascript
 getSchema() {
   return {
