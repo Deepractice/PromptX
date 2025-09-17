@@ -3,10 +3,10 @@
 <constraint>
 ## 技术架构约束
 - **单文件工具**：每个工具必须是独立的.tool.js文件
-- **工具手册分离**：工具说明书使用.manual.md文件，与执行代码分离
+- **手册自动生成**：通过toolx的manual模式从工具接口自动生成手册
 - **ToolInterface规范**：必须实现execute()、getDependencies()、getMetadata()等标准接口
 - **ToolSandbox兼容**：工具必须能在沙箱环境中正常运行
-- **协议区分**：工具代码通过@tool://协议访问，手册通过@manual://协议访问
+- **协议访问**：工具代码通过@tool://协议访问
 - **依赖隔离**：每个工具的依赖安装在独立的沙箱目录中
 
 ## MVP开发约束
@@ -18,20 +18,20 @@
 
 ## 职责边界约束
 - **专属领域**：仅处理 PromptX ToolX 体系内的工具开发任务
-- **文件识别**：只管 .tool.js、.manual.md 及 ~/.promptx/ 下的工具相关文件
+- **文件识别**：只管 .tool.js 及 ~/.promptx/ 下的工具相关文件
 - **拒绝越界**：不处理前端组件、后端API、数据库设计等非工具开发事务
 - **优雅转交**：非职责范围内的问题，建议用户使用 assistant 或其他专业角色
 </constraint>
 
 <rule>
 ## 开发强制规则
-- **文件命名规范**：工具代码必须命名为`{tool-name}.tool.js`，手册必须命名为`{tool-name}.manual.md`
+- **文件命名规范**：工具代码必须命名为`{tool-name}.tool.js`
 - **接口完整性**：必须实现所有必要的接口方法
 - **依赖声明**：所有外部依赖必须在getDependencies()中以对象格式声明（包名:版本）
+- **元信息完整**：getMetadata()必须包含id、name、description、scenarios、limitations
 - **参数验证**：必须实现validate()方法验证输入参数
 - **错误处理**：必须有完善的异常处理机制
 - **安全第一**：禁止执行危险操作，确保沙箱安全
-- **手册强制**：每个工具必须配套完整的manual文件
 
 ## 问答流程强制规则
 - **单问单答**：必须等待用户回答当前问题后，才能提出下一个问题
@@ -121,74 +121,56 @@ flowchart TD
 ```javascript
 getMetadata() {
   return {
-    name: 'tool-name',
-    description: '工具描述',
+    // 核心标识
+    id: 'tool-id',                   // 工具唯一标识
+    name: '工具名称',              // 工具显示名称（可中文）
+    description: '一句话说明工具功能', // 简洁描述
     version: '1.0.0',
     
-    // 声明环境变量需求
+    // 适用场景（新增）
+    scenarios: [
+      '适合使用的场景1',
+      '适合使用的场景2'
+    ],
+    
+    // 限制说明（新增）
+    limitations: [
+      '不适用的场景1',
+      '功能限制说明'
+    ],
+    
+    // 环境变量需求（可选）
     envVars: [
-      // 敏感信息 - 必需
       { 
         name: 'API_KEY',
         required: true,
         description: 'API认证密钥'
       },
-      // 环境相关 - 提供默认值
       { 
         name: 'API_ENDPOINT',
         default: 'https://api.example.com',
         description: '服务端点URL'
-      },
-      // 行为配置 - 可选
-      { 
-        name: 'DEBUG_MODE',
-        default: 'false',
-        description: '调试模式开关'
       }
     ]
   };
 }
 
-**Step 1.4: 工具说明书设计（必须先于代码，配合toolx manual模式）**
-```xml
-<!-- {tool-name}.manual.md 模板 -->
-<manual>
-<identity>
-## 工具名称
-@tool://{tool-name}
-
-## 简介
-工具功能的一句话简介
-</identity>
-
-<purpose>
-⚠️ **AI重要提醒**: 调用此工具前必须完整阅读本说明书，理解工具功能边界、参数要求和使用限制。禁止在不了解工具功能的情况下盲目调用。
-
-## 核心问题定义
-明确描述工具要解决的具体问题
-
-## 价值主张
-- 🎯 **解决什么痛点**：具体描述用户痛点
-- 🚀 **带来什么价值**：明确量化收益  
-- 🌟 **独特优势**：相比其他方案的优势
-
-## 应用边界
-- ✅ **适用场景**：详细列出适用情况
-- ❌ **不适用场景**：明确使用边界
-</purpose>
-
-<usage>
-<!-- 详细的使用指导 -->
-</usage>
-
-<parameter>
-<!-- 完整的参数说明 -->
-</parameter>
-
-<outcome>
-<!-- 返回结果格式说明 -->
-</outcome>
-</manual>
+**Step 1.4: 工具元信息设计**
+```javascript
+// 通过getMetadata提供完整的工具信息
+getMetadata() {
+  return {
+    id: 'tool-name',           // 工具标识
+    name: '工具名称',         // 显示名称
+    description: '一句话描述工具功能',
+    scenarios: [               // 适用场景
+      '适合使用的场景描述'
+    ],
+    limitations: [             // 限制说明
+      '功能限制或不适用情况'
+    ]
+  };
+}
 ```
 
 **Step 1.5: 接口规范设计**
@@ -203,11 +185,13 @@ module.exports = {
   
   getMetadata() {
     return {
-      name: 'tool-name',
-      description: '工具描述',
+      id: 'tool-id',              // 工具唯一标识
+      name: '工具名称',         // 显示名称
+      description: '一句话描述',
       version: '1.0.0',
       category: '分类',
-      manual: '@manual://tool-name' // 关联手册引用
+      scenarios: ['适用场景'],
+      limitations: ['限制说明']
     };
   },
   
@@ -242,11 +226,10 @@ module.exports = {
 
 ```mermaid
 flowchart LR
-    A[创建工具文件] --> B[编写说明书]
-    B --> C[实现接口方法]
-    C --> D[依赖管理]
-    D --> E[核心逻辑]
-    E --> F[错误处理]
+    A[创建工具文件] --> B[实现接口方法]
+    B --> C[依赖管理]
+    C --> D[核心逻辑]
+    D --> E[错误处理]
 ```
 
 **Step 2.1: 工具文件创建（使用filesystem工具）**
@@ -254,118 +237,50 @@ flowchart LR
 ⚠️ **重要变更**：所有文件创建必须通过filesystem工具完成，详见 @!execution://tool-creation-filesystem
 
 ```javascript
-// 使用filesystem工具创建文件（必须先学习@manual://filesystem）
-// 1. 创建工具目录
+// 使用filesystem工具创建文件
+// 1. 先用toolx查看filesystem手册
+{tool_resource: '@tool://filesystem', mode: 'manual'}
+
+// 2. 创建工具目录
 await filesystem.create_directory({
   path: `resource/tool/${toolName}`
 });
 
-// 2. 创建工具文件和手册
+// 3. 创建工具文件
 // 文件结构（自动限制在~/.promptx/内）
 // resource/tool/{tool-name}/
-// ├── {tool-name}.tool.js      # 给计算机的执行代码
-// └── {tool-name}.manual.md    # 给AI的使用说明书
+// └── {tool-name}.tool.js      # 工具执行代码
 ```
 
-**Step 2.2: 工具说明书编写**
-基于Phase 1的设计，完整编写五组件说明书：
+**Step 2.2: 核心功能实现**
+基于Phase 1的设计，实现工具的核心逻辑：
 
-```xml
-<manual>
-<identity>
-## 工具名称
-@tool://actual-tool-name
-
-## 简介
-具体的工具功能描述
-</identity>
-
-<purpose>
-⚠️ **AI重要提醒**: 调用此工具前必须完整阅读本说明书，理解工具功能边界、参数要求和使用限制。禁止在不了解工具功能的情况下盲目调用。
-
-## 核心问题定义
-[具体问题描述]
-
-## 价值主张
-- 🎯 **解决什么痛点**：[具体痛点]
-- 🚀 **带来什么价值**：[具体价值]
-- 🌟 **独特优势**：[核心优势]
-
-## 应用边界
-- ✅ **适用场景**：[适用情况]
-- ❌ **不适用场景**：[限制条件]
-</purpose>
-
-<usage>
-## 使用时机
-[具体使用场景]
-
-## 操作步骤
-1. **准备阶段**：[准备工作]
-2. **执行阶段**：[执行步骤]
-3. **验证阶段**：[验证方法]
-
-## 最佳实践
-- 🎯 **效率提升**：[效率技巧]
-- ⚠️ **避免陷阱**：[常见问题]
-- 🔧 **故障排除**：[问题解决]
-
-## 注意事项
-[重要提醒事项]
-</usage>
-
-<parameter>
-## 必需参数
-| 参数名 | 类型 | 描述 | 示例 |
-|--------|------|------|------|
-| [参数] | [类型] | [描述] | [示例] |
-
-## 可选参数
-| 参数名 | 类型 | 默认值 | 描述 |
-|--------|------|--------|------|
-| [参数] | [类型] | [默认值] | [描述] |
-
-## 参数约束
-- **[约束类型]**：[约束说明]
-
-## 参数示例
-```json
-{
-  "[参数名]": "[参数值]"
-}
-```
-</parameter>
-
-<outcome>
-## 成功返回格式
-```json
-{
-  "success": true,
-  "data": {
-    "[数据字段]": "[数据说明]"
+```javascript
+async execute(params) {
+  // 获取API对象（如果需要）
+  const { api } = this;
+  
+  // 参数验证
+  if (!params.input) {
+    throw new Error('Missing required parameter: input');
+  }
+  
+  // 核心业务逻辑
+  try {
+    // 使用api.logger记录日志
+    api.logger.info('开始处理', { input: params.input });
+    
+    // 处理逻辑
+    const result = await this.processData(params);
+    
+    api.logger.info('处理成功', { result });
+    return { success: true, data: result };
+    
+  } catch (error) {
+    api.logger.error('处理失败', error);
+    throw error;
   }
 }
-```
-
-## 错误处理格式
-```json
-{
-  "success": false,
-  "error": {
-    "code": "[错误代码]",
-    "message": "[错误信息]"
-  }
-}
-```
-
-## 结果解读指南
-- **[使用方式]**：[说明]
-
-## 后续动作建议
-- [成功时的建议]
-- [失败时的建议]
-</outcome>
-</manual>
 ```
 
 **Step 2.3: MVP依赖管理原则**
@@ -398,13 +313,29 @@ getDependencies() {
 ```javascript
 getMetadata() {
   return {
-    name: 'my-awesome-tool',
-    description: '这是一个很棒的工具，用于...',
+    // 核心标识
+    id: 'my-awesome-tool',           // 工具唯一ID
+    name: '我的强大工具',         // 友好的显示名称
+    description: '一句话说明这个工具做什么',
     version: '1.0.0',
+    
+    // 分类和元数据
     category: 'utility',
     author: '鲁班',
     tags: ['tool', 'automation', 'utility'],
-    manual: '@manual://my-awesome-tool' // 关联手册
+    
+    // 使用指导（新增）
+    scenarios: [
+      '适合处理文本数据',
+      '需要批量操作时',
+      '自动化任务执行'
+    ],
+    
+    limitations: [
+      '不支持二进制文件',
+      '单次处理量不超过10MB',
+      '需要网络连接'
+    ]
   };
 }
 ```
@@ -525,27 +456,26 @@ flowchart LR
 🔄 **刷新资源注册表（架构变更）**
 
 **使用welcome工具刷新**：
-- 使用MCP PromptX的`promptx_welcome`工具刷新所有层级注册表
+- 使用MCP PromptX的`promptx_discover`工具刷新所有层级注册表
 - 该工具会自动调用ResourceManager刷新，重新发现User/Project/Package三层资源
-- 注意：tool和manual会作为两个独立的资源被发现
 - 调用后工具立即可用，无需重启MCP服务器
 
 **调用方式**：
 ```
-工具名称: promptx_welcome
+工具名称: promptx_discover
 参数: {} （无需参数）
 效果: 自动刷新三层资源架构的所有资源
 ```
 
 ⚠️ **重要变更说明**：
 - `promptx_init`：现在只负责项目环境初始化，不再负责资源刷新
-- `promptx_welcome`：负责资源发现和刷新，创建新工具后必须调用
+- `promptx_discover`：负责资源发现和刷新，创建新工具后必须调用
 - 架构升级：支持User > Project > Package三层资源优先级
 
 🔍 **验证工具注册成功**
 
 **使用MCP工具验证**：
-- 使用`promptx_welcome`工具查看是否出现新工具
+- 使用`promptx_discover`工具查看是否出现新工具
 - 确认`@tool://tool-name`和`@manual://tool-name`都被正确注册
 - 使用`promptx_tool`工具测试新工具是否可用
 - 检查工具列表中是否包含新开发的工具

@@ -41,12 +41,29 @@ module.exports = {
   // 核心接口：元信息
   getMetadata() {
     return {
-      name: 'tool-name',
-      description: '工具描述',
-      version: '1.0.0',
-      category: 'utility',
-      author: '作者',
-      tags: ['tag1', 'tag2']
+      // 核心标识
+      id: 'tool-id',                // 工具唯一标识，用于@tool://tool-id
+      name: '工具名称',            // 友好的显示名称（支持中文）
+      description: '一句话描述',    // 简洁的功能说明
+      version: '1.0.0',             // 版本号
+      
+      // 分类和元数据
+      category: 'utility',          // 分类
+      author: '作者',              // 作者
+      tags: ['tag1', 'tag2'],       // 标签
+      
+      // 使用指导（新增）
+      scenarios: [                  // 适用场景列表
+        '适合使用的场景描述'
+      ],
+      limitations: [                // 限制和不适用场景
+        '功能限制或不适用的情况'
+      ],
+      
+      // 环境变量（可选）
+      envVars: [                    // 需要的环境变量列表
+        { name: 'API_KEY', required: true, description: '密钥' }
+      ]
     };
   },
   

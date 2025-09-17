@@ -117,11 +117,13 @@ graph LR
 
 // 3. configure模式 - 配置环境变量
 {tool_resource: '@tool://my-tool', mode: 'configure', parameters: {API_KEY: 'xxx'}}
+// 查看配置：parameters 为空
+// 设置配置：parameters 包含要设置的环境变量
 
 // 4. rebuild模式 - 重建沙箱
 {tool_resource: '@tool://my-tool', mode: 'rebuild', parameters: {...}}
 
-// 5. log模式 - 查询日志（新增）
+// 5. log模式 - 查询日志
 {tool_resource: '@tool://my-tool', mode: 'log', parameters: {action: 'tail', lines: 50}}
 {tool_resource: '@tool://my-tool', mode: 'log', parameters: {action: 'search', keyword: 'error'}}
 {tool_resource: '@tool://my-tool', mode: 'log', parameters: {action: 'errors', limit: 20}}

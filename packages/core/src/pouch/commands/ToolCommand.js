@@ -287,39 +287,205 @@ ${JSON.stringify(actualToolResult, null, 2)}
   }
 
   /**
-   * Manual模式 - 查看工具手册
+   * Manual模式 - 从工具接口自动生成手册
    */
   async executeManualMode(tool_resource, startTime) {
+    let sandbox = null
+    
     try {
-      const resourceManager = await this.getResourceManager()
+      // 创建沙箱来分析工具
+      sandbox = new ToolSandbox(tool_resource)
+      sandbox.setResourceManager(await this.getResourceManager())
       
-      // 从tool_resource提取工具ID
-      const toolId = tool_resource.replace('@tool://', '')
-      const manualResource = `@manual://${toolId}`
+      // 分析工具获取接口信息
+      await sandbox.analyze()
+      const analysisResult = sandbox.getAnalysisResult()
       
-      logger.debug(`[PromptXTool] Manual模式: 加载手册 ${manualResource}`)
-      const result = await resourceManager.loadResource(manualResource)
-      
-      if (!result.success) {
-        throw new Error(`Failed to load manual: ${result.error?.message || 'Manual not found'}`)
+      // 获取工具实例
+      const toolInstance = sandbox.toolInstance
+      if (!toolInstance) {
+        throw new Error('Tool instance not found')
       }
+      
+      // 收集工具信息
+      const manual = {
+        toolId: analysisResult.toolId,
+        toolReference: tool_resource,
+        
+        // 从getMetadata获取基础信息
+        metadata: typeof toolInstance.getMetadata === 'function' ? toolInstance.getMetadata() : {},
+        
+        // 从getDependencies获取依赖
+        dependencies: typeof toolInstance.getDependencies === 'function' ? toolInstance.getDependencies() : {},
+        
+        // 从getSchema获取参数定义
+        schema: typeof toolInstance.getSchema === 'function' ? toolInstance.getSchema() : {},
+        
+        // 接口可用性
+        interfaces: {
+          hasExecute: typeof toolInstance.execute === 'function',
+          hasValidate: typeof toolInstance.validate === 'function',
+          hasInit: typeof toolInstance.init === 'function',
+          hasCleanup: typeof toolInstance.cleanup === 'function',
+          hasGetMetadata: typeof toolInstance.getMetadata === 'function',
+          hasGetDependencies: typeof toolInstance.getDependencies === 'function',
+          hasGetSchema: typeof toolInstance.getSchema === 'function'
+        }
+      }
+      
+      // 格式化为易读的手册文本
+      const formattedManual = this.formatToolManual(manual)
       
       return {
         success: true,
         tool_resource: tool_resource,
         mode: 'manual',
         result: {
-          manual: result.content,
-          toolId: toolId
+          manual: formattedManual,
+          raw: manual,
+          toolId: manual.toolId
         },
         metadata: {
           execution_time_ms: Date.now() - startTime,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          source: 'auto-generated'
         }
       }
     } catch (error) {
       throw error
+    } finally {
+      // 清理沙箱
+      if (sandbox) {
+        try {
+          await sandbox.cleanup()
+        } catch (cleanupError) {
+          logger.warn(`[PromptXTool] 清理沙箱失败: ${cleanupError.message}`)
+        }
+      }
     }
+  }
+  
+  /**
+   * 格式化工具信息为手册文本
+   */
+  formatToolManual(manual) {
+    const lines = []
+    
+    // 标题 - 优先使用name，然后是id，最后是toolId
+    const displayName = manual.metadata.name || manual.metadata.id || manual.toolId
+    lines.push(`# 工具手册: ${displayName}`)
+    lines.push('')
+    
+    // 基础信息
+    lines.push('## 基础信息')
+    if (manual.metadata.id || manual.toolId) {
+      lines.push(`**标识**: @tool://${manual.metadata.id || manual.toolId}`)
+    }
+    if (manual.metadata.name) {
+      lines.push(`**名称**: ${manual.metadata.name}`)
+    }
+    if (manual.metadata.description) {
+      lines.push(`**描述**: ${manual.metadata.description}`)
+    }
+    if (manual.metadata.version) {
+      lines.push(`**版本**: ${manual.metadata.version}`)
+    }
+    if (manual.metadata.category) {
+      lines.push(`**分类**: ${manual.metadata.category}`)
+    }
+    if (manual.metadata.author) {
+      lines.push(`**作者**: ${manual.metadata.author}`)
+    }
+    if (manual.metadata.tags && manual.metadata.tags.length > 0) {
+      lines.push(`**标签**: ${manual.metadata.tags.join(', ')}`)
+    }
+    lines.push('')
+    
+    // 适用场景（新增）
+    if (manual.metadata.scenarios && manual.metadata.scenarios.length > 0) {
+      lines.push('## 适用场景')
+      manual.metadata.scenarios.forEach(scenario => {
+        lines.push(`- ✅ ${scenario}`)
+      })
+      lines.push('')
+    }
+    
+    // 限制说明（新增）
+    if (manual.metadata.limitations && manual.metadata.limitations.length > 0) {
+      lines.push('## 限制说明')
+      manual.metadata.limitations.forEach(limitation => {
+        lines.push(`- ❌ ${limitation}`)
+      })
+      lines.push('')
+    }
+    
+    // 环境变量
+    if (manual.metadata.envVars && manual.metadata.envVars.length > 0) {
+      lines.push('## 环境变量')
+      lines.push('| 名称 | 必需 | 默认值 | 描述 |')
+      lines.push('|------|------|--------|------|')
+      manual.metadata.envVars.forEach(v => {
+        const required = v.required ? '✅' : '❌'
+        const defaultVal = v.default || '-'
+        lines.push(`| ${v.name} | ${required} | ${defaultVal} | ${v.description || ''} |`)
+      })
+      lines.push('')
+    }
+    
+    // 依赖
+    if (Object.keys(manual.dependencies).length > 0) {
+      lines.push('## 依赖包')
+      lines.push('| 包名 | 版本 |')
+      lines.push('|------|------|')
+      Object.entries(manual.dependencies).forEach(([name, version]) => {
+        lines.push(`| ${name} | ${version} |`)
+      })
+      lines.push('')
+    }
+    
+    // 参数Schema
+    if (manual.schema.properties && Object.keys(manual.schema.properties).length > 0) {
+      lines.push('## 参数定义')
+      lines.push('| 参数 | 类型 | 必需 | 描述 |')
+      lines.push('|------|------|------|------|')
+      
+      const required = manual.schema.required || []
+      Object.entries(manual.schema.properties).forEach(([key, prop]) => {
+        const isRequired = required.includes(key) ? '✅' : '❌'
+        const type = prop.type || 'any'
+        const desc = prop.description || ''
+        lines.push(`| ${key} | ${type} | ${isRequired} | ${desc} |`)
+      })
+      lines.push('')
+    }
+    
+    // 接口信息
+    lines.push('## 接口实现')
+    lines.push('| 接口 | 已实现 |')
+    lines.push('|------|--------|')
+    Object.entries(manual.interfaces).forEach(([key, value]) => {
+      const impl = value ? '✅' : '❌'
+      const name = key.replace('has', '')
+      lines.push(`| ${name} | ${impl} |`)
+    })
+    lines.push('')
+    
+    // 使用示例
+    lines.push('## 使用示例')
+    lines.push('```javascript')
+    lines.push(`// 执行工具`)
+    lines.push(`{tool_resource: '${manual.toolReference}', mode: 'execute', parameters: {...}}`)
+    lines.push('')
+    if (manual.metadata.envVars && manual.metadata.envVars.length > 0) {
+      lines.push(`// 配置环境变量`)
+      lines.push(`{tool_resource: '${manual.toolReference}', mode: 'configure', parameters: {KEY: 'value'}}`)
+      lines.push('')
+    }
+    lines.push(`// 查看日志`)
+    lines.push(`{tool_resource: '${manual.toolReference}', mode: 'log', parameters: {action: 'tail'}}`)
+    lines.push('```')
+    
+    return lines.join('\n')
   }
 
   /**
