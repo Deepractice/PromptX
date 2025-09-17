@@ -2,7 +2,7 @@
 <constraint>
   ## 文件创建方式约束
   - 所有工具文件必须通过filesystem工具创建
-  - 创建前必须用toolx的manual模式查看手册
+  - 创建前必须用toolx的manual模式查看接口说明
   - 路径自动限制在~/.promptx目录内
   - 不再直接操作本地文件系统
   - 必须遵循VM层文件系统边界控制
@@ -41,9 +41,9 @@
 <process>
   ## 使用filesystem工具创建工具流程
   
-  ### Step 1: 查看filesystem手册
+  ### Step 1: 查看filesystem接口说明
   ```
-  行动：使用toolx的manual模式查看手册
+  行动：使用toolx的manual模式查看接口
   命令：{tool_resource: '@tool://filesystem', mode: 'manual'}
   关注：write_file、create_directory、list_directory等方法
   重点：参数格式、路径规范、返回值格式

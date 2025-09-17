@@ -66,6 +66,17 @@ class ToolLogger {
   }
 
   /**
+   * 记录 debug 日志
+   */
+  debug(message, data = {}) {
+    const content = this._format('DEBUG', message, data);
+    this._write(content);
+    
+    // Debug 总是输出到 promptx logger，方便鲁班调试
+    logger.debug(`[ToolLogger:${this.toolId}] ${message}`, data);
+  }
+
+  /**
    * 记录 info 日志
    */
   info(message, data = {}) {
@@ -76,6 +87,17 @@ class ToolLogger {
     if (process.env.NODE_ENV === 'development') {
       logger.debug(`[ToolLogger:${this.toolId}] ${message}`, data);
     }
+  }
+
+  /**
+   * 记录 warn 日志
+   */
+  warn(message, data = {}) {
+    const content = this._format('WARN', message, data);
+    this._write(content);
+    
+    // 警告输出到 promptx logger
+    logger.warn(`[ToolLogger:${this.toolId}] ${message}`, data);
   }
 
   /**
@@ -100,6 +122,42 @@ class ToolLogger {
     
     // 错误总是输出到 promptx logger
     logger.error(`[ToolLogger:${this.toolId}] ${message}`, data);
+  }
+
+  /**
+   * 记录任意级别的日志（通用方法）
+   */
+  log(level, message, data = {}) {
+    // 标准化级别名称
+    const normalizedLevel = level.toUpperCase();
+    const content = this._format(normalizedLevel, message, data);
+    this._write(content);
+    
+    // 输出到 promptx logger
+    const loggerMethod = logger[level.toLowerCase()] || logger.debug;
+    loggerMethod(`[ToolLogger:${this.toolId}] ${message}`, data);
+  }
+
+  /**
+   * 记录 trace 日志（最详细的调试信息）
+   */
+  trace(message, data = {}) {
+    const content = this._format('TRACE', message, data);
+    this._write(content);
+    
+    // Trace 输出到 debug 级别
+    logger.debug(`[ToolLogger:${this.toolId}] [TRACE] ${message}`, data);
+  }
+
+  /**
+   * 记录 fatal 日志（致命错误）
+   */
+  fatal(message, data = {}) {
+    const content = this._format('FATAL', message, data);
+    this._write(content);
+    
+    // Fatal 输出到 error 级别
+    logger.error(`[ToolLogger:${this.toolId}] [FATAL] ${message}`, data);
   }
 
   /**

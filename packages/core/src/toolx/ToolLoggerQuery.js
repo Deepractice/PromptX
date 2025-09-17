@@ -210,7 +210,7 @@ class ToolLoggerQuery {
       const content = await fs.promises.readFile(this.logFile, 'utf8');
       const lines = content.trim().split('\n').filter(Boolean);
       
-      const levels = { INFO: 0, ERROR: 0, WARN: 0, DEBUG: 0 };
+      const levels = { TRACE: 0, DEBUG: 0, INFO: 0, WARN: 0, ERROR: 0, FATAL: 0 };
       let firstLog = null;
       let lastLog = null;
 
@@ -271,6 +271,24 @@ class ToolLoggerQuery {
    */
   async getErrors(limit = 50) {
     return this.search('', { level: 'ERROR', limit });
+  }
+
+  /**
+   * 获取警告日志
+   * @param {number} limit - 最大数量
+   * @returns {Promise<Array>} 警告日志列表
+   */
+  async getWarnings(limit = 50) {
+    return this.search('', { level: 'WARN', limit });
+  }
+
+  /**
+   * 获取调试日志
+   * @param {number} limit - 最大数量
+   * @returns {Promise<Array>} 调试日志列表
+   */
+  async getDebugLogs(limit = 50) {
+    return this.search('', { level: 'DEBUG', limit });
   }
 
   /**

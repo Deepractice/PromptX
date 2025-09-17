@@ -112,7 +112,7 @@ graph LR
 // 1. execute模式 - 执行工具
 {tool_resource: '@tool://my-tool', mode: 'execute', parameters: {...}}
 
-// 2. manual模式 - 查看手册
+// 2. manual模式 - 查看工具接口信息
 {tool_resource: '@tool://my-tool', mode: 'manual'}
 
 // 3. configure模式 - 配置环境变量

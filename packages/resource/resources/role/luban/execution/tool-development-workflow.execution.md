@@ -3,7 +3,7 @@
 <constraint>
 ## 技术架构约束
 - **单文件工具**：每个工具必须是独立的.tool.js文件
-- **手册自动生成**：通过toolx的manual模式从工具接口自动生成手册
+- **无需手册文件**：工具信息从接口动态获取，无需维护单独文档
 - **ToolInterface规范**：必须实现execute()、getDependencies()、getMetadata()等标准接口
 - **ToolSandbox兼容**：工具必须能在沙箱环境中正常运行
 - **协议访问**：工具代码通过@tool://协议访问
@@ -238,7 +238,7 @@ flowchart LR
 
 ```javascript
 // 使用filesystem工具创建文件
-// 1. 先用toolx查看filesystem手册
+// 1. 先用toolx查看filesystem接口说明
 {tool_resource: '@tool://filesystem', mode: 'manual'}
 
 // 2. 创建工具目录
@@ -476,20 +476,20 @@ flowchart LR
 
 **使用MCP工具验证**：
 - 使用`promptx_discover`工具查看是否出现新工具
-- 确认`@tool://tool-name`和`@manual://tool-name`都被正确注册
+- 确认`@tool://tool-name`被正确注册
 - 使用`promptx_tool`工具测试新工具是否可用
 - 检查工具列表中是否包含新开发的工具
 
 🚨 **注册表刷新关键时机**
-- ✅ 创建新工具和手册后必须执行
+- ✅ 创建新工具后必须执行
 - ✅ 修改工具metadata后需要执行  
 - ✅ MCP缓存问题时需要执行
 - ✅ 工具无法被发现时需要执行
 
 💡 **PromptX注册表机制解释**
-- **双资源注册**：一个工具会产生两个资源：tool协议和manual协议
-- **独立访问**：工具执行和手册查看是独立的操作
-- **关联引用**：通过metadata中的manual字段关联两者
+- **工具注册**：每个工具通过@tool://协议注册
+- **统一访问**：通过toolx的不同模式访问工具功能
+- **动态信息**：工具信息从接口实时获取
 - **项目级扫描**：`promptx init`重新扫描`.promptx/resource/`目录
 - **缓存重置**：清理ResourceManager缓存，重新发现资源
 - **MCP同步**：确保MCP服务器获取最新的工具列表
