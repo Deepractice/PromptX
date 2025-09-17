@@ -88,8 +88,7 @@ export const toolxTool: ToolWithHandler = {
       mode: {
         type: 'string',
         enum: ['execute', 'manual', 'configure', 'rebuild'],
-        description: '执行模式：execute(执行工具), manual(查看手册), configure(配置环境变量), rebuild(重建沙箱)',
-        default: 'execute'
+        description: '执行模式：execute(执行工具), manual(查看手册), configure(配置环境变量), rebuild(重建沙箱)'
       },
       parameters: {
         type: 'object',
@@ -101,9 +100,9 @@ export const toolxTool: ToolWithHandler = {
         default: 30000
       }
     },
-    required: ['tool_resource']
+    required: ['tool_resource', 'mode']
   },
-  handler: async (args: { tool_resource: string; mode?: string; parameters?: any; timeout?: number }) => {
+  handler: async (args: { tool_resource: string; mode: string; parameters?: any; timeout?: number }) => {
     const core = await import('@promptx/core');
     const coreExports = core.default || core;
     const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
@@ -115,10 +114,8 @@ export const toolxTool: ToolWithHandler = {
     // 构建CLI参数
     const cliArgs = [args.tool_resource];
     
-    // 添加mode（如果指定且不是默认的execute）
-    if (args.mode && args.mode !== 'execute') {
-      cliArgs.push(args.mode);
-    }
+    // 添加mode
+    cliArgs.push(args.mode);
     
     // 添加parameters（如果有）
     if (args.parameters) {
