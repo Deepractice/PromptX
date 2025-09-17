@@ -51,7 +51,7 @@ class ToolCommand extends BasePouchCommand {
         // 解析mode和parameters
         if (args.length >= 2) {
           // 检查第二个参数是否是mode
-          const validModes = ['execute', 'manual', 'configure', 'rebuild'];
+          const validModes = ['execute', 'manual', 'configure', 'rebuild', 'log'];
           if (validModes.includes(args[1])) {
             toolArgs.mode = args[1];
             // 如果有第三个参数，它是parameters
