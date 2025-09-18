@@ -7,8 +7,13 @@
  * 架构优势：
  * 1. 复用MCP官方实现，减少维护成本
  * 2. 继承MCP的所有安全机制和bug修复
- * 3. 代码量从500行减至100行以内
- * 4. 依赖从4个减至1个核心依赖
+ * 3. 代码量精简，易于维护
+ * 4. 依赖最小化
+ * 
+ * 接口规范：
+ * - 只实现4个核心方法：getDependencies, getMetadata, getSchema, execute
+ * - 参数验证由 ToolValidator 根据 getSchema 自动处理
+ * - 业务相关的验证逻辑放在 execute 方法中
  */
 
 const path = require('path');
@@ -31,12 +36,26 @@ module.exports = {
    */
   getMetadata() {
     return {
+      id: 'filesystem',
       name: 'filesystem',
       description: '基于MCP标准的文件系统操作工具，提供读写、搜索、编辑等功能',
       version: '2.0.0',
       category: 'system',
       author: '鲁班',
-      tags: ['file', 'system', 'io', 'mcp']
+      tags: ['file', 'system', 'io', 'mcp'],
+      scenarios: [
+        '文件读写操作',
+        '目录管理和遍历',
+        '文件搜索和批量处理',
+        'PromptX资源文件管理',
+        '项目文件结构分析'
+      ],
+      limitations: [
+        '默认只能访问 ~/.promptx 目录',
+        '可通过环境变量配置额外允许的目录',
+        '不支持符号链接操作',
+        '单文件大小建议不超过10MB'
+      ]
     };
   },
 
@@ -45,75 +64,244 @@ module.exports = {
    */
   getSchema() {
     return {
-      type: 'object',
-      properties: {
-        method: {
-          type: 'string',
-          description: 'MCP方法名',
-          enum: [
-            'read_text_file',
-            'read_media_file', 
-            'read_multiple_files',
-            'write_file',
-            'edit_file',
-            'create_directory',
-            'list_directory',
-            'list_directory_with_sizes',
-            'directory_tree',
-            'move_file',
-            'search_files',
-            'get_file_info',
-            'list_allowed_directories'
-          ]
-        },
-        // 通用参数，根据method动态使用
-        path: { type: 'string', description: '文件或目录路径' },
-        paths: { type: 'array', items: { type: 'string' }, description: '多个文件路径' },
-        content: { type: 'string', description: '文件内容' },
-        head: { type: 'number', description: '读取前N行' },
-        tail: { type: 'number', description: '读取后N行' },
-        edits: { 
-          type: 'array', 
-          description: '编辑操作列表',
-          items: {
-            type: 'object',
-            properties: {
-              oldText: { type: 'string' },
-              newText: { type: 'string' }
+      parameters: {
+        type: 'object',
+        properties: {
+          method: {
+            type: 'string',
+            description: 'MCP方法名',
+            enum: [
+              'read_text_file',
+              'read_media_file', 
+              'read_multiple_files',
+              'write_file',
+              'edit_file',
+              'create_directory',
+              'list_directory',
+              'list_directory_with_sizes',
+              'directory_tree',
+              'move_file',
+              'search_files',
+              'get_file_info',
+              'list_allowed_directories'
+            ]
+          },
+          // 通用参数，根据method动态使用
+          path: { type: 'string', description: '文件或目录路径' },
+          paths: { type: 'array', items: { type: 'string' }, description: '多个文件路径' },
+          content: { type: 'string', description: '文件内容' },
+          head: { type: 'number', description: '读取前N行' },
+          tail: { type: 'number', description: '读取后N行' },
+          edits: { 
+            type: 'array', 
+            description: '编辑操作列表',
+            items: {
+              type: 'object',
+              properties: {
+                oldText: { type: 'string' },
+                newText: { type: 'string' }
+              }
             }
+          },
+          dryRun: { type: 'boolean', description: '仅预览不执行' },
+          source: { type: 'string', description: '源路径' },
+          destination: { type: 'string', description: '目标路径' },
+          pattern: { type: 'string', description: '搜索模式' },
+          excludePatterns: { type: 'array', items: { type: 'string' }, description: '排除模式' },
+          sortBy: { type: 'string', enum: ['name', 'size'], description: '排序方式' }
+        },
+        required: ['method']
+      },
+      environment: {
+        type: 'object',
+        properties: {
+          ALLOWED_DIRECTORIES: {
+            type: 'string',
+            description: '允许访问的目录列表（JSON数组格式），默认为 ["~/.promptx"]',
+            default: '["~/.promptx"]'
           }
         },
-        dryRun: { type: 'boolean', description: '仅预览不执行' },
-        source: { type: 'string', description: '源路径' },
-        destination: { type: 'string', description: '目标路径' },
-        pattern: { type: 'string', description: '搜索模式' },
-        excludePatterns: { type: 'array', items: { type: 'string' }, description: '排除模式' },
-        sortBy: { type: 'string', enum: ['name', 'size'], description: '排序方式' }
-      },
-      required: ['method']
+        required: []
+      }
     };
   },
 
   /**
-   * 参数验证
+   * 获取业务错误定义
    */
-  validate(params) {
-    // 首先检查params是否存在
-    if (!params || typeof params !== 'object') {
-      return { 
-        valid: false, 
-        errors: ['参数必须是一个对象'] 
-      };
+  getBusinessErrors() {
+    return [
+      {
+        code: 'PATH_OUTSIDE_SCOPE',
+        description: '路径越权访问',
+        match: /路径越权/,
+        solution: '确保路径在允许的目录范围内',
+        retryable: false
+      },
+      {
+        code: 'FILE_NOT_FOUND',
+        description: '文件或目录不存在',
+        match: /ENOENT|no such file|cannot find/i,
+        solution: '检查文件路径是否正确',
+        retryable: false
+      },
+      {
+        code: 'PERMISSION_DENIED',
+        description: '权限不足',
+        match: /EACCES|permission denied/i,
+        solution: '检查文件或目录的访问权限',
+        retryable: false
+      },
+      {
+        code: 'FILE_TOO_LARGE',
+        description: '文件过大',
+        match: /File too large|ENOBUFS|too big/i,
+        solution: '文件大小不应超过10MB',
+        retryable: false
+      },
+      {
+        code: 'DIRECTORY_NOT_EMPTY',
+        description: '目录非空',
+        match: /ENOTEMPTY|directory not empty/i,
+        solution: '清空目录后再试',
+        retryable: false
+      },
+      {
+        code: 'INVALID_PATH',
+        description: '无效路径',
+        match: /invalid path|illegal characters/i,
+        solution: '检查路径格式是否正确',
+        retryable: false
+      }
+    ];
+  },
+
+  /**
+   * 获取允许的目录列表
+   */
+  getAllowedDirectories() {
+    const { api } = this;
+    
+    // 尝试从环境变量获取配置
+    let allowedDirs = ['~/.promptx'];  // 默认值
+    
+    if (api && api.environment) {
+      try {
+        const configStr = api.environment.get('ALLOWED_DIRECTORIES');
+        if (configStr) {
+          const parsed = JSON.parse(configStr);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            allowedDirs = parsed;
+          }
+        }
+      } catch (error) {
+        // 解析失败时使用默认值
+        api?.logger?.warn('Failed to parse ALLOWED_DIRECTORIES', { error: error.message });
+      }
     }
     
-    if (!params.method) {
-      return { 
-        valid: false, 
-        errors: ['缺少必需参数: method'] 
-      };
-    }
+    // 将 ~ 替换为用户目录，并规范化路径
+    return allowedDirs.map(dir => {
+      const expanded = dir.replace(/^~/, os.homedir());
+      return path.resolve(expanded);
+    });
+  },
 
-    // 根据不同的method验证必需参数
+  /**
+   * 初始化MCP文件系统实例
+   * 缓存实例以避免重复初始化
+   */
+  async getMCPInstance() {
+    if (!this._mcpInstance) {
+      // 动态导入MCP filesystem模块的lib文件
+      // importx 由 ToolSandbox 在沙箱环境中提供，自动处理ES Module
+      // 注意：必须导入 dist/lib.js，因为主入口是CLI服务器
+      const mcpModule = await importx('@modelcontextprotocol/server-filesystem/dist/lib.js');
+      
+      // 获取允许的目录列表
+      const allowedDirectories = this.getAllowedDirectories();
+      
+      // 设置允许的目录
+      mcpModule.setAllowedDirectories(allowedDirectories);
+      
+      this._mcpInstance = mcpModule;
+      this._allowedDirectories = allowedDirectories;
+      
+      // 记录日志
+      const { api } = this;
+      api?.logger?.info('Filesystem initialized', { 
+        allowedDirectories: this._allowedDirectories 
+      });
+    }
+    return this._mcpInstance;
+  },
+
+  /**
+   * PromptX特定的路径处理
+   * 将相对路径转换为绝对路径，并确保在允许的目录范围内
+   */
+  resolvePromptXPath(inputPath) {
+    const { api } = this;
+    
+    // 获取允许的目录列表
+    const allowedDirs = this._allowedDirectories || this.getAllowedDirectories();
+    
+    if (!inputPath) {
+      // 没有路径时返回第一个允许的目录
+      return allowedDirs[0];
+    }
+    
+    // 处理 ~ 开头的路径
+    const expandedPath = inputPath.replace(/^~/, os.homedir());
+    
+    // 如果是绝对路径
+    if (path.isAbsolute(expandedPath)) {
+      const resolved = path.resolve(expandedPath);
+      
+      // 检查是否在任何允许的目录内
+      const isAllowed = allowedDirs.some(dir => resolved.startsWith(dir));
+      
+      if (!isAllowed) {
+        const dirsStr = allowedDirs.join(', ');
+        api?.logger?.warn('Path access denied', { path: resolved, allowedDirs });
+        throw new Error(`路径越权: ${inputPath} 不在允许的目录范围内 [${dirsStr}]`);
+      }
+      
+      return resolved;
+    }
+    
+    // 相对路径，尝试在每个允许的目录中解析
+    // 优先使用第一个允许的目录（通常是 ~/.promptx）
+    const baseDir = allowedDirs[0];
+    const fullPath = path.join(baseDir, expandedPath);
+    const resolved = path.resolve(fullPath);
+    
+    // 安全检查：确保解析后的路径在允许的目录内
+    const isAllowed = allowedDirs.some(dir => resolved.startsWith(dir));
+    
+    if (!isAllowed) {
+      const dirsStr = allowedDirs.join(', ');
+      api?.logger?.warn('Path resolution failed', { path: inputPath, resolved, allowedDirs });
+      throw new Error(`路径越权: ${inputPath} 解析后超出允许的目录范围 [${dirsStr}]`);
+    }
+    
+    return resolved;
+  },
+
+  /**
+   * 执行工具 - 包装MCP实现
+   */
+  async execute(params) {
+    const { api } = this;
+    
+    // 记录执行开始
+    api?.logger?.info('Executing filesystem operation', { 
+      method: params.method,
+      path: params.path || params.paths || params.source
+    });
+    
+    // 参数验证由 ToolValidator 根据 getSchema() 自动处理
+    // 这里进行 method 相关的业务验证
     const methodRequirements = {
       'read_text_file': ['path'],
       'read_media_file': ['path'],
@@ -132,91 +320,23 @@ module.exports = {
 
     const required = methodRequirements[params.method];
     if (!required) {
-      return { 
-        valid: false, 
-        errors: [`不支持的方法: ${params.method}`] 
-      };
+      throw new Error(`不支持的方法: ${params.method}`);
     }
 
     const missing = required.filter(field => !params[field]);
     if (missing.length > 0) {
-      return { 
-        valid: false, 
-        errors: [`缺少必需参数: ${missing.join(', ')}`] 
-      };
+      throw new Error(`方法 ${params.method} 缺少必需参数: ${missing.join(', ')}`);
     }
 
-    return { valid: true, errors: [] };
-  },
-
-  /**
-   * 初始化MCP文件系统实例
-   * 缓存实例以避免重复初始化
-   */
-  async getMCPInstance() {
-    if (!this._mcpInstance) {
-      // 动态导入MCP filesystem模块的lib文件
-      // importx 由 ToolSandbox 在沙箱环境中提供，自动处理ES Module
-      // 注意：必须导入 dist/lib.js，因为主入口是CLI服务器
-      const mcpModule = await importx('@modelcontextprotocol/server-filesystem/dist/lib.js');
-      
-      // 获取基础路径
-      const basePath = path.join(os.homedir(), '.promptx');
-      
-      // 设置允许的目录（只允许~/.promptx）
-      mcpModule.setAllowedDirectories([basePath]);
-      
-      this._mcpInstance = mcpModule;
-      this._basePath = basePath;
-    }
-    return this._mcpInstance;
-  },
-
-  /**
-   * PromptX特定的路径处理
-   * 将相对路径转换为基于~/.promptx的绝对路径
-   */
-  resolvePromptXPath(inputPath) {
-    if (!inputPath) return this._basePath;
-    
-    const basePath = this._basePath || path.join(os.homedir(), '.promptx');
-    
-    // 如果是绝对路径，确保在允许范围内
-    if (path.isAbsolute(inputPath)) {
-      if (!inputPath.startsWith(basePath)) {
-        throw new Error(`路径越权: ${inputPath} 不在 ${basePath} 内`);
-      }
-      return inputPath;
-    }
-    
-    // 相对路径，基于basePath解析
-    const fullPath = path.join(basePath, inputPath);
-    const resolved = path.resolve(fullPath);
-    
-    // 安全检查
-    if (!resolved.startsWith(basePath)) {
-      throw new Error(`路径越权: ${inputPath} 解析后超出 ${basePath}`);
-    }
-    
-    return resolved;
-  },
-
-  /**
-   * 执行工具 - 包装MCP实现
-   */
-  async execute(params) {
-    // 验证参数
-      const validation = this.validate(params);
-      if (!validation.valid) {
-        throw new Error(validation.errors.join('; '));
-      }
-
+    try {
       // 获取MCP实例
       const mcp = await this.getMCPInstance();
       
       // 特殊处理list_allowed_directories
       if (params.method === 'list_allowed_directories') {
-        return [this._basePath];
+        const dirs = this._allowedDirectories || this.getAllowedDirectories();
+        api?.logger?.info('Returning allowed directories', { directories: dirs });
+        return dirs;
       }
 
       // 准备MCP调用参数
@@ -416,9 +536,9 @@ module.exports = {
             dot: true
           });
           
-          // 转换为相对路径
-          const basePath = this._basePath;
-          result = foundFiles.map(file => path.relative(basePath, file));
+          // 转换为相对路径（相对于第一个允许的目录）
+          const baseDir = this._allowedDirectories?.[0] || this.getAllowedDirectories()[0];
+          result = foundFiles.map(file => path.relative(baseDir, file));
           break;
         }
           
@@ -430,6 +550,21 @@ module.exports = {
           throw new Error(`不支持的方法: ${params.method}`);
       }
       
+      // 记录执行成功
+      api?.logger?.info('Filesystem operation completed', { 
+        method: params.method,
+        success: true 
+      });
+      
       return result;
+      
+    } catch (error) {
+      // 记录错误
+      api?.logger?.error('Filesystem operation failed', { 
+        method: params.method,
+        error: error.message 
+      });
+      throw error;
+    }
   }
 };

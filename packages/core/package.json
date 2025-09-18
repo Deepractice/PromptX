@@ -39,6 +39,7 @@
     "ajv": "^8.17.1",
     "env-paths": "2.2.1",
     "eta": "^3.5.0",
+    "extract-comments": "^1.1.0",
     "fs-extra": "^11.3.0",
     "glob": "^10.4.5",
     "importx": "^0.5.2",

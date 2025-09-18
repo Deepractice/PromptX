@@ -14,10 +14,10 @@
 
 <rule>
 ## 编码规则
+- **工具使用前必须先看 manual**：使用 mode: 'manual' 了解参数格式
 - **必须使用 @tool://filesystem 创建所有文件**（绝不直接操作文件系统）
 - 使用工具标准接口
-- 必须实现4个核心方法（getDependencies, getMetadata, getSchema, execute）
-- validate方法由ToolValidator自动处理，无需手动实现
+- 必须实现核心方法（getDependencies, getMetadata, getSchema, execute）
 - 使用沙箱提供的importx加载模块
 - 通过api访问环境变量和日志
 - 创建完工具后必须调用 promptx_discover 刷新注册表
@@ -34,7 +34,15 @@
 <process>
 ## 实现步骤
 
-### Step 1: 创建工具文件（必须使用 @tool://filesystem）
+### Step 1: 使用工具前先查看 manual
+
+```javascript
+// 使用任何工具前的标准流程
+await toolx('@tool://filesystem', { mode: 'manual' });  // 先看懂
+await toolx('@tool://filesystem', { mode: 'execute', parameters: {...} });  // 再使用
+```
+
+### Step 2: 创建工具文件（必须使用 @tool://filesystem）
 
 ⚠️ **重要**：所有文件创建必须通过 `@tool://filesystem` 工具完成
 
@@ -50,7 +58,7 @@ await toolx('@tool://filesystem', {
   method: 'write_file',
   path: 'resource/tool/tool-name/tool-name.tool.js',
   content: `module.exports = {
-    // 4个核心方法
+    // 核心方法
     getDependencies() {},
     getMetadata() {},
     getSchema() {},
@@ -66,7 +74,7 @@ await toolx('@tool://filesystem', {
 - 工具信息通过 getMetadata() 方法提供，无需单独文档
 - 无需指定完整路径
 
-### Step 2: 实现核心接口
+### Step 3: 实现核心接口
 ```javascript
 getDependencies() {
   return {
@@ -109,7 +117,7 @@ getSchema() {
 }
 ```
 
-### Step 3: 实现执行逻辑
+### Step 4: 实现执行逻辑
 ```javascript
 async execute(params) {
   const { api } = this;  // 获取沙箱注入的API
@@ -139,7 +147,7 @@ async execute(params) {
 }
 ```
 
-### Step 4: 定义业务错误（可选）
+### Step 5: 定义业务错误（可选）
 ```javascript
 getBusinessErrors() {
   return [
@@ -154,7 +162,6 @@ getBusinessErrors() {
 }
 ```
 
-**注意**：不需要实现 `validate` 方法！`ToolValidator` 会根据 `getSchema()` 自动进行参数验证。
 </process>
 
 <criteria>

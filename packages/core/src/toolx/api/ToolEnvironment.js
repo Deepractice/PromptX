@@ -1,4 +1,5 @@
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const logger = require('@promptx/logger');
 
@@ -23,16 +24,16 @@ class ToolEnvironment {
   }
 
   /**
-   * 获取环境变量值
+   * 获取环境变量值（同步方法）
    * @param {string} key - 环境变量名
-   * @returns {Promise<string|undefined>} 环境变量值
+   * @returns {string|undefined} 环境变量值
    */
-  async get(key) {
+  get(key) {
     if (typeof key !== 'string') {
       throw new Error('Environment variable key must be a string');
     }
 
-    const env = await this._loadEnv();
+    const env = this._loadEnvSync();
     return env[key];
   }
 
@@ -83,24 +84,24 @@ class ToolEnvironment {
   }
 
   /**
-   * 获取所有环境变量
-   * @returns {Promise<Object>} 所有环境变量的键值对
+   * 获取所有环境变量（同步方法）
+   * @returns {Object} 所有环境变量的键值对
    */
-  async getAll() {
-    return await this._loadEnv();
+  getAll() {
+    return this._loadEnvSync();
   }
 
   /**
-   * 检查环境变量是否存在
+   * 检查环境变量是否存在（同步方法）
    * @param {string} key - 要检查的环境变量名
-   * @returns {Promise<boolean>} 是否存在
+   * @returns {boolean} 是否存在
    */
-  async has(key) {
+  has(key) {
     if (typeof key !== 'string') {
       throw new Error('Environment variable key must be a string');
     }
 
-    const env = await this._loadEnv();
+    const env = this._loadEnvSync();
     return key in env;
   }
 
@@ -136,7 +137,33 @@ class ToolEnvironment {
   }
 
   /**
-   * 内部方法：加载 .env 文件
+   * 内部方法：同步加载 .env 文件
+   * @private
+   */
+  _loadEnvSync() {
+    // 如果有缓存，返回缓存
+    if (this.envCache !== null) {
+      return { ...this.envCache };
+    }
+
+    try {
+      const content = fs.readFileSync(this.envPath, 'utf8');
+      const env = this._parseEnvFile(content);
+      this.envCache = env;
+      return { ...env };
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        // 文件不存在，返回空对象
+        this.envCache = {};
+        return {};
+      }
+      logger.error(`[ToolEnvironment] Failed to load .env file: ${error.message}`);
+      throw new Error(`Failed to load environment variables: ${error.message}`);
+    }
+  }
+
+  /**
+   * 内部方法：异步加载 .env 文件（用于写操作后的重新加载）
    * @private
    */
   async _loadEnv() {
@@ -146,7 +173,7 @@ class ToolEnvironment {
     }
 
     try {
-      const content = await fs.readFile(this.envPath, 'utf8');
+      const content = await fsPromises.readFile(this.envPath, 'utf8');
       const env = this._parseEnvFile(content);
       this.envCache = env;
       return { ...env };
@@ -169,13 +196,13 @@ class ToolEnvironment {
     try {
       // 确保目录存在
       const dir = path.dirname(this.envPath);
-      await fs.mkdir(dir, { recursive: true });
+      await fsPromises.mkdir(dir, { recursive: true });
       
       // 生成 .env 格式的内容
       const content = this._generateEnvFile(env);
       
       // 写入文件
-      await fs.writeFile(this.envPath, content, 'utf8');
+      await fsPromises.writeFile(this.envPath, content, 'utf8');
     } catch (error) {
       logger.error(`[ToolEnvironment] Failed to save .env file: ${error.message}`);
       throw new Error(`Failed to save environment variables: ${error.message}`);
