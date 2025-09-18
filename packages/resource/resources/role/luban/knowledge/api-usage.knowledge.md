@@ -2,6 +2,32 @@
 
 <knowledge>
 
+## api.importx模块加载
+
+### 智能模块导入
+```javascript
+async execute(params) {
+  const { api } = this;
+  
+  // 智能加载各种格式的模块
+  const _ = await api.importx('lodash');        // CommonJS函数导出
+  const axios = await api.importx('axios');      // 默认导出风格
+  const moment = await api.importx('moment');    // 函数式导出
+  const joi = await api.importx('joi');          // 对象式导出
+  
+  // 直接使用，无需关心模块格式
+  const result = _.merge({a: 1}, {b: 2});
+  const response = await axios.get(url);
+  const now = moment().format();
+}
+```
+
+### 核心特性
+- **自动适配**：智能处理CommonJS/ESM差异
+- **降级策略**：4层策略确保正确加载
+- **缓存机制**：避免重复加载
+- **预装优先**：优先使用系统预装包
+
 ## api.environment环境变量
 
 ### 读取环境变量

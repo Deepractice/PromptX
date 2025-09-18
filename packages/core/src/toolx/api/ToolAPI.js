@@ -7,6 +7,7 @@
 
 const ToolEnvironment = require('./ToolEnvironment');
 const ToolLogger = require('./ToolLogger');
+const ToolModuleImport = require('./ToolModuleImport');
 
 class ToolAPI {
   constructor(toolId, sandboxPath, resourceManager = null) {
@@ -17,6 +18,7 @@ class ToolAPI {
     // 延迟初始化的服务实例
     this._environment = null;
     this._logger = null;
+    this._moduleImport = null;
   }
 
   /**
@@ -39,6 +41,27 @@ class ToolAPI {
       this._logger = new ToolLogger(this.toolId, this.sandboxPath);
     }
     return this._logger;
+  }
+
+  /**
+   * 模块导入器 - 提供智能的模块加载功能
+   * @returns {ToolModuleImport} 模块导入器实例
+   */
+  get moduleImport() {
+    if (!this._moduleImport) {
+      this._moduleImport = new ToolModuleImport(this.toolId, this.sandboxPath);
+    }
+    return this._moduleImport;
+  }
+
+  /**
+   * 智能导入模块 - 工具使用的统一接口
+   * 自动处理CommonJS/ESM差异，提供一致的导入体验
+   * @param {string} moduleName - 要导入的模块名称
+   * @returns {Promise<any>} 规范化后的模块
+   */
+  async importx(moduleName) {
+    return await this.moduleImport.import(moduleName);
   }
 
   /**

@@ -1,14 +1,5 @@
-// importx is ESM-only package, needs dynamic import
-let importx = null;
-const getImportx = async () => {
-  if (!importx) {
-    const { import: importFn } = await import('importx');
-    importx = importFn;
-  }
-  return importx;
-};
-
-// Removed global parentURL, changed to dynamically generate when calling importx
+// Note: Module loading is now handled by ToolModuleImport class
+// The importx package is dynamically loaded inside ToolModuleImport when needed
 
 // Directly import error classes
 const { 
@@ -679,35 +670,17 @@ class ToolSandbox {
       this.logger.info('[ToolSandbox] Injected FormData polyfill to global');
     }
 
-    // 统一的模块加载函数 - 使用importx，支持预装包和沙箱包的双重解析
+    // 简化的模块加载函数 - 提供基础的importx功能作为后备
+    // 主要的模块加载应该通过 api.importx() 进行
     this.sandboxContext.importx = async (moduleName) => {
+      this.logger.warn(`[ToolSandbox] Direct importx usage detected. Consider using api.importx() instead.`);
+      
+      // 创建临时的 ToolModuleImport 实例
+      const ToolModuleImport = require('./api/ToolModuleImport');
+      const moduleImporter = new ToolModuleImport(this.toolId, this.sandboxPath);
+      
       try {
-        this.logger.debug(`[ToolSandbox] Loading module: ${moduleName}`);
-        
-        // 先尝试从预装包获取
-        const { getPreinstalledDependenciesManager } = require('@promptx/resource');
-        const preinstalledManager = getPreinstalledDependenciesManager();
-        
-        // 使用新的 getPreinstalledModule 方法直接获取模块
-        const preinstalledModule = await preinstalledManager.getPreinstalledModule(moduleName);
-        if (preinstalledModule) {
-          this.logger.debug(`[ToolSandbox] Using preinstalled module: ${moduleName}`);
-          return preinstalledModule;
-        }
-        
-        // 如果不是预装的包，使用 importx 从沙箱加载
-        this.logger.debug(`[ToolSandbox] Loading user-installed module: ${moduleName}`);
-        const importFn = await getImportx();
-        const path = require('path');
-        const { pathToFileURL } = require('url');
-        const toolPackageJson = path.join(this.sandboxPath, 'package.json');
-        const toolParentURL = pathToFileURL(toolPackageJson).href;
-        
-        return await importFn(moduleName, {
-          parentURL: toolParentURL,
-          cache: true,
-          loader: 'auto'
-        });
+        return await moduleImporter.import(moduleName);
       } catch (error) {
         this.logger.error(`[ToolSandbox] Failed to load module ${moduleName}: ${error.message}`);
         throw new ToolError(

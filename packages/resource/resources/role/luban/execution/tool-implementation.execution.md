@@ -18,7 +18,7 @@
 - **必须使用 @tool://filesystem 创建所有文件**（绝不直接操作文件系统）
 - 使用工具标准接口
 - 必须实现核心方法（getDependencies, getMetadata, getSchema, execute）
-- 使用沙箱提供的importx加载模块
+- 使用api.importx智能加载模块
 - 通过api访问环境变量和日志
 - 创建完工具后必须调用 promptx_discover 刷新注册表
 </rule>
@@ -142,8 +142,8 @@ async execute(params) {
   api.logger.info('开始处理', { params });
   
   try {
-    // 加载依赖（沙箱提供importx）
-    const lodash = await importx('lodash');
+    // 使用api.importx智能加载依赖
+    const lodash = await api.importx('lodash');
     
     // 访问环境变量
     const apiKey = await api.environment.get('API_KEY');

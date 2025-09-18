@@ -2,19 +2,21 @@
 
 <knowledge>
 
-## importx统一加载
+## api.importx智能加载
 
 ### 基本用法
-沙箱环境直接提供importx函数，无需require
+通过工具API提供的importx方法加载模块
 ```javascript
 async execute(params) {
-  // 加载任何类型的模块
-  const lodash = await importx('lodash');      // CommonJS
-  const chalk = await importx('chalk');        // ES Module
-  const fs = await importx('fs');              // Node内置
-  const axios = await importx('axios');        // 第三方包
+  const { api } = this;  // 获取注入的API实例
   
-  // 使用加载的模块
+  // 智能加载任何类型的模块
+  const lodash = await api.importx('lodash');      // CommonJS
+  const chalk = await api.importx('chalk');        // ES Module  
+  const fs = await api.importx('fs');              // Node内置
+  const axios = await api.importx('axios');        // 第三方包
+  
+  // 直接使用，自动处理模块格式差异
   const merged = lodash.merge({}, params);
   const colored = chalk.green('Success!');
   const data = await fs.promises.readFile('file.txt');
@@ -24,27 +26,43 @@ async execute(params) {
 
 ### 批量加载
 ```javascript
-// 并行加载多个模块提高性能
-const [lodash, axios, chalk] = await Promise.all([
-  importx('lodash'),
-  importx('axios'),
-  importx('chalk')
-]);
+async execute(params) {
+  const { api } = this;
+  
+  // 并行加载多个模块提高性能
+  const [lodash, axios, chalk] = await Promise.all([
+    api.importx('lodash'),
+    api.importx('axios'),
+    api.importx('chalk')
+  ]);
+}
 ```
 
-### 注意事项
-- importx自动检测模块类型
-- 不需要关心是CommonJS还是ES Module
-- 包括内置缓存机制，重复加载很快
-- 替代了旧的loadModule和require
+### 智能特性
+- **格式自适应**：自动处理CommonJS/ES Module差异
+- **降级策略**：智能识别default导出、函数导出、对象导出
+- **缓存优化**：模块缓存机制，重复加载速度极快（0ms）
+- **预装包优先**：优先使用系统预装包，减少安装时间
 
 ### 常见错误
 ```javascript
-// ❌ 错误：不要用require加载ES Module
-const chalk = require('chalk'); // chalk v5+会报错
-
-// ✅ 正确：统一用importx
+// ❌ 错误：直接使用importx（旧方式）
 const chalk = await importx('chalk');
+
+// ❌ 错误：使用require（不支持ES Module）
+const chalk = require('chalk'); 
+
+// ✅ 正确：使用api.importx（新架构）
+const { api } = this;
+const chalk = await api.importx('chalk');
+```
+
+### 架构说明
+```
+工具 → api.importx() → ToolAPI → ToolModuleImport → 智能加载
+                                         ↓
+                                   降级策略链处理
+                                   模块格式自适应
 ```
 
 </knowledge>
