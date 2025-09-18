@@ -91,4 +91,67 @@ const info = api.getInfo();
 // 返回: { toolId, sandboxPath, version }
 ```
 
+## api.storage持久化存储
+
+### 存储数据
+```javascript
+async execute(params) {
+  const { api } = this;
+  
+  // 存储各种类型的数据（自动JSON序列化）
+  await api.storage.setItem('config', {
+    theme: 'dark',
+    language: 'zh-CN',
+    fontSize: 14
+  });
+  
+  await api.storage.setItem('counter', 42);
+  await api.storage.setItem('enabled', true);
+  await api.storage.setItem('tags', ['tag1', 'tag2']);
+}
+```
+
+### 读取数据
+```javascript
+// 读取存储的数据（自动JSON反序列化）
+const config = await api.storage.getItem('config');
+const counter = await api.storage.getItem('counter');
+
+// 不存在的键返回 null
+const notExists = await api.storage.getItem('not-exists'); // null
+```
+
+### 其他操作
+```javascript
+// 删除指定项
+await api.storage.removeItem('old-data');
+
+// 清空所有存储
+await api.storage.clear();
+
+// 获取所有键名
+const keys = await api.storage.keys();
+// 返回: ['config', 'counter', 'enabled', 'tags']
+
+// 获取存储项数量
+const length = api.storage.length;
+
+// 获取所有数据
+const allData = await api.storage.getAll();
+// 返回: { config: {...}, counter: 42, enabled: true, tags: [...] }
+
+// 检查键是否存在
+const hasConfig = await api.storage.hasItem('config'); // true
+
+// 获取存储大小
+const size = api.storage.getSize(); // 返回字节数
+```
+
+### 核心特性
+- **完全兼容localStorage API**：零学习成本，前端开发者秒懂
+- **自动隔离**：每个工具独立的 `storage.json` 文件
+- **智能序列化**：自动处理对象、数组等复杂类型
+- **持久化保证**：数据存储在 `~/.promptx/toolbox/{toolId}/storage.json`
+- **10MB容量限制**：单个工具最多10MB存储空间
+
 </knowledge>

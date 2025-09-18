@@ -8,6 +8,7 @@
 const ToolEnvironment = require('./ToolEnvironment');
 const ToolLogger = require('./ToolLogger');
 const ToolModuleImport = require('./ToolModuleImport');
+const ToolStorage = require('./ToolStorage');
 
 class ToolAPI {
   constructor(toolId, sandboxPath, resourceManager = null) {
@@ -19,6 +20,7 @@ class ToolAPI {
     this._environment = null;
     this._logger = null;
     this._moduleImport = null;
+    this._storage = null;
   }
 
   /**
@@ -52,6 +54,17 @@ class ToolAPI {
       this._moduleImport = new ToolModuleImport(this.toolId, this.sandboxPath);
     }
     return this._moduleImport;
+  }
+
+  /**
+   * 持久化存储 - 完全兼容 localStorage API
+   * @returns {ToolStorage} 存储管理器实例
+   */
+  get storage() {
+    if (!this._storage) {
+      this._storage = new ToolStorage(this.toolId, this.sandboxPath);
+    }
+    return this._storage;
   }
 
   /**
