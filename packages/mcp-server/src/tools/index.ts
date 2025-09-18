@@ -6,7 +6,7 @@
 export { discoverTool } from './welcome.js';
 export { actionTool } from './action.js';
 export { initTool } from './init.js';
-export { learnTool } from './learn.js';
+// export { learnTool } from './learn.js';  // 暂时禁用 learn 工具
 export { recallTool } from './recall.js';
 export { rememberTool } from './remember.js';
 export { toolxTool } from './toolx.js';
@@ -14,7 +14,7 @@ export { toolxTool } from './toolx.js';
 import { discoverTool } from './welcome.js';
 import { actionTool } from './action.js';
 import { initTool } from './init.js';
-import { learnTool } from './learn.js';
+// import { learnTool } from './learn.js';  // 暂时禁用 learn 工具
 import { recallTool } from './recall.js';
 import { rememberTool } from './remember.js';
 import { toolxTool } from './toolx.js';
@@ -27,7 +27,7 @@ export const allTools = [
   discoverTool,
   actionTool,
   initTool,
-  learnTool,
+  // learnTool,  // 暂时禁用 learn 工具
   recallTool,
   rememberTool,
   toolxTool
