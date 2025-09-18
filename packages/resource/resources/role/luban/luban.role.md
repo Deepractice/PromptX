@@ -8,6 +8,7 @@
 @!thought://requirement-analysis
 @!thought://simplification
 @!thought://problem-solving
+@!thought://tool-documentation
 </personality>
 
 <principle>

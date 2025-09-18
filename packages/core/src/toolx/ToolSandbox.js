@@ -13,7 +13,9 @@ const getImportx = async () => {
 // Directly import error classes
 const { 
   ToolError,
-  VALIDATION_ERRORS
+  VALIDATION_ERRORS,
+  SYSTEM_ERRORS,
+  DEVELOPMENT_ERRORS
 } = require('./errors');
 const ToolDirectoryManager = require('./ToolDirectoryManager'); 
 const SandboxIsolationManager = require('./SandboxIsolationManager');
@@ -154,12 +156,9 @@ class ToolSandbox {
       return this.getAnalysisResult();
     }
 
+    // ResourceManager 应该在创建时就设置好，这里只是 assert
     if (!this.resourceManager) {
-      throw new ToolError(
-        'ResourceManager not set. Call setResourceManager() first.',
-        SYSTEM_ERRORS.RESOURCE_MANAGER_ERROR.code || 'SYSTEM_ERROR',
-        { phase: 'initialization' }
-      );
+      throw new Error('[BUG] ResourceManager should be set during initialization');
     }
 
     try {
@@ -173,7 +172,7 @@ class ToolSandbox {
       if (!resourceResult.success) {
         throw new ToolError(
           `Failed to load tool: ${resourceResult.error?.message || 'Unknown error'}`,
-          SYSTEM_ERRORS.TOOL_NOT_FOUND.code || 'TOOL_NOT_FOUND',
+          SYSTEM_ERRORS.TOOL_NOT_FOUND.code,
           { toolId: this.toolId }
         );
       }
@@ -223,13 +222,8 @@ class ToolSandbox {
       return { success: true, message: 'Dependencies already prepared' };
     }
 
-    if (!this.isAnalyzed) {
-      throw new ToolError(
-        'Tool must be analyzed before preparing dependencies. Call analyze() first.',
-        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
-        { phase: 'prepareDependencies' }
-      );
-    }
+    // 框架应该保证调用顺序，这里只是 assert
+    console.assert(this.isAnalyzed, '[BUG] Tool should be analyzed before preparing dependencies');
 
     try {
       // 1. 确保沙箱目录存在
@@ -301,13 +295,8 @@ class ToolSandbox {
   async configureEnvironment(params = {}) {
     await this.ensureInitialized();
     
-    if (!this.isAnalyzed) {
-      throw new ToolError(
-        'Tool must be analyzed before configuring. Call analyze() first.',
-        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
-        { phase: 'configure' }
-      );
-    }
+    // 框架应该保证调用顺序，这里只是 assert
+    console.assert(this.isAnalyzed, '[BUG] Tool should be analyzed before configuring');
     
     // 创建 ToolAPI 实例来管理环境变量
     const ToolAPI = require('./api/ToolAPI');
@@ -433,13 +422,8 @@ class ToolSandbox {
   async queryLogs(params = {}) {
     await this.ensureInitialized();
     
-    if (!this.isAnalyzed) {
-      throw new ToolError(
-        'Tool must be analyzed before querying logs. Call analyze() first.',
-        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
-        { phase: 'queryLogs' }
-      );
-    }
+    // 框架应该保证调用顺序，这里只是 assert
+    console.assert(this.isAnalyzed, '[BUG] Tool should be analyzed before querying logs');
     
     const ToolLoggerQuery = require('./ToolLoggerQuery');
     const logQuery = new ToolLoggerQuery(this.toolId, this.sandboxPath);
@@ -547,13 +531,8 @@ class ToolSandbox {
   async execute(params = {}) {
     await this.ensureInitialized();
     
-    if (!this.isPrepared) {
-      throw new ToolError(
-        'Dependencies must be prepared before execution. Call prepareDependencies() first.',
-        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
-        { phase: 'execute' }
-      );
-    }
+    // 框架应该保证调用顺序，这里只是 assert
+    console.assert(this.isPrepared, '[BUG] Dependencies should be prepared before execution');
 
     // 在try块外声明，以便catch块能访问
     let businessErrors = [];

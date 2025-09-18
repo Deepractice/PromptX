@@ -197,6 +197,29 @@ const SYSTEM_ERRORS = {
     }
   },
 
+  TOOL_NOT_FOUND: {
+    code: 'TOOL_NOT_FOUND',
+    category: 'SYSTEM',
+    description: '工具未找到',
+    identify: (error) => {
+      return error.message.includes('Tool not found') ||
+             error.message.includes('Failed to load tool');
+    },
+    getSolution: (error, context) => {
+      return {
+        message: '指定的工具不存在',
+        toolId: context?.toolId,
+        suggestions: [
+          '1. 检查工具ID是否正确',
+          '2. 确认工具已安装',
+          '3. 使用 discover 命令查看可用工具',
+          '4. 尝试重新安装工具'
+        ],
+        autoRecoverable: false
+      };
+    }
+  },
+
   UNKNOWN_ERROR: {
     code: 'UNKNOWN_ERROR',
     category: 'SYSTEM',

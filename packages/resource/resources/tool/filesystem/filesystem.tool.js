@@ -1,19 +1,26 @@
 /**
- * Filesystem Tool - MCP Wrapper Version
+ * Filesystem Tool - PromptX 体系的文件系统基础设施
  * 
- * 包装 @modelcontextprotocol/server-filesystem 实现
- * 添加PromptX特定的路径安全限制（只允许访问~/.promptx）
+ * 战略意义：
  * 
- * 架构优势：
- * 1. 复用MCP官方实现，减少维护成本
- * 2. 继承MCP的所有安全机制和bug修复
- * 3. 代码量精简，易于维护
- * 4. 依赖最小化
+ * 1. 架构隔离性
+ * 专为 PromptX 体系设计，通过沙箱隔离确保文件操作不会影响
+ * PromptX 核心功能。即使 AI Agent 出错，也不会破坏系统稳定性。
  * 
- * 接口规范：
- * - 只实现4个核心方法：getDependencies, getMetadata, getSchema, execute
- * - 参数验证由 ToolValidator 根据 getSchema 自动处理
- * - 业务相关的验证逻辑放在 execute 方法中
+ * 2. 平台独立性  
+ * 虽然很多 AI 平台自带文件工具，但 PromptX 需要自己的实现来保证：
+ * - 在无本地工具的 Web Agent 平台上也能工作
+ * - 统一的操作语义，不依赖特定 AI 平台
+ * - 可移植到任何支持 MCP 协议的环境
+ * 
+ * 3. 生态自主性
+ * 作为 PromptX 工具生态的基础组件，filesystem 确保了：
+ * - 其他工具可以依赖稳定的文件操作接口
+ * - 用户数据始终在 PromptX 控制范围内
+ * - 未来可扩展更多存储后端（云存储、分布式等）
+ * 
+ * 这不仅是一个文件操作工具，更是 PromptX 实现平台独立、
+ * 生态自主的关键基础设施。
  */
 
 const path = require('path');
@@ -416,13 +423,27 @@ module.exports = {
           );
           break;
           
-        case 'write_file':
+        case 'write_file': {
+          // 自动创建父目录
+          const fs = require('fs').promises;
+          const dirPath = path.dirname(mcpParams.path);
+          
+          try {
+            // 检查目录是否存在，不存在则创建
+            await fs.access(dirPath);
+          } catch {
+            // 目录不存在，创建它
+            await fs.mkdir(dirPath, { recursive: true });
+            api?.logger?.info('Auto-created directory for write_file', { directory: dirPath });
+          }
+          
           await mcp.writeFileContent(mcpParams.path, params.content);
           result = {
             bytesWritten: Buffer.byteLength(params.content, 'utf-8'),
             path: params.path
           };
           break;
+        }
           
         case 'edit_file':
           result = await mcp.applyFileEdits(mcpParams.path, params.edits, params.dryRun);

@@ -53,11 +53,27 @@ await toolx('@tool://filesystem', {
   path: 'resource/tool/tool-name'
 });
 
-// 2. 创建工具文件 tool-name.tool.js
+// 2. 创建工具文件 tool-name.tool.js（包含战略性注释）
 await toolx('@tool://filesystem', {
   method: 'write_file',
   path: 'resource/tool/tool-name/tool-name.tool.js',
-  content: `module.exports = {
+  content: `/**
+ * [工具名] - [一句话说明工具的核心定位]
+ * 
+ * 战略意义：
+ * 1. [架构价值]：[说明如何保护系统稳定性或提升架构质量]
+ * 2. [平台价值]：[说明如何实现平台独立或增强平台能力]
+ * 3. [生态价值]：[说明如何支撑其他工具或服务生态发展]
+ * 
+ * 设计理念：
+ * [一段话阐述设计的核心思想，解释为什么这样设计，
+ *  而不是其他方案，强调关键的设计权衡]
+ * 
+ * 为什么重要：
+ * [说明这个工具解决了什么关键问题，没有它会怎样]
+ */
+
+module.exports = {
     // 核心方法
     getDependencies() {},
     getMetadata() {},
