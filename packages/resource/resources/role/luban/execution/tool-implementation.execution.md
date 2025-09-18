@@ -4,6 +4,8 @@
 
 <constraint>
 ## 实现约束
+- **文件创建方式**：必须且只能通过 @tool://filesystem 工具创建文件
+- **禁止直接文件操作**：不允许使用 fs.writeFile 等 Node.js API
 - 代码不超过100行
 - 依赖不超过3个
 - 必须处理所有错误
@@ -12,10 +14,13 @@
 
 <rule>
 ## 编码规则
+- **必须使用 @tool://filesystem 创建所有文件**（绝不直接操作文件系统）
 - 使用工具标准接口
-- 必须实现5个核心方法
-- 使用importx加载模块
+- 必须实现4个核心方法（getDependencies, getMetadata, getSchema, execute）
+- validate方法由ToolValidator自动处理，无需手动实现
+- 使用沙箱提供的importx加载模块
 - 通过api访问环境变量和日志
+- 创建完工具后必须调用 promptx_discover 刷新注册表
 </rule>
 
 <guideline>
@@ -29,19 +34,43 @@
 <process>
 ## 实现步骤
 
-### Step 1: 创建工具文件
+### Step 1: 创建工具文件（必须使用 @tool://filesystem）
+
+⚠️ **重要**：所有文件创建必须通过 `@tool://filesystem` 工具完成
+
 ```javascript
-// tool-name.tool.js
-module.exports = {
-  // 5个核心方法
-}
+// 1. 创建工具目录
+await toolx('@tool://filesystem', {
+  method: 'create_directory',
+  path: 'resource/tool/tool-name'
+});
+
+// 2. 创建工具文件 tool-name.tool.js
+await toolx('@tool://filesystem', {
+  method: 'write_file',
+  path: 'resource/tool/tool-name/tool-name.tool.js',
+  content: `module.exports = {
+    // 4个核心方法
+    getDependencies() {},
+    getMetadata() {},
+    getSchema() {},
+    execute() {}
+  }`
+});
 ```
+
+**文件结构说明**：
+- filesystem 工具自动在 `~/.promptx/` 目录下操作
+- 路径使用 `resource/tool/{tool-name}/` 格式
+- **只创建一个 .tool.js 文件，不需要 manual 文件**
+- 工具信息通过 getMetadata() 方法提供，无需单独文档
+- 无需指定完整路径
 
 ### Step 2: 实现核心接口
 ```javascript
 getDependencies() {
   return {
-    'lodash': '^4.17.21'
+    'lodash': '^4.17.21'  // 仅在需要时添加
   };
 }
 
@@ -49,7 +78,8 @@ getMetadata() {
   return {
     id: 'tool-name',
     name: '工具名称',
-    description: '一句话说明'
+    description: '一句话说明',
+    version: '1.0.0'
   };
 }
 
@@ -58,9 +88,22 @@ getSchema() {
     parameters: {
       type: 'object',
       properties: {
-        input: { type: 'string' }
+        input: { 
+          type: 'string',
+          description: '输入数据'
+        }
       },
       required: ['input']
+    },
+    // 如需环境变量
+    environment: {
+      type: 'object',
+      properties: {
+        API_KEY: {
+          type: 'string',
+          description: 'API密钥'
+        }
+      }
     }
   };
 }
@@ -69,40 +112,49 @@ getSchema() {
 ### Step 3: 实现执行逻辑
 ```javascript
 async execute(params) {
-  // 1. 验证参数
-  const validation = this.validate(params);
-  if (!validation.valid) {
-    throw new Error(validation.errors.join('; '));
-  }
+  const { api } = this;  // 获取沙箱注入的API
   
-  // 2. 执行核心逻辑
+  // 记录开始
+  api.logger.info('开始处理', { params });
+  
   try {
+    // 加载依赖（沙箱提供importx）
+    const lodash = await importx('lodash');
+    
+    // 访问环境变量
+    const apiKey = await api.environment.get('API_KEY');
+    
+    // 执行核心逻辑
     const result = await this.process(params.input);
+    
+    api.logger.info('处理成功', { result });
     return {
       success: true,
       data: result
     };
   } catch (error) {
-    return {
-      success: false,
-      error: error.message
-    };
+    api.logger.error('处理失败', error);
+    throw error;  // ToolValidator会自动处理错误
   }
 }
 ```
 
-### Step 4: 添加参数验证
+### Step 4: 定义业务错误（可选）
 ```javascript
-validate(params) {
-  if (!params || typeof params !== 'object') {
-    return { valid: false, errors: ['参数必须是对象'] };
-  }
-  if (!params.input) {
-    return { valid: false, errors: ['缺少必需参数: input'] };
-  }
-  return { valid: true, errors: [] };
+getBusinessErrors() {
+  return [
+    {
+      code: 'API_RATE_LIMIT',
+      description: 'API调用频率超限',
+      match: /rate limit/i,
+      solution: '等待后重试',
+      retryable: true
+    }
+  ];
 }
 ```
+
+**注意**：不需要实现 `validate` 方法！`ToolValidator` 会根据 `getSchema()` 自动进行参数验证。
 </process>
 
 <criteria>
