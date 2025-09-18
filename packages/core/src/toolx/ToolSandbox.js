@@ -10,13 +10,10 @@ const getImportx = async () => {
 
 // Removed global parentURL, changed to dynamically generate when calling importx
 
-// Directly import manager classes
+// Directly import error classes
 const { 
-  ToolErrorManager, 
   ToolError,
-  VALIDATION_ERRORS,
-  SYSTEM_ERRORS,
-  DEVELOPMENT_ERRORS 
+  VALIDATION_ERRORS
 } = require('./errors');
 const ToolDirectoryManager = require('./ToolDirectoryManager'); 
 const SandboxIsolationManager = require('./SandboxIsolationManager');
@@ -43,7 +40,6 @@ class ToolSandbox {
     this.sandboxPath = null;             // Sandbox directory path (kept for compatibility)
     this.sandboxContext = null;          // VM sandbox context
     this.isolationManager = null;        // Sandbox isolation manager
-    this.errorManager = null;            // Smart error manager
     
     // Asynchronously loaded modules
     this.fs = null;
@@ -79,8 +75,6 @@ class ToolSandbox {
       this.logger = require('@promptx/logger');
       
       // 管理器类已在顶部静态导入
-      
-      this.errorManager = new ToolErrorManager();
       const promptxPath = require('path').join(require('os').homedir(), '.promptx');
       this.isolationManager = new SandboxIsolationManager(promptxPath);
       
@@ -207,10 +201,11 @@ class ToolSandbox {
       return this.getAnalysisResult();
 
     } catch (error) {
-      const enhancedError = this.errorManager.analyzeError(error, {
+      const enhancedError = ToolError.from(error, {
         phase: 'analyze',
         toolReference: this.toolReference,
-        toolId: this.toolId
+        toolId: this.toolId,
+        dependencies: this.dependencies
       });
       this.logger.error(`[ToolSandbox] Analysis failed: ${enhancedError.message}`);
       throw enhancedError;
@@ -287,7 +282,7 @@ class ToolSandbox {
       return { success: true, message: 'Dependencies prepared successfully' };
 
     } catch (error) {
-      const enhancedError = this.errorManager.analyzeError(error, {
+      const enhancedError = ToolError.from(error, {
         phase: 'prepareDependencies',
         toolId: this.toolId,
         dependencies: this.dependencies,
@@ -419,10 +414,11 @@ class ToolSandbox {
       };
       
     } catch (error) {
-      const enhancedError = this.errorManager.analyzeError(error, {
+      const enhancedError = ToolError.from(error, {
         phase: 'configure',
         toolId: this.toolId,
-        params: params
+        params: params,
+        metadata: this.metadata
       });
       this.logger.error(`[ToolSandbox] Configuration failed: ${enhancedError.message}`);
       throw enhancedError;
@@ -535,7 +531,7 @@ class ToolSandbox {
       }
       
     } catch (error) {
-      const enhancedError = this.errorManager.analyzeError(error, {
+      const enhancedError = ToolError.from(error, {
         phase: 'queryLogs',
         toolId: this.toolId,
         params: params
@@ -558,6 +554,10 @@ class ToolSandbox {
         { phase: 'execute' }
       );
     }
+
+    // 在try块外声明，以便catch块能访问
+    let businessErrors = [];
+    let exported = null;
 
     try {
       // 环境变量自动检查（排除配置类操作）
@@ -626,12 +626,22 @@ class ToolSandbox {
       const context = this.vm.createContext(this.sandboxContext);
       
       script.runInContext(context);
-      const exported = context.module.exports;
+      exported = context.module.exports;
       
       // 创建并注入统一的 ToolAPI 实例 - 这是唯一的注入点
       const ToolAPI = require('./api/ToolAPI');
       const toolAPI = new ToolAPI(this.toolId, this.sandboxPath, this.resourceManager);
       exported.api = toolAPI;
+      
+      // 获取工具的BusinessErrors定义
+      try {
+        if (typeof exported.getBusinessErrors === 'function') {
+          businessErrors = exported.getBusinessErrors() || [];
+          this.logger.debug(`[ToolSandbox] Got ${businessErrors.length} business errors from tool`);
+        }
+      } catch (e) {
+        this.logger.warn(`[ToolSandbox] Failed to get business errors:`, e.message);
+      }
       
       // 执行工具的execute方法
       const result = await exported.execute(params);
@@ -647,12 +657,16 @@ class ToolSandbox {
         throw error;
       }
       
-      // 转换为 ToolError
+      // 使用增强的ToolError.from，传入完整context
       this.logger.error(`[ToolSandbox] Execution failed:`, error.message);
       throw ToolError.from(error, {
         phase: 'execute',
         toolId: this.toolId,
-        params: params
+        params: params,
+        businessErrors: businessErrors,  // 关键：传入BusinessErrors
+        schema: this.schema,
+        metadata: this.metadata,
+        environment: this.environment
       });
     }
   }

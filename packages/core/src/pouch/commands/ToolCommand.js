@@ -166,15 +166,8 @@ ${JSON.stringify(actualToolResult, null, 2)}
             }
         }
       } else {
-        return `❌ Tool执行失败
-
-📋 工具资源: ${result.tool_resource}
-🔧 模式: ${result.mode || 'execute'}
-❌ 错误信息: ${result.error.message}
-🏷️ 错误类型: ${result.error.type}
-🔢 错误代码: ${result.error.code}
-
-⏱️ 执行时间: ${result.metadata.execution_time_ms}ms`
+        // 渲染错误，根据错误类型显示不同信息
+        return this.formatErrorOutput(result.error, result.tool_resource, result.metadata, result.mode);
       }
     } catch (error) {
       return `❌ Tool执行异常
@@ -666,6 +659,71 @@ ${JSON.stringify(actualToolResult, null, 2)}
         timestamp: new Date().toISOString()
       }
     }
+  }
+
+  /**
+   * 格式化错误输出（负责错误的最终渲染）
+   * @param {Object} errorInfo - 错误信息（来自ToolError.toMCPFormat）
+   * @param {string} toolResource - 工具资源
+   * @param {Object} metadata - 元数据
+   * @param {string} mode - 执行模式
+   * @returns {string} 格式化的错误文本
+   */
+  formatErrorOutput(errorInfo, toolResource, metadata, mode = 'execute') {
+    const { ToolError } = require('~/toolx/errors');
+    
+    // 根据错误类别展示不同信息
+    const categoryInfo = ToolError.CATEGORIES[errorInfo.category];
+    
+    let output = `❌ Tool执行失败
+
+📋 工具资源: ${toolResource}
+🔧 模式: ${mode}
+❌ 错误信息: ${errorInfo.message}
+🔢 错误代码: ${errorInfo.code}`;
+
+    // 如果有类别信息，显示类别
+    if (categoryInfo) {
+      output += `
+${categoryInfo.emoji} 错误类型: ${categoryInfo.description}
+📝 责任方: ${categoryInfo.responsibility}`;
+    }
+    
+    // 如果是BusinessError，显示更多信息
+    if (errorInfo.category === 'BUSINESS' && errorInfo.details?.businessError) {
+      const be = errorInfo.details.businessError;
+      if (be.description) {
+        output += `
+📄 错误描述: ${be.description}`;
+      }
+    }
+    
+    // 显示解决方案
+    if (errorInfo.solution) {
+      let solutionText = errorInfo.solution;
+      
+      // 如果solution是对象
+      if (typeof errorInfo.solution === 'object') {
+        solutionText = errorInfo.solution.message || errorInfo.solution.detail || JSON.stringify(errorInfo.solution);
+      }
+      
+      output += `
+
+💡 解决方案: ${solutionText}`;
+    }
+    
+    // 显示是否可重试
+    if (errorInfo.retryable) {
+      output += `
+🔄 可重试: 是`;
+    }
+    
+    // 显示执行时间
+    output += `
+
+⏱️ 执行时间: ${metadata.execution_time_ms}ms`;
+    
+    return output;
   }
 
 
