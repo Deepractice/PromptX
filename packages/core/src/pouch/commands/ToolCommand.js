@@ -643,121 +643,32 @@ ${JSON.stringify(actualToolResult, null, 2)}
   }
 
   /**
-   * 格式化错误结果 - 适配ToolSandbox智能错误格式
+   * 格式化错误结果（简化版 - 奥卡姆剃刀原则）
    * @param {Error} error - 错误对象
-   * @param {string} toolResource - 工具资源引用（可能为空）
+   * @param {string} toolResource - 工具资源引用
    * @param {number} startTime - 开始时间
    * @returns {Object} 格式化的错误结果
    */
   formatErrorResult(error, toolResource, startTime) {
+    const { ToolError } = require('~/toolx/errors')
     const duration = Date.now() - startTime
-    const executionId = this.generateExecutionId()
     
-    // 检查是否为智能错误
-    let errorCode, errorMessage, errorType = 'UNKNOWN_ERROR'
-    let agentInstructions = null
+    // 统一转换为 ToolError（集成层统一处理）
+    const toolError = error instanceof ToolError ? error : ToolError.from(error)
     
-    if (error.intelligentError) {
-      // 使用智能错误管理器提供的信息
-      errorType = error.intelligentError.type
-      errorCode = this.mapIntelligentErrorToCode(errorType)
-      errorMessage = error.intelligentError.formattedMessage
-      agentInstructions = error.intelligentError.agentInstructions
-    } else {
-      // 回退到传统错误处理
-      errorCode = this.getErrorCode(error)
-      errorMessage = error.message
-    }
-    
-    const result = {
+    return {
       success: false,
       tool_resource: toolResource || 'unknown',
-      error: {
-        code: errorCode,
-        type: errorType,
-        message: errorMessage,
-        details: {
-          executionId: executionId,
-          executionTime: `${duration}ms`,
-          stack: error.stack
-        }
-      },
+      error: toolError.toMCPFormat(),
       metadata: {
         executor: 'ToolSandbox',
-        timestamp: new Date().toISOString(),
-        execution_time_ms: duration
+        execution_time_ms: duration,
+        timestamp: new Date().toISOString()
       }
     }
-    
-    // 如果有Agent指令，添加到metadata中
-    if (agentInstructions) {
-      result.metadata.agentInstructions = agentInstructions
-    }
-    
-    return result
   }
 
-  /**
-   * 将智能错误类型映射到传统错误代码
-   * @param {string} intelligentErrorType - 智能错误类型
-   * @returns {string} 错误代码
-   */
-  mapIntelligentErrorToCode(intelligentErrorType) {
-    const mapping = {
-      'DEPENDENCY_MISSING': 'DEPENDENCY_ERROR',
-      'UNDECLARED_DEPENDENCY': 'DEPENDENCY_ERROR', 
-      'DEPENDENCY_INSTALL_FAILED': 'DEPENDENCY_ERROR',
-      'TOOL_LOADING_ERROR': 'ANALYSIS_ERROR',
-      'PARAMETER_VALIDATION_ERROR': 'VALIDATION_ERROR',
-      'SANDBOX_ENVIRONMENT_ERROR': 'EXECUTION_ERROR',
-      'NETWORK_TIMEOUT': 'EXECUTION_TIMEOUT',
-      'UNKNOWN_ERROR': 'UNKNOWN_ERROR'
-    }
-    
-    return mapping[intelligentErrorType] || 'UNKNOWN_ERROR'
-  }
 
-  /**
-   * 根据错误类型获取错误代码 - 增强支持ToolSandbox错误
-   * @param {Error} error - 错误对象
-   * @returns {string} 错误代码
-   */
-  getErrorCode(error) {
-    const message = error.message.toLowerCase()
-    
-    // ToolSandbox特有错误
-    if (message.includes('analyze') || message.includes('analysis')) {
-      return 'ANALYSIS_ERROR'
-    }
-    if (message.includes('dependencies') || message.includes('pnpm')) {
-      return 'DEPENDENCY_ERROR'
-    }
-    if (message.includes('sandbox') || message.includes('execution')) {
-      return 'EXECUTION_ERROR'
-    }
-    if (message.includes('validation') || message.includes('validate')) {
-      return 'VALIDATION_ERROR'
-    }
-    
-    // 通用错误
-    if (message.includes('not found')) {
-      return 'TOOL_NOT_FOUND'
-    }
-    if (message.includes('invalid tool_resource format')) {
-      return 'INVALID_TOOL_RESOURCE'
-    }
-    if (message.includes('missing')) {
-      return 'MISSING_PARAMETER'
-    }
-    if (message.includes('syntax')) {
-      return 'TOOL_SYNTAX_ERROR'
-    }
-    if (message.includes('timeout')) {
-      return 'EXECUTION_TIMEOUT'
-    }
-    
-    return 'UNKNOWN_ERROR'
-  }
 
   /**
    * 生成执行ID
@@ -781,16 +692,6 @@ ${JSON.stringify(actualToolResult, null, 2)}
     return undefined;
   }
 
-  /**
-   * 检查智能错误是否可以自动重试
-   * @param {Object} intelligentError - 智能错误对象
-   * @returns {boolean} 是否可自动重试
-   */
-  isAutoRetryable(intelligentError) {
-    return intelligentError.agentInstructions && 
-           intelligentError.agentInstructions.autoRetryable === true &&
-           intelligentError.agentInstructions.retryParameters
-  }
 
   /**
    * 检查工具内部执行是否成功

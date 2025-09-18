@@ -11,7 +11,13 @@ const getImportx = async () => {
 // Removed global parentURL, changed to dynamically generate when calling importx
 
 // Directly import manager classes
-const { ToolErrorManager } = require('./errors');
+const { 
+  ToolErrorManager, 
+  ToolError,
+  VALIDATION_ERRORS,
+  SYSTEM_ERRORS,
+  DEVELOPMENT_ERRORS 
+} = require('./errors');
 const ToolDirectoryManager = require('./ToolDirectoryManager'); 
 const SandboxIsolationManager = require('./SandboxIsolationManager');
 
@@ -81,7 +87,12 @@ class ToolSandbox {
       this.isInitialized = true;
       this.logger.debug('[ToolSandbox] Initialized with importx');
     } catch (error) {
-      throw new Error(`Failed to initialize ToolSandbox: ${error.message}`);
+      // 初始化失败是系统错误
+      throw new ToolError(
+        `Failed to initialize ToolSandbox: ${error.message}`,
+        SYSTEM_ERRORS.SANDBOX_INIT_FAILED.code,
+        { originalError: error.message }
+      );
     }
   }
 
@@ -150,7 +161,11 @@ class ToolSandbox {
     }
 
     if (!this.resourceManager) {
-      throw new Error('ResourceManager not set. Call setResourceManager() first.');
+      throw new ToolError(
+        'ResourceManager not set. Call setResourceManager() first.',
+        SYSTEM_ERRORS.RESOURCE_MANAGER_ERROR.code || 'SYSTEM_ERROR',
+        { phase: 'initialization' }
+      );
     }
 
     try {
@@ -162,7 +177,11 @@ class ToolSandbox {
       const resourceResult = await this.resourceManager.loadResource(this.toolReference);
       
       if (!resourceResult.success) {
-        throw new Error(`Failed to load tool: ${resourceResult.error?.message || 'Unknown error'}`);
+        throw new ToolError(
+          `Failed to load tool: ${resourceResult.error?.message || 'Unknown error'}`,
+          SYSTEM_ERRORS.TOOL_NOT_FOUND.code || 'TOOL_NOT_FOUND',
+          { toolId: this.toolId }
+        );
       }
       
       this.toolContent = resourceResult.content;
@@ -210,7 +229,11 @@ class ToolSandbox {
     }
 
     if (!this.isAnalyzed) {
-      throw new Error('Tool must be analyzed before preparing dependencies. Call analyze() first.');
+      throw new ToolError(
+        'Tool must be analyzed before preparing dependencies. Call analyze() first.',
+        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
+        { phase: 'prepareDependencies' }
+      );
     }
 
     try {
@@ -284,7 +307,11 @@ class ToolSandbox {
     await this.ensureInitialized();
     
     if (!this.isAnalyzed) {
-      throw new Error('Tool must be analyzed before configuring. Call analyze() first.');
+      throw new ToolError(
+        'Tool must be analyzed before configuring. Call analyze() first.',
+        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
+        { phase: 'configure' }
+      );
     }
     
     // 创建 ToolAPI 实例来管理环境变量
@@ -411,7 +438,11 @@ class ToolSandbox {
     await this.ensureInitialized();
     
     if (!this.isAnalyzed) {
-      throw new Error('Tool must be analyzed before querying logs. Call analyze() first.');
+      throw new ToolError(
+        'Tool must be analyzed before querying logs. Call analyze() first.',
+        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
+        { phase: 'queryLogs' }
+      );
     }
     
     const ToolLoggerQuery = require('./ToolLoggerQuery');
@@ -421,7 +452,7 @@ class ToolSandbox {
       const { action = 'tail', ...options } = params;
       
       switch (action) {
-        case 'tail':
+        case 'tail': {
           // 获取最近的日志
           const lines = options.lines || 50;
           return {
@@ -430,11 +461,16 @@ class ToolSandbox {
             logs: await logQuery.tail(lines),
             count: lines
           };
+        }
           
         case 'search':
           // 搜索日志
           if (!options.keyword) {
-            throw new Error('Search action requires keyword parameter');
+            throw new ToolError(
+              'Search action requires keyword parameter',
+              VALIDATION_ERRORS.MISSING_REQUIRED_PARAM.code,
+              { param: 'keyword' }
+            );
           }
           return {
             success: true,
@@ -444,7 +480,7 @@ class ToolSandbox {
             options
           };
           
-        case 'errors':
+        case 'errors': {
           // 获取错误日志
           const limit = options.limit || 50;
           return {
@@ -453,6 +489,7 @@ class ToolSandbox {
             logs: await logQuery.getErrors(limit),
             limit
           };
+        }
           
         case 'stats':
           // 获取统计信息
@@ -465,7 +502,11 @@ class ToolSandbox {
         case 'timeRange':
           // 按时间范围查询
           if (!options.startTime || !options.endTime) {
-            throw new Error('Time range action requires startTime and endTime parameters');
+            throw new ToolError(
+              'Time range action requires startTime and endTime parameters',
+              VALIDATION_ERRORS.MISSING_REQUIRED_PARAM.code,
+              { params: ['startTime', 'endTime'] }
+            );
           }
           return {
             success: true,
@@ -475,7 +516,7 @@ class ToolSandbox {
             logs: await logQuery.getByTimeRange(options.startTime, options.endTime)
           };
           
-        case 'clear':
+        case 'clear': {
           // 清空日志
           const cleared = await logQuery.clear();
           return {
@@ -483,9 +524,14 @@ class ToolSandbox {
             action: 'clear',
             message: cleared ? 'Logs cleared successfully' : 'Failed to clear logs'
           };
+        }
           
         default:
-          throw new Error(`Unknown log query action: ${action}`);
+          throw new ToolError(
+            `Unknown log query action: ${action}`,
+            VALIDATION_ERRORS.INVALID_PARAM_VALUE?.code || 'INVALID_PARAM',
+            { param: 'action', value: action }
+          );
       }
       
     } catch (error) {
@@ -506,7 +552,11 @@ class ToolSandbox {
     await this.ensureInitialized();
     
     if (!this.isPrepared) {
-      throw new Error('Dependencies must be prepared before execution. Call prepareDependencies() first.');
+      throw new ToolError(
+        'Dependencies must be prepared before execution. Call prepareDependencies() first.',
+        SYSTEM_ERRORS.EXECUTION_ORDER_ERROR?.code || 'EXECUTION_ERROR',
+        { phase: 'execute' }
+      );
     }
 
     try {
@@ -549,12 +599,22 @@ class ToolSandbox {
         }
       }
       
-      // 参数验证
-      if (typeof this.toolInstance.validate === 'function') {
-        const validation = this.toolInstance.validate(params);
-        if (validation && !validation.valid) {
-          throw new Error(`Parameter validation failed: ${validation.errors?.join(', ')}`);
-        }
+      // 使用 ToolValidator 进行参数验证
+      const ToolValidator = require('./ToolValidator');
+      const validation = ToolValidator.defaultValidate(this.toolInstance, params);
+      if (!validation.valid) {
+        this.logger.error(`[ToolSandbox] 参数验证失败:`, validation.errors);
+        
+        // 直接抛出简化的 ToolError
+        throw new ToolError(
+          validation.errors.join('; '),
+          VALIDATION_ERRORS.SCHEMA_VALIDATION_FAILED?.code || 'VALIDATION_ERROR',
+          { 
+            validation: validation.details,
+            params: params,
+            toolId: this.toolId 
+          }
+        );
       }
 
       // 执行工具
@@ -582,23 +642,18 @@ class ToolSandbox {
       return result;
 
     } catch (error) {
-      // 获取工具定义的业务错误
-      const businessErrors = (this.toolInstance && typeof this.toolInstance.getBusinessErrors === 'function') ?
-        this.toolInstance.getBusinessErrors() : [];
+      // 如果已经是 ToolError，直接抛出
+      if (error instanceof ToolError) {
+        throw error;
+      }
       
-      const enhancedError = this.errorManager.analyzeError(error, {
+      // 转换为 ToolError
+      this.logger.error(`[ToolSandbox] Execution failed:`, error.message);
+      throw ToolError.from(error, {
         phase: 'execute',
         toolId: this.toolId,
-        params: params,
-        schema: this.schema,
-        metadata: this.metadata,
-        dependencies: this.dependencies,
-        sandboxPath: this.sandboxPath,
-        businessErrors: businessErrors,
-        environment: this.toolInstance?.api?.environment || {}
+        params: params
       });
-      this.logger.error(`[ToolSandbox] Execution failed: ${enhancedError.code}`);
-      throw enhancedError;
     }
   }
 
@@ -662,7 +717,11 @@ class ToolSandbox {
         });
       } catch (error) {
         this.logger.error(`[ToolSandbox] Failed to load module ${moduleName}: ${error.message}`);
-        throw new Error(`Cannot load module '${moduleName}': ${error.message}`);
+        throw new ToolError(
+          `Cannot load module '${moduleName}': ${error.message}`,
+          DEVELOPMENT_ERRORS.UNDECLARED_DEPENDENCY.code,
+          { module: moduleName, originalError: error.message }
+        );
       }
     };
     
@@ -694,7 +753,11 @@ class ToolSandbox {
     if (toolReference.startsWith('@tool://')) {
       return toolReference.substring(8); // 移除 '@tool://' 前缀
     }
-    throw new Error(`Invalid tool reference format: ${toolReference}`);
+    throw new ToolError(
+      `Invalid tool reference format: ${toolReference}`,
+      VALIDATION_ERRORS.INVALID_PARAM_FORMAT?.code || 'INVALID_PARAM',
+      { toolReference }
+    );
   }
 
   /**
@@ -744,7 +807,11 @@ class ToolSandbox {
       // 返回导出的模块
       return context.module.exports;
     } catch (error) {
-      throw new Error(`Failed to parse tool content: ${error.message}`);
+      throw new ToolError(
+        `Failed to parse tool content: ${error.message}`,
+        DEVELOPMENT_ERRORS.TOOL_SYNTAX_ERROR.code,
+        { originalError: error.message }
+      );
     }
   }
 

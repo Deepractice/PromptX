@@ -8,6 +8,7 @@ const DEVELOPMENT_ERRORS = require('./DevelopmentErrors');
 const { VALIDATION_ERRORS, validateAgainstSchema, checkMissingEnvVars } = require('./ValidationErrors');
 const SYSTEM_ERRORS = require('./SystemErrors');
 const ToolErrorManager = require('./ToolErrorManager');
+const ToolError = require('./ToolError');
 
 // 合并所有错误定义
 const ALL_ERROR_DEFINITIONS = {
@@ -17,6 +18,9 @@ const ALL_ERROR_DEFINITIONS = {
 };
 
 module.exports = {
+  // 简化的错误类（对外主要接口）
+  ToolError,
+  
   // 错误管理器
   ToolErrorManager,
   
