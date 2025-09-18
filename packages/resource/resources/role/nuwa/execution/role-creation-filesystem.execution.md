@@ -13,7 +13,7 @@
     - 角色路径：resource/role/{roleId}/
     - 创建目录使用create_directory方法
     - 批量创建使用write_multiple_files提高效率
-    - **必须执行promptx_welcome刷新注册表**：创建或更新角色后的强制步骤
+    - **必须执行promptx discover刷新注册表**：创建或更新角色后的强制步骤
   </rule>
 
   <guideline>
@@ -54,7 +54,7 @@
     
     ### Step 4: 刷新资源注册表（关键步骤！）
     ```
-    必须执行：调用 promptx_welcome 工具
+    必须执行：使用 discover 工具刷新资源
     目的：重新发现所有资源，让新角色可被用户使用
     警告：不执行此步骤，用户无法发现和激活新创建的角色
     ```
