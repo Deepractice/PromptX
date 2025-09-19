@@ -1,5 +1,27 @@
 # @promptx/desktop
 
+## 1.18.0
+
+### Patch Changes
+
+- [#373](https://github.com/Deepractice/PromptX/pull/373) [`9812fef`](https://github.com/Deepractice/PromptX/commit/9812fefb90104838235b58dd600b29cc9960f0bc) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Replace tray icons with new professional pixel-art design
+
+  - Added new tray icon assets in dedicated `/assets/icons/tray/` directory
+  - Implemented cross-platform tray icon support:
+    - macOS: Uses template image for automatic theme adaptation
+    - Windows: Detects system theme and switches between black/white icons
+    - Linux: Uses default black icon
+  - Added visual status indication through different icon variants:
+    - Running: Normal icon (pixel version)
+    - Stopped: Transparent/gray icon for reduced visual prominence
+    - Error: Reserved for future customization
+  - Removed programmatic icon generation (createPIcon) in favor of designer-provided assets
+  - Added automatic theme change listener for Windows to update icon dynamically
+
+- Updated dependencies [[`ad52333`](https://github.com/Deepractice/PromptX/commit/ad5233372ae4d4835a5f5626ebb5dd585077f597)]:
+  - @promptx/core@1.18.0
+  - @promptx/mcp-server@1.18.0
+
 ## 1.17.3
 
 ### Patch Changes

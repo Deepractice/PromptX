@@ -1,5 +1,115 @@
 # @promptx/core
 
+## 1.18.0
+
+### Minor Changes
+
+- [#369](https://github.com/Deepractice/PromptX/pull/369) [`ad52333`](https://github.com/Deepractice/PromptX/commit/ad5233372ae4d4835a5f5626ebb5dd585077f597) Thanks [@deepracticexs](https://github.com/deepracticexs)! - feat: 为 PromptX 工具添加持久化存储 API 和增强的沙箱架构
+
+  ### 核心功能
+
+  #### 🗄️ Tool Storage API - 工具持久化存储
+
+  - 新增 `api.storage` 接口，提供类似 localStorage 的持久化存储能力
+  - 每个工具独立的 storage.json 文件，自动隔离数据
+  - 支持自动 JSON 序列化/反序列化，处理复杂数据类型
+  - 10MB 容量限制，确保性能
+  - 完全兼容 Web Storage API，零学习成本
+
+  #### 🏗️ 增强的工具沙箱架构
+
+  - 重构 ToolSandbox，提供更强大的 API 注入机制
+  - 新增 ToolAPI 统一管理所有工具 API
+  - 优化 api.importx 智能模块加载，自动处理 CommonJS/ESM 差异
+  - 改进 api.environment 环境变量管理
+  - 增强 api.logger 日志记录能力
+
+  #### 📚 工具手册系统
+
+  - 新增 ToolManualFormatter 自动生成工具文档
+  - 支持从工具元数据动态生成使用手册
+  - 统一的手册格式，包含参数、环境变量、错误码等完整信息
+
+  #### 🔍 日志查询系统
+
+  - 新增 ToolLoggerQuery 提供强大的日志查询能力
+  - 支持 tail、search、stats、errors 等多种查询操作
+  - 结构化日志解析，便于问题排查
+
+  #### ⚠️ 错误处理体系
+
+  - 全新的分层错误体系：ValidationErrors、SystemErrors、DevelopmentErrors
+  - ToolError 统一错误处理，提供详细的错误分类和解决方案
+  - 业务错误自定义支持，更精准的错误提示
+
+  ### 改进的工具
+
+  #### filesystem 工具重构
+
+  - 移除独立的 manual 文件，改为通过接口动态生成
+  - 优化文件操作性能
+  - 增强错误处理能力
+  - 单文件架构，更简洁的工具结构
+
+  ### 角色更新
+
+  #### 鲁班角色优化
+
+  - 简化工具开发流程，MVP 原则驱动
+  - 更清晰的知识体系组织
+  - 增强的工具文档注释指导
+  - 优化需求收集和实现流程
+
+  #### Sean 角色精简
+
+  - 聚焦矛盾驱动决策
+  - 简化执行流程
+  - 更清晰的产品哲学
+
+  ### 技术债务清理
+
+  - 删除 SandboxErrorManager（功能合并到 ToolError）
+  - 删除 promptx-log-viewer 工具（功能集成到 log 模式）
+  - 清理过时的手册文件
+  - 简化工具接口定义
+
+  ### 破坏性变更
+
+  - 工具现在必须使用 `api.importx()` 而不是直接的 `importx()`
+  - 工具手册不再是独立文件，而是通过 getMetadata() 动态生成
+  - 环境变量管理 API 变更：`api.environment.get/set` 替代旧的直接访问
+
+  ### 迁移指南
+
+  旧版工具需要更新：
+
+  ```javascript
+  // 旧版
+  const lodash = await importx("lodash")
+
+  // 新版
+  const { api } = this
+  const lodash = await api.importx("lodash")
+  ```
+
+  存储 API 使用：
+
+  ```javascript
+  // 保存数据
+  await api.storage.setItem("config", { theme: "dark" })
+
+  // 读取数据
+  const config = await api.storage.getItem("config")
+  ```
+
+  这次更新为 PromptX 工具生态提供了更强大、更稳定的基础设施，显著提升了工具开发体验和运行时可靠性。
+
+### Patch Changes
+
+- Updated dependencies [[`ad52333`](https://github.com/Deepractice/PromptX/commit/ad5233372ae4d4835a5f5626ebb5dd585077f597)]:
+  - @promptx/resource@1.18.0
+  - @promptx/logger@1.18.0
+
 ## 1.17.3
 
 ### Patch Changes
