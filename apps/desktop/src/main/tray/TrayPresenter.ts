@@ -1,13 +1,14 @@
-import { 
-  BrowserWindow, 
-  Menu, 
-  MenuItem, 
+import {
+  BrowserWindow,
+  Menu,
+  MenuItem,
   Tray,
-  app, 
-  clipboard, 
+  app,
+  clipboard,
   nativeImage,
   shell,
-  dialog 
+  dialog,
+  nativeTheme
 } from 'electron'
 import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
 import { ResultUtil } from '~/shared/Result'
@@ -18,7 +19,7 @@ import type { UpdateManager } from '~/main/application/UpdateManager'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 import * as logger from '@promptx/logger'
-import { createPIcon } from '~/utils/createPIcon'
+// import { createPIcon } from '~/utils/createPIcon' // Deprecated - using new icons
 import { ResourceManager } from '~/main/ResourceManager'
 import packageJson from '../../../package.json'
 
@@ -38,6 +39,7 @@ export class TrayPresenter {
   private statusListener: (status: ServerStatus) => void
   private resourceManager: ResourceManager
   private appIcon: nativeImage | undefined
+  private trayIcons: Map<string, nativeImage> = new Map()
 
   constructor(
     private readonly startServerUseCase: StartServerUseCase,
@@ -77,16 +79,102 @@ export class TrayPresenter {
 
   private createTray(): Tray {
     logger.debug('Creating tray icon...')
-    
-    // Create P icon programmatically
-    logger.info('Creating P icon for tray')
-    const icon = createPIcon()
-    
+
+    // Load all tray icons
+    this.loadTrayIcons()
+
+    // Get initial icon based on platform and theme
+    const icon = this.getTrayIcon('normal')
+
     const tray = new Tray(icon)
     tray.setToolTip('PromptX Desktop')
-    
-    logger.info('Tray created with P icon')
+
+    // Listen to theme changes on Windows
+    if (process.platform === 'win32') {
+      nativeTheme.on('updated', () => {
+        this.updateTrayIcon()
+      })
+    }
+
+    logger.info('Tray created with new icon')
     return tray
+  }
+
+  private loadTrayIcons(): void {
+    try {
+      const iconDir = path.join(__dirname, '../../assets/icons/tray')
+      const iconSize = process.platform === 'darwin' ? '16x16' : '32x32'
+
+      // Load different icon variants
+      const pixelIcon = nativeImage.createFromPath(
+        path.join(iconDir, `icon-pixelversion-${iconSize}.png`)
+      )
+      const transparentIcon = nativeImage.createFromPath(
+        path.join(iconDir, `icon-transparent-${iconSize}.png`)
+      )
+      const whiteIcon = nativeImage.createFromPath(
+        path.join(iconDir, `icon-white-${iconSize}.png`)
+      )
+
+      // Store icons for different states and themes
+      this.trayIcons.set('normal-dark', pixelIcon)
+      this.trayIcons.set('normal-light', whiteIcon)
+      this.trayIcons.set('stopped', transparentIcon)
+      this.trayIcons.set('error', pixelIcon) // Could be customized later
+
+      // Set template image for macOS
+      if (process.platform === 'darwin') {
+        pixelIcon.setTemplateImage(true)
+        this.trayIcons.set('normal', pixelIcon)
+      }
+
+      logger.info('Tray icons loaded successfully')
+    } catch (error) {
+      logger.error('Failed to load tray icons:', error)
+    }
+  }
+
+  private getTrayIcon(state: 'normal' | 'stopped' | 'error' = 'normal'): nativeImage {
+    if (process.platform === 'darwin') {
+      // macOS: Use template image (auto-adapts to theme)
+      if (state === 'stopped') {
+        return this.trayIcons.get('stopped') || this.trayIcons.get('normal')!
+      }
+      return this.trayIcons.get('normal')!
+    } else if (process.platform === 'win32') {
+      // Windows: Choose based on theme
+      if (state === 'stopped') {
+        return this.trayIcons.get('stopped')!
+      }
+      const isDark = nativeTheme.shouldUseDarkColors
+      const key = isDark ? 'normal-light' : 'normal-dark'
+      return this.trayIcons.get(key) || this.trayIcons.get('normal-dark')!
+    }
+    // Linux fallback
+    return this.trayIcons.get('normal-dark')!
+  }
+
+  private updateTrayIcon(): void {
+    if (!this.tray || this.tray.isDestroyed()) return
+
+    let iconState: 'normal' | 'stopped' | 'error' = 'normal'
+
+    switch (this.currentStatus) {
+      case ServerStatus.RUNNING:
+      case ServerStatus.STARTING:
+        iconState = 'normal'
+        break
+      case ServerStatus.STOPPED:
+      case ServerStatus.STOPPING:
+        iconState = 'stopped'
+        break
+      case ServerStatus.ERROR:
+        iconState = 'error'
+        break
+    }
+
+    const icon = this.getTrayIcon(iconState)
+    this.tray.setImage(icon)
   }
 
 
@@ -403,14 +491,14 @@ return
 
   updateStatus(status: ServerStatus): void {
     this.currentStatus = status
-    
-    // For now, keep the same icon for all statuses
-    // TODO: Create different colored versions of the logo for different statuses
-    
+
+    // Update icon based on new status
+    this.updateTrayIcon()
+
     // Update tooltip
     const statusLabel = this.getStatusLabel(status)
     this.tray.setToolTip(`PromptX Desktop - ${statusLabel}`)
-    
+
     // Rebuild menu
     this.initializeMenu()
   }
