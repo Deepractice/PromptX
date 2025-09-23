@@ -263,14 +263,8 @@ class UserDiscovery extends BaseDiscovery {
         case 'manual':
           return trimmedContent.includes('<manual>') && trimmedContent.includes('</manual>')
         case 'tool':
-          // tool 文件是 JavaScript，进行基本的语法验证
-          try {
-            new Function(trimmedContent)
-            return true
-          } catch (e) {
-            logger.warn(`[UserDiscovery] Invalid JavaScript in tool file ${filePath}: ${e.message}`)
-            return false
-          }
+          // tool 文件存在且有内容就认为是有效的，语法验证延迟到加载时
+          return true
         default:
           return false
       }
