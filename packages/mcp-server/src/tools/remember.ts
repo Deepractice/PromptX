@@ -19,7 +19,8 @@ export const rememberTool: ToolWithHandler = {
   engrams: [{
     content: "刚刚讨论/解决的核心内容",
     schema: "关键词1\\n关键词2\\n关键词3",
-    strength: 0.7  // 默认0.7即可
+    strength: 0.7,  // 默认0.7即可
+    type: "ATOMIC"  // ATOMIC(具体信息)|LINK(关系)|PATTERN(模式)
   }]
 }
 
@@ -59,21 +60,24 @@ export const rememberTool: ToolWithHandler = {
 {
   content: "今天下雨了",
   schema: "今天\\n  下雨",
-  strength: 0.5
+  strength: 0.5,
+  type: "ATOMIC"  // 具体事实
 }
 
 "数据库通过连接池来管理" → 概念关系
 {
   content: "数据库通过连接池来管理",
   schema: "数据库\\n  通过\\n  连接池\\n  管理",
-  strength: 0.7
+  strength: 0.7,
+  type: "LINK"  // 关系连接
 }
 
 "先登录，再选商品，最后付款" → 流程步骤
 {
   content: "购物流程",
   schema: "登录\\n  选商品\\n  付款",
-  strength: 0.8
+  strength: 0.8,
+  type: "PATTERN"  // 流程模式
 }
 
 记住：存了总比没存强！
@@ -87,7 +91,7 @@ export const rememberTool: ToolWithHandler = {
       },
       engrams: {
         type: 'array',
-        description: 'Engram（记忆痕迹）对象数组，支持批量记忆保存。每个对象包含content, schema, strength三个字段',
+        description: 'Engram（记忆痕迹）对象数组，支持批量记忆保存。每个对象包含content, schema, strength, type四个字段',
         items: {
           type: 'object',
           properties: {
@@ -105,9 +109,14 @@ export const rememberTool: ToolWithHandler = {
               minimum: 0,
               maximum: 1,
               default: 0.8
+            },
+            type: {
+              type: 'string',
+              description: 'Engram类型：ATOMIC(原子概念:名词、实体、具体信息)、LINK(关系连接:动词、介词、关系词)、PATTERN(模式结构:流程、方法论、框架)',
+              enum: ['ATOMIC', 'LINK', 'PATTERN']
             }
           },
-          required: ['content', 'schema', 'strength']
+          required: ['content', 'schema', 'strength', 'type']
         },
         minItems: 1
       }

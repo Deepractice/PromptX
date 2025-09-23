@@ -244,6 +244,7 @@ class CognitionManager {
           content: engramData.content,
           schema: engramData.schema,
           strength: engramData.strength,
+          type: engramData.type,  // 传递type字段
           timestamp: Date.now()  // 使用当前时间戳
         });
         

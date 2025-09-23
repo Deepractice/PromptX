@@ -41,7 +41,7 @@ class Memory {
     this.db = open(this.dbPath, {
       encoding: 'json',          // 自动JSON序列化
       compression: true,         // 启用压缩
-      maxDbs: 3,                 // 支持多个子数据库
+      maxDbs: 4,                 // 支持多个子数据库
       mapSize: 100 * 1024 * 1024 // 100MB映射空间
     });
 
@@ -49,6 +49,7 @@ class Memory {
     this.engramDb = this.db.openDB('engrams');      // 主engram存储
     this.cueIndexDb = this.db.openDB('cue_index');   // Cue -> Engram映射
     this.timeIndexDb = this.db.openDB('time_index'); // 时间索引
+    this.typeIndexDb = this.db.openDB('type_index'); // 类型索引 (ATOMIC/LINK/PATTERN)
 
     logger.debug('[Memory] Initialized with LMDB', { dbPath: this.dbPath });
   }
@@ -89,10 +90,20 @@ class Memory {
             this.timeIndexDb.put(timeKey, dailyIds);
           }
         }
+
+        // 4. 建立type索引
+        if (engramData.type) {
+          const typeIds = this.typeIndexDb.get(engramData.type) || [];
+          if (!typeIds.includes(key)) {
+            typeIds.push(key);
+            this.typeIndexDb.put(engramData.type, typeIds);
+          }
+        }
       });
 
       logger.debug('[Memory] Stored engram with LMDB', {
         key,
+        type: engram.type,
         preview: engram.getPreview(),
         strength: engram.strength
       });
@@ -170,6 +181,78 @@ class Memory {
     }
   }
   
+  /**
+   * 根据类型查询Engram对象
+   *
+   * @param {string} type - Engram类型 (ATOMIC/LINK/PATTERN)
+   * @param {string} [word] - 可选词汇过滤
+   * @returns {Promise<Array>} Engram数据对象数组
+   */
+  async getByType(type, word = null) {
+    try {
+      const typeIds = this.typeIndexDb.get(type) || [];
+      const engrams = [];
+
+      for (const id of typeIds) {
+        const engram = this.engramDb.get(id);
+        if (engram) {
+          // 如果指定了word，检查schema中是否包含该词
+          if (!word || (engram.schema && engram.schema.includes(word))) {
+            engrams.push(engram);
+          }
+        }
+      }
+
+      logger.debug('[Memory] Retrieved engrams by type', {
+        type,
+        word,
+        count: engrams.length
+      });
+
+      return engrams;
+    } catch (error) {
+      logger.error('[Memory] Failed to retrieve engrams by type', {
+        type,
+        word,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 根据词汇分类型查询Engram
+   *
+   * @param {string} word - 查询词汇
+   * @returns {Promise<Object>} 分类型的Engram结果
+   */
+  async getByWordWithType(word) {
+    try {
+      const patterns = await this.getByType('PATTERN', word);
+      const links = await this.getByType('LINK', word);
+      const atomics = await this.getByType('ATOMIC', word);
+
+      logger.debug('[Memory] Retrieved typed engrams', {
+        word,
+        patterns: patterns.length,
+        links: links.length,
+        atomics: atomics.length
+      });
+
+      return {
+        patterns: patterns.sort((a, b) => b.strength - a.strength).slice(0, 5),   // 最多5个
+        links: links.sort((a, b) => b.strength - a.strength).slice(0, 10),       // 最多10个
+        atomics: atomics.sort((a, b) => b.timestamp - a.timestamp).slice(0, 15) // 最多15个，按时间排序
+      };
+    } catch (error) {
+      logger.error('[Memory] Failed to retrieve typed engrams', {
+        word,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
   /**
    * 关闭数据库连接
    *
