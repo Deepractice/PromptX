@@ -152,7 +152,15 @@ class Mind {
    * @param {number} weight - 连接权重
    */
   addConnection(from, to, weight) {
-    this.connections.push({ from, to, weight });
+    // 检查连接是否已存在，避免重复
+    const exists = this.connections.some(conn =>
+      conn.from === from && conn.to === to
+    );
+
+    if (!exists) {
+      this.connections.push({ from, to, weight });
+    }
+
     // 确保两端都在激活集合中
     this.activatedCues.add(from);
     this.activatedCues.add(to);
