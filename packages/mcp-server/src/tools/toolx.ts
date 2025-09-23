@@ -8,6 +8,22 @@ export const toolxTool: ToolWithHandler = {
   description: `🔧 [ToolX多模式执行器] 执行、配置、查看PromptX工具体系中的JavaScript工具
 基于PromptX工具生态系统，提供安全可控的工具执行环境，支持多种操作模式。
 
+⚠️ AI 使用注意（GPT/Claude/Cursor必读）：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 如果你是 AI，请务必遵守以下规则：
+1. execute/rebuild 模式的 parameters 必须是对象，不能是 null/undefined
+2. 第一次使用任何工具，必须先 mode: 'manual' 查看参数要求
+3. 看到 "Parameters must be an object" 错误，说明你没传 parameters
+
+❌ AI 常见错误：
+{tool_resource: '@tool://filesystem', mode: 'execute'}  // 缺少parameters
+{tool_resource: '@tool://filesystem', parameters: null}  // parameters不能为null
+
+✅ 正确示例：
+{tool_resource: '@tool://filesystem', mode: 'manual'}  // 先看手册
+{tool_resource: '@tool://filesystem', parameters: {method: 'read_text_file', path: '/path'}}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ⚠️ 重要原则：提高执行成功率的黄金法则
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【第一次使用工具时的标准流程】

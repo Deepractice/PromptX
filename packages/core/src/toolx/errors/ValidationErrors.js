@@ -138,6 +138,28 @@ const VALIDATION_ERRORS = {
     }
   },
 
+  PARAMETERS_NOT_OBJECT: {
+    code: 'PARAMETERS_NOT_OBJECT',
+    category: 'VALIDATION',
+    description: 'execute/rebuild模式需要parameters对象',
+    identify: (error, context) => {
+      return error.message.includes('Parameters must be an object') ||
+             error.message.includes('需要 parameters 对象') ||
+             error.message.includes('parameters 参数');
+    },
+    getSolution: (error, context) => {
+      const mode = context.mode || 'execute';
+      const toolName = context.tool_resource?.replace('@tool://', '') || 'tool-name';
+      return {
+        message: `${mode} 模式需要 parameters 对象`,
+        example: `{tool_resource: '@tool://${toolName}', mode: '${mode}', parameters: {...}}`,
+        detail: `💡 建议：先用 mode: 'manual' 查看工具参数要求`,
+        command: `先执行: {tool_resource: '@tool://${toolName}', mode: 'manual'}`,
+        autoRecoverable: false
+      };
+    }
+  },
+
   SCHEMA_VALIDATION_FAILED: {
     code: 'SCHEMA_VALIDATION_FAILED',
     category: 'VALIDATION',
