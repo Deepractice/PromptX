@@ -98,36 +98,48 @@ class FrequencyCue extends Cue {
   }
   
   /**
-   * 序列化为JSON（包含频率信息）
-   * 
-   * @returns {Object} 包含频率的序列化对象
+   * 序列化为JSON（包含频率信息和记忆引用）
+   *
+   * @returns {Object} 包含频率和记忆引用的序列化对象
    */
   toJSON() {
-    return {
+    const json = {
       ...super.toJSON(),
       recallFrequency: this.recallFrequency
     };
+
+    // 序列化memories字段（Set需要转换为Array）
+    if (this.memories && this.memories.size > 0) {
+      json.memories = Array.from(this.memories);
+    }
+
+    return json;
   }
   
   /**
-   * 从JSON恢复（包含频率信息）
-   * 
+   * 从JSON恢复（包含频率信息和记忆引用）
+   *
    * @param {Object} json - 序列化的对象
    * @returns {FrequencyCue} 恢复的FrequencyCue实例
    */
   static fromJSON(json) {
     const freqCue = new FrequencyCue(json.word);
-    
+
     // 恢复连接
     if (json.connections) {
       for (const conn of json.connections) {
         freqCue.connections.set(conn.target, conn.weight);
       }
     }
-    
+
     // 恢复频率
     freqCue.recallFrequency = json.recallFrequency || 0;
-    
+
+    // 恢复memories字段（Array转换回Set）
+    if (json.memories && json.memories.length > 0) {
+      freqCue.memories = new Set(json.memories);
+    }
+
     return freqCue;
   }
   
