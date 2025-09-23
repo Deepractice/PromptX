@@ -202,57 +202,66 @@ class HippocampalActivationStrategy extends ActivationStrategy {
         weight,
         frequency: context.getTargetFrequency(targetWord)
       }));
-    
-    // 如果有权重策略，使用它进行归一化（包含温度控制和批次感知）
-    if (this.weightStrategy && typeof this.weightStrategy.normalizeForActivation === 'function') {
-      edges = this.weightStrategy.normalizeForActivation(edges);
-      logger.debug('[HippocampalActivationStrategy] Applied weight strategy normalization', {
-        strategy: this.weightStrategy.constructor.name,
-        edgeCount: edges.length
-      });
-    }
-    
-    // 基于归一化后的概率计算能量传递
-    const processedEdges = edges.map(edge => {
-      // 使用归一化后的概率（如果有）或原始权重
-      const activationProbability = edge.probability || (edge.weight / edges.reduce((sum, e) => sum + e.weight, 0));
-      
-      // 频率加成（经常被激活的节点更容易再次激活）
+
+    const degree = edges.length;
+
+    // GraphSAGE核心改进：固定采样K个邻居解决Hub节点问题
+    // 根据度数动态调整，但有上限
+    const SAMPLE_SIZE = Math.min(
+      8,  // 最多采样8个（提高到8以增加扩散范围）
+      Math.max(3, Math.ceil(Math.log2(degree + 1)))  // 至少3个，对数增长
+    );
+
+    // 按权重排序，选择Top-K
+    const sampledEdges = edges
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, SAMPLE_SIZE);
+
+    // Hub节点能量补偿：度数越大，总能量越多
+    // 但不是线性增长，而是对数增长，避免能量爆炸
+    const hubCompensation = 1 + Math.log(1 + degree) * 0.3;
+    const availableEnergy = context.currentEnergy * hubCompensation;
+
+    // 能量均分给采样的邻居（GraphSAGE-Mean策略）
+    const energyPerEdge = (availableEnergy * this.synapticDecay) / Math.max(1, sampledEdges.length);
+
+    // 处理采样的边
+    const processedEdges = sampledEdges.map(edge => {
+      // 频率加成（保留原有的频率奖励机制）
       const freqBonus = 1 + Math.log(1 + edge.frequency) * this.frequencyBoost;
-      
-      // 基于概率的能量传递
-      const transmittedEnergy = context.currentEnergy * 
-                               activationProbability * 
-                               this.synapticDecay * 
-                               freqBonus;
-      
-      // 应用侧抑制（激活节点越多，抑制越强）
-      const inhibition = 1 - (this.inhibitionFactor * context.activatedNodes.size / 100);
-      const finalEnergy = transmittedEnergy * inhibition;
-      
+
+      // 每条边获得均等能量（GraphSAGE的核心）
+      const transmittedEnergy = energyPerEdge * freqBonus;
+
+      // 降低侧抑制的影响（因为我们已经限制了激活数量）
+      const inhibition = 1 - (this.inhibitionFactor * context.activatedNodes.size / 200);  // 从100改为200
+      const finalEnergy = transmittedEnergy * Math.max(0.5, inhibition);  // 确保抑制不会过强
+
       return {
         targetWord: edge.targetWord,
         weight: edge.weight,
         energy: finalEnergy,
         frequency: edge.frequency,
-        probability: activationProbability,
-        batchMultiplier: edge.batchMultiplier || 1,
         shouldFire: finalEnergy >= this.firingThreshold
       };
     });
-    
+
     // 只返回能量足够且未激活的边
-    const activeEdges = processedEdges.filter(e => 
+    const activeEdges = processedEdges.filter(e =>
       e.shouldFire && !context.isActivated(e.targetWord)
     );
     
-    logger.debug('[HippocampalActivationStrategy] Activation decision', {
+    logger.debug('[HippocampalActivationStrategy] GraphSAGE activation', {
       source: context.sourceCue.word,
       sourceEnergy: context.currentEnergy,
+      degree: degree,
+      sampleSize: SAMPLE_SIZE,
+      hubCompensation: hubCompensation.toFixed(2),
+      energyPerEdge: energyPerEdge.toFixed(3),
       totalEdges: edges.length,
+      sampledEdges: sampledEdges.length,
       activeEdges: activeEdges.length,
-      cycle: context.cycle,
-      hasWeightStrategy: !!this.weightStrategy
+      cycle: context.cycle
     });
     
     return { shouldActivate: true, edges: activeEdges };
