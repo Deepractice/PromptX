@@ -118,8 +118,24 @@ export class PromptXMCPServer {
    * 3. 保持进程存活（stdio 模式）
    */
   static async launch(options: PromptXServerOptions): Promise<PromptXMCPServer> {
+    // 设置环境变量，通知 logger 当前的传输模式
+    process.env.MCP_TRANSPORT = options.transport;
+
+    // MCP STDIO模式最佳实践：劫持console防止stdout污染
+    if (options.transport === 'stdio') {
+      // 将所有console输出重定向到stderr，遵循MCP官方最佳实践
+      // 参考：https://modelcontextprotocol.io/quickstart/server
+      const originalLog = console.log;
+      console.log = console.error;  // 重定向到stderr
+      console.info = console.error;
+      console.debug = console.error;
+      console.warn = console.error;
+      // 保留原始方法以备需要
+      (console as any)._originalLog = originalLog;
+    }
+
     const server = new PromptXMCPServer(options);
-    
+
     // 设置信号处理
     const shutdown = async (signal: string) => {
       logger.info(`\nReceived ${signal}, shutting down gracefully...`);

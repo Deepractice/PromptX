@@ -153,9 +153,11 @@ export function createLogger(config: LoggerConfig = {}): pino.Logger {
         target: 'pino-pretty',
         level: finalConfig.level,
         options: {
-          colorize: finalConfig.colors,
+          // MCP stdio模式下禁用颜色，避免ANSI转义码
+          colorize: process.env.MCP_TRANSPORT === 'stdio' ? false : finalConfig.colors,
           translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
           ignore: 'hostname,pid,package,file,line',
+          destination: 2, // 输出到 stderr (fd 2) - MCP官方最佳实践
           messageFormat: '{package} [{file}:{line}] {msg}'
         }
       })
