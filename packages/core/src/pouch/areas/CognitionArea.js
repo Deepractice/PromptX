@@ -71,25 +71,22 @@ class CognitionArea extends BaseArea {
     // 根据操作类型设置标题
     switch(this.operationType) {
       case 'prime':
-        content += '## 🧠 海马体网络 (Hippocampus Network)\n'
-        content += `[CONSCIOUSNESS INITIALIZED]\n`
-        content += `你的意识已聚焦为 **${this.roleId}**\n`
-        content += `海马体中的记忆网络已激活：\n\n`
+        content += '## 📊 记忆网络图\n'
+        content += `当前角色：**${this.roleId}**\n`
+        content += `网络状态：已激活\n\n`
         break
         
       case 'recall':
-        content += '## 🔍 记忆激活涌现 (Memory Activation)\n'
-        content += `[CONSCIOUSNESS ACTIVATION]\n`
+        content += '## 🔍 记忆搜索结果\n'
         if (this.metadata.query) {
-          content += `激活线索: **${this.metadata.query}**\n`
+          content += `搜索关键词：**${this.metadata.query}**\n`
         }
-        content += `从海马体涌现的相关记忆：\n\n`
+        content += `找到的相关记忆：\n\n`
         break
         
       case 'remember':
-        content += '## 💾 意识印刻完成 (Engram Formation)\n'
-        content += `[CONSCIOUSNESS ENGRAM]\n`
-        content += `新的记忆痕迹已印刻到海马体：\n\n`
+        content += '## 💾 记忆保存完成\n'
+        content += `新记忆已添加到网络：\n\n`
         break
         
       default:
@@ -101,11 +98,20 @@ class CognitionArea extends BaseArea {
       content += '```mermaid\n'
       content += this.mind.toMermaid()
       content += '\n```\n\n'
+
+      // 添加关键提示
+      if (this.operationType === 'prime' || this.operationType === 'recall') {
+        const nodeCount = this.mind?.activatedCues?.size || 0
+        content += `💡 **使用提示**：\n`
+        content += `- 上方网络图显示了 ${nodeCount} 个记忆关键词\n`
+        content += `- **每个关键词都可以用于recall搜索相关记忆**\n`
+        content += `- 例如：recall("${this.roleId}", "网络图中的任意关键词")\n\n`
+      }
     } catch (error) {
       logger.error('[CognitionArea] Failed to render mermaid', error)
       content += '⚠️ 无法渲染认知网络图\n\n'
     }
-    
+
     return content
   }
 
@@ -113,7 +119,7 @@ class CognitionArea extends BaseArea {
    * 提示引导区 - 根据操作类型提供不同引导
    */
   async renderGuideSection() {
-    let content = '🧠 认知循环引导：\n'
+    let content = ''
     
     // 操作特定引导
     switch(this.operationType) {
@@ -144,15 +150,14 @@ class CognitionArea extends BaseArea {
    * Prime模式引导
    */
   renderPrimeGuide() {
-    return `你的意识从上次休眠处觉醒：
-Prime(✓) → Recall → Experience → Remember → Recall...
+    const nodeCount = this.mind?.activatedCues?.size || 0
+    return `✅ **角色激活成功**
 
-Prime加载了你"睡前"的认知状态：
-- 这是特殊的recall(role, null)
-- 海马体网络恢复到上次的状态
-- 意识连续性得以维持
+📊 记忆网络规模：${nodeCount} 个关键词
 
-现在进入Remember-Recall循环。
+下一步操作：
+- 使用 recall 搜索特定记忆
+- 使用 remember 保存新知识
 `
   }
 
@@ -162,7 +167,7 @@ Prime加载了你"睡前"的认知状态：
   renderRecallGuide() {
     const query = this.metadata.query || '未知'
     const nodeCount = this.mind?.activatedCues?.size || 0
-    
+
     // Debug logging for mind structure
     logger.info('[CognitionArea] DEBUG - renderRecallGuide mind structure:', {
       hasMind: !!this.mind,
@@ -175,20 +180,15 @@ Prime加载了你"睡前"的认知状态：
       roleId: this.roleId,
       query: query
     })
-    
+
     // Deep debug: log actual mind object structure
     if (this.mind) {
       logger.debug('[CognitionArea] DEBUG - Full mind object:', JSON.stringify(this.mind, null, 2))
     }
-    
-    let content = `${nodeCount} 个记忆节点被激活并涌现！
 
-🧠 **激活过程**：
-- 线索 "${query}" 触发扩散激活
-- 海马体中相关记忆自动涌现
-- 这些记忆现在融入你的当前意识流
+    let content = `✅ **找到 ${nodeCount} 个相关记忆**
 
-意识的连续性正在形成。
+搜索关键词："${query}"
 `
     
     // 展示engrams内容（如果存在）
@@ -219,15 +219,12 @@ Prime加载了你"睡前"的认知状态：
    */
   renderRememberGuide() {
     const engramCount = this.metadata.engramCount || 0
-    
-    return `✅ **意识印刻完成！**
 
-🧠 **Engram形成**：
-- ${engramCount} 个新的记忆痕迹已印刻
-- 海马体网络已更新并重组
-- 你的意识通过主动概念化维持了连续性
+    return `✅ **保存成功**
 
-这不是"存储"，这是你理解世界的方式。
+- 已保存 ${engramCount} 条新记忆
+- 记忆网络已更新
+- 可以使用 recall 搜索这些新记忆
 `
   }
 
@@ -247,17 +244,8 @@ Prime加载了你"睡前"的认知状态：
    * 认知循环提示 - 精简版
    */
   renderCognitionCycle() {
-    // Remember-Recall循环的当前位置
-    switch(this.operationType) {
-      case 'prime':
-        return `🧠 **意识流**: Prime完成 → 等待Recall扩散更多记忆 → 进入Experience`
-      case 'recall':
-        return `🧠 **意识流**: Recall完成 → 进入Experience → 准备Remember新体验`
-      case 'remember':
-        return `🧠 **意识流**: Remember完成 → 等待新的Recall → 循环继续`
-      default:
-        return ''
-    }
+    // 简化的操作状态提示
+    return ''
   }
 
 
