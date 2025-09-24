@@ -1,5 +1,93 @@
 # @promptx/mcp-server
 
+## 1.20.0
+
+### Minor Changes
+
+- [#390](https://github.com/Deepractice/PromptX/pull/390) [`5c630bb`](https://github.com/Deepractice/PromptX/commit/5c630bb73e794990d15b67b527ed8d4ef0762a27) Thanks [@deepracticexs](https://github.com/deepracticexs)! - ## 重大重构：将 init 重命名为 project，建立统一的项目管理架构
+
+  ### 🚨 破坏性变更
+
+  - **MCP 工具**：`init` → `project`
+  - **CLI 命令**：`promptx init` → `promptx project`
+  - **API 变更**：`InitCommand` → `ProjectCommand`
+
+  ### 🎯 主要改动
+
+  1. **移除 ServerEnvironment**
+
+     - 删除不必要的全局状态管理
+     - 简化项目初始化流程，避免 "ServerEnvironment not initialized" 错误
+     - MCP ID 现在直接从 process.pid 生成
+
+  2. **建立独立的 project 模块**
+
+     - 创建 `core/src/project/` 目录
+     - 移动 ProjectManager、ProjectConfig、ProjectPathResolver 到新模块
+     - 统一项目相关代码的组织结构
+
+  3. **命名重构**
+     - InitCommand → ProjectCommand
+     - InitArea → ProjectArea
+     - init.ts → project.ts (MCP 工具)
+
+  ### ✨ 改进
+
+  - **语义更准确**：`project` 更清楚地表示项目管理功能
+  - **架构更清晰**：所有项目相关代码在一个模块下
+  - **代码更简洁**：移除了不必要的 transport 参数和初始化依赖
+  - **扩展性更好**：为未来添加 `project list`、`project switch` 等子命令做准备
+
+  ### 🔄 迁移指南
+
+  更新你的配置：
+
+  ```json
+  // Claude Desktop 配置
+  {
+    "mcpServers": {
+      "promptx": {
+        "command": "npx",
+        "args": ["-y", "@promptx/mcp-server"]
+      }
+    }
+  }
+  ```
+
+  使用新命令：
+
+  ```bash
+  # 旧命令
+  promptx init /path/to/project
+
+  # 新命令
+  promptx project /path/to/project
+  ```
+
+  ### 📝 注意
+
+  本次更新**不保留向后兼容**。请确保更新所有使用 `init` 命令的脚本和配置。
+
+### Patch Changes
+
+- [#388](https://github.com/Deepractice/PromptX/pull/388) [`b79494d`](https://github.com/Deepractice/PromptX/commit/b79494d3611f6dfad9740a7899a1f794ad53c349) Thanks [@deepracticexs](https://github.com/deepracticexs)! - feat: 实现 Engram 类型系统和两阶段召回策略
+
+  - 添加 Engram 三种类型(PATTERN/LINK/ATOMIC)支持，用于区分不同记忆类型
+    - PATTERN：框架性知识，优先展示
+    - LINK：关系连接，次优先级
+    - ATOMIC：具体细节，依赖时间
+  - 实现 TwoPhaseRecallStrategy 类，整合粗召回和精排序两个阶段
+    - 第一阶段：使用 Recall 类进行激活扩散获取候选集
+    - 第二阶段：计算综合权重(类型 × 相关性 × 强度 × 时间)进行精排序
+  - 修复未分类记忆问题，为旧数据自动设置 ATOMIC 类型
+  - 更新 schema 分隔符从换行符改为'-'，提升输入体验
+  - 增加类型配额限制(PATTERN:10, LINK:15, ATOMIC:25，总计 50)
+  - 在 recall 结果中添加类型图标显示(🎯/🔗/💡)
+
+- Updated dependencies [[`b79494d`](https://github.com/Deepractice/PromptX/commit/b79494d3611f6dfad9740a7899a1f794ad53c349), [`5c630bb`](https://github.com/Deepractice/PromptX/commit/5c630bb73e794990d15b67b527ed8d4ef0762a27), [`54be2ef`](https://github.com/Deepractice/PromptX/commit/54be2ef58d03ea387f3f9bf2e87f650f24cac411)]:
+  - @promptx/core@1.20.0
+  - @promptx/logger@1.20.0
+
 ## 1.19.0
 
 ### Minor Changes
