@@ -281,19 +281,28 @@ class CognitionManager {
    */
   parseSchema(schema) {
     if (!schema) return [];
-    
-    // 按行分割，处理缩进层级
-    const lines = schema.split('\n').filter(line => line.trim());
-    const concepts = [];
-    
-    for (const line of lines) {
-      // 移除缩进和特殊符号，提取概念
-      const concept = line.trim().replace(/^[-*>#\s]+/, '').trim();
-      if (concept) {
-        concepts.push(concept);
+
+    // 支持多种分隔符：优先使用 - 分隔符
+    let concepts = [];
+
+    if (schema.includes(' - ')) {
+      // 用 - 分割（标准格式）
+      concepts = schema.split(/\s*-\s*/).filter(c => c.trim());
+    } else if (schema.includes('\n')) {
+      // 兼容旧格式：用换行符分割
+      const lines = schema.split('\n').filter(line => line.trim());
+      for (const line of lines) {
+        // 移除缩进和特殊符号，提取概念
+        const concept = line.trim().replace(/^[-*>#\s]+/, '').trim();
+        if (concept) {
+          concepts.push(concept);
+        }
       }
+    } else {
+      // 如果没有分隔符，尝试用空格分割
+      concepts = schema.split(/\s+/).filter(c => c.trim());
     }
-    
+
     return concepts;
   }
 

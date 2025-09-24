@@ -204,7 +204,21 @@ ${nodeCount > 0 ? '\n📗 **认知状态**：经验模式 - 基于历史记忆�
         // 时间格式化
         const timeAgo = this.formatTimeAgo(engram.timestamp)
         
-        content += `💭 **记忆片段** (强度: ${engram.strength}) • ⏰ ${timeAgo}\n`
+        // 根据type显示不同的emoji和标签
+        const typeEmoji = {
+          'PATTERN': '🎯',
+          'LINK': '🔗',
+          'ATOMIC': '💡'
+        }
+        const typeLabel = {
+          'PATTERN': '模式',
+          'LINK': '关系',
+          'ATOMIC': '原子'
+        }
+        const emoji = typeEmoji[engram.type] || '💭'
+        const label = typeLabel[engram.type] || engram.type || '未分类'
+
+        content += `${emoji} **记忆片段** [${label}] (强度: ${engram.strength}) • ⏰ ${timeAgo}\n`
         content += `   *"${engram.content}"*\n\n`
         
         // 展示schema概念结构

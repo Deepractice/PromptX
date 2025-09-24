@@ -162,6 +162,10 @@ class Memory {
       for (const id of engramIds) {
         const engram = this.engramDb.get(id);
         if (engram) {
+          // 兼容旧数据：如果没有type字段，默认为ATOMIC
+          if (!engram.type) {
+            engram.type = 'ATOMIC';
+          }
           engrams.push(engram);
         }
       }

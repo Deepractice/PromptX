@@ -59,7 +59,7 @@ export const rememberTool: ToolWithHandler = {
 "今天下雨了" → 简单事实
 {
   content: "今天下雨了",
-  schema: "今天\\n  下雨",
+  schema: "今天 - 下雨",
   strength: 0.5,
   type: "ATOMIC"  // 具体事实
 }
@@ -67,7 +67,7 @@ export const rememberTool: ToolWithHandler = {
 "数据库通过连接池来管理" → 概念关系
 {
   content: "数据库通过连接池来管理",
-  schema: "数据库\\n  通过\\n  连接池\\n  管理",
+  schema: "数据库 - 通过 - 连接池 - 管理",
   strength: 0.7,
   type: "LINK"  // 关系连接
 }
@@ -75,7 +75,7 @@ export const rememberTool: ToolWithHandler = {
 "先登录，再选商品，最后付款" → 流程步骤
 {
   content: "购物流程",
-  schema: "登录\\n  选商品\\n  付款",
+  schema: "登录 - 选商品 - 付款",
   strength: 0.8,
   type: "PATTERN"  // 流程模式
 }
@@ -100,8 +100,8 @@ export const rememberTool: ToolWithHandler = {
               description: '要保存的原始经验内容（感性直观）'
             },
             schema: {
-              type: 'string', 
-              description: '概念序列，用换行分隔。直接从原文提取关键词，不要发明新词（知性概念化）'
+              type: 'string',
+              description: '概念序列，用 - 分隔（推荐），也支持换行符兼容旧数据。直接从原文提取关键词，不要发明新词（知性概念化）'
             },
             strength: {
               type: 'number',

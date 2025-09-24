@@ -1,10 +1,10 @@
 const logger = require('@promptx/logger');
 const Network = require('./Network');
 const Remember = require('./Remember');
-const Recall = require('./Recall');
 const Prime = require('./Prime');
 const Memory = require('./Memory');
 const { TemperatureWeightStrategy } = require('./WeightStrategy');
+const TwoPhaseRecallStrategy = require('./TwoPhaseRecallStrategy');
 
 /**
  * CognitionSystem - 认知系统主控制器
@@ -110,7 +110,7 @@ class CognitionSystem {
     
     /**
      * Recall引擎实例（延迟创建）
-     * @type {Recall|null}
+     * @type {TwoPhaseRecallStrategy|null}
      */
     this.recallEngine = null;
     
@@ -140,12 +140,34 @@ class CognitionSystem {
   
   /**
    * 获取Recall引擎（懒加载）
-   * 
-   * @returns {Recall}
+   *
+   * @returns {TwoPhaseRecallStrategy}
    */
   getRecallEngine() {
     if (!this.recallEngine) {
-      this.recallEngine = new Recall(this.network, this.recallOptions);
+      // 使用新的两阶段召回策略
+      this.recallEngine = new TwoPhaseRecallStrategy({
+        // 第一阶段配置
+        maxActivations: this.recallOptions.maxActivations || 100,
+        // 第二阶段配置
+        typeWeights: this.recallOptions.typeWeights || {
+          'PATTERN': 2.0,
+          'LINK': 1.5,
+          'ATOMIC': 1.0
+        },
+        typeQuotas: this.recallOptions.typeQuotas || {
+          'PATTERN': 10,
+          'LINK': 15,
+          'ATOMIC': 25
+        },
+        totalLimit: this.recallOptions.totalLimit || 50,
+        // 传递权重策略
+        activationStrategy: this.recallOptions.activationStrategy,
+        weightFactors: this.recallOptions.weightFactors
+      });
+
+      // 注入依赖
+      this.recallEngine.setDependencies(this.network, this.getMemory());
     }
     return this.recallEngine;
   }
@@ -220,32 +242,26 @@ class CognitionSystem {
    */
   async recall(word) {
     logger.debug('[CognitionSystem] Recall operation', { word });
-    
-    const recall = this.getRecallEngine();
-    const mind = recall.execute(word);
-    
+
+    const recallEngine = this.getRecallEngine();
+
+    // 使用新的两阶段召回策略
+    // TwoPhaseRecallStrategy已经在内部处理了engrams的加载和排序
+    const mind = await recallEngine.recall(word);
+
     if (!mind) {
       return null;
     }
-    
-    // 加载与原始查询直接相关的engrams
-    if (this.getMemory()) {
-      try {
-        await this.loadEngrams(mind, word);
-      } catch (error) {
-        logger.error('[CognitionSystem] Failed to load engrams', { error: error.message });
-        // 不影响recall的核心功能，继续执行
-      }
-    }
-    
+
     // 更新频率
     if (mind.activatedCues.size > 0) {
       this.network.updateRecallFrequency(mind.activatedCues);
       logger.debug('[CognitionSystem] Updated frequencies after recall', {
-        activatedCount: mind.activatedCues.size
+        activatedCount: mind.activatedCues.size,
+        engramCount: mind.engrams?.length || 0
       });
     }
-    
+
     return mind;
   }
   
@@ -293,6 +309,7 @@ class CognitionSystem {
             content: engramData.content,
             schema: engramData.schema,
             strength: engramData.strength,
+            type: engramData.type,  // 添加type字段
             timestamp: engramData.timestamp,
             activatedBy: originalQuery
           });
