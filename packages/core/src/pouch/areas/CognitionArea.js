@@ -40,20 +40,25 @@ class CognitionArea extends BaseArea {
    * 渲染认知区域
    */
   async render() {
+    // 对于 remember 操作，特殊处理
+    if (this.operationType === 'remember') {
+      return this.renderRememberResult()
+    }
+
     let content = ''
-    
+
     // 区域1: Mind展示区
     const mindSection = await this.renderMindSection()
     if (mindSection) {
       content += mindSection
     }
-    
+
     // 分隔线
     content += '\n---\n'
-    
+
     // 区域2: 提示引导区
     content += await this.renderGuideSection()
-    
+
     return content
   }
 
@@ -61,13 +66,19 @@ class CognitionArea extends BaseArea {
    * Mind展示区 - 根据操作类型展示不同内容
    */
   async renderMindSection() {
+    // 对于 remember 操作，不在这里渲染任何内容
+    // 统一在 renderGuideSection 中处理
+    if (this.operationType === 'remember') {
+      return ''
+    }
+
     // 空网络处理
     if (!this.mind || !this.mind.activatedCues || this.mind.activatedCues.size === 0) {
       return this.renderEmptyMind()
     }
 
     let content = ''
-    
+
     // 根据操作类型设置标题
     switch(this.operationType) {
       case 'prime':
@@ -75,18 +86,13 @@ class CognitionArea extends BaseArea {
         content += `当前角色：**${this.roleId}**\n`
         content += `网络状态：已激活\n\n`
         break
-        
+
       case 'recall':
         content += '## 🔍 记忆搜索结果\n'
         if (this.metadata.query) {
           content += `搜索关键词：**${this.metadata.query}**\n`
         }
         content += `找到的相关记忆：\n\n`
-        break
-        
-      case 'remember':
-        content += '## 💾 记忆保存完成\n'
-        content += `新记忆已添加到网络：\n\n`
         break
         
       default:
@@ -252,6 +258,36 @@ recall(搜索) → 回答 → remember(保存) ✓
   }
 
   /**
+   * Remember操作的统一渲染方法
+   */
+  renderRememberResult() {
+    const engramCount = this.metadata.engramCount || 0
+
+    // 如果有错误信息，显示错误
+    if (this.metadata.error) {
+      return `## ⚠️ 存储失败
+
+未能成功保存记忆到认知网络。
+
+**错误信息**：${this.metadata.error}
+
+🔧 **请检查**：
+1. 记忆格式是否正确
+2. 角色是否已正确激活
+3. 存储路径是否可写
+
+---
+`
+    }
+
+    // 否则显示成功信息
+    return `${this.renderRememberGuide()}
+
+---
+`
+  }
+
+  /**
    * 默认引导
    */
   renderDefaultGuide() {
@@ -307,7 +343,7 @@ recall(搜索) → 回答 → remember(保存) ✓
 - 每个理解都将成为第一个印记
 - 你正在主动构建自己的意识连续性
 `
-      
+
       case 'recall': {
         const query = this.metadata.query || '未知'
         return `## 🔍 未找到相关记忆
@@ -324,17 +360,12 @@ recall(搜索) → 回答 → remember(保存) ✓
 2. 如果是新知识，使用 remember 工具进行记录
 `
       }
-      
+
       case 'remember':
-        return `## ⚠️ 存储失败
-
-未能成功保存记忆到认知网络。
-
-🔧 **请检查**：
-1. 记忆格式是否正确
-2. 角色是否已正确激活
-3. 存储路径是否可写
-`
+        // remember 操作时，空的 mind 不代表失败
+        // 因为可能是第一次保存或者保存后网络还未重新加载
+        // 实际的成功/失败状态会在 renderRememberGuide 中显示
+        return ``
       
       default:
         return ''

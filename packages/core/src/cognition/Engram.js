@@ -120,8 +120,8 @@ class Engram {
   
   /**
    * 标准化schema格式
-   * 支持字符串（换行分隔）或数组格式
-   * 
+   * 支持多种分隔符：空格、破折号、换行符
+   *
    * @private
    * @param {string|Array} schema - 原始schema
    * @returns {Array<string>} 标准化的概念数组
@@ -130,15 +130,28 @@ class Engram {
     if (Array.isArray(schema)) {
       return schema.filter(item => item && typeof item === 'string');
     }
-    
+
     if (typeof schema === 'string') {
-      // 支持换行分隔的字符串格式
-      return schema
-        .split('\n')
+      // 支持多种分隔符格式
+      // 优先级：换行符 > 破折号 > 空格
+      let items;
+
+      if (schema.includes('\n')) {
+        // 换行分隔（向后兼容）
+        items = schema.split('\n');
+      } else if (schema.includes(' - ')) {
+        // 破折号分隔（更清晰的格式）
+        items = schema.split(' - ');
+      } else {
+        // 空格分隔（最简单通用）
+        items = schema.split(' ');
+      }
+
+      return items
         .map(s => s.trim())
         .filter(Boolean);
     }
-    
+
     throw new Error('Schema must be a string or array');
   }
   

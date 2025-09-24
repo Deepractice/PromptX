@@ -24,6 +24,10 @@ export const rememberTool: ToolWithHandler = {
   }]
 }
 
+⚔️ 生成指导：你必须遵循奥卡姆剃刀原则 - "如无必要，勿增实体"
+生成记忆时，删除所有非必要的词汇，只保留传达核心意思的最少元素。
+每个词都要问自己：删掉它意思会变吗？不变就删。
+
 记忆积累策略：
 • 每次对话 = 至少1条remember
 • 重质不重量，抓住关键点
@@ -59,7 +63,7 @@ export const rememberTool: ToolWithHandler = {
 "今天下雨了" → 简单事实
 {
   content: "今天下雨了",
-  schema: "今天 - 下雨",
+  schema: "今天 下雨",
   strength: 0.5,
   type: "ATOMIC"  // 具体事实
 }
@@ -67,7 +71,7 @@ export const rememberTool: ToolWithHandler = {
 "数据库通过连接池来管理" → 概念关系
 {
   content: "数据库通过连接池来管理",
-  schema: "数据库 - 通过 - 连接池 - 管理",
+  schema: "数据库 连接池 管理",
   strength: 0.7,
   type: "LINK"  // 关系连接
 }
@@ -75,7 +79,7 @@ export const rememberTool: ToolWithHandler = {
 "先登录，再选商品，最后付款" → 流程步骤
 {
   content: "购物流程",
-  schema: "登录 - 选商品 - 付款",
+  schema: "登录 选商品 付款",
   strength: 0.8,
   type: "PATTERN"  // 流程模式
 }

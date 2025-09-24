@@ -70,13 +70,17 @@ class RememberCommand extends BasePouchCommand {
     } catch (error) {
       logger.error(` [RememberCommand] 记忆保存失败: ${error.message}`)
       logger.debug(` [RememberCommand] 错误堆栈: ${error.stack}`)
-      
-      // 错误情况：只创建角色层显示错误
-      const roleLayer = new RoleLayer()
-      roleLayer.addRoleArea(new StateArea(
-        `error: ${error.message}`,
-        ['检查角色ID是否正确', '验证记忆格式是否符合要求', '重试保存操作']
-      ))
+
+      // 错误情况：创建带错误信息的认知层
+      const cognitionLayer = CognitionLayer.createForRemember(null, role, 0)
+      cognitionLayer.metadata.error = error.message
+      this.registerLayer(cognitionLayer)
+
+      // 同时创建角色层显示状态
+      const roleLayer = new RoleLayer({ roleId: role })
+      roleLayer.addRoleArea(new StateArea('remember_failed', {
+        error: error.message
+      }))
       this.registerLayer(roleLayer)
     }
   }
