@@ -1,6 +1,6 @@
 const logger = require('@promptx/logger')
-const RegistryData = require('../RegistryData')
-const ResourceData = require('../ResourceData')
+const RegistryData = require('../resource/RegistryData')
+const ResourceData = require('../resource/ResourceData')
 const fs = require('fs-extra')
 const path = require('path')
 
@@ -25,7 +25,7 @@ class ProjectDiscovery {
    */
   getProjectProtocol() {
     if (!this.projectProtocol) {
-      const { getGlobalResourceManager } = require('../../resource')
+      const { getGlobalResourceManager } = require('../resource')
       const resourceManager = getGlobalResourceManager()
       this.projectProtocol = resourceManager.protocols.get('project')
     }

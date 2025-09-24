@@ -3,6 +3,7 @@ const path = require('path')
 const os = require('os')
 const crypto = require('crypto')
 const logger = require('@promptx/logger')
+const ProjectDiscovery = require('./ProjectDiscovery')
 
 /**
  * 统一项目管理器 - 新架构
@@ -497,6 +498,21 @@ ${projectList}
     const projectManager = getGlobalProjectManager()
     const result = await projectManager.registerProject(workingDirectory, mcpId, ideType)
     logger.debug(`[ProjectManager DEBUG] 项目配置持久化完成:`, JSON.stringify(result, null, 2))
+
+    // 扫描并注册项目资源
+    logger.debug(`[ProjectManager DEBUG] 开始扫描项目资源...`)
+    try {
+      const discovery = new ProjectDiscovery()
+      const resources = await discovery.scanProjectResources()
+      if (resources && Array.isArray(resources)) {
+        const resourceCount = resources.length
+        logger.info(`[ProjectManager] 发现并注册了 ${resourceCount} 个项目资源`)
+        result.resourcesDiscovered = resourceCount
+      }
+    } catch (error) {
+      logger.warn(`[ProjectManager] 项目资源扫描失败: ${error.message}`)
+    }
+
     logger.debug(`[ProjectManager DEBUG] ======= registerCurrentProject结束 =======`)
 
     return result

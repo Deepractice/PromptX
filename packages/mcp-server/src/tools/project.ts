@@ -10,7 +10,20 @@ const outputAdapter = new MCPOutputAdapter();
  */
 export const projectTool: ToolWithHandler = {
   name: 'project',
-  description: '📁 [项目配置工具]（可选）仅在需要项目级配置隔离时使用。大多数情况下无需执行此工具，所有 PromptX 功能均可直接使用。',
+  description: `📁 [项目管理] 发现并激活项目专属资源
+
+为什么需要：
+✅ 加载项目专属的角色、工具等资源
+✅ 访问项目级的记忆和知识
+✅ 获得针对此项目优化的能力
+
+何时调用：
+当你知道项目根目录时，建议立即调用以获得项目的完整能力。
+
+不调用会怎样：
+- 只能使用系统级和用户级资源
+- 无法访问项目专属资源
+- 可能错过重要的项目能力`,
   inputSchema: {
     type: 'object',
     properties: {

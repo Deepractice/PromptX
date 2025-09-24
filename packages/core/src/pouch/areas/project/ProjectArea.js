@@ -51,11 +51,12 @@ class ProjectArea extends BaseArea {
 ✅ 项目路径: ${projectConfig.projectPath}
 ✅ 配置文件: ${configFileName}
 
-## 📋 项目资源注册表
+## 📋 项目资源
 ${registryStats.message}
+${projectConfig.resourcesDiscovered > 0 ? `✅ 已发现 **${projectConfig.resourcesDiscovered}** 个项目资源（角色、工具等）` : '📂 项目资源目录已准备，可创建项目专属资源'}
 
 💡 **多项目支持**: 现在支持同时在多个项目中使用PromptX，项目间完全隔离！
-💡 **提示**: ${registryStats.totalResources > 0 ? '项目资源已优化为注册表模式，性能大幅提升！' : '现在可以开始创建项目级资源了！'}`
+💡 **提示**: ${registryStats.totalResources > 0 || projectConfig.resourcesDiscovered > 0 ? '项目资源已加载，使用 discover 查看所有资源' : '在 .promptx/resource 目录下创建角色和工具'}`
   }
 }
 

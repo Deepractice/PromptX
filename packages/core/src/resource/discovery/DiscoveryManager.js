@@ -1,5 +1,5 @@
 const PackageDiscovery = require('./PackageDiscovery')
-const ProjectDiscovery = require('./ProjectDiscovery')
+const ProjectDiscovery = require('../../project/ProjectDiscovery')
 const UserDiscovery = require('./UserDiscovery')
 const logger = require('@promptx/logger')
 

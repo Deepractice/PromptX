@@ -9,7 +9,7 @@ const os = require('os')
 const { getGlobalResourceManager } = require('../../resource')
 const ProjectManager = require('~/project/ProjectManager')
 const { getGlobalProjectManager } = require('~/project/ProjectManager')
-const ProjectDiscovery = require('../../resource/discovery/ProjectDiscovery')
+const ProjectDiscovery = require('../../project/ProjectDiscovery')
 const UserDiscovery = require('../../resource/discovery/UserDiscovery')
 const logger = require('@promptx/logger')
 
