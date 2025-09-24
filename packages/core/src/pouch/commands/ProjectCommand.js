@@ -69,15 +69,18 @@ class ProjectCommand extends BasePouchCommand {
     }
     
     // 基础路径验证（使用简单的 fs 检查，避免依赖 ProjectManager 实例方法）
-    if (!await this.validateProjectPathDirectly(projectPath)) {
-      return `❌ 提供的工作目录无效: ${projectPath}
-      
-请确保：
-1. 路径存在且为目录
-2. 不是用户主目录
-3. 具有适当的访问权限
+    const validationError = await this.validateProjectPathDirectly(projectPath)
+    if (validationError) {
+      // 传递错误信息给 ProjectArea 统一处理
+      const projectArea = new ProjectArea({
+        isProjectMode: false,
+        error: validationError
+      })
+      this.registerArea(projectArea)
 
-💡 请提供一个有效的项目目录路径。`
+      const stateArea = new StateArea('error')
+      this.registerArea(stateArea)
+      return
     }
     
     // 使用统一项目注册方法（从ServerEnvironment获取服务信息）
@@ -232,30 +235,52 @@ class ProjectCommand extends BasePouchCommand {
   /**
    * 直接验证项目路径（避免依赖 ProjectManager 实例）
    * @param {string} projectPath - 要验证的路径
-   * @returns {Promise<boolean>} 是否为有效项目目录
+   * @returns {Promise<Object|null>} 错误对象或 null（路径有效）
    */
   async validateProjectPathDirectly(projectPath) {
     try {
       const os = require('os')
-      
+
+      // 检查路径是否存在
+      const exists = await fs.pathExists(projectPath)
+      if (!exists) {
+        return {
+          type: 'not_exists',
+          path: projectPath,
+          message: '目录不存在'
+        }
+      }
+
       // 基础检查：路径存在且为目录
       const stat = await fs.stat(projectPath)
       if (!stat.isDirectory()) {
-        return false
+        return {
+          type: 'not_directory',
+          path: projectPath,
+          message: '提供的路径是文件而不是目录'
+        }
       }
 
       // 简单检查：避免明显错误的路径
       const resolved = path.resolve(projectPath)
       const homeDir = os.homedir()
-      
+
       // 不允许是用户主目录
       if (resolved === homeDir) {
-        return false
+        return {
+          type: 'is_home',
+          path: projectPath,
+          message: '不能使用用户主目录作为项目目录'
+        }
       }
 
-      return true
+      return null  // 路径有效
     } catch (error) {
-      return false
+      return {
+        type: 'access_error',
+        path: projectPath,
+        message: error.message || '无法访问目录'
+      }
     }
   }
 
