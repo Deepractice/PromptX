@@ -17,8 +17,8 @@ export const rememberTool: ToolWithHandler = {
 {
   role: "当前角色",
   engrams: [{
-    content: "刚刚讨论/解决的核心内容",
-    schema: "关键词1\\n关键词2\\n关键词3",
+    content: "刚刚讨论解决的核心内容",
+    schema: "关键词1 关键词2 关键词3",
     strength: 0.7,  // 默认0.7即可
     type: "ATOMIC"  // ATOMIC(具体信息)|LINK(关系)|PATTERN(模式)
   }]
