@@ -2,7 +2,7 @@
  * 锦囊命令导出
  */
 
-const InitCommand = require('./InitCommand')
+const ProjectCommand = require('./ProjectCommand')
 const DiscoverCommand = require('./DiscoverCommand')
 const ActionCommand = require('./ActionCommand')
 const LearnCommand = require('./LearnCommand')
@@ -12,7 +12,7 @@ const ThinkCommand = require('./ThinkCommand')
 const ToolCommand = require('./ToolCommand')
 
 module.exports = {
-  InitCommand,
+  ProjectCommand,
   DiscoverCommand,
   ActionCommand,
   LearnCommand,

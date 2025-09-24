@@ -20,6 +20,7 @@ export const cognition = core.cognition
 export const resource = core.resource
 export const toolx = core.toolx
 export const pouch = core.pouch
+export const project = core.project
 export const utils = core.utils
 
 // Also export individual utils for convenience

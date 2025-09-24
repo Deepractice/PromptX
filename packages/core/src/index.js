@@ -20,13 +20,17 @@ const toolx = require('./toolx')
 // Pouch CLI 框架
 const pouch = require('./pouch')
 
+// 项目管理模块
+const project = require('./project')
+
 // 工具模块
 const utils = {
   version: require('./utils/version'),
   DirectoryService: require('./utils/DirectoryService'),
-  ProjectManager: require('./utils/ProjectManager'),
-  ProjectPathResolver: require('./utils/ProjectPathResolver'),
-  ProjectConfig: require('./utils/ProjectConfig')
+  // Project 相关已移动到 project 模块
+  ProjectManager: project.ProjectManager,
+  ProjectPathResolver: project.ProjectPathResolver,
+  ProjectConfig: project.ProjectConfig
 }
 
 module.exports = {
@@ -34,8 +38,10 @@ module.exports = {
   resource,
   toolx,
   pouch,
+  project,
   utils,
-  
+
   // 便捷导出
-  ...utils
+  ...utils,
+  ...project
 }

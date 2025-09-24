@@ -109,7 +109,7 @@ class PouchStateMachine {
   async saveState () {
     try {
       // ✅ 修复：检查项目是否已初始化，未初始化时跳过文件保存
-      const ProjectManager = require('~/utils/ProjectManager')
+      const ProjectManager = require('~/project/ProjectManager')
       if (!ProjectManager.isInitialized()) {
         // 项目未初始化，只保存在内存中，不持久化到文件
         return
@@ -152,7 +152,7 @@ class PouchStateMachine {
   async loadState () {
     try {
       // ✅ 修复：检查项目是否已初始化，未初始化时跳过文件加载
-      const ProjectManager = require('~/utils/ProjectManager')
+      const ProjectManager = require('~/project/ProjectManager')
       if (!ProjectManager.isInitialized()) {
         // 项目未初始化，使用默认内存状态
         return

@@ -2,8 +2,8 @@ const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
 const DPMLContentParser = require('../../dpml/DPMLContentParser')
 const SemanticRenderer = require('../../dpml/SemanticRenderer')
-const ProjectManager = require('~/utils/ProjectManager')
-const { getGlobalProjectManager } = require('~/utils/ProjectManager')
+const ProjectManager = require('~/project/ProjectManager')
+const { getGlobalProjectManager } = require('~/project/ProjectManager')
 const { COMMANDS } = require('~/constants')
 
 /**

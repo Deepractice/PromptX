@@ -4,12 +4,12 @@ import { MCPOutputAdapter } from '~/utils/MCPOutputAdapter.js';
 const outputAdapter = new MCPOutputAdapter();
 
 /**
- * Init 工具 - 项目配置工具（可选）
- * 
- * 仅在需要项目级配置隔离时使用
+ * Project 工具 - 项目配置管理
+ *
+ * 管理项目配置、环境准备和状态
  */
-export const initTool: ToolWithHandler = {
-  name: 'init',
+export const projectTool: ToolWithHandler = {
+  name: 'project',
   description: '📁 [项目配置工具]（可选）仅在需要项目级配置隔离时使用。大多数情况下无需执行此工具，所有 PromptX 功能均可直接使用。',
   inputSchema: {
     type: 'object',
@@ -37,14 +37,14 @@ export const initTool: ToolWithHandler = {
       throw new Error('CLI not available in @promptx/core');
     }
     
-    // 构建 init 命令参数
+    // 构建 project 命令参数
     const cliArgs = [];
     if (args.workingDirectory || args.ideType) {
       cliArgs.push({ workingDirectory: args.workingDirectory, ideType: args.ideType });
     }
     
-    // 执行 init 命令
-    const result = await cli.execute('init', cliArgs);
+    // 执行 project 命令
+    const result = await cli.execute('project', cliArgs);
     
     // 使用 OutputAdapter 格式化输出
     return outputAdapter.convertToMCPFormat(result);

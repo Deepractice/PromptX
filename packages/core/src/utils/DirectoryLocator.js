@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const os = require('os')
-const ProjectManager = require('./ProjectManager')
+const ProjectManager = require('../project/ProjectManager')
 
 /**
  * 目录定位器基础抽象类

@@ -93,12 +93,12 @@ program
 
 // Five core pouch commands
 program
-  .command('init [workspacePath]')
-  .description('init pouch - initialize work environment, communicate system basic promises')
+  .command('project [workspacePath]')
+  .description('project pouch - manage project configuration and environment')
   .action(async (workspacePath, options) => {
     // If workspacePath is provided, pass it as workingDirectory parameter
     const args = workspacePath ? { workingDirectory: workspacePath } : {}
-    await cli.execute('init', [args])
+    await cli.execute('project', [args])
   })
 
 program

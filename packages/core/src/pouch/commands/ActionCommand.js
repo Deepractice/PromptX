@@ -10,8 +10,8 @@ const { getGlobalResourceManager } = require('../../resource')
 const DPMLContentParser = require('../../dpml/DPMLContentParser')
 const SemanticRenderer = require('../../dpml/SemanticRenderer')
 const CognitionManager = require('../../cognition/CognitionManager')
-const ProjectManager = require('~/utils/ProjectManager')
-const { getGlobalProjectManager } = require('~/utils/ProjectManager')
+const ProjectManager = require('~/project/ProjectManager')
+const { getGlobalProjectManager } = require('~/project/ProjectManager')
 const logger = require('@promptx/logger')
 
 /**

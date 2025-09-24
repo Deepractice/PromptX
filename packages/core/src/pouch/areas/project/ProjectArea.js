@@ -4,12 +4,12 @@ const fs = require('fs-extra')
 const logger = require('@promptx/logger')
 
 /**
- * InitArea - 初始化信息展示区域
+ * ProjectArea - 项目信息展示区域
  */
-class InitArea extends BaseArea {
-  constructor(initInfo) {
-    super('INIT_AREA')
-    this.initInfo = initInfo
+class ProjectArea extends BaseArea {
+  constructor(projectInfo) {
+    super('PROJECT_AREA')
+    this.projectInfo = projectInfo
   }
 
   async render() {
@@ -19,7 +19,7 @@ class InitArea extends BaseArea {
       registryStats, 
       configFileName,
       isProjectMode 
-    } = this.initInfo
+    } = this.projectInfo
 
     if (!isProjectMode) {
       return `📁 PromptX 项目配置工具
@@ -59,4 +59,4 @@ ${registryStats.message}
   }
 }
 
-module.exports = InitArea
+module.exports = ProjectArea

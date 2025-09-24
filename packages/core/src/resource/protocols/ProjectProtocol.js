@@ -1,8 +1,8 @@
 const ResourceProtocol = require('./ResourceProtocol')
 const path = require('path')
 const fs = require('fs').promises
-const { getGlobalProjectPathResolver } = require('~/utils/ProjectPathResolver')
-const ProjectManager = require('~/utils/ProjectManager')
+const { getGlobalProjectPathResolver } = require('~/project/ProjectPathResolver')
+const ProjectManager = require('~/project/ProjectManager')
 const UserProtocol = require('./UserProtocol')
 
 /**
