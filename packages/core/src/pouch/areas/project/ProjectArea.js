@@ -31,8 +31,9 @@ class ProjectArea extends BaseArea {
 
 ✅ **所有功能均可正常使用**，包括：
 - 角色激活 (action)
+- 资源学习 (learn)
 - 记忆管理 (recall/remember)
-- 工具执行 (toolx)
+- 工具执行 (tool)
 
 💡 **仅在以下情况需要项目配置**：
 - 需要多项目隔离

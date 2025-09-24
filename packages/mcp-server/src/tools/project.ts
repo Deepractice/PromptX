@@ -10,6 +10,7 @@ const outputAdapter = new MCPOutputAdapter();
  */
 export const projectTool: ToolWithHandler = {
   name: 'project',
+<<<<<<< HEAD
   description: `📁 [项目管理] 发现并激活项目专属资源
 
 为什么需要：
