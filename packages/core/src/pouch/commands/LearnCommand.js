@@ -4,7 +4,6 @@ const DPMLContentParser = require('../../dpml/DPMLContentParser')
 const SemanticRenderer = require('../../dpml/SemanticRenderer')
 const ProjectManager = require('~/utils/ProjectManager')
 const { getGlobalProjectManager } = require('~/utils/ProjectManager')
-const { getGlobalServerEnvironment } = require('~/utils/ServerEnvironment')
 const { COMMANDS } = require('~/constants')
 
 /**
@@ -300,11 +299,7 @@ ${errorMessage}
    * 检测MCP进程ID
    */
   detectMcpId() {
-    const serverEnv = getGlobalServerEnvironment()
-    if (serverEnv.isInitialized()) {
-      return serverEnv.getMcpId()
-    }
-    return ProjectManager.generateMcpId()
+    return ProjectManager.getCurrentMcpId()
   }
 
   /**

@@ -2,7 +2,6 @@ const fs = require('fs-extra')
 const path = require('path')
 const os = require('os')
 const crypto = require('crypto')
-const { getGlobalServerEnvironment } = require('./ServerEnvironment')
 const logger = require('@promptx/logger')
 
 /**
@@ -21,8 +20,15 @@ class ProjectManager {
     workingDirectory: null,
     mcpId: null,
     ideType: null,
-    transport: null,
     initialized: false
+  }
+
+  /**
+   * 获取当前MCP ID
+   * @returns {string} MCP进程ID
+   */
+  static getCurrentMcpId() {
+    return `mcp-${process.pid}`
   }
 
   /**
@@ -30,14 +36,12 @@ class ProjectManager {
    * @param {string} workingDirectory - 项目工作目录绝对路径
    * @param {string} mcpId - MCP进程ID
    * @param {string} ideType - IDE类型
-   * @param {string} transport - 传输协议类型
    */
-  static setCurrentProject(workingDirectory, mcpId, ideType, transport) {
+  static setCurrentProject(workingDirectory, mcpId, ideType) {
     this.currentProject = {
       workingDirectory: path.resolve(workingDirectory),
       mcpId,
       ideType,
-      transport,
       initialized: true
     }
   }
@@ -99,10 +103,9 @@ class ProjectManager {
    * @param {string} projectPath - 项目绝对路径
    * @param {string} mcpId - MCP进程ID
    * @param {string} ideType - IDE类型（cursor/vscode等）
-   * @param {string} transport - 传输协议类型（stdio/http/sse）
    * @returns {Promise<Object>} 项目配置对象
    */
-  async registerProject(projectPath, mcpId, ideType, transport = 'stdio') {
+  async registerProject(projectPath, mcpId, ideType) {
     // 验证项目路径
     if (!await this.validateProjectPath(projectPath)) {
       throw new Error(`无效的项目路径: ${projectPath}`)
@@ -112,7 +115,6 @@ class ProjectManager {
     const projectConfig = {
       mcpId: mcpId,
       ideType: ideType.toLowerCase(),
-      transport: transport.toLowerCase(),
       projectPath: path.resolve(projectPath),
       projectHash: this.generateProjectHash(projectPath)
     }
@@ -128,7 +130,7 @@ class ProjectManager {
     await fs.ensureDir(path.join(projectConfigDir, '.promptx', 'resource'))
 
     // 生成配置文件名并保存到Hash目录下
-    const fileName = this.generateConfigFileName(mcpId, ideType, transport, projectPath)
+    const fileName = this.generateConfigFileName(mcpId, ideType, projectPath)
     const configPath = path.join(projectConfigDir, fileName)
     
     await fs.writeJson(configPath, projectConfig, { spaces: 2 })
@@ -241,14 +243,13 @@ class ProjectManager {
    * 删除项目绑定 - 支持Hash目录结构
    * @param {string} mcpId - MCP进程ID
    * @param {string} ideType - IDE类型
-   * @param {string} transport - 传输协议类型
    * @param {string} projectPath - 项目路径
    * @returns {Promise<boolean>} 是否删除成功
    */
-  async removeProject(mcpId, ideType, transport, projectPath) {
+  async removeProject(mcpId, ideType, projectPath) {
     const projectHash = this.generateProjectHash(projectPath)
     const projectConfigDir = path.join(this.projectsDir, projectHash)
-    const fileName = this.generateConfigFileName(mcpId, ideType, transport, projectPath)
+    const fileName = this.generateConfigFileName(mcpId, ideType, projectPath)
     const configPath = path.join(projectConfigDir, fileName)
     
     if (await fs.pathExists(configPath)) {
@@ -427,17 +428,15 @@ ${projectList}
    * 生成配置文件名
    * @param {string} mcpId - MCP进程ID
    * @param {string} ideType - IDE类型
-   * @param {string} transport - 传输协议类型
    * @param {string} projectPath - 项目路径
    * @returns {string} 配置文件名
    */
-  generateConfigFileName(mcpId, ideType, transport, projectPath) {
+  generateConfigFileName(mcpId, ideType, projectPath) {
     const projectHash = this.generateProjectHash(projectPath)
     const projectName = path.basename(projectPath).toLowerCase().replace(/[^a-z0-9-]/g, '-')
     const ideTypeSafe = ideType.replace(/[^a-z0-9-]/g, '').toLowerCase() || 'unknown'
-    const transportSafe = transport.replace(/[^a-z0-9-]/g, '').toLowerCase() || 'unknown'
-    // 格式：mcp-transport-id-idetype-projectname-hash.json
-    return `mcp-${transportSafe}-${mcpId.replace('mcp-', '')}-${ideTypeSafe}-${projectName}-${projectHash}.json`
+    // 格式：mcp-pid-idetype-projectname-hash.json
+    return `mcp-${mcpId.replace('mcp-', '')}-${ideTypeSafe}-${projectName}-${projectHash}.json`
   }
 
   /**
@@ -484,29 +483,22 @@ ${projectList}
     logger.debug(`[ProjectManager DEBUG] 参数 - workingDirectory: ${workingDirectory}`)
     logger.debug(`[ProjectManager DEBUG] 参数 - ideType: ${ideType}`)
     logger.debug(`[ProjectManager DEBUG] 注册前 currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
-    
-    const serverEnv = getGlobalServerEnvironment()
-    if (!serverEnv.isInitialized()) {
-      logger.error(`[ProjectManager DEBUG]  ServerEnvironment未初始化`)
-      throw new Error('ServerEnvironment not initialized')
-    }
-    
-    const mcpId = serverEnv.getMcpId()
-    const transport = serverEnv.getTransport()
-    logger.debug(`[ProjectManager DEBUG] ServerEnvironment信息 - mcpId: ${mcpId}, transport: ${transport}`)
-    
+
+    const mcpId = this.getCurrentMcpId()
+    logger.debug(`[ProjectManager DEBUG] MCP ID: ${mcpId}`)
+
     // 🎯 新架构：设置当前项目状态
     logger.debug(`[ProjectManager DEBUG] 调用 setCurrentProject...`)
-    this.setCurrentProject(workingDirectory, mcpId, ideType, transport)
+    this.setCurrentProject(workingDirectory, mcpId, ideType)
     logger.debug(`[ProjectManager DEBUG] setCurrentProject完成后 currentProject状态:`, JSON.stringify(this.currentProject, null, 2))
-    
+
     // 持久化项目配置（保持多项目管理功能）
     logger.debug(`[ProjectManager DEBUG] 开始持久化项目配置...`)
     const projectManager = getGlobalProjectManager()
-    const result = await projectManager.registerProject(workingDirectory, mcpId, ideType, transport)
+    const result = await projectManager.registerProject(workingDirectory, mcpId, ideType)
     logger.debug(`[ProjectManager DEBUG] 项目配置持久化完成:`, JSON.stringify(result, null, 2))
     logger.debug(`[ProjectManager DEBUG] ======= registerCurrentProject结束 =======`)
-    
+
     return result
   }
 }

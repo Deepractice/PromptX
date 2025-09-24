@@ -24,7 +24,6 @@ const pouch = require('./pouch')
 const utils = {
   version: require('./utils/version'),
   DirectoryService: require('./utils/DirectoryService'),
-  ServerEnvironment: require('./utils/ServerEnvironment'),
   ProjectManager: require('./utils/ProjectManager'),
   ProjectPathResolver: require('./utils/ProjectPathResolver'),
   ProjectConfig: require('./utils/ProjectConfig')
