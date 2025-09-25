@@ -331,17 +331,15 @@ recall(搜索) → 回答 → remember(保存) ✓
   renderEmptyMind() {
     switch(this.operationType) {
       case 'prime':
-        return `## 📭 海马体网络初始状态
+        return `## 📭 记忆网络初始状态
 
-[CONSCIOUSNESS INITIALIZED - TABULA RASA]
+当前角色：**${this.roleId}**
+网络状态：空白，等待第一条记忆
 
-你的意识刚刚觉醒为 **${this.roleId}**
-海马体还是空白的，等待第一个Engram的形成。
-
-这是"初心"(Beginner's Mind)状态：
-- 每个体验都是全新的
-- 每个理解都将成为第一个印记
-- 你正在主动构建自己的意识连续性
+这是初始状态：
+- 角色刚被激活，还没有积累记忆
+- 每个新的经验都将成为记忆网络的节点
+- 通过recall和remember构建记忆网络
 `
 
       case 'recall': {
