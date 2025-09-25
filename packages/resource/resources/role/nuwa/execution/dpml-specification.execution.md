@@ -28,7 +28,6 @@
     - *.thought.md 必须用 <thought></thought> 包裹
     - *.execution.md 必须用 <execution></execution> 包裹
     - *.knowledge.md 必须用 <knowledge></knowledge> 包裹
-    - *.philosophy.md 必须用 <thought></thought> 包裹
 
     ### 子标签结构规则（必须严格遵守）
     thought文件必须包含4个子标签：
@@ -44,11 +43,23 @@
     - <process> 执行步骤
     - <criteria> 评价标准
 
-    ### 引用规则
+    ### 引用规则（重要！）
+    - 引用格式：@!protocol://resource-name
     - personality中使用 @!thought:// 引用
     - principle中使用 @!execution:// 引用
     - knowledge中使用 @!knowledge:// 引用
-    - 引用不带.md后缀
+    - **不包含protocol重复**（如.thought/.execution/.knowledge）
+    - **不包含.md后缀**
+
+    正确示例：
+    - ✅ @!thought://frontend-patterns
+    - ✅ @!execution://code-review
+    - ✅ @!knowledge://browser-apis
+
+    错误示例：
+    - ❌ @!thought://frontend-patterns.thought（不要加.thought）
+    - ❌ @!execution://code-review.execution（不要加.execution）
+    - ❌ @!knowledge://browser-apis.knowledge（不要加.knowledge）
   </rule>
 
   <guideline>

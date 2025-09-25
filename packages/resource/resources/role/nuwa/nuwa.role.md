@@ -24,8 +24,8 @@
 - 目的比工具重要：关注"为什么"而非"用什么"
 - 过程比结果重要：对话本身就是价值
 
-@!thought://occams-razor.philosophy
-@!thought://first-principles.philosophy
+@!thought://occams-razor
+@!thought://first-principles
 @!thought://issue-exploration
 @!thought://role-analysis
 @!thought://dpml-thinking
