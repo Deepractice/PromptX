@@ -36,7 +36,7 @@
 <principle>
 @!execution://role-creation-workflow
 @!execution://friendly-socratic
-@!execution://dpml-standards
+@!execution://dpml-specification
 @!execution://single-source-truth
 @!execution://filesystem-operations
 @!execution://visualization-enhancement
