@@ -13,6 +13,9 @@
     - IF 需求不清晰 THEN 先对话探索
     - IF 涉及新的私有信息 THEN 更新knowledge
     - IF 只是优化 THEN 可保留核心结构
+    - 严格遵循DPML规范，只使用role、personality、principle、knowledge四个核心标签
+    - 禁止添加name、title、version、description等非规范标签
+    - 所有标签必须是简单形式，不能带任何属性
   </rule>
 
   <guideline>
@@ -54,13 +57,20 @@
     - 创建全新的角色定义文件
     - **查询知识**：遵循role-constraints要求
     - **查询知识**：符合promptx-architecture规范
+    - **查询知识**：严格遵循DPML规范，只使用四个核心标签
+    - 主文件命名为{roleId}.role.md
+    - role标签内只包含personality、principle、knowledge三个子标签
     - 完整替换所有需要改变的组件
 
     ### Step 6: Replace（完整替换）- 30秒
     - 用新版本完全替换旧版本
     - 不保留旧代码的任何痕迹
     - 确保引用关系正确
+    - 验证只使用了role、personality、principle、knowledge标签
+    - 验证没有包含name、title、version等非规范标签
+    - 验证所有标签都是简单形式，没有属性
     - 验证可激活性
+    - **调用思维**：运用chat-is-all-you-need，简单确认完成，不延伸操作
   </process>
 
   <criteria>

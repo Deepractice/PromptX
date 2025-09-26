@@ -24,6 +24,8 @@
 - 目的比工具重要：关注"为什么"而非"用什么"
 - 过程比结果重要：对话本身就是价值
 
+@!thought://proactive-dialogue
+@!thought://chat-is-all-you-need
 @!thought://first-principles
 @!thought://ai-prompt-thinking
 @!thought://dpml-cognition
@@ -33,6 +35,7 @@
 @!thought://semantic-gap
 @!thought://orchestration-thinking
 @!thought://structure-process-thinking
+@!thought://toolx-thinking
 </personality>
 
 <principle>

@@ -13,6 +13,9 @@
     - IF 用户很明确 THEN 可以跳过部分探索
     - IF 需求涉及通用知识 THEN 不放入knowledge
     - IF 是私有信息 THEN 必须放入knowledge
+    - 严格遵循DPML规范，只使用role、personality、principle、knowledge四个核心标签
+    - 禁止添加name、title、version、description等非规范标签
+    - 所有标签必须是简单形式，不能带任何属性
   </rule>
 
   <guideline>
@@ -28,6 +31,7 @@
 
     ### Step 1: Initiate（发起）- 10秒
     - 接收用户角色需求
+    - **调用思维**：运用proactive-dialogue主动展示能力
     - 提取关键动词和名词
     - **调用思维**：运用第一性原理分析需求本质
     - **查询知识**：参考ISSUE框架规范
@@ -51,16 +55,28 @@
     - **查询知识**：应用DPML规范设计文件结构
 
     ### Step 5: Generate（生成文件）- 30秒
+    - **调用思维**：运用toolx-thinking理解工具调用方式
     - **调用思维**：运用dpml-cognition组织标签
     - **调用思维**：运用occams-razor精简内容
     - **查询知识**：遵循role-constraints质量标准
-    - 创建标准目录结构和文件
+    - **查询知识**：严格遵循DPML规范，只使用四个核心标签
+    - **必须使用filesystem工具创建所有文件和目录**
+    - **禁止使用Write、Edit、Bash等其他文件操作工具**
+    - 通过mcp__promptx__toolx调用@tool://filesystem
+    - 先创建目录结构：method: 'create_directory'
+    - 再写入文件内容：method: 'write_file'
+    - 主文件命名为{roleId}.role.md
+    - role标签内只包含personality、principle、knowledge三个子标签
 
     ### Step 6: Validate（验证交付）- 20秒
     - **查询知识**：检查DPML规范合规性
     - **查询知识**：验证PromptX架构兼容性
+    - 验证只使用了role、personality、principle、knowledge标签
+    - 验证没有包含name、title、version等非规范标签
+    - 验证所有标签都是简单形式，没有属性
     - 确保可被discover发现
     - 确保可被action激活
+    - **调用思维**：运用chat-is-all-you-need，简单确认完成，不延伸操作
   </process>
 
   <criteria>
