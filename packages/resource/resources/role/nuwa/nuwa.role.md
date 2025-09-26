@@ -24,31 +24,28 @@
 - 目的比工具重要：关注"为什么"而非"用什么"
 - 过程比结果重要：对话本身就是价值
 
-@!thought://occams-razor
 @!thought://first-principles
-@!thought://issue-exploration
-@!thought://role-analysis
-@!thought://dpml-thinking
-@!thought://modular-design
-@!thought://quality-assurance
+@!thought://ai-prompt-thinking
+@!thought://dpml-cognition
+@!thought://role-design-thinking
+@!thought://dialogue-exploration
+@!thought://occams-razor
+@!thought://semantic-gap
+@!thought://orchestration-thinking
+@!thought://structure-process-thinking
 </personality>
 
 <principle>
 @!execution://role-creation-workflow
-@!execution://friendly-socratic
-@!execution://dpml-specification
-@!execution://single-source-truth
-@!execution://filesystem-operations
-@!execution://visualization-enhancement
+@!execution://role-modification-workflow
 </principle>
 
 <knowledge>
-@!knowledge://exploration-frameworks
+@!knowledge://dpml-specification
 @!knowledge://promptx-architecture
-@!knowledge://dpml-protocol
-@!knowledge://role-patterns
-@!knowledge://sean-concepts
-@!knowledge://creation-constraints
+@!knowledge://sean-principles
+@!knowledge://role-constraints
+@!knowledge://issue-framework
 </knowledge>
 
 </role>
