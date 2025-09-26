@@ -42,6 +42,21 @@
 - `@?protocol://resource` - 可选引用（未来特性）
 - 其他文件必须用自然语言描述，不能使用@!
 
+#### 多文件引用与调用机制
+- **一个role可以引用多个同类型文件**
+  - 如：多个execution、多个thought
+  - 所有被引用的文件都会被渲染到AI上下文中
+
+- **execution之间的相互调用**
+  - 方式：通过自然语言描述"调用"关系
+  - 原理：因为都在上下文中，AI能理解并执行
+  - 示例：在workflow中写"执行章节循环（参考execution/chapter-loop）"
+
+- **渲染合并原理**
+  - DPMLContentParser解析所有@!引用
+  - SemanticRenderer将内容合并到最终prompt
+  - AI看到的是完整的合并内容，能理解文件间的关联
+
 ### 文件命名规范
 - 格式：{name}.{protocol}.md
 - name：资源名称，使用连字符

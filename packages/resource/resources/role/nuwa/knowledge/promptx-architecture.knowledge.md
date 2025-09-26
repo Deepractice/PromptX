@@ -1,12 +1,14 @@
 <knowledge>
 ## PromptX系统架构（Deepractice专有）
 
-### 核心路径
-- 系统角色：packages/resource/resources/role/{roleId}/
+### 核心路径（完整路径）
+- 系统角色：/Users/sean/Deepractice/projects/PromptX/packages/resource/resources/role/{roleId}/
 - 用户角色：~/.promptx/resource/role/{roleId}/
-- 项目角色：.promptx/resource/role/{roleId}/
+- 项目角色：{当前项目}/.promptx/resource/role/{roleId}/
 - 日志路径：~/.promptx/logs/
 - 配置路径：~/.promptx/config/
+
+**重要**：系统角色在projects/PromptX目录下，不是PromptX目录
 
 ### 激活流程
 1. ActionCommand接收激活指令

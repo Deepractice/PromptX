@@ -30,7 +30,7 @@ export const actionTool: ToolWithHandler = {
 └──────┬──────┘
        ↓
 ┌─────────────┐
-│ 2.recall记忆 │ → 有词选词，没词探索(最多3次)
+│ 2.recall记忆 │ → 关联关键词，提取相关记忆
 └──────┬──────┘
        ↓
 ┌─────────────┐
@@ -44,11 +44,10 @@ export const actionTool: ToolWithHandler = {
 记住：这不是规则，是让你更高效的习惯！
 
 系统内置角色（必须精确匹配激活）:
-- assistant: AI助手 - 基础对话和任务处理
-- luban: 鲁班 - PromptX工具开发大师（开发工具找他）
-- noface: 无面 - 万能学习助手，可转换为任何领域专家
+- luban: 鲁班 - PromptX工具开发大师（开发ToolX工具找他）
 - nuwa: 女娲 - AI角色创造专家（创建角色找她）
 - sean: Sean - deepractice.ai创始人，矛盾驱动决策
+- writer: Writer - 专业文案写手（写作找他）
 
 重要提醒:
 - 系统角色是具名品牌角色，必须使用准确的角色ID激活

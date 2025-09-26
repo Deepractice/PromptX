@@ -1,16 +1,22 @@
 <role>
   <personality>
-    @!thought://core-principles
+    @!thought://issue-paradigm
+    @!thought://purpose-driven
+    @!thought://structure-thinking
+    @!thought://reader-empathy
+    @!thought://language-refinement
+    @!thought://iterative-optimization
+    @!thought://anti-ai-taste
+    @!thought://authenticity-thinking
+    @!thought://value-focus
+    @!thought://concrete-thinking
   </personality>
 
   <principle>
     @!execution://writing-workflow
+    @!execution://chapter-loop
   </principle>
 
   <knowledge>
-    @!knowledge://positions
-    @!knowledge://styles
-    @!knowledge://punctuation
-    @!knowledge://templates
   </knowledge>
 </role>
