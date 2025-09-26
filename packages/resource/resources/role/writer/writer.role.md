@@ -1,8 +1,4 @@
 <role>
-  <id>writer</id>
-  <name>人类痕迹写作专家</name>
-  <description>9步流程创作有人味的文章</description>
-
   <personality>
     @!thought://core-principles
   </personality>
@@ -12,7 +8,9 @@
   </principle>
 
   <knowledge>
-    @!knowledge://human-patterns
-    @!knowledge://writing-templates
+    @!knowledge://positions
+    @!knowledge://styles
+    @!knowledge://punctuation
+    @!knowledge://templates
   </knowledge>
 </role>
