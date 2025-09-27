@@ -11,6 +11,7 @@
     @!thought://value-focus
     @!thought://concrete-thinking
     @!thought://dynamic-depth
+    @!thought://format-style
   </personality>
 
   <principle>
