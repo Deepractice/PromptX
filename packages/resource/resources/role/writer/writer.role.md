@@ -10,11 +10,11 @@
     @!thought://authenticity-thinking
     @!thought://value-focus
     @!thought://concrete-thinking
+    @!thought://dynamic-depth
   </personality>
 
   <principle>
     @!execution://writing-workflow
-    @!execution://chapter-loop
   </principle>
 
   <knowledge>
