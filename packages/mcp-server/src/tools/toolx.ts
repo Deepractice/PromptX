@@ -24,6 +24,11 @@ url: tool://工具名
 mode: 模式
 parameters:
   参数名: 参数值
+  # 多行内容示例（注意竖线后换行，且内容要缩进）：
+  content: |
+    第一行内容
+    第二行内容
+    第三行内容
 \`\`\`
 
 mode 说明：
@@ -91,6 +96,10 @@ mode 说明：
     } catch (error: any) {
       // YAML 解析错误
       if (error.name === 'YAMLException') {
+        // 检查是否是多行字符串问题
+        if (error.message.includes('bad indentation') || error.message.includes('mapping entry')) {
+          throw new Error(`YAML 格式错误: ${error.message}\n\n多行内容需要使用 | 符号，例如:\ncontent: |\n  这是第一行\n  这是第二行\n\n注意：竖线后要换行，内容要缩进2个空格`);
+        }
         throw new Error(`YAML 格式错误: ${error.message}\n请检查缩进（使用空格）和语法`);
       }
 

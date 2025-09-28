@@ -331,40 +331,86 @@ class ToolManualFormatter {
    */
   formatExamples(resource, schema) {
     const lines = ['\n## 💻 使用示例']
-    lines.push('\n```javascript')
-    
+    lines.push('\n通过 mcp__promptx__toolx 调用，使用 YAML 格式：')
+    lines.push('\n```yaml')
+
     // 执行工具
-    lines.push('// 执行工具')
+    lines.push('# 执行工具')
+    const toolName = resource.replace('@tool://', '')
+    lines.push(`url: tool://${toolName}`)
+    lines.push('mode: execute')
     if (schema?.parameters?.properties && Object.keys(schema.parameters.properties).length > 0) {
+      lines.push('parameters:')
       const exampleParams = this.generateExampleParams(schema.parameters)
-      lines.push(`{tool_resource: '${resource}', parameters: ${JSON.stringify(exampleParams, null, 2)}}`)
-    } else {
-      lines.push(`{tool_resource: '${resource}', parameters: {}}`)
+      this.formatYAMLParams(lines, exampleParams, '  ')
     }
-    
+
     lines.push('')
-    
+
     // 查看手册
-    lines.push('// 查看手册')
-    lines.push(`{tool_resource: '${resource}', mode: 'manual'}`)
-    
+    lines.push('# 查看手册（第一次使用必看）')
+    lines.push(`url: tool://${toolName}`)
+    lines.push('mode: manual')
+
     // 配置环境变量（如果有）
     if (schema?.environment?.properties && Object.keys(schema.environment.properties).length > 0) {
       lines.push('')
-      lines.push('// 配置环境变量')
-      const envExample = {}
+      lines.push('# 配置环境变量')
+      lines.push(`url: tool://${toolName}`)
+      lines.push('mode: configure')
+      lines.push('parameters:')
       const firstEnvKey = Object.keys(schema.environment.properties)[0]
-      envExample[firstEnvKey] = 'your_value_here'
-      lines.push(`{tool_resource: '${resource}', mode: 'configure', parameters: ${JSON.stringify(envExample)}}`)
+      lines.push(`  ${firstEnvKey}: your_value_here`)
     }
-    
+
     lines.push('')
-    lines.push('// 查看日志')
-    lines.push(`{tool_resource: '${resource}', mode: 'log', parameters: {action: 'tail', lines: 50}}`)
-    
+    lines.push('# 查看日志')
+    lines.push(`url: tool://${toolName}`)
+    lines.push('mode: log')
+    lines.push('parameters:')
+    lines.push('  action: tail')
+    lines.push('  lines: 50')
+
     lines.push('```')
-    
+
     return lines.join('\n')
+  }
+
+  /**
+   * 格式化 YAML 参数
+   */
+  formatYAMLParams(lines, params, indent = '') {
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null || value === undefined) {
+        lines.push(`${indent}${key}: null`)
+      } else if (typeof value === 'object' && !Array.isArray(value)) {
+        lines.push(`${indent}${key}:`)
+        this.formatYAMLParams(lines, value, indent + '  ')
+      } else if (Array.isArray(value)) {
+        if (value.length === 0) {
+          lines.push(`${indent}${key}: []`)
+        } else {
+          lines.push(`${indent}${key}:`)
+          for (const item of value) {
+            if (typeof item === 'object') {
+              lines.push(`${indent}- `)
+              this.formatYAMLParams(lines, item, indent + '  ')
+            } else {
+              lines.push(`${indent}- ${item}`)
+            }
+          }
+        }
+      } else if (typeof value === 'string') {
+        // 对于包含特殊字符的字符串，使用引号
+        if (value.includes(':') || value.includes('#') || value.includes('|') || value.includes('>')) {
+          lines.push(`${indent}${key}: "${value}"`)
+        } else {
+          lines.push(`${indent}${key}: ${value}`)
+        }
+      } else {
+        lines.push(`${indent}${key}: ${value}`)
+      }
+    }
   }
 
   /**
