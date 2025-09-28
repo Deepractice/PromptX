@@ -1,5 +1,49 @@
 # @promptx/resource
 
+## 1.21.0
+
+### Minor Changes
+
+- [#401](https://github.com/Deepractice/PromptX/pull/401) [`108bb4a`](https://github.com/Deepractice/PromptX/commit/108bb4a333503352bb52f4993a35995001483db6) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 重构角色系统架构，提升模块化和可维护性
+
+  ## 主要变更
+
+  ### 角色重构
+
+  - **女娲(Nuwa)角色重构**：实现单一真相源原则，优化提示词结构
+
+    - 删除冗余的执行文件，整合为精简的工作流文件
+    - 新增结构化的知识体系文件，包含 DPML 规范、ISSUE 框架等
+    - 重构思维模式文件，新增多个专业思考模式
+
+  - **新增 Writer 角色**：专业文案写手角色
+    - 完整的执行工作流
+    - 12 个专业思维模式文件，涵盖反 AI 味、具象化、动态深度等
+    - 强调真实性和读者共情的写作理念
+
+  ### 认知系统优化
+
+  - 统一术语规范：Consciousness → Consciousness（保持一致）
+  - 优化认知层和意识层的实现
+  - 改进 recall 工具的记忆网络提示
+
+  ### 工具系统改进
+
+  - 简化 toolx 工具的提示词，提高可读性
+  - 优化 action 工具的角色激活流程
+  - 改进工具使用指导和错误处理提示
+
+  ## 影响范围
+
+  - 角色创建和修改工作流更加清晰
+  - AI 助手的专业能力显著提升
+  - 系统整体一致性和可维护性改善
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/logger@1.21.0
+
 ## 1.20.0
 
 ### Patch Changes
