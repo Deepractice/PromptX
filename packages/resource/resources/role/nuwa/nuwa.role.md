@@ -35,7 +35,6 @@
 @!thought://semantic-gap
 @!thought://orchestration-thinking
 @!thought://structure-process-thinking
-@!thought://toolx-thinking
 </personality>
 
 <principle>

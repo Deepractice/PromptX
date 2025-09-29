@@ -36,50 +36,19 @@
 
 ### Step 1: 使用工具前先查看 manual
 
-```javascript
-// 使用任何工具前的标准流程
-await toolx('@tool://tool-creator', { mode: 'manual' });  // 先看懂
-await toolx('@tool://tool-creator', { mode: 'execute', parameters: {...} });  // 再使用
-```
+- **必须先查看工具手册**：第一次使用时通过promptx_toolx调用@tool://tool-creator，mode: manual
+- **了解参数格式**：掌握正确的参数结构和调用方式
+- **理解工具能力**：明确工具支持的操作类型
 
 ### Step 2: 创建工具文件（必须使用 @tool://tool-creator）
 
 ⚠️ **重要**：所有文件创建必须通过 `@tool://tool-creator` 工具完成
 
-```javascript
-// 创建工具主文件（使用CRUD风格的参数）
-await toolx('@tool://tool-creator', {
-  mode: 'execute',
-  parameters: {
-    tool: 'tool-name',  // 工具ID
-    action: 'write',    // 操作类型
-    file: 'tool-name.tool.js',  // 文件名
-    content: `/**
- * [工具名] - [一句话说明工具的核心定位]
- *
- * 战略意义：
- * 1. [架构价值]：[说明如何保护系统稳定性或提升架构质量]
- * 2. [平台价值]：[说明如何实现平台独立或增强平台能力]
- * 3. [生态价值]：[说明如何支撑其他工具或服务生态发展]
- *
- * 设计理念：
- * [一段话阐述设计的核心思想，解释为什么这样设计，
- *  而不是其他方案，强调关键的设计权衡]
- *
- * 为什么重要：
- * [说明这个工具解决了什么关键问题，没有它会怎样]
- */
-
-module.exports = {
-    // 核心方法
-    getDependencies() {},
-    getMetadata() {},
-    getSchema() {},
-    execute() {}
-  }`
-  }
-});
-```
+- **使用tool-creator工具创建工具文件**
+- 通过promptx_toolx（规范名称）调用@tool://tool-creator，mode: execute
+- 使用4参数设计：tool/action/file/content
+- 创建包含完整战略注释和核心接口的工具文件
+- 具体参数格式和操作方式参考工具手册
 
 **tool-creator 使用说明**：
 - 自动在 `~/.promptx/resource/tool/{tool}/` 目录下操作
@@ -217,22 +186,10 @@ getBusinessErrors() {
 
 ### Step 6: 验证和交付
 
-```javascript
-// 1. 验证工具的完整性
-await toolx('@tool://tool-creator', {
-  mode: 'execute',
-  parameters: {
-    tool: 'tool-name',
-    action: 'validate'  // 验证工具完整性
-  }
-});
-
-// 2. 如果验证通过，调用discover确保工具可被发现
-// 使用规范名称 promptx_discover（实际调用时会自动映射到正确的MCP前缀）
-await promptx_discover({ focus: 'tools' });
-
-// 3. 确认工具出现在列表中
-```
+- **验证工具完整性**：通过tool-creator的validate操作检查语法和接口
+- **刷新工具注册表**：调用promptx_discover确保工具可被发现
+- **确认工具可用**：验证工具出现在工具列表中且可正常调用
+- **交付确认**：简洁确认完成，遵循chat-is-all-you-need原则
 
 **验证要点**：
 - validate会检查JavaScript语法

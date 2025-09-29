@@ -65,7 +65,7 @@ module.exports = {
           action: {
             type: 'string',
             description: '操作类型',
-            enum: ['write', 'read', 'delete', 'list', 'exists', 'validate']
+            enum: ['write', 'read', 'delete', 'list', 'exists', 'validate', 'edit']
           },
           file: {
             type: 'string',
@@ -76,6 +76,29 @@ module.exports = {
             type: 'string',
             description: '文件内容（write操作时必需）',
             maxLength: 500000  // 500KB limit
+          },
+          edits: {
+            type: 'array',
+            description: '编辑操作列表，每个元素为对象: {oldText: "要替换的文本", newText: "新文本"}',
+            items: {
+              type: 'object',
+              properties: {
+                oldText: {
+                  type: 'string',
+                  description: '要替换的原始文本（必须完全匹配）'
+                },
+                newText: {
+                  type: 'string',
+                  description: '替换后的新文本'
+                }
+              },
+              required: ['oldText', 'newText']
+            }
+          },
+          dryRun: {
+            type: 'boolean',
+            description: '仅预览不执行（edit操作时可选）',
+            default: false
           }
         },
         required: ['tool', 'action'],
@@ -88,6 +111,10 @@ module.exports = {
           {
             if: { properties: { action: { enum: ['read', 'delete', 'exists'] } } },
             then: { required: ['file'] }
+          },
+          {
+            if: { properties: { action: { const: 'edit' } } },
+            then: { required: ['file', 'edits'] }
           }
         ]
       }
@@ -161,6 +188,65 @@ module.exports = {
     }
     
     return true;
+  },
+
+  /**
+   * 应用编辑操作（参照role-creator的edit实现）
+   */
+  async applyEdits(filePath, edits, dryRun = false) {
+    const fs = require('fs').promises;
+
+    // 读取原始文件内容
+    let content;
+    try {
+      content = await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error.message}`);
+    }
+
+    const originalContent = content;
+    let appliedEdits = 0;
+    const editResults = [];
+
+    // 按顺序应用每个编辑
+    for (const edit of edits) {
+      const { oldText, newText } = edit;
+
+      if (content.includes(oldText)) {
+        // 只替换第一次出现的位置
+        const index = content.indexOf(oldText);
+        content = content.substring(0, index) + newText + content.substring(index + oldText.length);
+        appliedEdits++;
+
+        editResults.push({
+          success: true,
+          oldText: oldText.substring(0, 50) + (oldText.length > 50 ? '...' : ''),
+          newText: newText.substring(0, 50) + (newText.length > 50 ? '...' : ''),
+          position: index
+        });
+      } else {
+        editResults.push({
+          success: false,
+          oldText: oldText.substring(0, 50) + (oldText.length > 50 ? '...' : ''),
+          newText: newText.substring(0, 50) + (newText.length > 50 ? '...' : ''),
+          error: 'Text not found'
+        });
+      }
+    }
+
+    // 如果不是dry run，写入文件
+    if (!dryRun && appliedEdits > 0) {
+      await fs.writeFile(filePath, content, 'utf-8');
+    }
+
+    return {
+      success: true,
+      appliedEdits,
+      totalEdits: edits.length,
+      dryRun,
+      changes: content !== originalContent,
+      editResults
+    };
   },
 
   /**
@@ -251,7 +337,7 @@ module.exports = {
    */
   async execute(params) {
     const { api } = this;
-    const { tool, action, file, content } = params;
+    const { tool, action, file, content, edits, dryRun = false } = params;
     
     // 记录操作
     api.logger.info(`Executing tool-creator`, { tool, action, file: file || 'root' });
@@ -396,9 +482,35 @@ module.exports = {
           }
         }
         
+        case 'edit': {
+          const fullPath = this.getToolPath(tool, file);
+
+          // 检查文件是否存在
+          try {
+            await fs.access(fullPath);
+          } catch {
+            throw new Error(`File not found: tool/${tool}/${file}`);
+          }
+
+          // 应用编辑操作
+          const result = await this.applyEdits(fullPath, edits, dryRun);
+
+          api.logger.info(`Edit operation completed`, {
+            path: fullPath,
+            appliedEdits: result.appliedEdits,
+            totalEdits: result.totalEdits,
+            dryRun
+          });
+
+          return {
+            ...result,
+            path: `tool/${tool}/${file}`
+          };
+        }
+
         case 'validate': {
           const toolPath = this.getToolPath(tool);
-          
+
           // 检查工具目录是否存在
           try {
             await fs.access(toolPath);
@@ -410,15 +522,15 @@ module.exports = {
               ready: false
             };
           }
-          
+
           // 执行验证
           const validationResult = await this.validateTool(toolPath, api);
-          api.logger.info(`Tool validation completed`, { 
-            tool, 
+          api.logger.info(`Tool validation completed`, {
+            tool,
             valid: validationResult.valid,
-            issueCount: validationResult.issues.length 
+            issueCount: validationResult.issues.length
           });
-          
+
           return {
             success: true,
             ...validationResult

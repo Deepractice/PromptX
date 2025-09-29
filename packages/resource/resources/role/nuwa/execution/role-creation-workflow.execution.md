@@ -58,13 +58,12 @@
     - **调用思维**：运用dpml-cognition组织标签
     - **调用思维**：运用occams-razor精简内容
     - **查询知识**：遵循role-constraints质量标准
-    - **必须使用role-creator工具创建角色文件**
-    - 通过promptx_toolx（规范名称）调用@tool://role-creator
-    - 写主文件：role: '{roleId}', action: 'write', file: '{roleId}.role.md'
-    - 写思维文件：role: '{roleId}', action: 'write', file: 'thought/{name}.thought.md'
-    - 写执行文件：role: '{roleId}', action: 'write', file: 'execution/{name}.execution.md'
-    - 写知识文件：role: '{roleId}', action: 'write', file: 'knowledge/{name}.knowledge.md'
-    - 自动创建目录，无需单独操作
+    - **必须先查看工具手册**：第一次使用时通过promptx_toolx调用@tool://role-creator，mode: manual
+    - **使用role-creator工具创建角色文件**
+    - 通过promptx_toolx（规范名称）调用@tool://role-creator，mode: execute
+    - 创建角色主文件和所需的思维、执行、知识文件
+    - 按照DPML规范组织文件结构
+    - 具体参数和操作方式参考工具手册
 
     ### Step 6: Validate（验证交付）- 20秒
     - **查询知识**：检查DPML规范合规性

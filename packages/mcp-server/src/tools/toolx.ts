@@ -36,11 +36,50 @@ parameters:
 
 mode 说明：
 • manual - 查看工具手册【第一次必须先执行】
+  示例：
+  url: tool://tool-creator
+  mode: manual
+
 • execute - 执行工具功能（默认）
+  示例：
+  url: tool://tool-creator
+  mode: execute
+  parameters:
+    tool: my-tool
+    action: write
+    file: my-tool.tool.js
+    content: |
+      module.exports = {
+        execute() { return 'hello'; }
+      };
+
 • configure - 配置环境变量
+  示例：
+  url: tool://my-tool
+  mode: configure
+  parameters:
+    API_KEY: sk-xxx123
+    TIMEOUT: 30000
+
 • rebuild - 重建依赖
+  示例：
+  url: tool://my-tool
+  mode: rebuild
+
 • log - 查看日志
+  示例：
+  url: tool://my-tool
+  mode: log
+  parameters:
+    action: tail
+    lines: 100
+
 • dryrun - 模拟执行
+  示例：
+  url: tool://my-tool
+  mode: dryrun
+  parameters:
+    input: test-data
 ⚠️⚠️⚠️再次强调，重要：第一次使用任何工具必须先 mode: manual 查看手册，了解正确的参数格式⚠️⚠️⚠️ 。
 
 系统工具可以直接使用的工具无需发现：

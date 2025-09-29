@@ -58,10 +58,9 @@
     - **查询知识**：符合DPML规范
     - **使用role-creator工具更新文件**
     - 通过promptx_toolx（规范名称）调用@tool://role-creator
-    - 更新主文件：role: '{roleId}', action: 'write', file: '{roleId}.role.md'
-    - 更新或添加子文件：action: 'write', file: 'thought/xxx.thought.md'
-    - 删除不需要的文件：action: 'delete', file: 'old-file.md'
-    - 完整替换所有需要改变的组件
+    - 更新主文件和相关的思维、执行、知识文件
+    - 删除不再需要的文件
+    - 具体操作参数参考工具手册
 
     ### Step 6: Validate（验证替换）- 30秒
     - 验证只使用了role、personality、principle、knowledge标签
