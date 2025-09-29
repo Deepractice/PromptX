@@ -15,7 +15,7 @@ export const toolxTool: ToolWithHandler = {
 • MCP Server 暴露工具，包括 toolx（即 mcp__promptx__toolx）
 • toolx 是一个 MCP 工具，用于加载和执行 PromptX 生态的工具（tool://xxx）
 
-⚠️ 重要：第一次使用任何工具必须先 mode: manual 查看手册，了解正确的参数格式。
+⚠️⚠️⚠️重要：第一次使用任何工具必须先 mode: manual 查看手册，了解正确的参数格式⚠️⚠️⚠️ 。
 
 调用方式：mcp__promptx__toolx，传入 yaml 字符串：
 
@@ -37,7 +37,9 @@ mode 说明：
 • configure - 配置环境变量
 • rebuild - 重建依赖
 • log - 查看日志
-• dryrun - 模拟执行`,
+• dryrun - 模拟执行
+⚠️⚠️⚠️再次强调，重要：第一次使用任何工具必须先 mode: manual 查看手册，了解正确的参数格式⚠️⚠️⚠️ 。
+`,
 
   inputSchema: {
     type: 'object',

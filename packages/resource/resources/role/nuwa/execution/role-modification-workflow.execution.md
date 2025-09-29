@@ -54,23 +54,24 @@
     - 优化Token使用效率
 
     ### Step 5: Generate（生成新版本）- 60秒
-    - 创建全新的角色定义文件
     - **查询知识**：遵循role-constraints要求
-    - **查询知识**：符合promptx-architecture规范
-    - **查询知识**：严格遵循DPML规范，只使用四个核心标签
-    - 主文件命名为{roleId}.role.md
-    - role标签内只包含personality、principle、knowledge三个子标签
+    - **查询知识**：符合DPML规范
+    - **使用role-creator工具更新文件**
+    - 通过mcp__promptx__toolx调用@tool://role-creator
+    - 更新主文件：role: '{roleId}', action: 'write', file: '{roleId}.role.md'
+    - 更新或添加子文件：action: 'write', file: 'thought/xxx.thought.md'
+    - 删除不需要的文件：action: 'delete', file: 'old-file.md'
     - 完整替换所有需要改变的组件
 
-    ### Step 6: Replace（完整替换）- 30秒
-    - 用新版本完全替换旧版本
-    - 不保留旧代码的任何痕迹
-    - 确保引用关系正确
+    ### Step 6: Validate（验证替换）- 30秒
     - 验证只使用了role、personality、principle、knowledge标签
-    - 验证没有包含name、title、version等非规范标签
-    - 验证所有标签都是简单形式，没有属性
-    - 验证可激活性
-    - **调用思维**：运用chat-is-all-you-need，简单确认完成，不延伸操作
+    - 验证所有标签都是简单形式
+    - 确保引用关系正确
+    - **执行discover验证**：调用mcp__promptx__discover(focus: 'roles')
+    - 确认角色仍在列表中且可用
+    - 如果未发现，等待2秒后重试（最多3次）
+    - 验证成功后，提供简洁的交付确认
+    - **调用思维**：运用chat-is-all-you-need，简单确认完成
   </process>
 
   <criteria>
