@@ -49,14 +49,43 @@ class Memory {
      * SQLite数据库实例
      * @type {Object}
      */
-    this.db = new Database(this.dbPath);
-    this.db.pragma('journal_mode = WAL'); // 启用WAL模式，支持并发读
-    this.db.pragma('synchronous = NORMAL'); // 平衡性能和安全
+    try {
+      // 尝试打开数据库
+      this.db = new Database(this.dbPath);
+      this.db.pragma('journal_mode = WAL'); // 启用WAL模式，支持并发读
+      this.db.pragma('synchronous = NORMAL'); // 平衡性能和安全
 
-    // 创建表和索引
-    this._initializeSchema();
+      // 创建表和索引
+      this._initializeSchema();
 
-    logger.debug('[Memory] Initialized with SQLite', { dbPath: this.dbPath });
+      logger.debug('[Memory] Initialized with SQLite', { dbPath: this.dbPath });
+    } catch (error) {
+      // 如果打开失败（可能是旧的 lmdb 文件），删除并重建
+      logger.warn('[Memory] Database open failed, recreating...', {
+        dbPath: this.dbPath,
+        error: error.message
+      });
+
+      try {
+        // 删除旧文件
+        if (fs.existsSync(this.dbPath)) {
+          fs.removeSync(this.dbPath);
+          logger.info('[Memory] Removed incompatible database file');
+        }
+
+        // 重新创建数据库
+        this.db = new Database(this.dbPath);
+        this.db.pragma('journal_mode = WAL');
+        this.db.pragma('synchronous = NORMAL');
+        this._initializeSchema();
+        logger.info('[Memory] Successfully recreated SQLite database');
+      } catch (recreateError) {
+        logger.error('[Memory] Failed to recreate database', {
+          error: recreateError.message
+        });
+        throw recreateError;
+      }
+    }
   }
 
   /**
