@@ -34,7 +34,7 @@ module.exports = {
       id: 'role-creator',
       name: 'Role Creator',
       description: 'PromptX角色资源的CRUD操作工具，简化角色创作流程',
-      version: '1.0.0',
+      version: '1.1.0',
       category: 'creation',
       author: '鲁班',
       tags: ['role', 'creation', 'crud', 'promptx'],
@@ -42,6 +42,7 @@ module.exports = {
         '创建新角色',
         '添加思维/执行/知识文件',
         '更新角色配置',
+        '精确编辑角色内容',
         '管理角色资源结构'
       ]
     };
@@ -65,7 +66,7 @@ module.exports = {
           action: {
             type: 'string',
             description: '操作类型',
-            enum: ['write', 'read', 'delete', 'list', 'exists']
+            enum: ['write', 'read', 'delete', 'list', 'exists', 'edit']
           },
           file: {
             type: 'string',
@@ -76,6 +77,29 @@ module.exports = {
             type: 'string',
             description: '文件内容（write操作时必需）',
             maxLength: 100000
+          },
+          edits: {
+            type: 'array',
+            description: '编辑操作列表，每个元素为对象: {oldText: "要替换的文本", newText: "新文本"}',
+            items: {
+              type: 'object',
+              properties: {
+                oldText: {
+                  type: 'string',
+                  description: '要替换的原始文本（必须完全匹配）'
+                },
+                newText: {
+                  type: 'string',
+                  description: '替换后的新文本'
+                }
+              },
+              required: ['oldText', 'newText']
+            }
+          },
+          dryRun: {
+            type: 'boolean',
+            description: '仅预览不执行（edit操作时可选）',
+            default: false
           }
         },
         required: ['role', 'action'],
@@ -88,6 +112,10 @@ module.exports = {
           {
             if: { properties: { action: { enum: ['read', 'delete', 'exists'] } } },
             then: { required: ['file'] }
+          },
+          {
+            if: { properties: { action: { const: 'edit' } } },
+            then: { required: ['file', 'edits'] }
           }
         ]
       }
@@ -118,6 +146,13 @@ module.exports = {
         description: '文件已存在',
         match: /file.*exists/i,
         solution: '使用不同的文件名或先删除现有文件',
+        retryable: false
+      },
+      {
+        code: 'EDIT_FAILED',
+        description: '编辑操作失败',
+        match: /edit.*failed|text.*not.*found/i,
+        solution: '检查要替换的文本是否完全匹配',
         retryable: false
       }
     ];
@@ -171,17 +206,76 @@ module.exports = {
   },
 
   /**
+   * 应用编辑操作（参照filesystem的edit实现）
+   */
+  async applyEdits(filePath, edits, dryRun = false) {
+    const fs = require('fs').promises;
+
+    // 读取原始文件内容
+    let content;
+    try {
+      content = await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error.message}`);
+    }
+
+    const originalContent = content;
+    let appliedEdits = 0;
+    const editResults = [];
+
+    // 按顺序应用每个编辑
+    for (const edit of edits) {
+      const { oldText, newText } = edit;
+
+      if (content.includes(oldText)) {
+        // 只替换第一次出现的位置
+        const index = content.indexOf(oldText);
+        content = content.substring(0, index) + newText + content.substring(index + oldText.length);
+        appliedEdits++;
+
+        editResults.push({
+          success: true,
+          oldText: oldText.substring(0, 50) + (oldText.length > 50 ? '...' : ''),
+          newText: newText.substring(0, 50) + (newText.length > 50 ? '...' : ''),
+          position: index
+        });
+      } else {
+        editResults.push({
+          success: false,
+          oldText: oldText.substring(0, 50) + (oldText.length > 50 ? '...' : ''),
+          newText: newText.substring(0, 50) + (newText.length > 50 ? '...' : ''),
+          error: 'Text not found'
+        });
+      }
+    }
+
+    // 如果不是dry run，写入文件
+    if (!dryRun && appliedEdits > 0) {
+      await fs.writeFile(filePath, content, 'utf-8');
+    }
+
+    return {
+      success: true,
+      appliedEdits,
+      totalEdits: edits.length,
+      dryRun,
+      changes: content !== originalContent,
+      editResults
+    };
+  },
+
+  /**
    * 执行工具
    */
   async execute(params) {
     const { api } = this;
-    const { role, action, file, content } = params;
+    const { role, action, file, content, edits, dryRun = false } = params;
     
     // 记录操作
     api.logger.info(`Executing role-creator`, { role, action, file: file || 'root' });
     
     // 验证文件路径
-    if (file && action === 'write') {
+    if (file && ['write', 'edit'].includes(action)) {
       this.validateFilePath(file);
     }
     
@@ -208,7 +302,33 @@ module.exports = {
             bytesWritten: Buffer.byteLength(content, 'utf-8')
           };
         }
-        
+
+        case 'edit': {
+          const fullPath = this.getRolePath(role, file);
+
+          // 检查文件是否存在
+          try {
+            await fs.access(fullPath);
+          } catch {
+            throw new Error(`File not found: role/${role}/${file}`);
+          }
+
+          // 应用编辑操作
+          const result = await this.applyEdits(fullPath, edits, dryRun);
+
+          api.logger.info(`Edit operation completed`, {
+            path: fullPath,
+            appliedEdits: result.appliedEdits,
+            totalEdits: result.totalEdits,
+            dryRun
+          });
+
+          return {
+            ...result,
+            path: `role/${role}/${file}`
+          };
+        }
+
         case 'read': {
           const fullPath = this.getRolePath(role, file);
           
