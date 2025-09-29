@@ -68,6 +68,7 @@ export const actionTool: ToolWithHandler = {
 - 通用任务 → 使用assistant
 - 学习新领域 → 使用noface
 - 产品决策 → 切换到sean
+- 写作任务 → 切换到writer
 
 你应该:
 1. 根据任务需求选择合适的角色激活
