@@ -42,6 +42,12 @@ mode 说明：
 • log - 查看日志
 • dryrun - 模拟执行
 ⚠️⚠️⚠️再次强调，重要：第一次使用任何工具必须先 mode: manual 查看手册，了解正确的参数格式⚠️⚠️⚠️ 。
+
+系统工具可以直接使用的工具无需发现：
+- tool://filesystem - 文件系统操作
+- tool://role-creator - 创建AI角色,女娲专用
+- tool://tool-creator - 创建工具,鲁班专用
+
 `,
 
   inputSchema: {

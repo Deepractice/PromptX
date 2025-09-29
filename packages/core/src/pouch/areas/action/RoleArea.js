@@ -58,13 +58,12 @@ class RoleArea extends BaseArea {
     }
     
     let content = '# 👤 角色人格特征\n'
-    
+
     const rendered = await this.semanticRenderer.renderSemanticContent(
       this.roleSemantics.personality,
       this.resourceManager
     )
-    
-    content += `## ✅ 👤 人格特征：${this.roleId}\n`
+
     content += rendered
     
     // 添加思维资源
@@ -93,13 +92,12 @@ class RoleArea extends BaseArea {
     }
     
     let content = '# ⚖️ 角色行为原则\n'
-    
+
     const rendered = await this.semanticRenderer.renderSemanticContent(
       this.roleSemantics.principle,
       this.resourceManager
     )
-    
-    content += `## ✅ ⚖️ 行为原则：${this.roleId}\n`
+
     content += rendered
     
     // 添加执行资源
@@ -128,13 +126,12 @@ class RoleArea extends BaseArea {
     }
     
     let content = '# 📚 专业知识体系\n'
-    
+
     const rendered = await this.semanticRenderer.renderSemanticContent(
       this.roleSemantics.knowledge,
       this.resourceManager
     )
-    
-    content += `## ✅ 📚 知识体系：${this.roleId}-knowledge\n`
+
     content += rendered
     
     return content
