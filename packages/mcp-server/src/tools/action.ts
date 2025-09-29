@@ -12,6 +12,9 @@ export const actionTool: ToolWithHandler = {
   name: 'action',
   description: `激活指定角色 - 加载角色的知识、记忆和能力
 
+【规范名称】promptx_action
+【调用说明】在提示词中使用 promptx_action，实际调用时自动映射到 mcp__[server]__action
+
 主要功能：
 1. 加载角色的完整配置（人格、原则、知识体系）
 2. 显示角色的记忆网络图（关键词可用于recall）

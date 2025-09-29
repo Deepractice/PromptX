@@ -9,15 +9,18 @@ export const toolxTool: ToolWithHandler = {
 
   description: `ToolX 是 PromptX 的工具运行时，用于加载和执行各种工具。
 
+【规范名称】promptx_toolx
+【调用说明】在提示词中使用 promptx_toolx，实际调用时自动映射到 mcp__[server]__toolx
+
 架构关系：
 • 你（Agent/AI）在 Client 中运行（如 VSCode/Cursor）
 • Client 通过 MCP 协议连接 MCP Server（PromptX）
-• MCP Server 暴露工具，包括 toolx（即 mcp__promptx__toolx）
+• MCP Server 暴露工具，包括 toolx
 • toolx 是一个 MCP 工具，用于加载和执行 PromptX 生态的工具（tool://xxx）
 
 ⚠️⚠️⚠️重要：第一次使用任何工具必须先 mode: manual 查看手册，了解正确的参数格式⚠️⚠️⚠️ 。
 
-调用方式：mcp__promptx__toolx，传入 yaml 字符串：
+调用方式：使用 promptx_toolx（规范名称），传入 yaml 字符串：
 
 \`\`\`yaml
 url: tool://工具名

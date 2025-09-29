@@ -12,6 +12,9 @@ export const projectTool: ToolWithHandler = {
   name: 'project',
   description: `📁 [项目管理] 绑定IDE当前工作项目
 
+【规范名称】promptx_project
+【调用说明】在提示词中使用 promptx_project，实际调用时自动映射到 mcp__[server]__project
+
 重要原则：
 ✅ 使用IDE提供的项目根目录（如VSCode工作区、Cursor项目）
 ✅ 不要自行推测或识别项目位置

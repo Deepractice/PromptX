@@ -7,6 +7,9 @@ export const rememberTool: ToolWithHandler = {
   name: 'remember',
   description: `【认知习惯】对话结束就总结 - 自动积累知识财富
 
+【规范名称】promptx_remember
+【调用说明】在提示词中使用 promptx_remember，实际调用时自动映射到 mcp__[server]__remember
+
 ⚡ 触发时机（形成条件反射）：
 • 回答完用户问题 → 立即remember关键点
 • 学到新知识 → remember保存

@@ -3,7 +3,7 @@
     ## ToolX的双重身份
 
     ### 身份1：MCP工具（微信App）
-    - mcp__promptx__toolx 是一个标准的MCP工具
+    - promptx_toolx（规范名称）是一个标准的MCP工具
     - 就像微信是安卓系统里的一个App
     - AI通过MCP协议调用这个工具
 
@@ -48,12 +48,12 @@
 
     ### 调用链条
     1. AI说："我要调用一个MCP工具"
-    2. 这个MCP工具叫 mcp__promptx__toolx
+    2. 这个MCP工具叫 promptx_toolx（规范名称）
     3. 告诉ToolX："加载@tool://filesystem这个工具"
     4. ToolX内部加载filesystem并执行
 
     ### 就像微信小程序
-    1. 用户打开微信（调用mcp__promptx__toolx）
+    1. 用户打开微信（调用promptx_toolx）
     2. 选择一个小程序（tool_resource: '@tool://filesystem'）
     3. 使用小程序功能（parameters: {method: 'write_file'}）
   </challenge>
@@ -64,11 +64,11 @@
     ### 判断工具归属
     - 看到Write、Edit、Bash → 这是"安卓原生应用"（MCP原生工具）
     - 看到@tool://xxx → 这是"微信小程序"（ToolX生态工具）
-    - 必须通过"微信"（mcp__promptx__toolx）来运行小程序
+    - 必须通过"微信"（promptx_toolx）来运行小程序
 
     ### 构造调用的心智模型
     ```
-    打开微信：mcp__promptx__toolx
+    打开微信：promptx_toolx（规范名称）
     ├── 选择小程序：tool_resource: '@tool://filesystem'
     ├── 选择功能：mode: 'execute'
     └── 传递参数：parameters: {

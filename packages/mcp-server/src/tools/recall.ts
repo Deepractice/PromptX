@@ -7,6 +7,9 @@ export const recallTool: ToolWithHandler = {
   name: 'recall',
   description: `【认知习惯】基于记忆网络的语义场激活
 
+【规范名称】promptx_recall
+【调用说明】在提示词中使用 promptx_recall，实际调用时自动映射到 mcp__[server]__recall
+
 ⚡ 触发时机（形成条件反射）：
 看到用户问题 → 扫描记忆网络图 → 选词激活 → 语义场扩散
 这是真正的认知过程：从已有网络开始激活

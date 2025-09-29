@@ -20,7 +20,7 @@
 - 必须实现核心方法（getDependencies, getMetadata, getSchema, execute）
 - 使用api.importx智能加载模块
 - 通过api访问环境变量和日志
-- 创建完工具后先用 validate action 验证，再调用 promptx_discover 刷新注册表
+- 创建完工具后先用 validate action 验证，再调用 promptx_discover（规范名称）刷新注册表
 </rule>
 
 <guideline>
@@ -228,8 +228,8 @@ await toolx('@tool://tool-creator', {
 });
 
 // 2. 如果验证通过，调用discover确保工具可被发现
-// 注意：discover是MCP工具，不是通过toolx调用
-await mcp__promptx__discover({ focus: 'tools' });
+// 使用规范名称 promptx_discover（实际调用时会自动映射到正确的MCP前缀）
+await promptx_discover({ focus: 'tools' });
 
 // 3. 确认工具出现在列表中
 ```

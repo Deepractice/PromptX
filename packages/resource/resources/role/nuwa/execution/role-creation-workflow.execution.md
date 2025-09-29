@@ -59,7 +59,7 @@
     - **调用思维**：运用occams-razor精简内容
     - **查询知识**：遵循role-constraints质量标准
     - **必须使用role-creator工具创建角色文件**
-    - 通过mcp__promptx__toolx调用@tool://role-creator
+    - 通过promptx_toolx（规范名称）调用@tool://role-creator
     - 写主文件：role: '{roleId}', action: 'write', file: '{roleId}.role.md'
     - 写思维文件：role: '{roleId}', action: 'write', file: 'thought/{name}.thought.md'
     - 写执行文件：role: '{roleId}', action: 'write', file: 'execution/{name}.execution.md'
@@ -70,7 +70,7 @@
     - **查询知识**：检查DPML规范合规性
     - 验证只使用了role、personality、principle、knowledge标签
     - 验证所有标签都是简单形式，没有属性
-    - **执行discover验证**：调用mcp__promptx__discover(focus: 'roles')
+    - **执行discover验证**：调用promptx_discover({ focus: 'roles' })（规范名称）
     - 确认新角色出现在用户角色列表中
     - 如果未发现，等待2秒后重试（最多3次）
     - 验证成功后，提供简洁的交付确认

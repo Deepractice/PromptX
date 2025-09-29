@@ -13,6 +13,9 @@ export const discoverTool: ToolWithHandler = {
   description: `🎯 [探索AI潜能] 发现你的AI可以成为什么 - 探索可用角色与工具
 为AI提供完整的专业服务选项清单，包括可激活的角色和可调用的工具。
 
+【规范名称】promptx_discover
+【调用说明】在提示词中使用 promptx_discover，实际调用时自动映射到 mcp__[server]__discover
+
 何时使用此工具:
 - 初次进入项目了解可用的角色和工具
 - 需要专业能力但不知道有哪些角色可选

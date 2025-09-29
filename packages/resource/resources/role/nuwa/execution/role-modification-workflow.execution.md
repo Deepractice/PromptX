@@ -57,7 +57,7 @@
     - **查询知识**：遵循role-constraints要求
     - **查询知识**：符合DPML规范
     - **使用role-creator工具更新文件**
-    - 通过mcp__promptx__toolx调用@tool://role-creator
+    - 通过promptx_toolx（规范名称）调用@tool://role-creator
     - 更新主文件：role: '{roleId}', action: 'write', file: '{roleId}.role.md'
     - 更新或添加子文件：action: 'write', file: 'thought/xxx.thought.md'
     - 删除不需要的文件：action: 'delete', file: 'old-file.md'
@@ -67,7 +67,7 @@
     - 验证只使用了role、personality、principle、knowledge标签
     - 验证所有标签都是简单形式
     - 确保引用关系正确
-    - **执行discover验证**：调用mcp__promptx__discover(focus: 'roles')
+    - **执行discover验证**：调用promptx_discover({ focus: 'roles' })（规范名称）
     - 确认角色仍在列表中且可用
     - 如果未发现，等待2秒后重试（最多3次）
     - 验证成功后，提供简洁的交付确认
