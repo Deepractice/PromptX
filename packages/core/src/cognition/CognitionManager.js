@@ -216,14 +216,23 @@ class CognitionManager {
       return null;
     }
 
-    // 自动锚定当前认知状态
-    try {
-      const anchor = new Anchor(system.network);
-      await anchor.execute(query, mind);
-      logger.debug(`[CognitionManager] Auto-anchored state after recall: "${query}"`);
-    } catch (error) {
-      logger.error(`[CognitionManager] Failed to auto-anchor state:`, error);
-      // 锚定失败不影响recall结果
+    // 自动锚定当前认知状态（仅当recall成功激活了节点）
+    if (mind && mind.activatedCues && mind.activatedCues.size > 0) {
+      try {
+        const anchor = new Anchor(system.network);
+        await anchor.execute(query, mind);
+        logger.debug(`[CognitionManager] Auto-anchored state after recall: "${query}"`, {
+          activatedNodes: mind.activatedCues.size
+        });
+      } catch (error) {
+        logger.error(`[CognitionManager] Failed to auto-anchor state:`, error);
+        // 锚定失败不影响recall结果
+      }
+    } else {
+      logger.debug(`[CognitionManager] Skip anchoring - recall returned empty mind`, {
+        query,
+        hasActivatedCues: mind?.activatedCues?.size || 0
+      });
     }
 
     return mind;
