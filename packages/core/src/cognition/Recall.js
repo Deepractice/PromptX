@@ -133,9 +133,11 @@ class Recall {
     const Mind = require('./Mind');
     const mind = new Mind(virtualMind);
 
-    // 6. 标记所有输入词为depth=1
+    // 6. 标记所有输入词为depth=1，并添加虚拟mind到输入词的连接
     for (const word of activatedNodes) {
       mind.addActivatedCue(word, 1);
+      // 添加虚拟mind节点到输入词的连接，用于toMermaid可视化
+      mind.addConnection('mind', word, initialEnergy, Date.now());
     }
 
     // 7. 创建激活上下文
