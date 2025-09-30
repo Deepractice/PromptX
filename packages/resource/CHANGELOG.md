@@ -1,5 +1,12 @@
 # @promptx/resource
 
+## 1.23.0
+
+### Patch Changes
+
+- Updated dependencies [[`df8140b`](https://github.com/Deepractice/PromptX/commit/df8140ba9a4d6715ba21d9fe0c37d92ee8db5127)]:
+  - @promptx/logger@1.23.0
+
 ## 1.22.0
 
 ### Minor Changes

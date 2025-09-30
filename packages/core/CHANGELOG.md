@@ -1,5 +1,85 @@
 # @promptx/core
 
+## 1.23.0
+
+### Minor Changes
+
+- [#415](https://github.com/Deepractice/PromptX/pull/415) [`665b71a`](https://github.com/Deepractice/PromptX/commit/665b71a58425b56eb4bf7f636485ef79c9e5da6c) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 创建 CognitivePrompts 模块统一管理认知循环提示词
+
+  **核心改进**：
+
+  - 创建`CognitivePrompts.js`作为单一数据源管理所有认知循环相关提示词
+  - recall.ts/remember.ts 工具层添加认知循环概念说明
+  - CognitionArea.js 在不同场景下强化认知循环驱动
+
+  **认知循环闭环**：
+
+  - recall 找到记忆 → 提示"回答后 remember 强化/扩展"
+  - recall 没找到 → 强调"必须 remember 填补空白"
+  - remember 成功 → 显示"认知循环完成"
+
+  **架构优势**：
+
+  - 遵循 DRY 原则，避免提示词重复定义
+  - 确保全局用词和表达一致性
+  - 易于维护和扩展
+
+  Closes #413
+
+- [#411](https://github.com/Deepractice/PromptX/pull/411) [`df8140b`](https://github.com/Deepractice/PromptX/commit/df8140ba9a4d6715ba21d9fe0c37d92ee8db5127) Thanks [@deepracticexs](https://github.com/deepracticexs)! - feat: 认知激活模式系统与 recall 工具增强
+
+  ## 新增功能
+
+  ### 认知激活模式 (Cognitive Activation Modes)
+
+  - 实现三种认知激活模式:Creative(创造性探索)、Balanced(平衡模式)、Focused(聚焦检索)
+  - 基于学术研究(ACT-R、探索-利用理论、双过程理论)设计参数体系
+  - 支持通过 recall 工具的 mode 参数切换激活模式
+  - 不同模式通过调节 firingThreshold、maxCycles、synapticDecay 等参数控制激活扩散行为
+
+  ### Recall 工具增强
+
+  - 严格限制 recall 必须使用记忆网络中实际存在的词汇
+  - 优化工具提示词,强制执行"action 查看网络图 → 选择已存在的词 → recall"工作流
+  - 添加明确的失败处理指导,禁止 AI 推测或抽象不存在的词
+
+  ## 修复
+
+  ### 状态锚定 bug 修复
+
+  - 修复空 Mind 对象被错误锚定导致状态污染的问题
+  - 添加系统级防御:仅当 recall 成功激活节点时才保存状态
+  - 防止 AI 违规使用不存在词汇导致的状态损坏
+
+  ### 其他修复
+
+  - 修复 TwoPhaseRecallStrategy 错误使用 centerCue 导致激活失败的 bug
+  - 改进 logger API 支持自然顺序参数 logger.info(msg, obj)
+  - 添加详细的 mode 参数传递日志便于调试
+
+  ## 技术细节
+
+  认知模式参数对比:
+
+  - Creative: firingThreshold=0.05, maxCycles=12, 广泛联想
+  - Balanced: firingThreshold=0.1, maxCycles=8, 系统默认
+  - Focused: firingThreshold=0.2, maxCycles=4, 精确检索
+
+### Patch Changes
+
+- [#414](https://github.com/Deepractice/PromptX/pull/414) [`a90ad4a`](https://github.com/Deepractice/PromptX/commit/a90ad4a159e112388109dac632cbad0da694a2bf) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 优化 recall 工具描述和认知循环体验
+
+  - **recall.ts**: 精简工具描述，从 1400+ tokens 减少到约 600 tokens，删除过度的使用教程和说教内容，遵循奥卡姆剃刀原则
+  - **recall 多词支持**: 支持空格分隔的多个关键词同时激活，创建虚拟 mind 节点实现多中心激活
+  - **DMN 模式**: 不传 query 参数时自动选择 5 个枢纽节点（连接度最高），模拟人脑默认网络
+  - **action 优化**: 使用 DMN 模式的 recall 替代 prime，统一认知激活路径
+
+  相关 Issue: #410 #412 #413
+
+- Updated dependencies [[`df8140b`](https://github.com/Deepractice/PromptX/commit/df8140ba9a4d6715ba21d9fe0c37d92ee8db5127)]:
+  - @promptx/logger@1.23.0
+  - @promptx/resource@1.23.0
+
 ## 1.22.0
 
 ### Minor Changes
