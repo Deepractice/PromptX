@@ -211,44 +211,70 @@ export function createLogger(config: LoggerConfig = {}): pino.Logger {
 // Default logger instance
 const logger = createLogger()
 
-// Export convenience methods
-export const error = (msg: string | object, ...args: any[]) => {
-  if (typeof msg === 'string') {
-    logger.error(msg)
+// Export convenience methods with flexible API
+// Supports both:
+// - logger.info(msg) - simple message
+// - logger.info(msg, obj) - message + context object (natural order)
+// - logger.info(obj, msg) - Pino native order (backward compatible)
+export const error = (msgOrObj: string | object, objOrMsg?: object | string) => {
+  if (typeof msgOrObj === 'string') {
+    // logger.error(msg) or logger.error(msg, obj)
+    if (objOrMsg && typeof objOrMsg === 'object') {
+      logger.error(objOrMsg, msgOrObj)  // Swap to Pino's (obj, msg) order
+    } else {
+      logger.error(msgOrObj)
+    }
   } else {
-    logger.error(msg, args[0] || '')
+    // logger.error(obj, msg) - Pino native
+    logger.error(msgOrObj, objOrMsg as string || '')
   }
 }
 
-export const warn = (msg: string | object, ...args: any[]) => {
-  if (typeof msg === 'string') {
-    logger.warn(msg)
+export const warn = (msgOrObj: string | object, objOrMsg?: object | string) => {
+  if (typeof msgOrObj === 'string') {
+    if (objOrMsg && typeof objOrMsg === 'object') {
+      logger.warn(objOrMsg, msgOrObj)
+    } else {
+      logger.warn(msgOrObj)
+    }
   } else {
-    logger.warn(msg, args[0] || '')
+    logger.warn(msgOrObj, objOrMsg as string || '')
   }
 }
 
-export const info = (msg: string | object, ...args: any[]) => {
-  if (typeof msg === 'string') {
-    logger.info(msg)
+export const info = (msgOrObj: string | object, objOrMsg?: object | string) => {
+  if (typeof msgOrObj === 'string') {
+    if (objOrMsg && typeof objOrMsg === 'object') {
+      logger.info(objOrMsg, msgOrObj)
+    } else {
+      logger.info(msgOrObj)
+    }
   } else {
-    logger.info(msg, args[0] || '')
+    logger.info(msgOrObj, objOrMsg as string || '')
   }
 }
 
-export const debug = (msg: string | object, ...args: any[]) => {
-  if (typeof msg === 'string') {
-    logger.debug(msg)
+export const debug = (msgOrObj: string | object, objOrMsg?: object | string) => {
+  if (typeof msgOrObj === 'string') {
+    if (objOrMsg && typeof objOrMsg === 'object') {
+      logger.debug(objOrMsg, msgOrObj)
+    } else {
+      logger.debug(msgOrObj)
+    }
   } else {
-    logger.debug(msg, args[0] || '')
+    logger.debug(msgOrObj, objOrMsg as string || '')
   }
 }
 
-export const verbose = (msg: string | object, ...args: any[]) => {
-  if (typeof msg === 'string') {
-    logger.trace(msg)
+export const verbose = (msgOrObj: string | object, objOrMsg?: object | string) => {
+  if (typeof msgOrObj === 'string') {
+    if (objOrMsg && typeof objOrMsg === 'object') {
+      logger.trace(objOrMsg, msgOrObj)
+    } else {
+      logger.trace(msgOrObj)
+    }
   } else {
-    logger.trace(msg, args[0] || '')
+    logger.trace(msgOrObj, objOrMsg as string || '')
   }
 }
 
