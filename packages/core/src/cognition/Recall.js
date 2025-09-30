@@ -74,36 +74,77 @@ class Recall {
 
   /**
    * 执行记忆检索
-   * 
-   * @param {string} word - 起始词
+   *
+   * @param {string|string[]} words - 起始词（单词或多词数组）
    * @returns {Mind|null} 激活的认知网络
    */
-  execute(word) {
-    logger.debug('[Recall] Starting recall', { word });
-    
-    // 找到起始Cue
-    const centerCue = this.network.cues.get(word);
-    if (!centerCue) {
-      logger.warn('[Recall] Cue not found', { word });
+  execute(words) {
+    // 1. 标准化输入：单词转数组
+    const wordList = Array.isArray(words) ? words : [words];
+    logger.debug('[Recall] Starting recall', { words: wordList });
+
+    // 2. 验证所有词是否存在
+    const validCues = [];
+    for (const word of wordList) {
+      const cue = this.network.cues.get(word);
+      if (cue) {
+        validCues.push({ word, cue });
+      } else {
+        logger.warn('[Recall] Cue not found', { word });
+      }
+    }
+
+    if (validCues.length === 0) {
+      logger.warn('[Recall] No valid cues found', { words: wordList });
       return null;
     }
-    
-    logger.debug('[Recall] Found center Cue', {
-      word: centerCue.word,
-      outDegree: centerCue.connections.size,
-      frequency: centerCue.recallFrequency || 0
+
+    // 3. 创建虚拟mind节点（不加入network）
+    const Cue = require('./Cue');
+    const virtualMind = new Cue('mind');
+
+    // 4. 构建多中心能量池
+    const initialEnergy = 1.0 / validCues.length;
+    const energyPool = new Map();
+    const activatedNodes = new Set();
+
+    for (const { word, cue } of validCues) {
+      // 虚拟mind节点连接到输入词
+      virtualMind.connections.set(word, initialEnergy);
+      // 初始能量分配
+      energyPool.set(word, initialEnergy);
+      activatedNodes.add(word);
+
+      logger.debug('[Recall] Added center cue', {
+        word,
+        energy: initialEnergy,
+        outDegree: cue.connections.size,
+        frequency: cue.recallFrequency || 0
+      });
+    }
+
+    logger.info('[Recall] Multi-center recall initialized', {
+      centerCount: validCues.length,
+      energyPerCenter: initialEnergy,
+      totalEnergy: 1.0
     });
-    
+
+    // 5. 创建Mind对象，以virtualMind为center
     const Mind = require('./Mind');
-    const mind = new Mind(centerCue);
-    
-    // 创建激活上下文
+    const mind = new Mind(virtualMind);
+
+    // 6. 标记所有输入词为depth=1
+    for (const word of activatedNodes) {
+      mind.addActivatedCue(word, 1);
+    }
+
+    // 7. 创建激活上下文
     const ActivationContext = require('./ActivationContext');
     const context = new ActivationContext({
       network: this.network,
-      sourceCue: centerCue,
-      energyPool: new Map([[centerCue.word, 1.0]]),  // 初始能量
-      activatedNodes: new Set([centerCue.word]),
+      sourceCue: validCues[0].cue,  // 兼容性：保留第一个作为初始sourceCue
+      energyPool,
+      activatedNodes,
       connections: []
     });
     
@@ -191,7 +232,7 @@ class Recall {
     this.network.updateRecallFrequency(context.activatedNodes);
     
     logger.info('[Recall] Recall completed', {
-      center: word,
+      centers: wordList,
       strategy: this.activationStrategy.name,
       cycles: context.cycle,
       activatedNodes: context.activatedNodes.size,

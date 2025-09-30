@@ -38,6 +38,18 @@ export const recallTool: ToolWithHandler = {
 • 让激活自然扩散到相关记忆
 • 多个入口点可并行激活
 
+🔥 **NEW: 多词recall与DMN模式**
+
+**多词recall**：同时从多个关键词激活
+- 用法：query用空格分隔多个词 "词1 词2 词3"
+- 效果：创建虚拟"mind"根节点，所有输入词作为第一层子节点
+- 能量：均分初始能量(1.0 / 词数)
+
+**DMN模式**（Default Mode Network）：无线索的全局激活
+- 用法：query传入null或不传
+- 效果：自动选择5个枢纽节点(连接度最高的节点)
+- 场景：首次探索、死胡同重置、定期回顾
+
 核心原则：
 ✅ 必须使用记忆网络图中实际存在的词
 ✅ 先用 action 查看网络图，再决定用什么词
@@ -52,11 +64,9 @@ export const recallTool: ToolWithHandler = {
 • 强制用户理解"记忆是网络，不是全文搜索"
 
 实际工作流程示例：
-1. 用户问："帮我recall关于数据库的记忆"
-2. AI先 action(role) 查看网络图
-3. 网络图显示：["PromptX", "测试", "ACT-R", "激活扩散"]
-4. 发现没有"数据库"这个词
-5. 告知用户："记忆网络中没有'数据库'关键词，当前网络包含：PromptX, 测试, ACT-R, 激活扩散。请从这些词中选择。"
+1. 单词recall：query="PromptX"
+2. 多词recall：query="PromptX 测试 修复"
+3. DMN模式：query=null (自动选择枢纽节点)
 
 记住：记忆网络是认知地图，只能从地图上**已有的点**开始探索！`,
   inputSchema: {
@@ -67,8 +77,11 @@ export const recallTool: ToolWithHandler = {
         description: '要检索记忆的角色ID，如：java-developer, product-manager, copywriter'
       },
       query: {
-        type: 'string',
-        description: '必须使用记忆网络图中实际存在的词（通过action工具查看）。严格匹配：精确匹配>子串匹配。禁止推测、抽象或转换不存在的词。找不到匹配时明确告知用户失败。'
+        oneOf: [
+          { type: 'string' },
+          { type: 'null' }
+        ],
+        description: '检索关键词：单词或空格分隔的多词(string)、或null(DMN模式,自动选择枢纽节点)。多词示例："PromptX 测试 修复"。必须使用记忆网络图中实际存在的词。'
       },
       mode: {
         type: 'string',
@@ -76,9 +89,9 @@ export const recallTool: ToolWithHandler = {
         description: '认知激活模式：creative(创造性探索，广泛联想)、balanced(平衡模式，默认)、focused(聚焦检索，精确查找)'
       }
     },
-    required: ['role', 'query']
+    required: ['role']
   },
-  handler: async (args: { role: string; query?: string; mode?: string }) => {
+  handler: async (args: { role: string; query?: string | null; mode?: string }) => {
     const core = await import('@promptx/core');
     const coreExports = core.default || core;
     const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
@@ -87,10 +100,10 @@ export const recallTool: ToolWithHandler = {
       throw new Error('CLI not available in @promptx/core');
     }
 
-    // 构建 CLI 参数，传递 mode 作为对象
+    // 构建 CLI 参数，支持 string | string[] | null
     const cliArgs: any[] = [{
       role: args.role,
-      query: args.query,
+      query: args.query ?? null,  // undefined转为null
       mode: args.mode
     }];
 

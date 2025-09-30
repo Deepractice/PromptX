@@ -46,13 +46,8 @@ class RecallCommand extends BasePouchCommand {
 
     try {
       let mind = null
-      if (query) {
-        // 有查询词时，执行 recall，传入 mode 参数
-        mind = await this.cognitionManager.recall(role, query, { mode })
-      } else {
-        // 无查询词时，执行 prime 获取全局概览
-        mind = await this.cognitionManager.prime(role)
-      }
+      // 始终执行 recall，query为null时触发DMN模式
+      mind = await this.cognitionManager.recall(role, query, { mode })
       
       if (!mind) {
         logger.warn(`[RecallCommand] No mind returned for role: ${role}, query: ${query}`)

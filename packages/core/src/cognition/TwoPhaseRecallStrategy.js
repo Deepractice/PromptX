@@ -116,35 +116,60 @@ class TwoPhaseRecallStrategy {
    * 负责激活扩散和初步候选集生成
    */
   async performCoarseRecall(query) {
-    logger.debug('[Phase1] Starting coarse recall', { query });
+    logger.debug('[Phase1] Starting coarse recall', { query, queryType: typeof query });
 
-    // 1. 分词和查找中心Cue
-    const words = this.tokenize(query);
-    logger.debug('[Phase1] Tokenized words', { words, networkSize: this.network?.size() });
+    // 1. 处理不同类型的query输入
+    let centerWords;
 
-    const centerCue = await this.findBestCue(words);
+    if (query === null || query === undefined || query === 'null') {
+      // DMN模式：自动选择枢纽节点(包括字符串"null"的兼容处理)
+      centerWords = await this.selectHubNodes();
+      logger.info('[Phase1] DMN mode: selected hub nodes', {
+        hubs: centerWords,
+        count: centerWords.length
+      });
+    } else if (Array.isArray(query)) {
+      // 多词模式：直接使用
+      centerWords = query;
+      logger.info('[Phase1] Multi-word mode', {
+        words: centerWords,
+        count: centerWords.length
+      });
+    } else {
+      // 单词模式：分词后选择最佳
+      const words = this.tokenize(query);
+      logger.debug('[Phase1] Tokenized words', { words, networkSize: this.network?.size() });
 
-    if (!centerCue) {
-      logger.warn('[Phase1] No center cue found', { query, words, networkSize: this.network?.size() });
+      const centerCue = await this.findBestCue(words);
+
+      if (!centerCue) {
+        logger.warn('[Phase1] No center cue found', { query, words, networkSize: this.network?.size() });
+        return new Mind(null);
+      }
+
+      centerWords = [centerCue.word];
+      logger.info('[Phase1] Single-word mode: found center cue', {
+        word: centerCue.word,
+        connections: centerCue.connections.size
+      });
+    }
+
+    // 验证至少有一个有效词
+    if (!centerWords || centerWords.length === 0) {
+      logger.warn('[Phase1] No valid center words', { query });
       return new Mind(null);
     }
 
-    logger.info('[Phase1] Found center cue', {
-      word: centerCue.word,
-      connections: centerCue.connections.size
-    });
-
-    // 2. 使用原有的Recall类进行激活扩散（临时方案）
+    // 2. 使用Recall进行激活扩散（现在支持多词）
     const Recall = require('./Recall');
     const recall = new Recall(this.network, {
       activationStrategy: this.coarseRecall.activationStrategy
     });
 
-    // 修复：使用 centerCue.word 而不是完整 query
-    const mind = recall.execute(centerCue.word);
+    const mind = recall.execute(centerWords);
 
     if (!mind) {
-      logger.warn('[Phase1] Recall failed', { query });
+      logger.warn('[Phase1] Recall failed', { query, centerWords });
       return new Mind(null);
     }
 
@@ -326,6 +351,50 @@ class TwoPhaseRecallStrategy {
     }
 
     return bestCue;
+  }
+
+  /**
+   * 辅助方法：选择枢纽节点（DMN模式）
+   *
+   * @param {number} count - 返回的枢纽节点数量
+   * @returns {string[]} 枢纽节点的word数组
+   */
+  async selectHubNodes(count = 5) {
+    if (!this.network) {
+      logger.error('[TwoPhaseRecallStrategy] Network not set for hub selection');
+      return [];
+    }
+
+    // 获取所有Cue并按连接度排序
+    const allCues = Array.from(this.network.cues.values())
+      .map(cue => ({
+        word: cue.word,
+        degree: cue.connections.size,
+        frequency: cue.recallFrequency || 0
+      }))
+      .filter(cue => cue.degree > 0);  // 过滤孤立节点
+
+    if (allCues.length === 0) {
+      logger.warn('[TwoPhaseRecallStrategy] No connected nodes in network');
+      return [];
+    }
+
+    // 按连接度降序排序，取Top-N
+    const hubs = allCues
+      .sort((a, b) => b.degree - a.degree)
+      .slice(0, count)
+      .map(cue => cue.word);
+
+    logger.debug('[TwoPhaseRecallStrategy] Selected hub nodes', {
+      totalNodes: allCues.length,
+      selectedCount: hubs.length,
+      hubs: hubs.map((word, i) => ({
+        word,
+        degree: allCues.find(c => c.word === word)?.degree
+      }))
+    });
+
+    return hubs;
   }
 
   /**
