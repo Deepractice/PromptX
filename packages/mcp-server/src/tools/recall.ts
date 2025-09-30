@@ -39,6 +39,10 @@ export const recallTool: ToolWithHandler = {
 - 对话中recall过的节点也都可以直接使用
 - 如果不确定网络中有什么，可以先用DMN模式（不传query）查看全貌
 
+🔄 **认知循环**：recall是循环的起点
+• 找到记忆 → 用记忆回答 → remember强化
+• 没找到 → 用预训练知识回答 → remember保存新知
+
 记住：记忆网络是认知地图，从节点开始探索！`,
   inputSchema: {
     type: 'object',

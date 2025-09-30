@@ -43,6 +43,10 @@ export const rememberTool: ToolWithHandler = {
 ✅ 下次recall直接有答案
 ❌ 不remember = 永远从零开始
 
+🔄 **认知循环**：remember是循环的终点
+• 每次recall后都应该remember
+• recall空的领域必须remember填补
+
 记住：每个remember都是对未来自己的投资！
 
 ---

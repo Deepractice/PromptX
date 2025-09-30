@@ -1,5 +1,6 @@
 const BaseArea = require('./BaseArea')
 const logger = require('@promptx/logger')
+const CognitivePrompts = require('../../cognition/CognitivePrompts')
 
 /**
  * CognitionArea - 统一的认知区域
@@ -161,13 +162,7 @@ class CognitionArea extends BaseArea {
 
 📊 记忆网络规模：${nodeCount} 个关键词
 
-🧠 **认知习惯提醒**：
-• 看到任务 → 先recall搜索经验
-• 网络有词就选词，没词就用任务关键词探索
-• 最多探索3次，确认无记忆就用预训练知识
-• 回答完成 → remember保存要点
-
-下一步：接收任务时先recall相关经验
+${CognitivePrompts.getPrimeGuideHint()}
 `
   }
 
@@ -235,7 +230,12 @@ ${nodeCount > 0 ? '\n📗 **认知状态**：经验模式 - 基于历史记忆�
         }
       }
     }
-    
+
+    // 添加认知循环提示
+    if (nodeCount > 0) {
+      content += '\n' + CognitivePrompts.getRecallFoundHint() + '\n'
+    }
+
     return content
   }
 
@@ -250,10 +250,7 @@ ${nodeCount > 0 ? '\n📗 **认知状态**：经验模式 - 基于历史记忆�
 - 已保存 ${engramCount} 条新记忆
 - 记忆网络已更新
 
-🎯 **认知循环完成**：
-recall(搜索) → 回答 → remember(保存) ✓
-
-继续保持这个习惯，让记忆网络越来越丰富！
+${CognitivePrompts.getRememberSuccessHint()}
 `
   }
 
@@ -353,9 +350,7 @@ recall(搜索) → 回答 → remember(保存) ✓
 2. 查询词拼写或格式不正确
 3. 该角色的认知系统中没有相关记忆
 
-🎯 **建议操作**：
-1. 尝试使用相关的其他概念进行检索
-2. 如果是新知识，使用 remember 工具进行记录
+${CognitivePrompts.getRecallEmptyHint(this.roleId)}
 `
       }
 
