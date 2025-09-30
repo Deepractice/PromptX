@@ -120,12 +120,19 @@ class TwoPhaseRecallStrategy {
 
     // 1. 分词和查找中心Cue
     const words = this.tokenize(query);
+    logger.debug('[Phase1] Tokenized words', { words, networkSize: this.network?.size() });
+
     const centerCue = await this.findBestCue(words);
 
     if (!centerCue) {
-      logger.warn('[Phase1] No center cue found', { query });
+      logger.warn('[Phase1] No center cue found', { query, words, networkSize: this.network?.size() });
       return new Mind(null);
     }
+
+    logger.info('[Phase1] Found center cue', {
+      word: centerCue.word,
+      connections: centerCue.connections.size
+    });
 
     // 2. 使用原有的Recall类进行激活扩散（临时方案）
     const Recall = require('./Recall');
@@ -133,7 +140,8 @@ class TwoPhaseRecallStrategy {
       activationStrategy: this.coarseRecall.activationStrategy
     });
 
-    const mind = recall.execute(query);
+    // 修复：使用 centerCue.word 而不是完整 query
+    const mind = recall.execute(centerCue.word);
 
     if (!mind) {
       logger.warn('[Phase1] Recall failed', { query });
