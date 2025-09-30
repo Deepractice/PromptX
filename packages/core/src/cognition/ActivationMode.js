@@ -159,7 +159,7 @@ class ActivationMode {
       return this.MODES.balanced;
     }
 
-    logger.debug('[ActivationMode] Using mode', { mode, config: config.name });
+    logger.info('[ActivationMode] Using mode', { mode, modeName: config.name });
     return config;
   }
 
@@ -176,8 +176,10 @@ class ActivationMode {
 
     logger.info('[ActivationMode] Creating activation strategy', {
       mode,
-      name: config.name,
-      params: config.params
+      modeName: config.name,
+      firingThreshold: config.params.firingThreshold,
+      maxActivations: config.params.maxActivations,
+      totalLimit: config.params.totalLimit
     });
 
     return new HippocampalActivationStrategy(config.params);
