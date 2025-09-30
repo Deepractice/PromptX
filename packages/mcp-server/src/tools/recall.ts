@@ -55,22 +55,31 @@ export const recallTool: ToolWithHandler = {
       query: {
         type: 'string',
         description: '必须从记忆网络图中选择最相关的词。选词优先级：精确匹配>部分匹配>语义相近>上位概念。只有网络为空时才用查询词本身'
+      },
+      mode: {
+        type: 'string',
+        enum: ['creative', 'balanced', 'focused'],
+        description: '认知激活模式：creative(创造性探索，广泛联想)、balanced(平衡模式，默认)、focused(聚焦检索，精确查找)'
       }
     },
     required: ['role', 'query']
   },
-  handler: async (args: { role: string; query?: string }) => {
+  handler: async (args: { role: string; query?: string; mode?: string }) => {
     const core = await import('@promptx/core');
     const coreExports = core.default || core;
     const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
-    
+
     if (!cli || !cli.execute) {
       throw new Error('CLI not available in @promptx/core');
     }
-    
-    const cliArgs = [args.role];
-    if (args.query) cliArgs.push(args.query);
-    
+
+    // 构建 CLI 参数，传递 mode 作为对象
+    const cliArgs: any[] = [{
+      role: args.role,
+      query: args.query,
+      mode: args.mode
+    }];
+
     const result = await cli.execute('recall', cliArgs);
     return outputAdapter.convertToMCPFormat(result);
   }

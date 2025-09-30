@@ -25,8 +25,8 @@ class RecallCommand extends BasePouchCommand {
    * 组装Layers - 使用两层架构
    */
   async assembleLayers(args) {
-    // 解析参数：--role, query
-    const { role, query } = this.parseArgs(args)
+    // 解析参数：--role, query, mode
+    const { role, query, mode } = this.parseArgs(args)
 
     if (!role) {
       // 错误情况：只创建角色层显示错误
@@ -42,13 +42,13 @@ class RecallCommand extends BasePouchCommand {
     }
 
     logger.info('🧠 [RecallCommand] 开始记忆检索流程 (基于认知体系)')
-    logger.info(` [RecallCommand] 角色: ${role}, 查询内容: ${query ? `"${query}"` : '全部记忆'}`)
+    logger.info(` [RecallCommand] 角色: ${role}, 查询内容: ${query ? `"${query}"` : '全部记忆'}, 模式: ${mode || 'balanced'}`)
 
     try {
       let mind = null
       if (query) {
-        // 有查询词时，执行 recall
-        mind = await this.cognitionManager.recall(role, query)
+        // 有查询词时，执行 recall，传入 mode 参数
+        mind = await this.cognitionManager.recall(role, query, { mode })
       } else {
         // 无查询词时，执行 prime 获取全局概览
         mind = await this.cognitionManager.prime(role)
@@ -129,11 +129,24 @@ class RecallCommand extends BasePouchCommand {
       return args[0]
     }
 
-    // 命令行格式：recall role [query]
+    // 命令行格式：recall role [query] [--mode=creative|balanced|focused]
     const role = args[0]
-    const query = args.slice(1).join(' ')
+    let mode = null
+    const queryParts = []
 
-    return { role, query }
+    // 解析参数
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i]
+      if (arg.startsWith('--mode=')) {
+        mode = arg.split('=')[1]
+      } else {
+        queryParts.push(arg)
+      }
+    }
+
+    const query = queryParts.join(' ')
+
+    return { role, query, mode }
   }
 }
 

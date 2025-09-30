@@ -16,10 +16,23 @@
 const Mind = require('./Mind');
 const ActivationContext = require('./ActivationContext');
 const HippocampalActivationStrategy = require('./ActivationStrategy').HippocampalActivationStrategy;
+const ActivationMode = require('./ActivationMode');
 const logger = require('@promptx/logger');
 
 class TwoPhaseRecallStrategy {
   constructor(options = {}) {
+    // 如果指定了 mode，使用 ActivationMode 配置
+    if (options.mode) {
+      const modeConfig = ActivationMode.createRecallConfig(options.mode);
+      // modeConfig 提供默认值，options 可以覆盖
+      options = { ...modeConfig, ...options };
+
+      logger.info('[TwoPhaseRecallStrategy] Using ActivationMode', {
+        mode: options.mode,
+        modeConfig
+      });
+    }
+
     // 第一阶段配置
     this.coarseRecall = {
       // 激活策略（可替换）
@@ -62,6 +75,7 @@ class TwoPhaseRecallStrategy {
     this.memory = null;
 
     logger.info('[TwoPhaseRecallStrategy] Initialized', {
+      mode: options.mode,
       coarseRecall: this.coarseRecall,
       fineRanking: this.fineRanking
     });

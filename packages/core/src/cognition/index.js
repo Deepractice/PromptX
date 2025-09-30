@@ -23,6 +23,7 @@ const ActivationContext = require('./ActivationContext');
 const CognitionSystem = require('./CognitionSystem');
 const { WeightStrategy, SimpleWeightStrategy, TimeBasedWeightStrategy } = require('./WeightStrategy');
 const { ActivationStrategy, HippocampalActivationStrategy } = require('./ActivationStrategy');
+const ActivationMode = require('./ActivationMode');
 
 module.exports = {
   // 核心数据结构
@@ -31,21 +32,22 @@ module.exports = {
   Mind,
   WeightContext,
   ActivationContext,
-  
+
   // 操作类
   Remember,
   Recall,
   Prime,
-  
+
   // 权重策略
   WeightStrategy,
   SimpleWeightStrategy,
   TimeBasedWeightStrategy,
-  
+
   // 激活策略
   ActivationStrategy,
   HippocampalActivationStrategy,
-  
+  ActivationMode,
+
   // 系统
   CognitionSystem
 };

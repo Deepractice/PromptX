@@ -230,20 +230,32 @@ class CognitionSystem {
   
   /**
    * 回忆操作
-   * 
+   *
    * 执行流程：
    * 1. 调用Recall引擎激活网络
    * 2. 加载与原始查询相关的Engrams
    * 3. 更新被激活节点的频率
    * 4. 返回激活的Mind（包含engrams）
-   * 
+   *
    * @param {string} word - 起始概念
+   * @param {Object} options - 可选参数
+   * @param {string} options.mode - 认知激活模式 ('creative' | 'balanced' | 'focused')
    * @returns {Promise<Mind|null>} 激活的认知网络
    */
-  async recall(word) {
-    logger.debug('[CognitionSystem] Recall operation', { word });
+  async recall(word, options = {}) {
+    const mode = options.mode || 'balanced';
+    logger.debug('[CognitionSystem] Recall operation', { word, mode });
 
-    const recallEngine = this.getRecallEngine();
+    // 如果指定了 mode，创建新的引擎实例
+    let recallEngine;
+    if (mode && mode !== 'balanced') {
+      const TwoPhaseRecallStrategy = require('./TwoPhaseRecallStrategy');
+      recallEngine = new TwoPhaseRecallStrategy({ mode });
+      recallEngine.setDependencies(this.network, this.getMemory());
+      logger.info('[CognitionSystem] Created recall engine with mode', { mode });
+    } else {
+      recallEngine = this.getRecallEngine();
+    }
 
     // 使用新的两阶段召回策略
     // TwoPhaseRecallStrategy已经在内部处理了engrams的加载和排序

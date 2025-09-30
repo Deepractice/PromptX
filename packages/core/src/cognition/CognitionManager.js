@@ -198,21 +198,24 @@ class CognitionManager {
    * 每次recall后自动锚定状态
    * @param {string} roleId - 角色ID
    * @param {string} query - 查询词
+   * @param {Object} options - 可选参数
+   * @param {string} options.mode - 认知激活模式 ('creative' | 'balanced' | 'focused')
    * @returns {Promise<Mind>} Mind 对象（包含engrams）
    */
-  async recall(roleId, query) {
-    logger.info(`[CognitionManager] Recall for role: ${roleId}, query: "${query}"`);
-    
+  async recall(roleId, query, options = {}) {
+    const mode = options.mode || 'balanced';
+    logger.info(`[CognitionManager] Recall for role: ${roleId}, query: "${query}", mode: ${mode}`);
+
     const system = await this.getSystem(roleId);
-    
-    // 执行recall（现在是异步的，会加载engrams）
-    const mind = await system.recall(query);
-    
+
+    // 执行recall（现在是异步的，会加载engrams），传入 mode 参数
+    const mind = await system.recall(query, { mode });
+
     if (!mind) {
       logger.warn(`[CognitionManager] Recall returned null for role: ${roleId}, query: ${query}`);
       return null;
     }
-    
+
     // 自动锚定当前认知状态
     try {
       const anchor = new Anchor(system.network);
@@ -222,7 +225,7 @@ class CognitionManager {
       logger.error(`[CognitionManager] Failed to auto-anchor state:`, error);
       // 锚定失败不影响recall结果
     }
-    
+
     return mind;
   }
 
