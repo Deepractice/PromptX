@@ -235,28 +235,32 @@ class ActionCommand extends BasePouchCommand {
 
   /**
    * 加载记忆数据 - 从认知系统获取 Mind 对象
+   * 使用DMN模式(recall without query)获取记忆网络概览
    */
   async loadMemories(roleId) {
     try {
       logger.info(`[ActionCommand] loadMemories called for role: ${roleId}`)
       logger.debug(`[ActionCommand] Starting to load cognitive data for role ${roleId}`)
-      
-      // 使用 CognitionManager 获取 Mind 对象
-      logger.info(`[ActionCommand] About to call cognitionManager.prime`)
-      const mind = await this.cognitionManager.prime(roleId)
-      logger.info(`[ActionCommand] cognitionManager.prime returned:`, mind)
-      
+
+      // 使用 recall(null) 触发DMN模式获取记忆网络
+      logger.info(`[ActionCommand] Calling recall with DMN mode (null query)`)
+      const mind = await this.cognitionManager.recall(roleId, null)
+      logger.info(`[ActionCommand] DMN recall returned:`, {
+        hasMind: !!mind,
+        nodeCount: mind?.activatedCues?.size || 0
+      })
+
       if (!mind) {
         logger.warn(`[ActionCommand] Cognitive data not found for role ${roleId}`)
         return null
       }
-      
+
       logger.debug(`[ActionCommand] Loaded Mind object:`, {
         hasMind: !!mind,
         nodeCount: mind.activatedCues?.size || 0,
         connectionCount: mind.connections?.length || 0
       })
-      
+
       return mind
     } catch (error) {
       logger.warn(`[ActionCommand] Failed to load cognitive data for role ${roleId}:`, error)
