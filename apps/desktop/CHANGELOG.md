@@ -1,5 +1,19 @@
 # @promptx/desktop
 
+## 1.23.1
+
+### Patch Changes
+
+- [#418](https://github.com/Deepractice/PromptX/pull/418) [`68e88be`](https://github.com/Deepractice/PromptX/commit/68e88be92244543dff288af9d866e25f7b843e99) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 使用 Cloudflare R2 优化国内用户自动更新体验
+
+  - 配置多 provider 自动更新策略：GitHub 优先，R2 兜底
+  - 发布时自动同步安装包到 Cloudflare R2
+  - 国内用户可通过 CDN 加速下载更新
+
+- Updated dependencies []:
+  - @promptx/core@1.23.1
+  - @promptx/mcp-server@1.23.1
+
 ## 1.23.0
 
 ### Patch Changes
