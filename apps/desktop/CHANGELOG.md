@@ -1,5 +1,19 @@
 # @promptx/desktop
 
+## 1.23.2
+
+### Patch Changes
+
+- [`84854cf`](https://github.com/Deepractice/PromptX/commit/84854cf98dcbdbbdef47ac956e039ec3257393ca) Thanks [@deepracticexs](https://github.com/deepracticexs)! - 测试 R2 CDN 和 PromptX Worker 自动更新
+
+  - 使用 PromptX Worker 实现 latest 自动重定向
+  - R2 上传改为独立 Phase
+  - 优化国内用户下载体验
+
+- Updated dependencies []:
+  - @promptx/core@1.23.2
+  - @promptx/mcp-server@1.23.2
+
 ## 1.23.1
 
 ### Patch Changes
