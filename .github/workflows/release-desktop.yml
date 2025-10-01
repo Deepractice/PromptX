@@ -410,8 +410,42 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload to Cloudflare R2
+        run: |
+          # 安装 wrangler
+          npm install -g wrangler
+
+          # 提取版本号（去掉 v 前缀）
+          VERSION=${GITHUB_REF_NAME#v}
+
+          # 上传所有发布文件到 R2
+          for file in release-files/*; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              echo "Uploading $filename to R2..."
+
+              # 上传到版本目录（归档）
+              npx wrangler r2 object put "promptx-releases/$VERSION/$filename" \
+                --file "$file" \
+                --content-type "application/octet-stream"
+
+              # 同时上传到 latest 目录（自动更新）
+              npx wrangler r2 object put "promptx-releases/latest/$filename" \
+                --file "$file" \
+                --content-type "application/octet-stream"
+            fi
+          done
+
+          echo "✅ All files uploaded to R2:"
+          echo "  - Version: promptx-releases/$VERSION/"
+          echo "  - Latest: promptx-releases/latest/"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Summary
         run: |
+          VERSION=${GITHUB_REF_NAME#v}
           echo "## 🎉 Desktop Apps Released Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Release: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
@@ -420,8 +454,12 @@ jobs:
           echo "- macOS: Built and Notarized" >> $GITHUB_STEP_SUMMARY
           echo "- Windows: Built and Signed" >> $GITHUB_STEP_SUMMARY
           echo "- Linux: Built (deb, AppImage, rpm)" >> $GITHUB_STEP_SUMMARY
+          echo "- R2: Synced to Cloudflare R2" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Release Contents:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           ls -lh release-files/ >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 CDN URLs:" >> $GITHUB_STEP_SUMMARY
+          echo "- Base URL: https://r2.deepractice.ai/promptx-releases/$VERSION/" >> $GITHUB_STEP_SUMMARY

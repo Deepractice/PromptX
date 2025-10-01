@@ -85,8 +85,11 @@ npmRebuild: true
 generateUpdatesFilesForAllChannels: true
 
 # 发布配置
+# 优先级顺序：GitHub (国外/有梯子) → R2 (国内兜底)
 publish:
   - provider: github
     owner: Deepractice
     repo: PromptX
     releaseType: release
+  - provider: generic
+    url: https://r2.deepractice.ai/promptx-releases/latest
