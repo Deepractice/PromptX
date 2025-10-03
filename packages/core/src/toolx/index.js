@@ -72,19 +72,66 @@ function initialize(options = {}) {
  * @returns {Promise<Object>} 执行结果
  */
 async function executeTool(toolResource, parameters = {}, resourceManager = null) {
-  if (!resourceManager) {
-    throw new Error('ResourceManager is required for ToolSandbox execution');
-  }
-  
-  const sandbox = await getGlobalToolSandbox(toolResource);
-  sandbox.setResourceManager(resourceManager);
-  
+  let sandbox = null;
+
   try {
+    if (!resourceManager) {
+      throw new Error('ResourceManager is required for ToolSandbox execution');
+    }
+
+    sandbox = await getGlobalToolSandbox(toolResource);
+    sandbox.setResourceManager(resourceManager);
+
     await sandbox.analyze();
     await sandbox.prepareDependencies();
     return await sandbox.execute(parameters);
+
+  } catch (error) {
+    // 顶层异常处理：确保所有错误都被正确包装，防止崩溃主进程
+    const logger = require('@promptx/logger');
+
+    // 记录详细错误信息用于调试
+    logger.error('[ToolX] Top-level error caught:', {
+      toolResource,
+      errorName: error.name,
+      errorMessage: error.message,
+      errorCode: error.code,
+      errorStack: error.stack
+    });
+
+    // 导入 ToolError
+    const { ToolError } = require('./errors');
+
+    // 如果已经是 ToolError，直接返回错误格式（不抛出）
+    if (error instanceof ToolError) {
+      return {
+        success: false,
+        error: error.toMCPFormat()
+      };
+    }
+
+    // 包装未知错误为 ToolError
+    const wrappedError = ToolError.from(error, {
+      phase: 'executeTool',
+      toolResource,
+      parameters
+    });
+
+    return {
+      success: false,
+      error: wrappedError.toMCPFormat()
+    };
+
   } finally {
-    await sandbox.cleanup();
+    // 确保清理工作始终执行
+    if (sandbox) {
+      try {
+        await sandbox.cleanup();
+      } catch (cleanupError) {
+        const logger = require('@promptx/logger');
+        logger.warn('[ToolX] Cleanup failed:', cleanupError.message);
+      }
+    }
   }
 }
 
