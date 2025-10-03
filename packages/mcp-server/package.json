@@ -1,6 +1,6 @@
 {
   "name": "@promptx/mcp-server",
-  "version": "1.23.2",
+  "version": "1.23.3",
   "description": "MCP Server implementation for PromptX",
   "type": "module",
   "main": "./dist/index.js",
