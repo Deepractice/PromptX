@@ -58,11 +58,31 @@
     - **调用思维**：运用dpml-cognition组织标签
     - **调用思维**：运用occams-razor精简内容
     - **查询知识**：遵循role-constraints质量标准
+    - **查询知识**：严格遵循DPML子标签规范
+
+    #### 文件生成规则
+    **Thought文件**：
+    - 必须使用子标签（exploration/reasoning/challenge/plan）
+    - 根据内容认知类型选择合适的子标签
+    - 不需要的子标签不用，可以只用1-2个
+    - 子标签内可以用markdown组织内容
+    - 不能在<thought>标签下直接写内容
+
+    **Execution文件**：
+    - 必须使用子标签（process/constraint/rule/guideline/criteria）
+    - process通常必需，其他按实际需要选择
+    - 子标签内可以用markdown组织内容
+    - 不能在<execution>标签下直接写内容
+
+    **Knowledge文件**：
+    - 不需要子标签
+    - 直接在<knowledge>标签下用markdown组织内容
+
+    #### 工具调用
     - **必须先查看工具手册**：第一次使用时通过promptx_toolx调用@tool://role-creator，mode: manual
     - **使用role-creator工具创建角色文件**
     - 通过promptx_toolx（规范名称）调用@tool://role-creator，mode: execute
     - 创建角色主文件和所需的思维、执行、知识文件
-    - 按照DPML规范组织文件结构
     - 具体参数和操作方式参考工具手册
 
     ### Step 6: Validate（验证交付）- 20秒

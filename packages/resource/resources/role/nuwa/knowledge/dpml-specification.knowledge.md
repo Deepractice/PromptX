@@ -24,18 +24,59 @@
 
 ### 语义子标签规范
 
-#### Thought子标签
-- `<exploration>` - 开放性探索
-- `<reasoning>` - 逻辑推理
-- `<challenge>` - 批判性思考
-- `<plan>` - 方案规划
+**核心原则**：子标签是语义分类器，不是模板填充
 
-#### Execution子标签
-- `<process>` - 主干流程（必需）
-- `<constraint>` - 硬性约束
-- `<rule>` - IF-THEN规则
-- `<guideline>` - 最佳实践
-- `<criteria>` - 验收标准
+#### Thought子标签（必须使用，按需选择）
+- `<exploration>` - 开放性探索（需要发散思维时用）
+- `<reasoning>` - 逻辑推理（需要逻辑推导时用）
+- `<challenge>` - 批判性思考（需要质疑挑战时用）
+- `<plan>` - 方案规划（需要规划步骤时用）
+
+**使用规则**：
+- 每个thought文件必须至少有1个子标签
+- 根据内容的认知类型选择合适的子标签
+- 不需要的子标签不要用
+- 子标签内可以用markdown组织内容
+
+**正确示例**：
+```xml
+<thought>
+<exploration>
+## 核心探索
+内容...
+</exploration>
+
+<reasoning>
+## 推理逻辑
+内容...
+</reasoning>
+</thought>
+```
+
+**错误示例**：
+```xml
+<thought>
+## 标题（❌ 不能直接在thought下写内容）
+### 小标题
+- 内容
+</thought>
+```
+
+#### Execution子标签（必须使用，按需选择）
+- `<process>` - 主干流程（基本必需）
+- `<constraint>` - 硬性约束（有约束才用）
+- `<rule>` - IF-THEN规则（有条件判断才用）
+- `<guideline>` - 最佳实践（有指导原则才用）
+- `<criteria>` - 验收标准（有评价标准才用）
+
+**使用规则**：
+- 每个execution文件必须至少有1个子标签
+- process通常是必需的，其他按实际需要选择
+- 子标签内可以用markdown组织内容
+
+#### Knowledge不需要子标签
+- Knowledge是散乱的私有信息，无需分类
+- 直接在`<knowledge>`标签下用markdown组织内容
 
 ### 引用机制规范
 - `@!protocol://resource` - 强制引用，只能在role文件使用
