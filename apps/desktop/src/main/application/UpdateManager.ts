@@ -131,26 +131,38 @@ export class UpdateManager {
     }
 
     // Perform check and download if available
-    try {
-      const result = await this.updater.checkForUpdates()
-      
-      if (result.updateAvailable) {
+    const result = await this.updater.checkForUpdates()
+
+    // Check if there was an error during the check
+    if (result.error) {
+      dialog.showMessageBox({
+        type: 'error',
+        title: 'Update Check Failed',
+        message: `Failed to check for updates: ${result.error.message || result.error}`
+      })
+      return
+    }
+
+    // Check if update is available
+    if (result.updateAvailable) {
+      try {
         // Auto-download when manually checking
         await this.downloadUpdate()
         // After download, show install dialog
         this.showInstallDialog()
-      } else {
+      } catch (error) {
         dialog.showMessageBox({
-          type: 'info',
-          title: 'Check for Updates',
-          message: 'You are already running the latest version'
+          type: 'error',
+          title: 'Download Failed',
+          message: `Failed to download update: ${error}`
         })
       }
-    } catch (error) {
+    } else {
+      // No update available - show info dialog
       dialog.showMessageBox({
-        type: 'error',
-        title: 'Update Check Failed',
-        message: `Failed to check for updates: ${error}`
+        type: 'info',
+        title: 'Check for Updates',
+        message: 'You are already running the latest version'
       })
     }
   }

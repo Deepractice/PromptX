@@ -85,11 +85,11 @@ npmRebuild: true
 generateUpdatesFilesForAllChannels: true
 
 # 发布配置
-# 优先级顺序：GitHub (国外/有梯子) → PromptX CDN (国内兜底)
+# 优先级顺序：PromptX CDN (优先) → GitHub (兜底)
 publish:
+  - provider: generic
+    url: https://promptx.deepractice.ai/download/latest
   - provider: github
     owner: Deepractice
     repo: PromptX
     releaseType: release
-  - provider: generic
-    url: https://promptx.deepractice.ai/download/latest
