@@ -244,19 +244,19 @@ class ProjectDiscovery {
         return false
       }
 
-      // 根据协议类型验证DPML标签
+      // 根据协议类型验证DPML标签（支持带属性的标签）
       switch (protocol) {
         case 'role':
-          return trimmedContent.includes('<role>') && trimmedContent.includes('</role>')
+          return /<role[\s>]/.test(trimmedContent) && trimmedContent.includes('</role>')
         case 'execution':
-          return trimmedContent.includes('<execution>') && trimmedContent.includes('</execution>')
+          return /<execution[\s>]/.test(trimmedContent) && trimmedContent.includes('</execution>')
         case 'thought':
-          return trimmedContent.includes('<thought>') && trimmedContent.includes('</thought>')
+          return /<thought[\s>]/.test(trimmedContent) && trimmedContent.includes('</thought>')
         case 'knowledge':
           // knowledge类型比较灵活，只要文件有内容就认为是有效的
           return true
         case 'manual':
-          return trimmedContent.includes('<manual>') && trimmedContent.includes('</manual>')
+          return /<manual[\s>]/.test(trimmedContent) && trimmedContent.includes('</manual>')
         case 'tool':
           // tool文件是JavaScript，进行基本的语法验证
           try {
