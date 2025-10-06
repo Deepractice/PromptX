@@ -1,5 +1,13 @@
 # @promptx/core
 
+## 1.23.4
+
+### Patch Changes
+
+- Updated dependencies [[`664a40c`](https://github.com/Deepractice/PromptX/commit/664a40ca72428ae3ce03a050c80a2c5ab9db505d)]:
+  - @promptx/resource@1.23.4
+  - @promptx/logger@1.23.4
+
 ## 1.23.3
 
 ### Patch Changes

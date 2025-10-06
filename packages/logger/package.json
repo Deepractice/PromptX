@@ -1,6 +1,6 @@
 {
   "name": "@promptx/logger",
-  "version": "1.23.3",
+  "version": "1.23.4",
   "description": "Unified logging system for PromptX",
   "type": "module",
   "main": "./dist/index.js",
