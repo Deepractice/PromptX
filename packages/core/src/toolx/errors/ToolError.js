@@ -23,7 +23,6 @@ class ToolError extends Error {
   
   // 工具函数
   static validateAgainstSchema = validateAgainstSchema;
-  static checkMissingEnvVars = checkMissingEnvVars;
 
   constructor(message, code = 'UNKNOWN_ERROR', details = {}) {
     super(message);
