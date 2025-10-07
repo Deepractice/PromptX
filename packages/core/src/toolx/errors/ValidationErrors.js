@@ -20,9 +20,9 @@ const VALIDATION_ERRORS = {
     getSolution: (error, context) => {
       const missing = context.validationResult?.missing || [];
       return {
-        message: `提供必需的参数`,
+        message: `提供必需的参数。如不清楚参数格式，请使用 mode: manual 查看工具的完整参数说明`,
         params: missing.length > 0 ? missing : 'Check schema for required parameters',
-        example: missing.length > 0 ? 
+        example: missing.length > 0 ?
           `{ ${missing.map(p => `"${p}": "value"`).join(', ')} }` : null,
         autoRecoverable: false
       };
@@ -44,8 +44,8 @@ const VALIDATION_ERRORS = {
     getSolution: (error, context) => {
       const typeErrors = context.validationResult?.typeErrors || [];
       return {
-        message: '修正参数类型',
-        detail: typeErrors.length > 0 ? 
+        message: '修正参数类型。如不清楚参数格式，请使用 mode: manual 查看工具的完整参数说明',
+        detail: typeErrors.length > 0 ?
           typeErrors.map(e => `${e.param}: 期望 ${e.expected}, 实际 ${e.actual}`).join('\n') :
           '检查参数类型是否符合 schema 定义',
         autoRecoverable: false
@@ -79,14 +79,14 @@ const VALIDATION_ERRORS = {
       if (enumErrors.length > 0) {
         const enumError = enumErrors[0];
         return {
-          message: `参数 ${enumError.param} 的值无效`,
+          message: `参数 ${enumError.param} 的值无效。如不清楚参数格式，请使用 mode: manual 查看工具的完整参数说明`,
           detail: `当前值: "${enumError.value}"\n允许的值: ${enumError.allowed.join(', ')}`,
           example: `将 ${enumError.param} 设置为: ${enumError.allowed[0]}`,
           autoRecoverable: false
         };
       }
       return {
-        message: '参数值超出允许范围',
+        message: '参数值超出允许范围。如不清楚参数格式，请使用 mode: manual 查看工具的完整参数说明',
         detail: '请检查参数值是否在允许的范围内',
         autoRecoverable: false
       };
