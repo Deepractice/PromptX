@@ -652,17 +652,24 @@ class ToolSandbox {
       const validation = ToolValidator.defaultValidate(this.toolInstance, params);
       if (!validation.valid) {
         this.logger.error(`[ToolSandbox] 参数验证失败:`, validation.errors);
-        
-        // 直接抛出简化的 ToolError
-        throw new ToolError(
-          validation.errors.join('; '),
-          VALIDATION_ERRORS.SCHEMA_VALIDATION_FAILED?.code || 'VALIDATION_ERROR',
-          { 
-            validation: validation.details,
-            params: params,
-            toolId: this.toolId 
-          }
-        );
+
+        // 创建验证错误，通过 analyze 生成完整的错误信息（包括 solution）
+        const error = new Error(validation.errors.join('; '));
+        const schema = this.toolInstance.getSchema();
+        const context = {
+          validationResult: {
+            valid: false,
+            errors: validation.errors,
+            missing: validation.missing,
+            typeErrors: validation.typeErrors,
+            enumErrors: validation.enumErrors
+          },
+          schema: schema,
+          params: params,
+          toolName: this.toolId
+        };
+
+        throw ToolError.from(error, context);
       }
 
       // 执行工具

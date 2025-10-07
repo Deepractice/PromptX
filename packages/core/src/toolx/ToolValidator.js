@@ -253,6 +253,8 @@ class ToolValidator {
    */
   static defaultValidate(tool, parameters) {
     const errors = [];
+    const missing = [];
+    const typeErrors = [];
 
     try {
       // 获取schema
@@ -261,7 +263,7 @@ class ToolValidator {
       // 基础类型检查
       if (!parameters || typeof parameters !== 'object') {
         errors.push('参数必须是对象类型');
-        return { valid: false, errors };
+        return { valid: false, errors, missing, typeErrors };
       }
 
       // 适配新的schema格式：支持 schema.parameters 或直接使用 schema
@@ -274,6 +276,7 @@ class ToolValidator {
         for (const field of paramSchema.required) {
           if (!(field in parameters)) {
             errors.push(`缺少必需参数: ${field}`);
+            missing.push(field);
           }
         }
       }
@@ -286,7 +289,13 @@ class ToolValidator {
             const expectedType = fieldSchema.type;
 
             if (expectedType && !this.validateType(value, expectedType)) {
-              errors.push(`参数 ${field} 类型错误，期望 ${expectedType}，实际 ${typeof value}`);
+              const errorMsg = `参数 ${field} 类型错误，期望 ${expectedType}，实际 ${typeof value}`;
+              errors.push(errorMsg);
+              typeErrors.push({
+                param: field,
+                expected: expectedType,
+                actual: typeof value
+              });
             }
           }
         }
@@ -296,7 +305,12 @@ class ToolValidator {
       errors.push(`参数验证失败: ${error.message}`);
     }
 
-    return { valid: errors.length === 0, errors };
+    return {
+      valid: errors.length === 0,
+      errors,
+      missing,
+      typeErrors
+    };
   }
 
   /**
