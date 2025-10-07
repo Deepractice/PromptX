@@ -1,5 +1,22 @@
 # @promptx/resource
 
+## 1.24.0
+
+### Minor Changes
+
+- [#429](https://github.com/Deepractice/PromptX/pull/429) [`730a412`](https://github.com/Deepractice/PromptX/commit/730a4120fd8e7ab697b3bebfa66392c813a71155) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Add chart generation functionality to excel-tool
+
+  - Support 4 chart types: column, line, pie, bar
+  - Support reading data from existing Excel files with dataRange
+  - Support direct data input (titles, fields, values)
+  - Add xlsx-chart dependency for chart creation
+  - Implement excel:createChart Bridge with real/mock modes
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/logger@1.24.0
+
 ## 1.23.4
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @promptx/mcp-server
 
+## 1.24.0
+
+### Minor Changes
+
+- [#427](https://github.com/Deepractice/PromptX/pull/427) [`92e3096`](https://github.com/Deepractice/PromptX/commit/92e309648d1d89ff124fd1a4de4a7bec8f368eb8) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Add pdf-reader system tool with intelligent caching
+
+  Features:
+
+  - Pagination support: read specific pages on demand
+  - Smart caching: avoid re-parsing already processed pages
+  - Image extraction: automatically extract and store images
+  - Token efficient: return text content with image paths
+  - Storage API integration: persistent cache across sessions
+
+### Patch Changes
+
+- Updated dependencies [[`83054d9`](https://github.com/Deepractice/PromptX/commit/83054d9b3d911ae2ba20256b0ddb9299b738da0b), [`42c7c9e`](https://github.com/Deepractice/PromptX/commit/42c7c9e0e353ade237160e41e111d868d764d108), [`4bda583`](https://github.com/Deepractice/PromptX/commit/4bda5834ee4f9fb8eae134b77961dff30b22a26d)]:
+  - @promptx/core@1.24.0
+  - @promptx/logger@1.24.0
+
 ## 1.23.4
 
 ### Patch Changes

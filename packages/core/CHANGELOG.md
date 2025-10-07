@@ -1,5 +1,24 @@
 # @promptx/core
 
+## 1.24.0
+
+### Patch Changes
+
+- [#426](https://github.com/Deepractice/PromptX/pull/426) [`83054d9`](https://github.com/Deepractice/PromptX/commit/83054d9b3d911ae2ba20256b0ddb9299b738da0b) Thanks [@deepracticexs](https://github.com/deepracticexs)! - fix: 修复 schema 参数验证失效问题并优化错误提示
+
+  - 修复 ToolValidator 和 ToolError 未正确读取 schema.parameters 导致的验证失效
+  - 统一使用 schema.environment 进行环境变量验证，移除过时的 metadata.envVars
+  - 在参数验证错误提示中添加查看 manual 的建议
+  - 增强验证错误信息，提供更详细的 missing/typeErrors 信息
+
+- [#425](https://github.com/Deepractice/PromptX/pull/425) [`42c7c9e`](https://github.com/Deepractice/PromptX/commit/42c7c9e0e353ade237160e41e111d868d764d108) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Fix getInfo() return key from 'sandbox' to 'sandboxPath' for semantic consistency with class property naming.
+
+- [#424](https://github.com/Deepractice/PromptX/pull/424) [`4bda583`](https://github.com/Deepractice/PromptX/commit/4bda5834ee4f9fb8eae134b77961dff30b22a26d) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Convert ToolStorage API from async to sync for better DX. All storage methods (getItem, setItem, removeItem, clear, keys, getAll, hasItem) are now synchronous. Migration: remove 'await' from all api.storage.\* calls.
+
+- Updated dependencies [[`730a412`](https://github.com/Deepractice/PromptX/commit/730a4120fd8e7ab697b3bebfa66392c813a71155)]:
+  - @promptx/resource@1.24.0
+  - @promptx/logger@1.24.0
+
 ## 1.23.4
 
 ### Patch Changes
