@@ -299,21 +299,33 @@ class ToolSandbox {
       if (!params || Object.keys(params).length === 0) {
         this.logger.debug(`[ToolSandbox] Getting current environment configuration for ${this.toolId}`);
         
-        // 获取工具声明的环境变量
-        let declaredVars = [];
-        if (this.toolInstance && typeof this.toolInstance.getMetadata === 'function') {
-          const metadata = this.toolInstance.getMetadata();
-          declaredVars = metadata.envVars || [];
+        // 获取工具声明的环境变量（从 schema.environment）
+        let declaredVars = {};
+        if (this.toolInstance && typeof this.toolInstance.getSchema === 'function') {
+          const schema = this.toolInstance.getSchema();
+          if (schema.environment && schema.environment.properties) {
+            const envSchema = schema.environment;
+            const requiredVars = envSchema.required || [];
+
+            // 转换 JSON Schema 格式为变量定义
+            for (const [varName, varSpec] of Object.entries(envSchema.properties)) {
+              declaredVars[varName] = {
+                required: requiredVars.includes(varName),
+                description: varSpec.description,
+                default: varSpec.default
+              };
+            }
+          }
         }
-        
+
         // 获取当前配置的环境变量
         const currentVars = await env.getAll();
-        
+
         // 构建状态信息
         const status = {};
-        for (const varDef of declaredVars) {
-          const value = currentVars[varDef.name];
-          status[varDef.name] = {
+        for (const [varName, varDef] of Object.entries(declaredVars)) {
+          const value = currentVars[varName];
+          status[varName] = {
             required: varDef.required || false,
             configured: value !== undefined,
             value: value ? '***' : undefined, // 脱敏显示
@@ -597,36 +609,38 @@ class ToolSandbox {
       // 环境变量自动检查（排除配置类操作）
       const configActions = ['configure', 'config', 'setup', 'init', 'check', 'info'];
       const isConfigAction = params.action && configActions.includes(params.action.toLowerCase());
-      
-      if (!isConfigAction && typeof this.toolInstance.getMetadata === 'function') {
-        const metadata = this.toolInstance.getMetadata();
-        if (metadata.envVars && Array.isArray(metadata.envVars)) {
+
+      if (!isConfigAction && typeof this.toolInstance.getSchema === 'function') {
+        const schema = this.toolInstance.getSchema();
+        if (schema.environment) {
           this.logger.debug(`[ToolSandbox] Checking environment variables for ${this.toolId}`);
           // 使用已创建的 ToolAPI 实例
           const ToolAPI = require('./api/ToolAPI');
           const api = new ToolAPI(this.toolId, this.sandboxPath, this.resourceManager);
           const env = api.environment;
-          
-          for (const varDef of metadata.envVars) {
-            if (varDef.required) {
-              const value = await env.get(varDef.name);
-              if (!value) {
-                this.logger.warn(`[ToolSandbox] Missing required environment variable: ${varDef.name}`);
-                // 返回格式符合 ToolCommand 的预期
-                return {
-                  success: false,
-                  error: {
-                    code: 'MISSING_ENV_VAR',
-                    message: `缺少必需的环境变量: ${varDef.name}`,
-                    details: {
-                      missing: varDef.name,
-                      description: varDef.description || `请配置 ${varDef.name}`,
-                      instruction: `请使用 action: "configure" 配置环境变量，或直接编辑 ${env.envPath} 文件`,
-                      envPath: env.envPath
-                    }
+
+          const envSchema = schema.environment;
+          const requiredVars = envSchema.required || [];
+
+          for (const varName of requiredVars) {
+            const value = await env.get(varName);
+            if (!value) {
+              const varSpec = envSchema.properties?.[varName];
+              this.logger.warn(`[ToolSandbox] Missing required environment variable: ${varName}`);
+              // 返回格式符合 ToolCommand 的预期
+              return {
+                success: false,
+                error: {
+                  code: 'MISSING_ENV_VAR',
+                  message: `缺少必需的环境变量: ${varName}`,
+                  details: {
+                    missing: varName,
+                    description: varSpec?.description || `请配置 ${varName}`,
+                    instruction: `请使用 action: "configure" 配置环境变量，或直接编辑 ${env.envPath} 文件`,
+                    envPath: env.envPath
                   }
-                };
-              }
+                }
+              };
             }
           }
           this.logger.debug(`[ToolSandbox] All required environment variables are configured`);

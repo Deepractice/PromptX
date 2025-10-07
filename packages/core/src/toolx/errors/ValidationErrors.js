@@ -283,27 +283,7 @@ function validateAgainstSchema(params, schema) {
   }
 }
 
-/**
- * 基于 metadata.envVars 检查环境变量
- */
-function checkMissingEnvVars(envVars, environment) {
-  const missing = [];
-  
-  if (!envVars || !Array.isArray(envVars)) {
-    return missing;
-  }
-  
-  for (const envVar of envVars) {
-    if (envVar.required && !environment[envVar.name]) {
-      missing.push(envVar.name);
-    }
-  }
-  
-  return missing;
-}
-
 module.exports = {
   VALIDATION_ERRORS,
-  validateAgainstSchema,
-  checkMissingEnvVars
+  validateAgainstSchema
 };

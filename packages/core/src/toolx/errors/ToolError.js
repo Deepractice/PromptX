@@ -11,7 +11,7 @@
 // 导入错误定义
 const ERROR_CATEGORIES = require('./ErrorCategories');
 const DEVELOPMENT_ERRORS = require('./DevelopmentErrors');
-const { VALIDATION_ERRORS, validateAgainstSchema, checkMissingEnvVars } = require('./ValidationErrors');
+const { VALIDATION_ERRORS, validateAgainstSchema } = require('./ValidationErrors');
 const SYSTEM_ERRORS = require('./SystemErrors');
 
 class ToolError extends Error {
@@ -160,26 +160,15 @@ class ToolError extends Error {
       }
     }
     
-    // 检查环境变量
-    // 支持两种方式：metadata.envVars (数组格式) 或 schema.environment (JSON Schema格式)
-    if (context.environment) {
-      let missingEnvVars = [];
+    // 检查环境变量（从 schema.environment）
+    if (context.environment && context.schema?.environment) {
+      const envSchema = context.schema.environment;
+      const missingEnvVars = [];
 
-      // 方式1: 从 metadata.envVars 检查
-      if (context.metadata?.envVars) {
-        missingEnvVars = checkMissingEnvVars(context.metadata.envVars, context.environment);
-      }
-
-      // 方式2: 从 schema.environment 检查
-      if (context.schema?.environment) {
-        const envSchema = context.schema.environment;
-        if (envSchema.required && Array.isArray(envSchema.required)) {
-          for (const envName of envSchema.required) {
-            if (!context.environment[envName]) {
-              if (!missingEnvVars.includes(envName)) {
-                missingEnvVars.push(envName);
-              }
-            }
+      if (envSchema.required && Array.isArray(envSchema.required)) {
+        for (const envName of envSchema.required) {
+          if (!context.environment[envName]) {
+            missingEnvVars.push(envName);
           }
         }
       }
