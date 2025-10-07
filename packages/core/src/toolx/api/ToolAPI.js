@@ -111,7 +111,7 @@ class ToolAPI {
   getInfo() {
     return {
       id: this.toolId,
-      sandbox: this.sandboxPath,
+      sandboxPath: this.sandboxPath,
       runtime: {
         node: process.version,
         platform: process.platform,
