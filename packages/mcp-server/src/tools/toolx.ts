@@ -87,6 +87,7 @@ mode 说明：
 - tool://role-creator - 创建AI角色,女娲专用
 - tool://tool-creator - 创建工具,鲁班专用
 - tool://pdf-reader - 阅读 PDF 文件的内容的工具
+- tool://excel-tool - 处理 Excel 文件的工具, 支持 读取/写入/修改 等功能
 
 `,
 
