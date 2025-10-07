@@ -257,16 +257,21 @@ class ToolValidator {
     try {
       // 获取schema
       const schema = tool.getSchema();
-      
+
       // 基础类型检查
       if (!parameters || typeof parameters !== 'object') {
         errors.push('参数必须是对象类型');
         return { valid: false, errors };
       }
 
+      // 适配新的schema格式：支持 schema.parameters 或直接使用 schema
+      // 标准格式: { parameters: {...}, environment: {...} }
+      // 兼容格式: { type: 'object', properties: {...}, required: [...] }
+      const paramSchema = schema.parameters || schema;
+
       // 必需参数检查
-      if (schema.required && Array.isArray(schema.required)) {
-        for (const field of schema.required) {
+      if (paramSchema.required && Array.isArray(paramSchema.required)) {
+        for (const field of paramSchema.required) {
           if (!(field in parameters)) {
             errors.push(`缺少必需参数: ${field}`);
           }
@@ -274,12 +279,12 @@ class ToolValidator {
       }
 
       // 基础字段类型检查
-      if (schema.properties && typeof schema.properties === 'object') {
-        for (const [field, fieldSchema] of Object.entries(schema.properties)) {
+      if (paramSchema.properties && typeof paramSchema.properties === 'object') {
+        for (const [field, fieldSchema] of Object.entries(paramSchema.properties)) {
           if (field in parameters) {
             const value = parameters[field];
             const expectedType = fieldSchema.type;
-            
+
             if (expectedType && !this.validateType(value, expectedType)) {
               errors.push(`参数 ${field} 类型错误，期望 ${expectedType}，实际 ${typeof value}`);
             }

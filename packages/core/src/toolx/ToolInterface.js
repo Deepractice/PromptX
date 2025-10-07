@@ -192,15 +192,26 @@ class ExampleTool {
 
   getSchema() {
     return {
-      type: 'object',
-      properties: {
-        input: {
-          type: 'string',
-          description: '输入参数'
-        }
-      },
-      required: ['input'],
-      additionalProperties: false
+      // 执行参数Schema
+      parameters: {
+        type: 'object',
+        properties: {
+          input: {
+            type: 'string',
+            description: '输入参数'
+          }
+        },
+        required: ['input'],
+        additionalProperties: false
+      }
+      // 如需环境变量，添加 environment 字段
+      // environment: {
+      //   type: 'object',
+      //   properties: {
+      //     API_KEY: { type: 'string', description: 'API密钥' }
+      //   },
+      //   required: ['API_KEY']
+      // }
     };
   }
 

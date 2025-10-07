@@ -120,7 +120,11 @@ class ToolError extends Error {
     // 2. 检查ValidationError（基于schema和环境变量）
     // 先进行schema验证
     if (context.schema && context.params) {
-      const validation = validateAgainstSchema(context.params, context.schema);
+      // 适配新的schema格式：支持 schema.parameters 或直接使用 schema
+      // 标准格式: { parameters: {...}, environment: {...} }
+      // 兼容格式: { type: 'object', properties: {...}, required: [...] }
+      const paramSchema = context.schema.parameters || context.schema;
+      const validation = validateAgainstSchema(context.params, paramSchema);
       if (!validation.valid) {
         context.validationResult = validation;
         
@@ -157,10 +161,31 @@ class ToolError extends Error {
     }
     
     // 检查环境变量
-    if (context.metadata?.envVars && context.environment) {
-      const missing = checkMissingEnvVars(context.metadata.envVars, context.environment);
-      if (missing.length > 0) {
-        context.missingEnvVars = missing;
+    // 支持两种方式：metadata.envVars (数组格式) 或 schema.environment (JSON Schema格式)
+    if (context.environment) {
+      let missingEnvVars = [];
+
+      // 方式1: 从 metadata.envVars 检查
+      if (context.metadata?.envVars) {
+        missingEnvVars = checkMissingEnvVars(context.metadata.envVars, context.environment);
+      }
+
+      // 方式2: 从 schema.environment 检查
+      if (context.schema?.environment) {
+        const envSchema = context.schema.environment;
+        if (envSchema.required && Array.isArray(envSchema.required)) {
+          for (const envName of envSchema.required) {
+            if (!context.environment[envName]) {
+              if (!missingEnvVars.includes(envName)) {
+                missingEnvVars.push(envName);
+              }
+            }
+          }
+        }
+      }
+
+      if (missingEnvVars.length > 0) {
+        context.missingEnvVars = missingEnvVars;
         const errorDef = VALIDATION_ERRORS.MISSING_ENV_VAR;
         return {
           category: ERROR_CATEGORIES.VALIDATION.name,
