@@ -162,54 +162,6 @@ class PackageInstaller {
   }
   
   /**
-   * 安装单个包
-   * @param {string} nodeModulesPath - node_modules目录路径
-   * @param {string} name - 包名
-   * @param {string} version - 版本
-   * @param {number} timeout - 超时时间
-   * @returns {Promise<Object>} 安装结果
-   */
-  static async installPackage(nodeModulesPath, name, version, timeout = 30000) {
-    const spec = `${name}@${version}`;
-    
-    // 处理作用域包的目录结构
-    let targetPath;
-    if (name.startsWith('@')) {
-      const [scope, pkgName] = name.split('/');
-      const scopePath = path.join(nodeModulesPath, scope);
-      await fs.mkdir(scopePath, { recursive: true });
-      targetPath = path.join(scopePath, pkgName);
-    } else {
-      targetPath = path.join(nodeModulesPath, name);
-    }
-    
-    // 设置超时
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Installation timeout for ${name}`)), timeout);
-    });
-    
-    // 使用pacote获取包信息并提取
-    const installPromise = (async () => {
-      // 获取包的manifest信息
-      const manifest = await pacote.manifest(spec);
-      
-      // 提取包到目标目录
-      await pacote.extract(spec, targetPath);
-      
-      return {
-        name: manifest.name,
-        version: manifest.version,
-        path: targetPath,
-        type: manifest.type || 'commonjs',
-        main: manifest.main,
-        exports: manifest.exports
-      };
-    })();
-    
-    return Promise.race([installPromise, timeoutPromise]);
-  }
-  
-  /**
    * 构建依赖列表字符串用于日志
    * @param {Object|Array} dependencies - 依赖
    * @returns {string} 格式化的依赖列表

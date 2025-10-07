@@ -33,7 +33,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@npmcli/arborist": "^9.1.4",
+    "@npmcli/arborist": "^8.0.1",
     "@promptx/logger": "workspace:*",
     "@promptx/resource": "workspace:*",
     "ajv": "^8.17.1",
