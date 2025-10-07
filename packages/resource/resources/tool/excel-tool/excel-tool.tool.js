@@ -18,7 +18,8 @@
 module.exports = {
   getDependencies() {
     return {
-      'exceljs': '^4.4.0'
+      'exceljs': '^4.4.0',
+      'xlsx-chart': '^0.4.3'
     };
   },
 
@@ -39,7 +40,7 @@ module.exports = {
         properties: {
           action: {
             type: 'string',
-            enum: ['read', 'write', 'appendRow', 'updateCell', 'insertColumn'],
+            enum: ['read', 'write', 'appendRow', 'updateCell', 'insertColumn', 'createColumnChart', 'createLineChart', 'createPieChart', 'createBarChart'],
             description: '操作类型'
           },
           filePath: {
@@ -137,6 +138,36 @@ module.exports = {
               },
               required: ['data']
             }
+          },
+          {
+            if: {
+              properties: {
+                action: {
+                  enum: ['createColumnChart', 'createLineChart', 'createPieChart', 'createBarChart']
+                }
+              }
+            },
+            then: {
+              properties: {
+                data: {
+                  type: 'object',
+                  properties: {
+                    sourceFile: { type: 'string', description: '数据源文件路径（可选）' },
+                    sheet: {
+                      oneOf: [{ type: 'string' }, { type: 'number' }],
+                      description: '数据源sheet名称或索引'
+                    },
+                    dataRange: { type: 'string', description: '数据范围，如 A1:D5' },
+                    titles: { type: 'array', items: { type: 'string' }, description: '系列名称数组' },
+                    fields: { type: 'array', items: { type: 'string' }, description: '类别名称数组' },
+                    values: { type: 'object', description: '数据值对象' },
+                    chartTitle: { type: 'string', description: '图表标题' }
+                  },
+                  description: '图表数据配置'
+                }
+              },
+              required: ['data']
+            }
           }
         ]
       }
@@ -208,11 +239,11 @@ module.exports = {
           const ExcelJS = await api.importx('exceljs');
           const workbook = new ExcelJS.Workbook();
           await workbook.xlsx.readFile(args.filePath);
-          
-          const worksheet = args.sheet 
+
+          const worksheet = args.sheet
             ? (typeof args.sheet === 'number' ? workbook.worksheets[args.sheet - 1] : workbook.getWorksheet(args.sheet))
             : workbook.worksheets[0];
-          
+
           api.logger.info('[Bridge] Workbook loaded for modification');
           return { workbook, worksheet, filePath: args.outputPath || args.filePath };
         },
@@ -228,6 +259,39 @@ module.exports = {
             filePath: args.outputPath || args.filePath
           };
         }
+      },
+
+      'excel:createChart': {
+        real: async (args, api) => {
+          api.logger.info('[Bridge] Creating chart', { chartType: args.chartType, outputFile: args.outputFile });
+          const XLSXChart = await api.importx('xlsx-chart');
+          const xlsxChart = new XLSXChart();
+
+          const chartOpts = {
+            file: args.outputFile,
+            chart: args.chartType,
+            titles: args.titles,
+            fields: args.fields,
+            data: args.data,
+            chartTitle: args.chartTitle
+          };
+
+          return new Promise((resolve, reject) => {
+            xlsxChart.writeFile(chartOpts, (err) => {
+              if (err) {
+                api.logger.error('[Bridge] Chart creation failed', err);
+                reject(err);
+              } else {
+                api.logger.info('[Bridge] Chart created successfully');
+                resolve(args.outputFile);
+              }
+            });
+          });
+        },
+        mock: async (args, api) => {
+          api.logger.debug('[Mock] Simulating chart creation', { chartType: args.chartType });
+          return args.outputFile;
+        }
       }
     };
   },
@@ -242,19 +306,31 @@ module.exports = {
       switch (action) {
         case 'read':
           return await this.handleRead(filePath, sheet, data, api);
-        
+
         case 'write':
           return await this.handleWrite(filePath, sheet, data, api);
-        
+
         case 'appendRow':
           return await this.handleAppendRow(filePath, sheet, data, api);
-        
+
         case 'updateCell':
           return await this.handleUpdateCell(filePath, sheet, data, api);
-        
+
         case 'insertColumn':
           return await this.handleInsertColumn(filePath, sheet, data, api);
-        
+
+        case 'createColumnChart':
+          return await this.handleCreateChart(filePath, 'column', data, sheet, api);
+
+        case 'createLineChart':
+          return await this.handleCreateChart(filePath, 'line', data, sheet, api);
+
+        case 'createPieChart':
+          return await this.handleCreateChart(filePath, 'pie', data, sheet, api);
+
+        case 'createBarChart':
+          return await this.handleCreateChart(filePath, 'bar', data, sheet, api);
+
         default:
           throw new Error(`Unsupported action: ${action}`);
       }
@@ -385,6 +461,95 @@ module.exports = {
     };
   },
 
+  async handleCreateChart(outputFilePath, chartType, chartData, sheetParam, api) {
+    api.logger.info('Creating chart', { chartType, outputFilePath });
+
+    let titles, fields, values;
+
+    // 如果提供了 sourceFile，从现有文件读取数据
+    if (chartData.sourceFile) {
+      api.logger.info('Reading data from source file', { sourceFile: chartData.sourceFile });
+
+      const workbook = await api.bridge.execute('excel:read', { filePath: chartData.sourceFile });
+      const worksheet = sheetParam || chartData.sheet
+        ? (typeof (sheetParam || chartData.sheet) === 'number'
+          ? workbook.worksheets[(sheetParam || chartData.sheet) - 1]
+          : workbook.getWorksheet(sheetParam || chartData.sheet))
+        : workbook.worksheets[0];
+
+      if (!worksheet) {
+        throw new Error('Worksheet not found in source file');
+      }
+
+      // 解析数据范围（如 A1:D4）
+      const range = chartData.dataRange || `A1:${String.fromCharCode(64 + worksheet.columnCount)}${worksheet.rowCount}`;
+      const match = range.match(/([A-Z]+)(\d+):([A-Z]+)(\d+)/);
+
+      if (!match) {
+        throw new Error('Invalid dataRange format. Expected format: A1:D5');
+      }
+
+      const startCol = match[1].charCodeAt(0) - 64;
+      const startRow = parseInt(match[2]);
+      const endCol = match[3].charCodeAt(0) - 64;
+      const endRow = parseInt(match[4]);
+
+      // 读取数据
+      const rows = [];
+      for (let i = startRow; i <= endRow; i++) {
+        const row = worksheet.getRow(i);
+        const rowData = [];
+        for (let j = startCol; j <= endCol; j++) {
+          rowData.push(row.values[j]);
+        }
+        rows.push(rowData);
+      }
+
+      // 第一行是表头（titles），第一列是类别（fields）
+      titles = rows[0].slice(1); // 跳过第一个单元格
+      fields = rows.slice(1).map(row => row[0]);
+
+      // 构建 values 对象
+      values = {};
+      titles.forEach((title, titleIndex) => {
+        values[title] = {};
+        rows.slice(1).forEach((row, rowIndex) => {
+          values[title][fields[rowIndex]] = row[titleIndex + 1];
+        });
+      });
+
+      api.logger.info('Data extracted from source file', { titles, fields });
+    } else {
+      // 直接使用提供的数据
+      titles = chartData.titles;
+      fields = chartData.fields;
+      values = chartData.values;
+    }
+
+    // 验证必要数据
+    if (!titles || !fields || !values) {
+      throw new Error('Missing required chart data: titles, fields, or values');
+    }
+
+    // 调用 Bridge 创建图表
+    const result = await api.bridge.execute('excel:createChart', {
+      outputFile: outputFilePath,
+      chartType: chartType,
+      titles: titles,
+      fields: fields,
+      data: values,
+      chartTitle: chartData.chartTitle
+    });
+
+    api.logger.info('Chart created', { filePath: result });
+
+    return {
+      success: true,
+      filePath: result,
+      chartType: chartType
+    };
+  },
+
   getBusinessErrors() {
     return [
       {
@@ -406,6 +571,13 @@ module.exports = {
         description: 'Sheet不存在',
         match: /worksheet not found/i,
         solution: '检查sheet名称或索引是否正确',
+        retryable: false
+      },
+      {
+        code: 'CHART_CREATION_FAILED',
+        description: '图表创建失败',
+        match: /chart|xlsx-chart/i,
+        solution: '检查图表数据格式是否正确',
         retryable: false
       }
     ];
