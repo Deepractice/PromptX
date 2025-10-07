@@ -1,5 +1,25 @@
 # @promptx/core
 
+## 1.24.1
+
+### Patch Changes
+
+- [#435](https://github.com/Deepractice/PromptX/pull/435) [`1bcb923`](https://github.com/Deepractice/PromptX/commit/1bcb923ccc48bc65e883f42c57f6e7a6ec91e1a8) Thanks [@deepracticexs](https://github.com/deepracticexs)! - fix: downgrade @npmcli/arborist to support Node 18.17+
+
+  - Downgrade @npmcli/arborist from 9.1.4 to 8.0.1 to support Node 18.17+ instead of requiring Node 20.17+
+  - Update engines.node to >=18.17.0 across all packages for consistency
+  - Update @types/node to ^18.0.0 to match the supported Node version
+  - Remove unused installPackage() method from PackageInstaller.js
+  - Fix turbo.json by removing incorrect extends config
+
+  This change removes the dependency on glob@11 and cacache@20 which required Node 20+, allowing users with Node 18.17+ to install and use PromptX without warnings.
+
+  Fixes #387
+
+- Updated dependencies []:
+  - @promptx/logger@1.24.1
+  - @promptx/resource@1.24.1
+
 ## 1.24.0
 
 ### Patch Changes
