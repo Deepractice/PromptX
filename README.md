@@ -198,6 +198,39 @@ docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:la
 
 ---
 
+## 🛠️ Built-in Tools - Ready-to-use Office Document Processing
+
+PromptX comes with professional document processing tools, turning AI into your office assistant.
+
+### 📊 Excel Tool
+Turn AI into your data analysis assistant and report generation expert.
+- Data analysis and insights
+- Automated report generation
+- Chart visualization
+- Data processing automation
+
+**[📖 Learn More](./packages/resource/resources/tool/excel-tool/README.md)** | [中文文档](./packages/resource/resources/tool/excel-tool/README.zh-CN.md)
+
+### 📝 Word Tool
+Turn AI into your document reading expert and professional writing assistant.
+- Document reading and analysis
+- Professional document creation
+- Batch text replacement
+- Format conversion
+
+**[📖 Learn More](./packages/resource/resources/tool/word-tool/README.md)** | [中文文档](./packages/resource/resources/tool/word-tool/README.zh-CN.md)
+
+### 📄 PDF Reader
+Turn AI into your PDF reading expert with smart caching.
+- Page-by-page reading
+- Content analysis and extraction
+- Image extraction
+- Smart caching for faster access
+
+**[📖 Learn More](./packages/resource/resources/tool/pdf-reader/README.md)** | [中文文档](./packages/resource/resources/tool/pdf-reader/README.zh-CN.md)
+
+---
+
 ## ⭐ **Star Growth Trend**
 
 <div align="center">

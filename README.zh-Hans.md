@@ -205,6 +205,39 @@ docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:la
 
 ---
 
+## 🛠️ 内置工具 - 开箱即用的办公文档处理
+
+PromptX 内置专业文档处理工具，让 AI 成为你的办公助手。
+
+### 📊 Excel 工具
+让 AI 成为你的数据分析助手和报表生成专家。
+- 数据分析与洞察
+- 自动化报表生成
+- 图表可视化
+- 数据处理自动化
+
+**[📖 了解更多](./packages/resource/resources/tool/excel-tool/README.zh-CN.md)** | [English](./packages/resource/resources/tool/excel-tool/README.md)
+
+### 📝 Word 工具
+让 AI 成为你的文档阅读专家和专业写作助手。
+- 文档阅读与分析
+- 专业文档创建
+- 批量文本替换
+- 格式转换
+
+**[📖 了解更多](./packages/resource/resources/tool/word-tool/README.zh-CN.md)** | [English](./packages/resource/resources/tool/word-tool/README.md)
+
+### 📄 PDF 阅读器
+让 AI 成为你的 PDF 阅读专家，智能缓存加速访问。
+- 分页阅读
+- 内容分析与提取
+- 图片提取
+- 智能缓存快速访问
+
+**[📖 了解更多](./packages/resource/resources/tool/pdf-reader/README.zh-CN.md)** | [English](./packages/resource/resources/tool/pdf-reader/README.md)
+
+---
+
 ## ⭐ **Star增长趋势**
 
 <div align="center">
