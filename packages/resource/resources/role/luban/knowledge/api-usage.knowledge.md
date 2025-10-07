@@ -97,51 +97,51 @@ const info = api.getInfo();
 ```javascript
 async execute(params) {
   const { api } = this;
-  
+
   // 存储各种类型的数据（自动JSON序列化）
-  await api.storage.setItem('config', {
+  api.storage.setItem('config', {
     theme: 'dark',
     language: 'zh-CN',
     fontSize: 14
   });
-  
-  await api.storage.setItem('counter', 42);
-  await api.storage.setItem('enabled', true);
-  await api.storage.setItem('tags', ['tag1', 'tag2']);
+
+  api.storage.setItem('counter', 42);
+  api.storage.setItem('enabled', true);
+  api.storage.setItem('tags', ['tag1', 'tag2']);
 }
 ```
 
 ### 读取数据
 ```javascript
 // 读取存储的数据（自动JSON反序列化）
-const config = await api.storage.getItem('config');
-const counter = await api.storage.getItem('counter');
+const config = api.storage.getItem('config');
+const counter = api.storage.getItem('counter');
 
 // 不存在的键返回 null
-const notExists = await api.storage.getItem('not-exists'); // null
+const notExists = api.storage.getItem('not-exists'); // null
 ```
 
 ### 其他操作
 ```javascript
 // 删除指定项
-await api.storage.removeItem('old-data');
+api.storage.removeItem('old-data');
 
 // 清空所有存储
-await api.storage.clear();
+api.storage.clear();
 
 // 获取所有键名
-const keys = await api.storage.keys();
+const keys = api.storage.keys();
 // 返回: ['config', 'counter', 'enabled', 'tags']
 
 // 获取存储项数量
 const length = api.storage.length;
 
 // 获取所有数据
-const allData = await api.storage.getAll();
+const allData = api.storage.getAll();
 // 返回: { config: {...}, counter: 42, enabled: true, tags: [...] }
 
 // 检查键是否存在
-const hasConfig = await api.storage.hasItem('config'); // true
+const hasConfig = api.storage.hasItem('config'); // true
 
 // 获取存储大小
 const size = api.storage.getSize(); // 返回字节数

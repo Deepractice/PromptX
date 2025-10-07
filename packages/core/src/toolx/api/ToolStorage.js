@@ -85,18 +85,18 @@ class ToolStorage {
    * @param {string} key - 键名
    * @param {any} value - 值（自动序列化）
    */
-  async setItem(key, value) {
+  setItem(key, value) {
     try {
       const data = this._load();
-      
+
       // 如果是 undefined，转为 null（JSON 不支持 undefined）
       if (value === undefined) {
         value = null;
       }
-      
+
       data[key] = value;
       this._save(data);
-      
+
       logger.debug(`[ToolStorage:${this.toolId}] Set item: ${key}`);
       return true;
     } catch (error) {
@@ -110,11 +110,11 @@ class ToolStorage {
    * @param {string} key - 键名
    * @returns {any} 存储的值
    */
-  async getItem(key) {
+  getItem(key) {
     try {
       const data = this._load();
       const value = data[key];
-      
+
       logger.debug(`[ToolStorage:${this.toolId}] Get item: ${key}`);
       return value !== undefined ? value : null;
     } catch (error) {
@@ -127,17 +127,17 @@ class ToolStorage {
    * 移除存储项
    * @param {string} key - 键名
    */
-  async removeItem(key) {
+  removeItem(key) {
     try {
       const data = this._load();
       const exists = key in data;
-      
+
       if (exists) {
         delete data[key];
         this._save(data);
         logger.debug(`[ToolStorage:${this.toolId}] Removed item: ${key}`);
       }
-      
+
       return exists;
     } catch (error) {
       logger.error(`[ToolStorage:${this.toolId}] Failed to remove item:`, error);
@@ -148,7 +148,7 @@ class ToolStorage {
   /**
    * 清空所有存储
    */
-  async clear() {
+  clear() {
     try {
       this._save({});
       logger.debug(`[ToolStorage:${this.toolId}] Cleared storage`);
@@ -164,7 +164,7 @@ class ToolStorage {
    * @param {number} index - 索引
    * @returns {string|null} 键名
    */
-  async key(index) {
+  key(index) {
     try {
       const data = this._load();
       const keys = Object.keys(data);
@@ -193,7 +193,7 @@ class ToolStorage {
    * 获取所有键名
    * @returns {string[]} 键名数组
    */
-  async keys() {
+  keys() {
     try {
       const data = this._load();
       return Object.keys(data);
@@ -207,7 +207,7 @@ class ToolStorage {
    * 获取所有键值对
    * @returns {Object} 所有存储的数据
    */
-  async getAll() {
+  getAll() {
     try {
       const data = this._load();
       logger.debug(`[ToolStorage:${this.toolId}] Get all items (${Object.keys(data).length} items)`);
@@ -223,7 +223,7 @@ class ToolStorage {
    * @param {string} key - 键名
    * @returns {boolean} 是否存在
    */
-  async hasItem(key) {
+  hasItem(key) {
     try {
       const data = this._load();
       return key in data;

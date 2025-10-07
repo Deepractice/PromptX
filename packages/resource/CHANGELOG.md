@@ -413,10 +413,10 @@
 
   ```javascript
   // 保存数据
-  await api.storage.setItem("config", { theme: "dark" })
+  api.storage.setItem("config", { theme: "dark" })
 
   // 读取数据
-  const config = await api.storage.getItem("config")
+  const config = api.storage.getItem("config")
   ```
 
   这次更新为 PromptX 工具生态提供了更强大、更稳定的基础设施，显著提升了工具开发体验和运行时可靠性。
