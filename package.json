@@ -12,7 +12,8 @@
     "changeset": "changeset",
     "changeset:add": "changeset add",
     "changeset:status": "changeset status",
-    "prepare": "npx lefthook install"
+    "prepare": "npx lefthook install",
+    "postinstall": "pnpm rebuild better-sqlite3 || true"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
