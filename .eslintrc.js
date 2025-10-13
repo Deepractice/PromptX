@@ -10,7 +10,8 @@ module.exports = {
     'eslint:recommended'
   ],
   parserOptions: {
-    ecmaVersion: 12
+    ecmaVersion: 12,
+    sourceType: "module"
   },
   rules: {
     'no-console': 'off',
@@ -70,4 +71,4 @@ module.exports = {
     'wrap-iife': 'off',
     'yoda': 'off'
   }
-} 
+}
