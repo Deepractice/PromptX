@@ -46,9 +46,18 @@ class RecallCommand extends BasePouchCommand {
 
     try {
       let mind = null
+      let fallbackToDMN = false
+
       // 始终执行 recall，query为null时触发DMN模式
       mind = await this.cognitionManager.recall(role, query, { mode })
-      
+
+      // DMN Fallback: 如果有查询词但没找到任何记忆，自动回退到DMN模式
+      if (query && (!mind || mind.activatedCues.size === 0)) {
+        logger.info('[RecallCommand] No results found for query, falling back to DMN mode')
+        mind = await this.cognitionManager.recall(role, null, { mode })
+        fallbackToDMN = true
+      }
+
       if (!mind) {
         logger.warn(`[RecallCommand] No mind returned for role: ${role}, query: ${query}`)
       } else {
@@ -62,26 +71,37 @@ class RecallCommand extends BasePouchCommand {
           activatedCuesSize: mind.activatedCues?.size,
           roleId: role,
           query: query,
+          fallbackToDMN: fallbackToDMN,
           operationType: query ? 'recall' : 'prime'
         })
-        
+
         // Deep debug: log actual mind object structure
         logger.debug('[RecallCommand] DEBUG - Full mind object:', JSON.stringify(mind, null, 2))
       }
-      
+
       const nodeCount = mind ? mind.activatedCues.size : 0
-      logger.info(` [RecallCommand] 认知检索完成 - 激活 ${nodeCount} 个节点`)
+      logger.info(` [RecallCommand] 认知检索完成 - 激活 ${nodeCount} 个节点${fallbackToDMN ? ' (DMN Fallback)' : ''}`)
 
       // 设置上下文
       this.context.roleId = role
       this.context.query = query
       this.context.mind = mind
+      this.context.fallbackToDMN = fallbackToDMN
 
       // 1. 创建认知层 (最高优先级)
-      const operationType = query ? 'recall' : 'prime'
-      const cognitionLayer = query 
-        ? CognitionLayer.createForRecall(mind, role, query)
-        : CognitionLayer.createForPrime(mind, role)
+      const operationType = fallbackToDMN ? 'prime' : (query ? 'recall' : 'prime')
+      const cognitionLayer = fallbackToDMN
+        ? CognitionLayer.createForPrime(mind, role)
+        : (query
+            ? CognitionLayer.createForRecall(mind, role, query)
+            : CognitionLayer.createForPrime(mind, role))
+
+      // 添加 fallback 标记到 metadata
+      if (fallbackToDMN) {
+        cognitionLayer.metadata.fallbackToDMN = true
+        cognitionLayer.metadata.originalQuery = query
+      }
+
       this.registerLayer(cognitionLayer)
 
       // 2. 创建角色层 (次优先级)

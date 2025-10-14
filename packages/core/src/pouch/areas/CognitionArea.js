@@ -85,7 +85,15 @@ class CognitionArea extends BaseArea {
       case 'prime':
         content += '## 📊 记忆网络图\n'
         content += `当前角色：**${this.roleId}**\n`
-        content += `网络状态：已激活\n\n`
+        content += `网络状态：已激活\n`
+
+        // 如果是 fallback 到 DMN，添加提示
+        if (this.metadata.fallbackToDMN) {
+          content += `\n⚠️ **查询词未找到，已自动切换到 DMN 模式**\n`
+          content += `原查询词："${this.metadata.originalQuery}"\n`
+          content += `下方显示完整记忆网络，请从中选择相关关键词重新搜索\n`
+        }
+        content += '\n'
         break
 
       case 'recall':
@@ -95,7 +103,7 @@ class CognitionArea extends BaseArea {
         }
         content += `找到的相关记忆：\n\n`
         break
-        
+
       default:
         content += '## 🧠 认知网络\n\n'
     }

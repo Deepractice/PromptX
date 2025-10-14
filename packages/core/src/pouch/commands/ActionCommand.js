@@ -1,22 +1,19 @@
 const BasePouchCommand = require('../BasePouchCommand')
-const CognitionArea = require('../areas/CognitionArea')
 const RoleArea = require('../areas/action/RoleArea')
 const StateArea = require('../areas/common/StateArea')
-// const ConsciousnessLayer = require('../layers/ConsciousnessLayer') // 已移除意识层
-const CognitionLayer = require('../layers/CognitionLayer')
 const RoleLayer = require('../layers/RoleLayer')
 const { COMMANDS } = require('~/constants')
 const { getGlobalResourceManager } = require('../../resource')
 const DPMLContentParser = require('../../dpml/DPMLContentParser')
 const SemanticRenderer = require('../../dpml/SemanticRenderer')
-const CognitionManager = require('../../cognition/CognitionManager')
 const ProjectManager = require('~/project/ProjectManager')
 const { getGlobalProjectManager } = require('~/project/ProjectManager')
 const logger = require('@promptx/logger')
 
 /**
  * ActionCommand - 角色激活命令
- * 使用三层Layer架构组装输出
+ * 专注于角色激活和提示词展示，不进行记忆加载
+ * 记忆探索由 AI 通过 recall 工具主动进行
  */
 class ActionCommand extends BasePouchCommand {
   constructor() {
@@ -25,7 +22,6 @@ class ActionCommand extends BasePouchCommand {
     this.dpmlParser = new DPMLContentParser()
     this.semanticRenderer = new SemanticRenderer()
     this.projectManager = getGlobalProjectManager()
-    this.cognitionManager = CognitionManager.getInstance(this.resourceManager)
   }
 
   /**
@@ -71,24 +67,11 @@ class ActionCommand extends BasePouchCommand {
       // 分析角色依赖
       const dependencies = await this.analyzeRoleDependencies(roleInfo)
 
-      // 加载记忆网络
-      const mind = await this.loadMemories(roleId)
-      logger.debug(`[ActionCommand] Loaded Mind:`, {
-        hasMind: !!mind,
-        nodeCount: mind?.activatedCues?.size || 0,
-        connectionCount: mind?.connections?.length || 0
-      })
-
       // 设置上下文
       this.context.roleId = roleId
       this.context.roleInfo = roleInfo
-      this.context.mind = mind
 
-      // 1. 创建认知层 (最高优先级)
-      const cognitionLayer = CognitionLayer.createForPrime(mind, roleId)
-      this.registerLayer(cognitionLayer)
-
-      // 2. 创建角色层 (次优先级)
+      // 创建角色层
       const roleLayer = new RoleLayer({ roleId, roleInfo })
       
       // 添加角色区域
@@ -231,41 +214,6 @@ class ActionCommand extends BasePouchCommand {
     }
 
     return dependencies
-  }
-
-  /**
-   * 加载记忆数据 - 从认知系统获取 Mind 对象
-   * 使用DMN模式(recall without query)获取记忆网络概览
-   */
-  async loadMemories(roleId) {
-    try {
-      logger.info(`[ActionCommand] loadMemories called for role: ${roleId}`)
-      logger.debug(`[ActionCommand] Starting to load cognitive data for role ${roleId}`)
-
-      // 使用 recall(null) 触发DMN模式获取记忆网络
-      logger.info(`[ActionCommand] Calling recall with DMN mode (null query)`)
-      const mind = await this.cognitionManager.recall(roleId, null)
-      logger.info(`[ActionCommand] DMN recall returned:`, {
-        hasMind: !!mind,
-        nodeCount: mind?.activatedCues?.size || 0
-      })
-
-      if (!mind) {
-        logger.warn(`[ActionCommand] Cognitive data not found for role ${roleId}`)
-        return null
-      }
-
-      logger.debug(`[ActionCommand] Loaded Mind object:`, {
-        hasMind: !!mind,
-        nodeCount: mind.activatedCues?.size || 0,
-        connectionCount: mind.connections?.length || 0
-      })
-
-      return mind
-    } catch (error) {
-      logger.warn(`[ActionCommand] Failed to load cognitive data for role ${roleId}:`, error)
-      return null
-    }
   }
 }
 
