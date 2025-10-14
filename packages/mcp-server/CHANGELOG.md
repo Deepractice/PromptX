@@ -1,5 +1,66 @@
 # @promptx/mcp-server
 
+## 1.25.0
+
+### Minor Changes
+
+- [#445](https://github.com/Deepractice/PromptX/pull/445) [`25468ba`](https://github.com/Deepractice/PromptX/commit/25468bae26bd052107bab3dce373e50e95f9d627) Thanks [@deepracticexs](https://github.com/deepracticexs)! - # Enhanced DMN Mode for Comprehensive Network Visibility
+
+  Significantly improved the Default Mode Network (DMN) mode to return comprehensive network overview, solving the issue where AI had insufficient visibility into memory networks.
+
+  ## Key Improvements
+
+  ### 1. Increased Hub Nodes (5 → 15)
+
+  - DMN now selects 15 core hub nodes instead of 5
+  - Balances cognitive load with network visibility
+  - Inspired by human working memory capacity research
+
+  ### 2. Enhanced Energy Allocation
+
+  - Each hub node receives full 1.0 energy (was 0.02-0.2)
+  - Total energy: 15.0 (was 1.0)
+  - Enables 7-9 layer deep activation spreading
+  - Results in 80-200 activated nodes (was 11)
+
+  ### 3. Safe Mermaid Rendering
+
+  - Added cycle detection to prevent infinite recursion
+  - Depth limit (5 layers) and node limit (100 nodes)
+  - Graceful fallback for large networks
+  - Clear indication when nodes are truncated
+
+  ### 4. Unified Tool Prompts
+
+  - Updated action.ts, recall.ts, and remember.ts prompts
+  - Emphasizes DMN-first workflow: DMN → multi-round recall → remember
+  - Guides AI to perform multi-round deep exploration
+  - No hard-coded numbers, focuses on semantic meaning
+
+  ## Breaking Changes
+
+  None - backward compatible
+
+  ## Migration Guide
+
+  No migration needed. Existing code works as-is with enhanced behavior.
+
+  ## Performance Impact
+
+  - Slight increase in token usage (~300-600 tokens for DMN)
+  - Significantly improved recall success rate
+  - Better cognitive coverage with 15 hubs vs 5
+
+  ## Related Issue
+
+  Fixes #443 - Enhance DMN mode to return comprehensive memory network structure
+
+### Patch Changes
+
+- Updated dependencies [[`be63d3c`](https://github.com/Deepractice/PromptX/commit/be63d3c1c93779f3b2201cfb4358e6f07bbdc61f), [`25468ba`](https://github.com/Deepractice/PromptX/commit/25468bae26bd052107bab3dce373e50e95f9d627)]:
+  - @promptx/core@1.25.0
+  - @promptx/logger@1.25.0
+
 ## 1.24.1
 
 ### Patch Changes
