@@ -1,6 +1,6 @@
 {
   "name": "@promptx/cli",
-  "version": "1.24.1",
+  "version": "1.25.0",
   "description": "PromptX CLI - Command-line interface for the DPML-powered AI prompt framework",
   "type": "module",
   "files": [
