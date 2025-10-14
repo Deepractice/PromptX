@@ -355,11 +355,15 @@ class TwoPhaseRecallStrategy {
 
   /**
    * 辅助方法：选择枢纽节点（DMN模式）
+   * Enhanced to return comprehensive network overview with hierarchical structure
    *
-   * @param {number} count - 返回的枢纽节点数量
+   * Default 15 nodes balances cognitive load with network visibility
+   * Inspired by human working memory capacity (4-7 chunks) and expanded for AI context
+   *
+   * @param {number} count - 返回的枢纽节点数量 (default: 15 for optimal cognitive load)
    * @returns {string[]} 枢纽节点的word数组
    */
-  async selectHubNodes(count = 5) {
+  async selectHubNodes(count = 15) {
     if (!this.network) {
       logger.error('[TwoPhaseRecallStrategy] Network not set for hub selection');
       return [];
@@ -385,10 +389,10 @@ class TwoPhaseRecallStrategy {
       .slice(0, count)
       .map(cue => cue.word);
 
-    logger.debug('[TwoPhaseRecallStrategy] Selected hub nodes', {
+    logger.info('[TwoPhaseRecallStrategy] Selected hub nodes for DMN overview', {
       totalNodes: allCues.length,
       selectedCount: hubs.length,
-      hubs: hubs.map((word, i) => ({
+      topHubs: hubs.slice(0, 10).map((word, i) => ({
         word,
         degree: allCues.find(c => c.word === word)?.degree
       }))

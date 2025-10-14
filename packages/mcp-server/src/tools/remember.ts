@@ -12,9 +12,12 @@ export const rememberTool: ToolWithHandler = {
 
 ⚡ 触发时机（形成条件反射）：
 • 回答完用户问题 → 立即remember关键点
+• 多轮recall深挖完 → remember总结收获
 • 学到新知识 → remember保存
 • 解决了问题 → remember记录方案
-• recall没找到记忆 → 必须remember填补空白
+• recall空白领域 → 必须remember填补
+
+💡 关键：每次recall探索后都要remember，这样下次就有记忆了
 
 🎯 快速remember模板（10秒完成）：
 {
@@ -44,8 +47,9 @@ export const rememberTool: ToolWithHandler = {
 ❌ 不remember = 永远从零开始
 
 🔄 **认知循环**：remember是循环的终点
-• 每次recall后都应该remember
-• recall空的领域必须remember填补
+• DMN看全景 → 多轮recall深挖 → 获得答案 → remember保存
+• 下次recall就能直接找到这次保存的记忆
+• recall空白领域必须remember填补
 
 记住：每个remember都是对未来自己的投资！
 
@@ -112,7 +116,7 @@ export const rememberTool: ToolWithHandler = {
             },
             schema: {
               type: 'string',
-              description: '概念序列，用 - 分隔（推荐），也支持换行符兼容旧数据。直接从原文提取关键词，不要发明新词（知性概念化）'
+              description: '概念序列，用空格分隔。直接从原文提取关键词，不要发明新词（知性概念化）'
             },
             strength: {
               type: 'number',

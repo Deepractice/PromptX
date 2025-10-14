@@ -254,29 +254,69 @@ class Mind {
    * 
    * @returns {string} Mermaid mindmap代码
    */
-  toMermaid() {
+  toMermaid(maxNodes = 100, maxDepth = 5) {
     if (!this.center || this.activatedCues.size === 0) {
       return 'mindmap\n  root((空))';
     }
-    
+
     // 构建树形结构（从连接关系构建）
     const tree = this.buildTree();
-    
+
     // 生成mindmap格式
     let mermaid = 'mindmap\n';
     mermaid += `  root((${this.center.word}))\n`;
-    
-    // 递归添加子节点
-    const addChildren = (parent, indent) => {
+
+    // 递归添加子节点（带防护）
+    const visited = new Set();
+    let nodeCount = 1; // 已包含root节点
+
+    const addChildren = (parent, indent, depth) => {
+      // 防护：深度限制
+      if (depth > maxDepth) {
+        return;
+      }
+
+      // 防护：节点数量限制
+      if (nodeCount >= maxNodes) {
+        return;
+      }
+
+      // 防护：循环检测
+      if (visited.has(parent)) {
+        return;
+      }
+      visited.add(parent);
+
       const children = tree.get(parent) || [];
       for (const child of children) {
+        // 防护：节点数量限制
+        if (nodeCount >= maxNodes) {
+          break;
+        }
+
+        // 防护：避免重复访问
+        if (visited.has(child)) {
+          continue;
+        }
+
         mermaid += ' '.repeat(indent) + child + '\n';
-        addChildren(child, indent + 2);
+        nodeCount++;
+        addChildren(child, indent + 2, depth + 1);
       }
     };
-    
-    addChildren(this.center.word, 4);
-    
+
+    try {
+      addChildren(this.center.word, 4, 0);
+    } catch (error) {
+      // 如果还是出错，返回简化版本
+      return `mindmap\n  root((${this.center.word}))\n    [Network too large: ${this.activatedCues.size} nodes]`;
+    }
+
+    // 如果节点被截断，添加提示
+    if (nodeCount >= maxNodes) {
+      mermaid += `    [...${this.activatedCues.size - nodeCount} more nodes]\n`;
+    }
+
     return mermaid;
   }
   

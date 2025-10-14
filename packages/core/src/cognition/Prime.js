@@ -131,6 +131,94 @@ class Prime extends Recall {
   }
   
   /**
+   * Get multiple prime words for DMN mode
+   * Returns a comprehensive list of important nodes for network overview
+   *
+   * @param {Object} options - Configuration options
+   * @param {number} options.maxRootNodes - Maximum root nodes to return (default: 15)
+   * @param {number} options.childrenPerRoot - Children per root node (default: 3)
+   * @param {number} options.maxTotalWords - Maximum total words (default: 50)
+   * @returns {Array<string>} Array of prime words
+   */
+  getPrimeWords(options = {}) {
+    const {
+      maxRootNodes = 15,
+      childrenPerRoot = 3,
+      maxTotalWords = 50
+    } = options;
+
+    logger.debug('[Prime] Getting multiple prime words for DMN mode', {
+      maxRootNodes,
+      childrenPerRoot,
+      maxTotalWords,
+      networkSize: this.network.cues.size
+    });
+
+    const rootNodes = this.findRootNodes();
+
+    // If no root nodes, fall back to hub nodes
+    if (rootNodes.length === 0) {
+      logger.info('[Prime] No root nodes found, using hub nodes strategy');
+      return this.getTopHubNodes(maxTotalWords);
+    }
+
+    // Sort root nodes by out-degree (importance)
+    const sortedRoots = rootNodes
+      .map(word => ({
+        word,
+        outDegree: this.network.cues.get(word)?.connections?.size || 0
+      }))
+      .sort((a, b) => b.outDegree - a.outDegree)
+      .slice(0, maxRootNodes)
+      .map(item => item.word);
+
+    logger.info('[Prime] Selected root nodes', {
+      totalRoots: rootNodes.length,
+      selectedRoots: sortedRoots.length,
+      roots: sortedRoots
+    });
+
+    const result = [];
+
+    // For each root, add it and its top children
+    for (const root of sortedRoots) {
+      result.push(root);
+
+      // Get top N children by connection weight
+      const cue = this.network.cues.get(root);
+      if (cue && cue.connections.size > 0) {
+        const children = Array.from(cue.connections.entries())
+          .sort((a, b) => b[1] - a[1])  // Sort by weight
+          .slice(0, childrenPerRoot)
+          .map(([word]) => word);
+
+        result.push(...children);
+
+        logger.debug('[Prime] Added children for root', {
+          root,
+          childCount: children.length,
+          children
+        });
+      }
+
+      // Stop if we reached the limit
+      if (result.length >= maxTotalWords) {
+        break;
+      }
+    }
+
+    const finalWords = result.slice(0, maxTotalWords);
+
+    logger.info('[Prime] DMN prime words prepared', {
+      totalWords: finalWords.length,
+      roots: sortedRoots.length,
+      sampleWords: finalWords.slice(0, 10)
+    });
+
+    return finalWords;
+  }
+
+  /**
    * 寻找根节点（入度为0的节点）
    * @returns {Array<string>} 根节点列表
    */
@@ -159,45 +247,85 @@ class Prime extends Recall {
     
     return rootNodes;
   }
-  
+
   /**
-   * 执行启动
-   * 
-   * @param {string} word - 可选的启动词，如果不提供则自动选择
-   * @returns {Mind|null} 基础认知状态
+   * Get top hub nodes by in-degree weight
+   * Fallback strategy when no root nodes exist
+   *
+   * @param {number} limit - Maximum nodes to return
+   * @returns {Array<string>} Array of hub node words
+   */
+  getTopHubNodes(limit) {
+    const inWeights = this.network.calculateInWeights();
+
+    if (inWeights.size === 0) {
+      logger.warn('[Prime] No nodes with in-weights, returning first N nodes');
+      return Array.from(this.network.cues.keys()).slice(0, limit);
+    }
+
+    const hubNodes = Array.from(inWeights.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([word]) => word);
+
+    logger.info('[Prime] Selected hub nodes', {
+      totalHubs: inWeights.size,
+      selectedCount: hubNodes.length,
+      topHubs: hubNodes.slice(0, 10)
+    });
+
+    return hubNodes;
+  }
+
+  /**
+   * Execute prime operation
+   *
+   * @param {string} word - Optional prime word, if not provided uses auto-selection
+   * @returns {Mind|null} Activated cognitive state
    */
   execute(word = null) {
-    logger.info('[Prime] Starting prime operation', { 
+    logger.info('[Prime] Starting prime operation', {
       providedWord: word,
       autoSelect: !word,
       networkSize: this.network.cues.size
     });
-    
-    // 如果没有提供启动词，自动选择
+
+    // DMN mode: multi-word activation for comprehensive network overview
     if (!word) {
-      word = this.getPrimeWord();
-      if (!word) {
-        logger.error('[Prime] Failed to find prime word, network empty or no suitable node');
+      const primeWords = this.getPrimeWords({
+        maxRootNodes: 15,
+        childrenPerRoot: 3,
+        maxTotalWords: 50
+      });
+
+      if (primeWords.length === 0) {
+        logger.error('[Prime] No prime words available, network may be empty');
         return null;
       }
-      logger.info('[Prime] Auto-selected prime word', { word });
-    } else {
-      // 验证提供的词是否存在
-      if (!this.network.hasCue(word)) {
-        logger.warn('[Prime] Provided word not found in network', { word });
-        return null;
-      }
+
+      logger.info('[Prime] DMN mode - using multiple prime words', {
+        totalWords: primeWords.length,
+        sampleWords: primeWords.slice(0, 10)
+      });
+
+      // Use executeMultiple to activate from all selected words
+      return this.executeMultiple(primeWords);
     }
-    
-    logger.info('[Prime] Executing recall with prime word', { 
+
+    // Single-word mode: validate and execute
+    if (!this.network.hasCue(word)) {
+      logger.warn('[Prime] Provided word not found in network', { word });
+      return null;
+    }
+
+    logger.info('[Prime] Executing single-word prime', {
       word,
-      cueExists: this.network.hasCue(word),
       cueConnections: this.network.cues.get(word)?.connections?.size || 0
     });
-    
-    // 调用父类的recall逻辑
+
+    // Call parent Recall.execute()
     const mind = super.execute(word);
-    
+
     if (mind) {
       logger.info('[Prime] Prime completed successfully', {
         primeWord: word,
@@ -207,7 +335,7 @@ class Prime extends Recall {
     } else {
       logger.error('[Prime] Prime failed', { word });
     }
-    
+
     return mind;
   }
   
@@ -225,46 +353,23 @@ class Prime extends Recall {
       words,
       count: words.length
     });
-    
-    const Mind = require('./Mind');
-    
-    // 创建一个合并的Mind
-    const mergedMind = new Mind(null);  // 没有单一中心
-    mergedMind.centers = [];  // 多个中心
-    
-    const validCenters = [];
-    const missingWords = [];
-    
-    // 对每个词分别执行recall
-    for (const word of words) {
-      const cue = this.network.cues.get(word);
-      if (!cue) {
-        missingWords.push(word);
-        logger.warn('[Prime] Word not found in network', { word });
-        continue;
-      }
-      
-      validCenters.push(word);
-      mergedMind.centers.push(cue);
-      
-      logger.debug('[Prime] Spreading from center', {
-        word,
-        outDegree: cue.connections.size
-      });
-      
-      // 扩散激活（重用spread方法）
-      this.spread(cue, mergedMind, [], 0);
+
+    // Use parent Recall.execute() with multiple words
+    // Recall.execute() already supports multi-word activation via array input
+    const mind = super.execute(words);
+
+    if (!mind) {
+      logger.error('[Prime] Multi-center prime failed');
+      return null;
     }
-    
+
     logger.info('[Prime] Multi-center prime completed', {
       requestedWords: words.length,
-      validCenters: validCenters.length,
-      missingWords,
-      activatedNodes: mergedMind.activatedCues.size,
-      connections: mergedMind.connections.length
+      activatedNodes: mind.activatedCues.size,
+      connections: mind.connections.length
     });
-    
-    return mergedMind;
+
+    return mind;
   }
 }
 

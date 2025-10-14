@@ -104,7 +104,9 @@ class Recall {
     const virtualMind = new Cue('mind');
 
     // 4. 构建多中心能量池
-    const initialEnergy = 1.0 / validCues.length;
+    // For DMN mode with multiple centers, give each node full energy for comprehensive activation
+    // DMN should explore the network deeply, not conserve energy
+    const initialEnergy = validCues.length > 5 ? 1.0 : (1.0 / validCues.length);
     const energyPool = new Map();
     const activatedNodes = new Set();
 
@@ -126,7 +128,7 @@ class Recall {
     logger.info('[Recall] Multi-center recall initialized', {
       centerCount: validCues.length,
       energyPerCenter: initialEnergy,
-      totalEnergy: 1.0
+      totalEnergy: initialEnergy * validCues.length
     });
 
     // 5. 创建Mind对象，以virtualMind为center
