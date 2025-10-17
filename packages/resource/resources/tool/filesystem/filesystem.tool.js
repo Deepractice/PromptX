@@ -195,26 +195,31 @@ module.exports = {
    */
   getAllowedDirectories() {
     const { api } = this;
-    
-    // 尝试从环境变量获取配置
-    let allowedDirs = ['~/.promptx'];  // 默认值
-    
+
+    // Try to get configuration from environment variable
+    let allowedDirs = ['~/.promptx'];  // Default value
+
     if (api && api.environment) {
       try {
-        const configStr = api.environment.get('ALLOWED_DIRECTORIES');
+        let configStr = api.environment.get('ALLOWED_DIRECTORIES');
         if (configStr) {
+          // Handle escaped quotes from .env file parsing
+          // The ToolEnvironment escapes backslashes and quotes when saving to .env
+          // We need to unescape them before parsing JSON
+          configStr = configStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+
           const parsed = JSON.parse(configStr);
           if (Array.isArray(parsed) && parsed.length > 0) {
             allowedDirs = parsed;
           }
         }
       } catch (error) {
-        // 解析失败时使用默认值
+        // Fall back to default value if parsing fails
         api?.logger?.warn('Failed to parse ALLOWED_DIRECTORIES', { error: error.message });
       }
     }
-    
-    // 将 ~ 替换为用户目录，并规范化路径
+
+    // Expand ~ to home directory and normalize paths
     return allowedDirs.map(dir => {
       const expanded = dir.replace(/^~/, os.homedir());
       return path.resolve(expanded);
