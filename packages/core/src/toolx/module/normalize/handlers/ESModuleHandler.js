@@ -19,11 +19,21 @@ class ESModuleHandler extends ModuleHandler {
 
     // 检查 ES Module 标记
     if (module.__esModule) {
-      // 优先返回 default，但要确保它有实质内容
+      // Check if there are named exports besides default and __esModule
+      const realKeys = this.getRealKeys(module);
+
+      // If has default but also has named exports, keep the whole module
+      // This preserves modules like: export default Foo; export { Bar, Baz };
+      if (module.default !== undefined && realKeys.length > 0) {
+        return { handled: true, result: module };
+      }
+
+      // If only has default (no other exports), return default only
       if (module.default !== undefined) {
         return { handled: true, result: module.default };
       }
-      // 没有 default 但是 ES Module，返回整个模块
+
+      // No default but is ES Module, return whole module
       return { handled: true, result: module };
     }
 

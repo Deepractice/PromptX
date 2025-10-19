@@ -150,14 +150,24 @@ class SmartDefaultHandler extends ModuleHandler {
       return false;
     }
 
-    // 函数的情况：检查是否是同一个引用
+    // 函数的情况：检查是否ALL exports都是同一个引用
     if (typeof def === 'function') {
-      // 检查是否有同名函数
+      // Count how many exports match default
+      let matchCount = 0;
       for (const key of realKeys) {
         if (module[key] === def) {
-          return true; // 找到相同引用
+          matchCount++;
         }
       }
+
+      // Only return true if ALL named exports are duplicates of default
+      // If even ONE export is different, we must keep the whole module
+      if (matchCount === realKeys.length && realKeys.length > 0) {
+        return true;
+      }
+
+      // Partial match means NOT duplicate - keep all exports
+      return false;
     }
 
     // 对象的情况：检查关键属性是否相同
