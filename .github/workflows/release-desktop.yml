@@ -309,16 +309,9 @@ jobs:
           release_date=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
           # 创建 latest.yml - 使用双引号包裹 sha512 确保单行
-          cat > latest.yml <<YAMLEOF
-version: ${version}
-files:
-  - url: ${signed_exe}
-    sha512: "${sha512_hash}"
-    size: ${file_size}
-path: ${signed_exe}
-sha512: "${sha512_hash}"
-releaseDate: '${release_date}'
-YAMLEOF
+          printf "version: %s\nfiles:\n  - url: %s\n    sha512: \"%s\"\n    size: %s\npath: %s\nsha512: \"%s\"\nreleaseDate: '%s'\n" \
+            "${version}" "${signed_exe}" "${sha512_hash}" "${file_size}" \
+            "${signed_exe}" "${sha512_hash}" "${release_date}" > latest.yml
 
           # 验证生成的 YAML 格式
           echo "Generated latest.yml:"
