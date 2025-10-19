@@ -1,5 +1,14 @@
 # @promptx/resource
 
+## 1.25.2
+
+### Patch Changes
+
+- [#452](https://github.com/Deepractice/PromptX/pull/452) [`5644473`](https://github.com/Deepractice/PromptX/commit/5644473acd08da8d5fee4345bf0f1b5f2ff3129d) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Fix filesystem tool ALLOWED_DIRECTORIES environment variable JSON parsing issue. The tool now properly handles escaped quotes from .env file format, allowing configuration of multiple allowed directories.
+
+- Updated dependencies []:
+  - @promptx/logger@1.25.2
+
 ## 1.25.1
 
 ### Patch Changes
