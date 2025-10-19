@@ -296,8 +296,8 @@ jobs:
 
           echo "Generating latest.yml for $signed_exe..."
 
-          # 计算 SHA512
-          sha512_hash=$(sha512sum "$signed_exe" | awk '{print $1}' | xxd -r -p | base64)
+          # 计算 SHA512 - 确保单行输出，移除所有换行符
+          sha512_hash=$(sha512sum "$signed_exe" | awk '{print $1}' | xxd -r -p | base64 | tr -d '\n')
 
           # 获取文件大小
           file_size=$(stat -c%s "$signed_exe" 2>/dev/null || stat -f%z "$signed_exe" 2>/dev/null)
@@ -308,17 +308,26 @@ jobs:
           # 获取发布日期
           release_date=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
-          # 创建 latest.yml
-          cat > latest.yml <<-YAMLEOF
-          version: ${version}
-          files:
-            - url: ${signed_exe}
-              sha512: ${sha512_hash}
-              size: ${file_size}
-          path: ${signed_exe}
-          sha512: ${sha512_hash}
-          releaseDate: '${release_date}'
-          YAMLEOF
+          # 创建 latest.yml - 使用双引号包裹 sha512 确保单行
+          cat > latest.yml <<YAMLEOF
+version: ${version}
+files:
+  - url: ${signed_exe}
+    sha512: "${sha512_hash}"
+    size: ${file_size}
+path: ${signed_exe}
+sha512: "${sha512_hash}"
+releaseDate: '${release_date}'
+YAMLEOF
+
+          # 验证生成的 YAML 格式
+          echo "Generated latest.yml:"
+          cat latest.yml
+
+          # 验证 YAML 语法
+          if command -v python3 &> /dev/null; then
+            python3 -c "import yaml; yaml.safe_load(open('latest.yml'))" && echo "✅ YAML syntax valid" || echo "❌ YAML syntax invalid"
+          fi
 
           # 将签名的文件移回主目录
           if [ -f "$signed_exe" ] && [ "$(pwd)" = "*/signed" ]; then

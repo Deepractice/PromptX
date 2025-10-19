@@ -5,7 +5,8 @@ import { UpdateState, UpdateEvent } from '../updater/types'
 
 export class UpdateManager {
   public readonly updater = createUpdater({
-    repo: 'Deepractice/PromptX',
+    // No repo/feedURL config - use electron-builder.yml publish config
+    // This ensures CDN (promptx.deepractice.ai) is tried first, then GitHub as fallback
     autoDownload: true, // Auto-download when update is found
     autoInstallOnAppQuit: true,
     checkInterval: 0 // No periodic checks, only on startup and manual
