@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptX 设置</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="settings-container">
+    <header class="settings-header">
+      <h1>设置</h1>
+      <p class="settings-subtitle">自定义你的 PromptX 体验</p>
+    </header>
+
+    <div class="settings-content">
+      <!-- 开机自启动设置 -->
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>开机自动启动</h3>
+          <p class="setting-description">启动计算机时自动运行 PromptX</p>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="auto-start-switch">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 状态提示区域 -->
+      <div id="status-message" class="status-message hidden">
+        <span id="status-text"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="/settings/settings.js"></script>
+</body>
+</html>
