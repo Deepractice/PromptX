@@ -1,0 +1,36 @@
+{
+  "name": "@promptx/config",
+  "version": "0.0.1",
+  "description": "Configuration management for PromptX",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/auto-launch": "^5.0.4"
+  },
+   "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
+   "publishConfig": {
+    "access": "public"
+  }
+}
