@@ -55,12 +55,14 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    publicDir: resolve(__dirname, 'public'),  // 添加这行
     build: {
       rollupOptions: {
         input: {
-          resources: resolve(__dirname, 'src/renderer/resources.html')
+          resources: resolve(__dirname, 'src/renderer/resources.html'),
+          settings: resolve(__dirname, 'src/renderer/settings/index.html')
         }
-      }
+      },
     },
     resolve: {
       alias: {

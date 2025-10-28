@@ -12,6 +12,7 @@ import { StopServerUseCase } from '~/main/application/useCases/StopServerUseCase
 import { UpdateManager } from '~/main/application/UpdateManager'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
+import { AutoStartManager } from '@promptx/config'
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
@@ -20,15 +21,14 @@ class PromptXDesktopApp {
   private configPort: FileConfigAdapter | null = null
   private notificationPort: ElectronNotificationAdapter | null = null
   private updateManager: UpdateManager | null = null
+  private autoStartManager: AutoStartManager | null = null
 
-  async initialize(): Promise<void> {
+   async initialize(): Promise<void> {
     logger.info('Initializing PromptX Desktop...')
-    
+
     // Setup Node.js environment for ToolSandbox
     this.setupNodeEnvironment()
-    
-    // Remove IPC logging handler as renderers will use console directly
-    
+
     // Wait for app to be ready
     await app.whenReady()
     logger.info('Electron app ready')
@@ -38,6 +38,16 @@ class PromptXDesktopApp {
       app.dock.hide()
       logger.info('Dock icon hidden (macOS)')
     }
+
+    // === 重要：先创建 autoStartManager ===
+    this.autoStartManager = new AutoStartManager({
+      name: 'PromptX Desktop',
+      path: process.execPath,
+      isHidden: true // 开机启动时隐藏窗口
+    })
+
+    // === 然后设置 IPC ===
+    this.setupAutoStartIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -55,7 +65,7 @@ class PromptXDesktopApp {
     // Setup presentation layer
     logger.info('Setting up presentation layer...')
     this.setupPresentation(startUseCase, stopUseCase)
-    
+
     // Setup ResourceManager for roles and tools
     logger.info('Setting up resource manager...')
     this.resourceManager = new ResourceManager()
@@ -64,17 +74,19 @@ class PromptXDesktopApp {
     // Handle app events
     logger.info('Setting up app events...')
     this.setupAppEvents()
-    
+
     logger.info('PromptX Desktop initialized successfully')
-    
+
     // Auto-start server on app launch
     logger.info('Auto-starting PromptX server...')
     try {
       await startUseCase.execute()
       logger.info('PromptX server started automatically')
     } catch (error) {
-      logger.error('Failed to auto-start server:', error)
+        const err = String(error);
+      logger.error('Failed to auto-start server:', err)
     }
+
 
     // Auto check and download updates on startup (non-blocking)
     logger.info('Scheduling automatic update check and download...')
@@ -122,6 +134,19 @@ class PromptXDesktopApp {
       logger.debug(`Updated PATH with Electron directory: ${electronDir}`)
     }
   }
+   private setupAutoStartIPC(): void {
+      ipcMain.handle('auto-start:enable', async () => {
+        return await this.autoStartManager?.enable()
+      })
+
+      ipcMain.handle('auto-start:disable', async () => {
+        return await this.autoStartManager?.disable()
+      })
+
+      ipcMain.handle('auto-start:status', async () => {
+        return await this.autoStartManager?.isEnabled()
+      })
+    }
 
   private setupInfrastructure(): void {
     // Create adapters
@@ -213,7 +238,8 @@ class PromptXDesktopApp {
         }
       }
     } catch (error) {
-      logger.error('Error stopping server:', error)
+      const err = String(error)
+      logger.error('Error stopping server:', err)
     }
 
     // Cleanup UI components

@@ -40,6 +40,7 @@
   "dependencies": {
     "@promptx/core": "workspace:*",
     "@promptx/mcp-server": "workspace:*",
+    "@promptx/config": "workspace:*",
     "electron-updater": "^6.6.2"
   },
   "devDependencies": {

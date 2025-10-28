@@ -12,15 +12,16 @@ interface ElectronAPI {
   getStatistics: () => Promise<any>
   activateRole: (roleId: string) => Promise<any>
   executeTool: (toolId: string, parameters?: any) => Promise<any>
+  invoke: (channel: string, ...args: any[]) => Promise<any>
 }
 
-// 暴露安全的API到渲染进程
 contextBridge.exposeInMainWorld('electronAPI', {
   getGroupedResources: () => ipcRenderer.invoke('resources:getGrouped'),
   searchResources: (query: string) => ipcRenderer.invoke('resources:search', query),
   getStatistics: () => ipcRenderer.invoke('resources:getStatistics'),
   activateRole: (roleId: string) => ipcRenderer.invoke('resources:activateRole', roleId),
-  executeTool: (toolId: string, parameters?: any) => ipcRenderer.invoke('resources:executeTool', toolId, parameters)
+  executeTool: (toolId: string, parameters?: any) => ipcRenderer.invoke('resources:executeTool', toolId, parameters),
+  invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args)
 } as ElectronAPI)
 
 // 为window对象添加类型定义

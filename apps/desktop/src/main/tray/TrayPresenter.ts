@@ -11,17 +11,18 @@ import {
   nativeTheme
 } from 'electron'
 import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
-import { ResultUtil } from '~/shared/Result'
+// import { ResultUtil } from '~/shared/Result'
 import type { StartServerUseCase } from '~/main/application/useCases/StartServerUseCase'
 import type { StopServerUseCase } from '~/main/application/useCases/StopServerUseCase'
 import type { IServerPort } from '~/main/domain/ports/IServerPort'
 import type { UpdateManager } from '~/main/application/UpdateManager'
 import * as path from 'node:path'
-import * as fs from 'node:fs'
+// import * as fs from 'node:fs'
 import * as logger from '@promptx/logger'
 // import { createPIcon } from '~/utils/createPIcon' // Deprecated - using new icons
 import { ResourceManager } from '~/main/ResourceManager'
 import packageJson from '../../../package.json'
+import type { NativeImage } from 'electron'
 
 interface TrayMenuItem {
   id?: string
@@ -36,10 +37,11 @@ export class TrayPresenter {
   private tray: Tray
   private currentStatus: ServerStatus = ServerStatus.STOPPED
   private logsWindow: BrowserWindow | null = null
+  private settingsWindow: BrowserWindow | null = null
   private statusListener: (status: ServerStatus) => void
   private resourceManager: ResourceManager
-  private appIcon: nativeImage | undefined
-  private trayIcons: Map<string, nativeImage> = new Map()
+  private appIcon: NativeImage | undefined
+  private trayIcons: Map<string, NativeImage> = new Map()
 
   constructor(
     private readonly startServerUseCase: StartServerUseCase,
@@ -130,11 +132,12 @@ export class TrayPresenter {
 
       logger.info('Tray icons loaded successfully')
     } catch (error) {
-      logger.error('Failed to load tray icons:', error)
+      const err = String(error);
+      logger.error('Failed to load tray icons:', err);
     }
   }
 
-  private getTrayIcon(state: 'normal' | 'stopped' | 'error' = 'normal'): nativeImage {
+  private getTrayIcon(state: 'normal' | 'stopped' | 'error' = 'normal'): NativeImage {
     if (process.platform === 'darwin') {
       // macOS: Use template image (auto-adapts to theme)
       if (state === 'stopped') {
@@ -245,11 +248,11 @@ export class TrayPresenter {
       click: () => this.handleShowLogs()
     })
 
-    // Settings (future)
+    // Settings 
     menuItems.push({
       id: 'settings',
       label: 'Settings...',
-      enabled: false // TODO: Implement settings window
+      click: () => this.handleShowSettings()
     })
 
     menuItems.push({ type: 'separator' })
@@ -417,6 +420,39 @@ return
       this.logsWindow = null
     })
   }
+  
+  private handleShowSettings(): void {
+    if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+      this.settingsWindow.focus()
+      return
+    }
+
+    this.settingsWindow = new BrowserWindow({
+      width: 600,
+      height: 500,
+      title: 'PromptX Settings',
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, '../preload/preload.cjs')
+      },
+      resizable: false,
+      minimizable: false,
+      maximizable: false
+    })
+
+    if (process.env.NODE_ENV === 'development') {
+      this.settingsWindow.loadURL('http://localhost:5173/settings/index.html')
+    } else {
+      this.settingsWindow.loadFile(
+        path.join(__dirname, '../renderer/settings/index.html')
+      )
+    }
+
+    this.settingsWindow.on('closed', () => {
+      this.settingsWindow = null
+    })
+  }
 
 
   handleQuit(): void {
@@ -473,7 +509,8 @@ return
       this.appIcon = nativeImage.createFromPath(iconPath)
       logger.info('TrayPresenter: App icon loaded successfully')
     } catch (error) {
-      logger.error('TrayPresenter: Failed to load app icon:', error)
+      const err = String(error);
+      logger.error('TrayPresenter: Failed to load app icon:', err);
     }
   }
 
