@@ -177,3 +177,43 @@ input:checked + .slider:before {
     align-self: flex-end;
   }
 }
+
+.text-input,
+.number-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.text-input:focus,
+.number-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.button {
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  margin-left: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.button:hover {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+.button.primary {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}

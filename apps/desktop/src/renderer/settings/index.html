@@ -28,6 +28,50 @@
         </div>
       </div>
 
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>服务器主机</h3>
+          <p class="setting-description">服务监听的主机地址，例如 127.0.0.1</p>
+        </div>
+        <div class="setting-control">
+          <input id="server-host-input" type="text" placeholder="127.0.0.1" class="text-input" />
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>服务器端口</h3>
+          <p class="setting-description">服务监听的端口，范围 1-65535</p>
+        </div>
+        <div class="setting-control">
+          <input id="server-port-input" type="number" min="1" max="65535" placeholder="5203" class="number-input" />
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>调试模式</h3>
+          <p class="setting-description">输出更多日志信息，用于定位问题</p>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="server-debug-switch">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>保存配置</h3>
+          <p class="setting-description">保存后立即应用并重启服务</p>
+        </div>
+        <div class="setting-control">
+          <button id="server-config-save" class="button primary">保存</button>
+          <button id="server-config-reset" class="button">重置为默认</button>
+        </div>
+      </div>
+
       <!-- 状态提示区域 -->
       <div id="status-message" class="status-message hidden">
         <span id="status-text"></span>
