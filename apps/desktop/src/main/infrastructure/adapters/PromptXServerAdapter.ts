@@ -1,9 +1,10 @@
 import { Result, ResultUtil } from '~/shared/Result'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
-import { ServerError, ServerErrorCode } from '~/main/domain/errors/ServerErrors'
+import { ServerError } from '~/main/domain/errors/ServerErrors'
 import { ServerStatus } from '~/main/domain/valueObjects/ServerStatus'
 import type { IServerPort, ServerMetrics } from '~/main/domain/ports/IServerPort'
 import * as logger from '@promptx/logger'
+import { ServerConfigManager } from '@promptx/config'
 
 // Dynamic import for ESM module
 let PromptXMCPServer: any
@@ -27,18 +28,26 @@ export class PromptXServerAdapter implements IServerPort {
         PromptXMCPServer = mcpServer.PromptXMCPServer
       }
 
+      // 使用配置管理器作为回退（当 UI 未提供 host/port/debug）
+      const cfg = new ServerConfigManager()
+      const host = config.host ?? cfg.getHost()
+      const port = config.port ?? cfg.getPort()
+      const debug = config.debug ?? cfg.getDebug()
+      const corsEnabled = cfg.getCorsEnabled()
+  
       // Create and start the PromptX MCP server
       this.server = new PromptXMCPServer({
         transport: 'http',
-        host: config.host,
-        port: config.port,
-        debug: config.debug || false
+        host,
+        port,
+        debug,
+        corsEnabled
       })
       
       await this.server.start()
       this.updateStatus(ServerStatus.RUNNING)
       
-      const endpoint = `http://${config.host}:${config.port}/mcp`
+      const endpoint = `http://${host}:${port}/mcp`
       logger.info(`Server running at ${endpoint}`)
 
       return ResultUtil.ok(undefined)
@@ -181,7 +190,8 @@ export class PromptXServerAdapter implements IServerPort {
       try {
         listener(status)
       } catch (error) {
-        logger.error('Error in status listener:', error)
+        const err = String(error)
+        logger.error('Error in status listener:', err)
       }
     })
   }

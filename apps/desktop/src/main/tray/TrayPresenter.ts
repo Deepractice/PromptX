@@ -429,7 +429,7 @@ return
 
     this.settingsWindow = new BrowserWindow({
       width: 600,
-      height: 500,
+      height: 1000,
       title: 'PromptX Settings',
       webPreferences: {
         nodeIntegration: false,

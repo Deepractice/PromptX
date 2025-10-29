@@ -63,39 +63,31 @@ export class StartServerUseCase {
   }
 
   private async loadOrCreateConfig(): Promise<Result<ServerConfig, UseCaseError>> {
-    // Config file persistence is disabled for now
-    // Always use default config from code
-    // This ensures users always get the latest configuration we ship
-    
-    // TODO: In the future, we can enable this for user preferences
-    // const loadResult = await this.configPort.load()
-    // 
-    // if (loadResult.ok) {
-    //   return ResultUtil.ok(loadResult.value)
-    // }
-    //
-    // // Check if config doesn't exist
-    // const exists = await this.configPort.exists()
-    // if (!exists) {
-    //   // Use default config
-    //   return ResultUtil.ok(ServerConfig.default())
-    // }
-    //
-    // // Config exists but failed to load
-    // const error: UseCaseError = {
-    //   code: 'USE_CASE_CONFIG_ERROR',
-    //   message: loadResult.error.message,
-    //   cause: loadResult.error
-    // }
-    //
-    // await this.notificationPort.showError(
-    //   `Failed to load configuration: ${loadResult.error.message}`,
-    //   'Configuration Error'
-    // )
-    //
-    // return ResultUtil.fail(error)
-    
-    return ResultUtil.ok(ServerConfig.default())
+    // 尝试加载已保存的配置
+    const loadResult = await this.configPort.load()
+    if (loadResult.ok) {
+      return ResultUtil.ok(loadResult.value)
+    }
+
+    // 不存在配置文件则使用默认配置
+    const exists = await this.configPort.exists()
+    if (!exists) {
+      return ResultUtil.ok(ServerConfig.default())
+    }
+
+    // 配置文件存在但加载失败：提示错误并返回失败
+    const error: UseCaseError = {
+      code: 'USE_CASE_CONFIG_ERROR',
+      message: loadResult.error.message,
+      cause: loadResult.error
+    }
+
+    await this.notificationPort.showError(
+      `Failed to load configuration: ${loadResult.error.message}`,
+      'Configuration Error'
+    )
+
+    return ResultUtil.fail(error)
   }
 
   private async handleStartError(error: ServerError): Promise<void> {

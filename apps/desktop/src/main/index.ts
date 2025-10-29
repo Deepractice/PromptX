@@ -13,6 +13,7 @@ import { UpdateManager } from '~/main/application/UpdateManager'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import { AutoStartManager } from '@promptx/config'
+import { ServerConfig } from '~/main/domain/entities/ServerConfig'
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
@@ -39,15 +40,17 @@ class PromptXDesktopApp {
       logger.info('Dock icon hidden (macOS)')
     }
 
-    // === 重要：先创建 autoStartManager ===
+    // === 先创建 autoStartManager ===
     this.autoStartManager = new AutoStartManager({
       name: 'PromptX Desktop',
       path: process.execPath,
-      isHidden: true // 开机启动时隐藏窗口
+      isHidden: true, // 开机启动时隐藏窗口
+      mac: { useLaunchAgent: true }  // macOS: 使用 LaunchAgent 更稳
     })
 
     // === 然后设置 IPC ===
     this.setupAutoStartIPC()
+    this.setupServerConfigIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -147,6 +150,72 @@ class PromptXDesktopApp {
         return await this.autoStartManager?.isEnabled()
       })
     }
+
+  private setupServerConfigIPC(): void {
+    ipcMain.handle('server-config:get', async () => {
+      if (!this.configPort) {
+        return ServerConfig.default().toJSON()
+      }
+      const res = await this.configPort.load()
+      if (res.ok) {
+        return res.value.toJSON()
+      }
+      // 加载失败则返回默认
+      return ServerConfig.default().toJSON()
+    })
+
+    ipcMain.handle('server-config:update', async (_event, payload: { host: string; port: number; debug?: boolean }) => {
+      const base = ServerConfig.default().toJSON()
+      const created = ServerConfig.create({
+        ...base,
+        host: payload.host,
+        port: payload.port,
+        debug: payload.debug ?? base.debug
+      })
+      if (!created.ok) {
+        throw new Error(created.error.message)
+      }
+      const cfg = created.value
+      // 持久化
+      if (this.configPort) {
+        const saveRes = await this.configPort.save(cfg)
+        if (!saveRes.ok) {
+          throw new Error(saveRes.error.message)
+        }
+      }
+      // 应用配置（重启服务）
+      if (this.serverPort) {
+        const restartRes = await this.serverPort.restart(cfg)
+        if (!restartRes.ok) {
+          throw new Error(restartRes.error.message)
+        }
+      }
+      return cfg.toJSON()
+    })
+
+    ipcMain.handle('server-config:reset', async () => {
+      const cfg = ServerConfig.default()
+      // 重置持久化文件
+      if (this.configPort) {
+        const resetRes = await this.configPort.reset()
+        if (!resetRes.ok) {
+          // 如果 reset 不可用或失败，则直接 save 默认
+          const saveRes = await this.configPort.save(cfg)
+          if (!saveRes.ok) {
+            throw new Error(saveRes.error.message)
+          }
+        }
+      }
+      // 应用默认配置
+      if (this.serverPort) {
+        const restartRes = await this.serverPort.restart(cfg)
+        if (!restartRes.ok) {
+          throw new Error(restartRes.error.message)
+        }
+      }
+      return cfg.toJSON()
+    })
+  }
 
   private setupInfrastructure(): void {
     // Create adapters
