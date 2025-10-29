@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.4",
+    "@promptx/config": "workspace:*",
     "@promptx/core": "workspace:*",
     "@promptx/logger": "workspace:*",
     "chalk": "^5.3.0",
