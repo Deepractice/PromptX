@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PromptX 设置</title>
+  <title>PromptX Settings</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="settings-container">
     <header class="settings-header">
-      <h1>设置</h1>
-      <p class="settings-subtitle">自定义你的 PromptX 体验</p>
+      <h1>Settings</h1>
+      <p class="settings-subtitle">Customize your PromptX experience</p>
     </header>
 
     <div class="settings-content">
-      <!-- 开机自启动设置 -->
+      <!-- Auto Start Setting -->
       <div class="setting-item">
         <div class="setting-info">
-          <h3>开机自动启动</h3>
-          <p class="setting-description">启动计算机时自动运行 PromptX</p>
+          <h3>Auto Start</h3>
+          <p class="setting-description">Launch PromptX automatically when computer starts</p>
         </div>
         <div class="setting-control">
           <label class="switch">
@@ -30,8 +30,8 @@
 
       <div class="setting-item">
         <div class="setting-info">
-          <h3>服务器主机</h3>
-          <p class="setting-description">服务监听的主机地址，例如 127.0.0.1</p>
+          <h3>Server Host</h3>
+          <p class="setting-description">Host address for the server to listen on, e.g. 127.0.0.1</p>
         </div>
         <div class="setting-control">
           <input id="server-host-input" type="text" placeholder="127.0.0.1" class="text-input" />
@@ -40,8 +40,8 @@
 
       <div class="setting-item">
         <div class="setting-info">
-          <h3>服务器端口</h3>
-          <p class="setting-description">服务监听的端口，范围 1-65535</p>
+          <h3>Server Port</h3>
+          <p class="setting-description">Port for the server to listen on, range 1-65535</p>
         </div>
         <div class="setting-control">
           <input id="server-port-input" type="number" min="1" max="65535" placeholder="5203" class="number-input" />
@@ -50,8 +50,8 @@
 
       <div class="setting-item">
         <div class="setting-info">
-          <h3>调试模式</h3>
-          <p class="setting-description">输出更多日志信息，用于定位问题</p>
+          <h3>Debug Mode</h3>
+          <p class="setting-description">Output more log information for troubleshooting</p>
         </div>
         <div class="setting-control">
           <label class="switch">
@@ -63,16 +63,16 @@
 
       <div class="setting-item">
         <div class="setting-info">
-          <h3>保存配置</h3>
-          <p class="setting-description">保存后立即应用并重启服务</p>
+          <h3>Save Configuration</h3>
+          <p class="setting-description">Save and apply immediately, then restart service</p>
         </div>
         <div class="setting-control">
-          <button id="server-config-save" class="button primary">保存</button>
-          <button id="server-config-reset" class="button">重置为默认</button>
+          <button id="server-config-save" class="button primary">Save</button>
+          <button id="server-config-reset" class="button">Reset to Default</button>
         </div>
       </div>
 
-      <!-- 状态提示区域 -->
+      <!-- Status Message Area -->
       <div id="status-message" class="status-message hidden">
         <span id="status-text"></span>
       </div>

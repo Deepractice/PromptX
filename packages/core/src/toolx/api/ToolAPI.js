@@ -135,6 +135,39 @@ class ToolAPI {
   }
 
   /**
+   * Execute system command
+   * Powered by execa for better cross-platform support and error handling
+   * @param {string} command - Command to execute
+   * @param {Array} args - Command arguments (optional)
+   * @param {Object} options - Execution options (optional)
+   * @returns {Promise<Object>} Execution result with stdout, stderr, exitCode
+   */
+  async execute(command, args = [], options = {}) {
+    const { execa } = require('execa');
+
+    try {
+      const result = await execa(command, args, {
+        cwd: options.cwd,
+        env: options.env,
+        timeout: options.timeout || 30000,
+        shell: options.shell || false,
+        reject: false, // Don't throw on non-zero exit code
+        ...options
+      });
+
+      return {
+        success: result.exitCode === 0,
+        exitCode: result.exitCode,
+        stdout: result.stdout,
+        stderr: result.stderr
+      };
+    } catch (error) {
+      // Handle execution errors (e.g., command not found)
+      throw new Error(`Failed to execute command: ${error.message}`);
+    }
+  }
+
+  /**
    * 获取API版本
    * @returns {string} API版本号
    */

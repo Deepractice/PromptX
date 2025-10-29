@@ -83,6 +83,82 @@ async execute(params) {
 - 日志文件：`~/.promptx/toolbox/{toolId}/logs/execute.log`
 - 通过mode='log'查询历史日志
 
+## api.execute命令执行
+
+### 执行系统命令
+```javascript
+async execute(params) {
+  const { api } = this;
+
+  // 简单命令执行
+  const result = await api.execute('ls', ['-la']);
+  console.log(result.stdout);
+
+  // 检查执行结果
+  if (result.success) {
+    api.logger.info('命令执行成功', { output: result.stdout });
+  } else {
+    api.logger.error('命令执行失败', {
+      exitCode: result.exitCode,
+      stderr: result.stderr
+    });
+  }
+}
+```
+
+### 跨平台命令处理
+```javascript
+async execute(params) {
+  const { api } = this;
+
+  // 根据平台执行不同命令
+  const isWindows = process.platform === 'win32';
+
+  if (isWindows) {
+    // Windows: PowerShell 通知
+    await api.execute('powershell', [
+      '-Command',
+      `[System.Windows.Forms.MessageBox]::Show("${params.message}")`
+    ]);
+  } else if (process.platform === 'darwin') {
+    // macOS: osascript
+    await api.execute('osascript', [
+      '-e',
+      `display notification "${params.message}"`
+    ]);
+  } else {
+    // Linux: notify-send
+    await api.execute('notify-send', [params.message]);
+  }
+}
+```
+
+### 配置选项
+```javascript
+const result = await api.execute('node', ['script.js'], {
+  cwd: '/path/to/project',    // 工作目录
+  env: { NODE_ENV: 'prod' },  // 环境变量
+  timeout: 60000,             // 超时时间(ms)
+  shell: true                 // 是否使用shell
+});
+```
+
+### 返回格式
+```javascript
+{
+  success: true,      // 是否成功(exitCode === 0)
+  exitCode: 0,        // 退出码
+  stdout: "...",      // 标准输出
+  stderr: ""          // 错误输出
+}
+```
+
+### 核心特性
+- **跨平台支持**：基于execa，自动处理平台差异
+- **安全执行**：30秒默认超时，防止命令hang住
+- **完整输出**：捕获stdout和stderr
+- **错误处理**：命令不存在时抛出异常，非零退出码返回结果
+
 ## api.getInfo工具信息
 
 ```javascript

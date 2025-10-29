@@ -40,6 +40,7 @@
     "better-sqlite3": "^12.4.1",
     "env-paths": "2.2.1",
     "eta": "^3.5.0",
+    "execa": "^9.5.2",
     "extract-comments": "^1.1.0",
     "fs-extra": "^11.3.0",
     "glob": "^10.4.5",
