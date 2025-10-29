@@ -4,7 +4,7 @@
  * 它封装了 auto-launch 库的功能，提供了简单易用的 API 来启用、禁用和检查自启动状态。
  * 
  * @author PromptX Team
- * @version 0.0.1
+ * @version 1.0.0
  */
 
 /**

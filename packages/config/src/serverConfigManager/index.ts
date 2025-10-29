@@ -4,7 +4,7 @@
  * 包括端口、主机地址、传输类型等配置的读取、设置和持久化。
  * 
  * @author PromptX Team
- * @version 0.0.1
+ * @version 1.0.0
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';

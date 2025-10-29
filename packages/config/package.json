@@ -1,6 +1,6 @@
 {
   "name": "@promptx/config",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Configuration management for PromptX",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,12 +25,12 @@
   "devDependencies": {
     "@types/auto-launch": "^5.0.4"
   },
-   "files": [
+  "files": [
     "dist",
     "package.json",
-    "README.md"
+    "CHANGELOG.md"
   ],
-   "publishConfig": {
+  "publishConfig": {
     "access": "public"
   }
 }
