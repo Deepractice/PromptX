@@ -42,7 +42,7 @@ mac:
 win:
   icon: assets/icons/icon.png
   artifactName: promptx-desktop-${version}-win32-${arch}.${ext}
-  requestedExecutionLevel: highestAvailable
+  requestedExecutionLevel: asInvoker
   target:
     - nsis
 
