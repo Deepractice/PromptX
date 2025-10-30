@@ -10,6 +10,7 @@ export { projectTool } from './project.js';
 export { recallTool } from './recall.js';
 export { rememberTool } from './remember.js';
 export { toolxTool } from './toolx.js';
+export { mcpTool } from './mcp.js';
 
 import { discoverTool } from './welcome.js';
 import { actionTool } from './action.js';
@@ -18,6 +19,7 @@ import { projectTool } from './project.js';
 import { recallTool } from './recall.js';
 import { rememberTool } from './remember.js';
 import { toolxTool } from './toolx.js';
+import { mcpTool } from './mcp.js';
 
 /**
  * 所有可用工具列表
@@ -30,5 +32,6 @@ export const allTools = [
   // learnTool,  // 暂时禁用 learn 工具
   recallTool,
   rememberTool,
-  toolxTool
+  toolxTool,
+  mcpTool
 ];
