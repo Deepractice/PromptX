@@ -33,6 +33,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
     "@npmcli/arborist": "^8.0.1",
     "@promptx/logger": "workspace:*",
     "@promptx/resource": "workspace:*",
