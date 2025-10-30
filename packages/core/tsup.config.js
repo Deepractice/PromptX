@@ -10,6 +10,7 @@ export default defineConfig({
     index: 'src/index.js',
     cognition: 'src/cognition/index.js',
     resource: 'src/resource/index.js',
+    mcp: 'src/mcp/index.js',
     toolx: 'src/toolx/index.js'
   },
   format: ['cjs'], // 只构建 CommonJS

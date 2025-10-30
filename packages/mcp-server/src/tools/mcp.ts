@@ -119,6 +119,54 @@ MCP (Model Context Protocol) 工具让你能够：
 }
 \`\`\`
 
+### 8. call - 调用工具
+直接调用外部 MCP 服务器的工具
+
+示例：
+\`\`\`json
+{
+  "action": "call",
+  "params": {
+    "serverName": "filesystem",
+    "toolName": "read_file",
+    "arguments": {
+      "path": "/Users/sean/test.txt"
+    }
+  }
+}
+\`\`\`
+
+### 9. read - 读取资源
+读取外部 MCP 服务器的资源
+
+示例：
+\`\`\`json
+{
+  "action": "read",
+  "params": {
+    "serverName": "filesystem",
+    "uri": "file:///Users/sean/test.txt"
+  }
+}
+\`\`\`
+
+### 10. prompt - 获取提示词
+获取外部 MCP 服务器的提示词
+
+示例：
+\`\`\`json
+{
+  "action": "prompt",
+  "params": {
+    "serverName": "github",
+    "promptName": "create-pr-description",
+    "arguments": {
+      "repository": "owner/repo"
+    }
+  }
+}
+\`\`\`
+
 ## URI 访问方式
 
 安装服务器后，可以通过 URI 访问其能力：
@@ -224,7 +272,7 @@ parameters:
     properties: {
       action: {
         type: 'string',
-        enum: ['install', 'list', 'info', 'start', 'stop', 'restart', 'enable', 'disable', 'remove', 'capabilities'],
+        enum: ['install', 'list', 'info', 'start', 'stop', 'restart', 'enable', 'disable', 'remove', 'capabilities', 'call', 'read', 'prompt'],
         description: 'MCP 命令操作'
       },
       params: {
@@ -234,6 +282,22 @@ parameters:
           serverName: {
             type: 'string',
             description: 'MCP 服务器名称'
+          },
+          toolName: {
+            type: 'string',
+            description: '工具名称（用于 call 命令）'
+          },
+          arguments: {
+            type: 'object',
+            description: '工具参数（用于 call 命令）'
+          },
+          uri: {
+            type: 'string',
+            description: '资源 URI（用于 read 命令）'
+          },
+          promptName: {
+            type: 'string',
+            description: '提示词名称（用于 prompt 命令）'
           },
           config: {
             type: 'object',
@@ -274,19 +338,63 @@ parameters:
 
   handler: async (args: { action: string; params?: any }) => {
     try {
-      // 动态导入 @promptx/core/mcp
-      const mcpModule = await import('@promptx/core/mcp');
-      const { MCPCommandHandler } = mcpModule;
+      // 动态导入 @promptx/core
+      const core = await import('@promptx/core');
+      const coreExports = core.default || core;
+
+      // 获取 MCP 模块
+      const mcpModule = (coreExports as any).mcp;
+
+      if (!mcpModule || !mcpModule.MCPCommandHandler) {
+        throw new Error('MCP module not available in @promptx/core');
+      }
 
       // 创建 MCP 命令处理器
-      const handler = new MCPCommandHandler();
+      const handler = new mcpModule.MCPCommandHandler();
 
       // 初始化（如果还没初始化）
       if (!handler.initialized) {
         await handler.initialize();
       }
 
-      // 执行命令
+      // 处理工具调用、资源读取、提示词获取
+      if (args.action === 'call') {
+        const toolProxy = handler.getToolProxy();
+        const { serverName, toolName, arguments: toolArgs } = args.params || {};
+
+        if (!serverName || !toolName) {
+          throw new Error('call 命令需要 serverName 和 toolName 参数');
+        }
+
+        const result = await toolProxy.callTool(serverName, toolName, toolArgs || {});
+        return outputAdapter.convertToMCPFormat(result);
+      }
+
+      if (args.action === 'read') {
+        const toolProxy = handler.getToolProxy();
+        const { serverName, uri } = args.params || {};
+
+        if (!serverName || !uri) {
+          throw new Error('read 命令需要 serverName 和 uri 参数');
+        }
+
+        const result = await toolProxy.readResource(serverName, uri);
+        return outputAdapter.convertToMCPFormat(result);
+      }
+
+      if (args.action === 'prompt') {
+        const toolProxy = handler.getToolProxy();
+        const { serverName, promptName, arguments: promptArgs } = args.params || {};
+
+        if (!serverName || !promptName) {
+          throw new Error('prompt 命令需要 serverName 和 promptName 参数');
+        }
+
+        const result = await toolProxy.getPrompt(serverName, promptName, promptArgs || {});
+        return outputAdapter.convertToMCPFormat(result);
+      }
+
+      // 执行管理命令
       const result = await handler.handleCommand(args.action, args.params || {});
 
       // 格式化输出

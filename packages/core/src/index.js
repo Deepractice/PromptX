@@ -14,6 +14,9 @@ const cognition = require('./cognition')
 // 资源管理模块
 const resource = require('./resource')
 
+// MCP 客户端模块
+const mcp = require('./mcp')
+
 // 工具扩展模块
 const toolx = require('./toolx')
 
@@ -36,6 +39,7 @@ const utils = {
 module.exports = {
   cognition,
   resource,
+  mcp,
   toolx,
   pouch,
   project,
