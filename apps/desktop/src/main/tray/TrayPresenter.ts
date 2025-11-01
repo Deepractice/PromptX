@@ -23,6 +23,7 @@ import * as logger from '@promptx/logger'
 import { ResourceManager } from '~/main/ResourceManager'
 import packageJson from '../../../package.json'
 import type { NativeImage } from 'electron'
+import { pathToFileURL } from 'node:url'
 
 interface TrayMenuItem {
   id?: string
@@ -442,11 +443,14 @@ return
     })
 
     if (process.env.NODE_ENV === 'development') {
-      this.settingsWindow.loadURL('http://localhost:5173/settings/index.html')
+      // 开发环境：指向 React Hash 路由
+      this.settingsWindow.loadURL('http://localhost:5173/#/settings')
     } else {
-      this.settingsWindow.loadFile(
-        path.join(__dirname, '../renderer/settings/index.html')
-      )
+      // 生产环境：加载打包后的入口，再附加 Hash 路由
+      const fileUrl = pathToFileURL(
+        path.join(__dirname, '../renderer/index.html')
+      ).toString()
+      this.settingsWindow.loadURL(`${fileUrl}#/settings`)
     }
 
     this.settingsWindow.on('closed', () => {
