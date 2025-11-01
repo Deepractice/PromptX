@@ -2,6 +2,7 @@ import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron'
 import { ResourceService } from '~/main/application/ResourceService'
 import { Resource } from '~/main/domain/Resource'
 import * as path from 'path'
+import { pathToFileURL } from 'node:url'
 
 /**
  * Resource List Window - 资源管理窗口
@@ -148,9 +149,12 @@ return
     
     // 加载资源管理页面
     if (process.env.NODE_ENV === 'development') {
-      this.window.loadURL('http://localhost:5173/resources.html')
+      this.window.loadURL('http://localhost:5173/#/resources')
     } else {
-      this.window.loadFile(path.join(__dirname, '../renderer/resources.html'))
+      const fileUrl = pathToFileURL(
+        path.join(__dirname, '../renderer/index.html')
+      ).toString()
+      this.window.loadURL(`${fileUrl}#/resources`)
     }
     
     this.window.once('ready-to-show', () => {

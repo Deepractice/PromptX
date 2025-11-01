@@ -1,6 +1,8 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import { resolve } from 'path'
-
+import path, { resolve } from 'node:path'
+import react from '@vitejs/plugin-react'
+import tailwindcss from "@tailwindcss/vite"
+import type { PluginOption } from 'vite'  // 新增：统一插件类型
 export default defineConfig({
   main: {
     plugins: [
@@ -54,19 +56,19 @@ export default defineConfig({
     }
   },
   renderer: {
-    root: resolve(__dirname, 'src/renderer'),
-    publicDir: resolve(__dirname, 'public'),  // 添加这行
+    root: resolve(__dirname, 'src/view'),
+    publicDir: resolve(__dirname, 'public'),
     build: {
       rollupOptions: {
         input: {
-          resources: resolve(__dirname, 'src/renderer/resources.html'),
-          settings: resolve(__dirname, 'src/renderer/settings/index.html')
+          index: resolve(__dirname, 'src/view/index.html')
         }
       },
     },
+    plugins: [react(), tailwindcss()] as any,
     resolve: {
       alias: {
-        '~': resolve(__dirname, 'src')
+        '@': path.resolve(__dirname, 'src/view')
       }
     }
   }

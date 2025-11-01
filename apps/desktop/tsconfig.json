@@ -5,8 +5,21 @@
     "outDir": "./out",
     "composite": true,
     "moduleResolution": "node",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM"],
+    "types": ["react", "react-dom"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/view/*"],
+      "@/components/*": ["src/view/components/*"],
+      "@/lib/*": ["src/view/lib/*"],
+      "@/hooks/*": ["src/view/hooks/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["out", "dist", "node_modules", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["out", "dist", "node_modules", "**/*.spec.ts", "**/*.test.ts"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

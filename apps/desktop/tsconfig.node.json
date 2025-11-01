@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  },
+  "include": [
+    "electron.vite.config.ts"
+    // 需要的话也可以包含主进程/预加载脚本：
+    // "src/main/**/*",
+    // "src/preload/**/*"
+  ]
+}
