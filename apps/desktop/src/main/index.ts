@@ -10,9 +10,11 @@ import { ElectronNotificationAdapter } from '~/main/infrastructure/adapters/Elec
 import { StartServerUseCase } from '~/main/application/useCases/StartServerUseCase'
 import { StopServerUseCase } from '~/main/application/useCases/StopServerUseCase'
 import { UpdateManager } from '~/main/application/UpdateManager'
+import { AutoStartService } from '~/main/application/AutoStartService'
+import { ElectronAutoStartAdapter } from '~/main/infrastructure/adapters/ElectronAutoStartAdapter'
+import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
-import { AutoStartManager } from '@promptx/config'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
 
 class PromptXDesktopApp {
@@ -22,7 +24,8 @@ class PromptXDesktopApp {
   private configPort: FileConfigAdapter | null = null
   private notificationPort: ElectronNotificationAdapter | null = null
   private updateManager: UpdateManager | null = null
-  private autoStartManager: AutoStartManager | null = null
+  private autoStartService: AutoStartService | null = null
+  private autoStartWindow: AutoStartWindow | null = null
 
    async initialize(): Promise<void> {
     logger.info('Initializing PromptX Desktop...')
@@ -40,16 +43,19 @@ class PromptXDesktopApp {
       logger.info('Dock icon hidden (macOS)')
     }
 
-    // === 先创建 autoStartManager ===
-    this.autoStartManager = new AutoStartManager({
+    // === 先创建 autoStartService ===
+    const autoStartAdapter = new ElectronAutoStartAdapter({
       name: 'PromptX Desktop',
       path: process.execPath,
       isHidden: true, // 开机启动时隐藏窗口
-      mac: { useLaunchAgent: true }  // macOS: 使用 LaunchAgent 更稳
+      mac: { useLaunchAgent: true }  // macOS: 使用 LaunchAgent 更稳定
     })
+    this.autoStartService = new AutoStartService(autoStartAdapter)
+    
+    // === 创建 autoStartWindow 来处理 IPC ===
+    this.autoStartWindow = new AutoStartWindow(this.autoStartService)
 
-    // === 然后设置 IPC ===
-    this.setupAutoStartIPC()
+    // === 然后设置其他 IPC ===
     this.setupServerConfigIPC()
 
     // Setup infrastructure
@@ -137,19 +143,6 @@ class PromptXDesktopApp {
       logger.debug(`Updated PATH with Electron directory: ${electronDir}`)
     }
   }
-   private setupAutoStartIPC(): void {
-      ipcMain.handle('auto-start:enable', async () => {
-        return await this.autoStartManager?.enable()
-      })
-
-      ipcMain.handle('auto-start:disable', async () => {
-        return await this.autoStartManager?.disable()
-      })
-
-      ipcMain.handle('auto-start:status', async () => {
-        return await this.autoStartManager?.isEnabled()
-      })
-    }
 
   private setupServerConfigIPC(): void {
     ipcMain.handle('server-config:get', async () => {
@@ -319,6 +312,11 @@ class PromptXDesktopApp {
     if (this.trayPresenter) {
       this.trayPresenter.destroy()
       this.trayPresenter = null
+    }
+    
+    if (this.autoStartWindow) {
+      this.autoStartWindow.cleanup()
+      this.autoStartWindow = null
     }
   }
 }

@@ -74,7 +74,7 @@ export class UpdateManager {
       }
       return result
     } catch (error) {
-      logger.error('UpdateManager: Check for updates failed:', error)
+      logger.error('UpdateManager: Check for updates failed:', String(error))
       throw error
     }
   }
@@ -95,7 +95,7 @@ export class UpdateManager {
         await this.downloadUpdate()
       }
     } catch (error) {
-      logger.error('UpdateManager: Auto check and download failed:', error)
+      logger.error('UpdateManager: Auto check and download failed:', String(error))
     }
   }
 

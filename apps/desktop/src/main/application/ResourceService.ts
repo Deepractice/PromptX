@@ -74,27 +74,6 @@ export class ResourceService {
     }
   }
 
-  /**
-   * 执行工具
-   */
-  async executeTool(toolId: string, parameters?: any): Promise<{ success: boolean; result?: any; message?: string }> {
-    try {
-      const resource = await this.repository.findById(toolId)
-      
-      if (!resource) {
-        return { success: false, message: '工具不存在' }
-      }
-
-      if (resource.type !== 'tool') {
-        return { success: false, message: '只能执行工具类型的资源' }
-      }
-
-      // TODO: 实现工具执行逻辑
-      return { success: true, message: '工具执行功能待实现' }
-    } catch (error: any) {
-      return { success: false, message: error.message || '执行失败' }
-    }
-  }
 
   /**
    * 更新资源元数据（名称和描述）

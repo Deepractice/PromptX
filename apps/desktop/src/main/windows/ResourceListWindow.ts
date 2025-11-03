@@ -1,6 +1,5 @@
 import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron'
 import { ResourceService } from '~/main/application/ResourceService'
-import { Resource } from '~/main/domain/Resource'
 import * as path from 'path'
 import { pathToFileURL } from 'node:url'
 
@@ -75,19 +74,6 @@ export class ResourceListWindow {
       }
     })
 
-    // 执行工具
-    ipcMain.handle('resources:executeTool', async (_: IpcMainInvokeEvent, toolId: string, parameters?: any) => {
-      try {
-        const result = await this.resourceService.executeTool(toolId, parameters)
-        return result
-      } catch (error: any) {
-        console.error('Failed to execute tool:', error)
-        return {
-          success: false,
-          message: error.message
-        }
-      }
-    })
 
     // 获取资源统计
     ipcMain.handle('resources:getStatistics', async () => {
@@ -206,8 +192,7 @@ export class ResourceListWindow {
           const discover = new DiscoverCommand()
           await discover.refreshAllResources()
         } catch (refreshErr) {
-          // 刷新失败不阻塞删除
-          console.warn('Resource refresh after delete failed:', refreshErr?.message || refreshErr)
+          console.warn('Resource refresh after delete failed:', refreshErr)
         }
 
         return { success: true }

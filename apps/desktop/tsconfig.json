@@ -11,6 +11,7 @@
     "types": ["react", "react-dom"],
     "baseUrl": ".",
     "paths": {
+      "~/*": ["src/*"],
       "@/*": ["src/view/*"],
       "@/components/*": ["src/view/components/*"],
       "@/lib/*": ["src/view/lib/*"],

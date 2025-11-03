@@ -1,31 +1,21 @@
 /**
  * @fileoverview 
- * 此文件提供了 AutoStartManager 类，用于管理 PromptX 应用程序的开机自启动功能。
- * 它封装了 auto-launch 库的功能，提供了简单易用的 API 来启用、禁用和检查自启动状态。
+ * Electron 自启动适配器
+ * 实现了基于 auto-launch 库的应用程序开机自启动功能
  * 
  * @author PromptX Team
  * @version 1.0.0
  */
 
-/**
- * 导入 auto-launch 库，它提供了跨平台的应用程序自启动功能支持
- * 支持 Windows、macOS 和 Linux 系统
- */
 import AutoLaunch from 'auto-launch';
+import { IAutoStartPort } from '~/main/domain/ports/IAutoStartPort';
 
 /**
- * AutoStartManager 配置选项接口
- * 
- * @interface AutoStartManagerOptions
- * @property {string} appName - 应用程序名称，将显示在操作系统的自启动列表中
- * @property {string} [appPath] - 可选的应用程序路径，如果不提供，auto-launch 将尝试自动检测
- *                               对于 Electron 应用，通常不需要指定
- * @property {object} [mac] - macOS 特定的配置选项
- * @property {boolean} [mac.useLaunchAgent] - 是否使用 LaunchAgent 而不是 Login Items (macOS)
+ * Electron 自启动适配器配置选项
  */
-export interface AutoStartManagerOptions {
+export interface ElectronAutoStartAdapterOptions {
   /** 应用程序名称 */
-  name: string;  // 应用程序名称，将显示在操作系统的自启动列表中
+  name: string;
   /** 应用程序路径，默认为 process.execPath */
   path?: string;
   /** 启动时隐藏，默认为 false */
@@ -37,14 +27,15 @@ export interface AutoStartManagerOptions {
 }
 
 /**
- * AutoStartManager 类 - 管理应用程序的开机自启动功能
+ * Electron 自启动适配器
  * 
- * 此类提供了一个简单的接口来控制应用程序的自启动行为，
- * 包括启用、禁用自启动功能以及检查当前状态。
+ * 此类实现了 IAutoStartPort 接口，提供基于 auto-launch 库的
+ * 跨平台应用程序自启动功能支持（Windows、macOS、Linux）
  * 
- * @class AutoStartManager
+ * @class ElectronAutoStartAdapter
+ * @implements {IAutoStartPort}
  */
-export class AutoStartManager {
+export class ElectronAutoStartAdapter implements IAutoStartPort {
   /**
    * AutoLaunch 实例，用于与操作系统的自启动机制交互
    * @private
@@ -52,12 +43,12 @@ export class AutoStartManager {
   private launcher: AutoLaunch;
 
   /**
-   * 创建 AutoStartManager 的新实例
+   * 创建 ElectronAutoStartAdapter 的新实例
    * 
    * @constructor
-   * @param {AutoStartManagerOptions} options - 配置选项
+   * @param {ElectronAutoStartAdapterOptions} options - 配置选项
    */
-  constructor(options: AutoStartManagerOptions) {
+  constructor(options: ElectronAutoStartAdapterOptions) {
     this.launcher = new AutoLaunch(options);
   }
 
