@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Search, Pickaxe, UserRoundPen, Database, SquarePen, FolderDown, Trash } from "lucide-react"
 import { toast, Toaster } from "sonner"
+import ResourceEditor from "./components/ResourceEditor"
 
 type ResourceItem = {
   id: string
@@ -15,18 +13,9 @@ type ResourceItem = {
   source?: string
 }
 
-type Statistics = {
-  roles: number
-  tools: number
-  sources?: Record<string, number>
-}
-
 export default function ResourcesPage() {
   const [items, setItems] = useState<ResourceItem[]>([])
-  const [stats, setStats] = useState<Statistics | null>(null)
   const [query, setQuery] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   // 新增：筛选状态
   const [typeFilter, setTypeFilter] = useState<"all" | "role" | "tool">("all")
@@ -44,8 +33,6 @@ export default function ResourcesPage() {
     })
   }, [items, typeFilter, sourceFilter, query])
   const loadResources = async () => {
-    setLoading(true)
-    setError(null)
     try {
       const result = await window.electronAPI?.getGroupedResources()
       if (result?.success) {
@@ -61,15 +48,12 @@ export default function ResourcesPage() {
         console.log("Loaded statistics:", statistics)
 
         // 使用统一的计算函数
-        setStats(calculateStats(flat))
       } else {
-        setError("加载资源失败")
+        toast.error("加载资源失败")
       }
     } catch (e: any) {
       console.error("Failed to load resources:", e)
-      setError(e?.message || "加载资源失败")
-    } finally {
-      setLoading(false)
+      toast.error(e?.message || "加载资源失败")
     }
   }
 
@@ -81,7 +65,6 @@ export default function ResourcesPage() {
       return
     }
     try {
-      setLoading(true)
       const result = await window.electronAPI?.searchResources(q.trim())
       if (result?.success) {
         const list: ResourceItem[] = (result.data || []).map((item: any) => ({
@@ -93,13 +76,11 @@ export default function ResourcesPage() {
         }))
         setItems(list)
       } else {
-        setError("搜索失败")
+        toast.error("搜索失败")
       }
     } catch (e: any) {
       console.error("Search failed:", e)
-      setError(e?.message || "搜索失败")
-    } finally {
-      setLoading(false)
+      toast.error(e?.message || "搜索失败")
     }
   }
 
@@ -121,20 +102,6 @@ export default function ResourcesPage() {
     })
     return stats
   }, [items])
-
-  // 统一的统计信息计算函数
-  const calculateStats = (itemList: ResourceItem[]): Statistics => {
-    const roles = itemList.filter(item => item.type === "role").length
-    const tools = itemList.filter(item => item.type === "tool").length
-
-    const sources: Record<string, number> = {}
-    itemList.forEach(item => {
-      const source = item.source || "user"
-      sources[source] = (sources[source] || 0) + 1
-    })
-
-    return { roles, tools, sources }
-  }
 
   // 分享即下载（绑定到“查看/外链”图标）
   const handleView = async (item: ResourceItem) => {
@@ -174,7 +141,6 @@ export default function ResourcesPage() {
         setItems(updatedItems)
 
         // 重新计算统计信息
-        setStats(calculateStats(updatedItems))
 
         toast.success("删除成功")
       } else {
@@ -185,161 +151,20 @@ export default function ResourcesPage() {
     }
   }
 
-  // 新增：编辑器状态
+  // 编辑器状态
   const [editorOpen, setEditorOpen] = useState(false)
-  const [editorLoading, setEditorLoading] = useState(false)
-  const [editorError, setEditorError] = useState<string | null>(null)
-  const [fileList, setFileList] = useState<string[]>([])
-  const [selectedFile, setSelectedFile] = useState<string | null>(null)
-  const [fileContent, setFileContent] = useState<string>("")
   const [editingItem, setEditingItem] = useState<ResourceItem | null>(null)
-  const [fileContentLoading, setFileContentLoading] = useState(false)
 
-  // 新增：资源信息编辑状态
-  const [editingName, setEditingName] = useState<string>("")
-  const [editingDescription, setEditingDescription] = useState<string>("")
-  const [resourceInfoChanged, setResourceInfoChanged] = useState(false)
-
-  // 新增：编辑（弹窗）
+  // 编辑（弹窗）
   const handleEdit = async (item: ResourceItem) => {
-    setEditorOpen(true)
     setEditingItem(item)
-    setEditorLoading(true)
-    setEditorError(null)
-
-    // 初始化资源信息编辑状态
-    setEditingName(item.name || "")
-    setEditingDescription(item.description || "")
-    setResourceInfoChanged(false)
-
-    try {
-      const res = await window.electronAPI?.invoke("resources:listFiles", {
-        id: item.id,
-        type: item.type,
-        source: item.source ?? "user"
-      })
-      if (!res?.success) throw new Error(res?.message || "加载文件列表失败")
-      const files: string[] = res.files || []
-      setFileList(files)
-      const initial = files[0] || null
-      setSelectedFile(initial)
-      if (initial) {
-        const fr = await window.electronAPI?.invoke("resources:readFile", {
-          id: item.id,
-          type: item.type,
-          source: item.source ?? "user",
-          relativePath: initial
-        })
-        if (!fr?.success) throw new Error(fr?.message || "读取文件失败")
-        setFileContent(fr.content || "")
-      } else {
-        setFileContent("")
-      }
-    } catch (e: any) {
-      setEditorError(e?.message || "打开编辑器失败")
-    } finally {
-      setEditorLoading(false)
-    }
+    setEditorOpen(true)
   }
 
-  // 新增：选择文件
-  const handleSelectFile = async (relativePath: string) => {
-    if (!editingItem) return
-    setSelectedFile(relativePath)
-    setFileContentLoading(true)
-    setEditorError(null)
-    try {
-      const fr = await window.electronAPI?.invoke("resources:readFile", {
-        id: editingItem.id,
-        type: editingItem.type,
-        source: editingItem.source ?? "user",
-        relativePath
-      })
-      if (!fr?.success) throw new Error(fr?.message || "读取文件失败")
-      setFileContent(fr.content || "")
-    } catch (e: any) {
-      setEditorError(e?.message || "读取文件失败")
-      setFileContent("") // 出错时清空内容
-    } finally {
-      setFileContentLoading(false)
-    }
-  }
-
-  // 新增：保存文件
-  const handleSaveFile = async () => {
-    if (!editingItem || !selectedFile) return
-    if ((editingItem.source ?? "user") !== "user") {
-      toast.error("仅支持修改用户资源（system/project不可编辑）")
-      return
-    }
-    setEditorLoading(true)
-    setEditorError(null)
-    try {
-      const sr = await window.electronAPI?.invoke("resources:saveFile", {
-        id: editingItem.id,
-        type: editingItem.type,
-        source: editingItem.source ?? "user",
-        relativePath: selectedFile,
-        content: fileContent
-      })
-      if (!sr?.success) throw new Error(sr?.message || "保存失败")
-      toast.success("保存成功")
-    } catch (e: any) {
-      setEditorError(e?.message || "保存失败")
-    } finally {
-      setEditorLoading(false)
-    }
-  }
-
-  // 新增：保存资源信息（名称和描述）
-  const handleSaveResourceInfo = async () => {
-    if (!editingItem) return
-    if ((editingItem.source ?? "user") !== "user") {
-      toast.error("仅支持修改用户资源（system/project不可编辑）")
-      return
-    }
-    setEditorLoading(true)
-    setEditorError(null)
-    try {
-      const sr = await window.electronAPI?.invoke("resources:updateMetadata", {
-        id: editingItem.id,
-        type: editingItem.type,
-        source: editingItem.source ?? "user",
-        name: editingName,
-        description: editingDescription
-      })
-      if (!sr?.success) throw new Error(sr?.message || "保存失败")
-
-      // 更新本地状态
-      setEditingItem(prev => (prev ? { ...prev, name: editingName, description: editingDescription } : null))
-      setResourceInfoChanged(false)
-
-      // 刷新资源列表
-      await loadResources()
-
-      toast.success("资源信息保存成功")
-    } catch (e: any) {
-      setEditorError(e?.message || "保存资源信息失败")
-    } finally {
-      setEditorLoading(false)
-    }
-  }
-
-  // 新增：关闭编辑器
+  // 关闭编辑器
   const closeEditor = () => {
     setEditorOpen(false)
     setEditingItem(null)
-    setFileList([])
-    setSelectedFile(null)
-    setFileContent("")
-    setEditorError(null)
-    setEditorLoading(false)
-    setFileContentLoading(false)
-
-    // 清理资源信息编辑状态
-    setEditingName("")
-    setEditingDescription("")
-    setResourceInfoChanged(false)
   }
 
   return (
@@ -461,119 +286,10 @@ export default function ResourcesPage() {
       <div className="flex justify-center py-4">
         <span className="text-sm text-muted-foreground">没有更多了:-I</span>
       </div>
-      {/* 编辑器弹窗 */}
-      <Dialog
-        open={editorOpen}
-        onOpenChange={open => {
-          if (!open) {
-            closeEditor()
-          }
-        }}
-      >
-        <DialogContent className="max-w-6xl w-[90vw] h-[80vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle>
-              编辑 {editingItem?.type === "role" ? "角色" : "工具"}: {editingItem?.name}
-            </DialogTitle>
-          </DialogHeader>
 
-          {/* 资源信息编辑区域 */}
-          <div className="p-4 border-b bg-gray-50">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
-                <Input
-                  value={editingName}
-                  onChange={e => {
-                    setEditingName(e.target.value)
-                    setResourceInfoChanged(true)
-                  }}
-                  placeholder="输入资源名称"
-                  className="w-full"
-                  disabled={editorLoading || (editingItem?.source ?? "user") !== "user"}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
-                <Input
-                  value={editingDescription}
-                  onChange={e => {
-                    setEditingDescription(e.target.value)
-                    setResourceInfoChanged(true)
-                  }}
-                  placeholder="输入资源描述"
-                  className="w-full"
-                  disabled={editorLoading || (editingItem?.source ?? "user") !== "user"}
-                />
-              </div>
-            </div>
-            {resourceInfoChanged && (
-              <div className="mt-3 flex justify-end">
-                <Button onClick={handleSaveResourceInfo} disabled={editorLoading || !editingName.trim()} className="text-sm  text-white">
-                  {editorLoading ? "保存中..." : "保存资源信息"}
-                </Button>
-              </div>
-            )}
-          </div>
+      {/* 编辑器弹窗组件 */}
+      <ResourceEditor isOpen={editorOpen} onClose={closeEditor} editingItem={editingItem} onResourceUpdated={loadResources} />
 
-          {/* 弹窗内容 */}
-          <div className="flex border-b flex-1 overflow-hidden">
-            {/* 左侧文件列表 */}
-            <div className="w-1/3 border-r bg-gray-50 p-4 overflow-y-auto">
-              <h3 className="font-medium mb-3">文件列表</h3>
-              {editorLoading && <p className="text-sm text-gray-500">加载中...</p>}
-              {editorError && <p className="text-sm text-red-600">{editorError}</p>}
-              <div className="space-y-1">
-                {fileList.map(file => {
-                  const isJs = file.endsWith(".js")
-                  const isMd = file.endsWith(".md")
-                  const isSelected = selectedFile === file
-
-                  return (
-                    <Button key={file} variant={isSelected ? "default" : "ghost"} onClick={() => handleSelectFile(file)} className={`w-full justify-start text-left  p-2 h-auto text-sm transition-colors flex items-center gap-2 ${isSelected ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : "hover:bg-gray-200"}`}>
-                      <span className="text-xs">{isJs ? "🔧" : isMd ? "📝" : "📄"}</span>
-                      <span className="truncate">{file}</span>
-                    </Button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* 右侧内容编辑器 */}
-            <div className="flex-1 flex flex-col">
-              <div className="p-4 border-b">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{selectedFile ? `编辑: ${selectedFile}` : "请选择文件"}</span>
-                  <Button className="text-white" onClick={handleSaveFile} disabled={!selectedFile || editorLoading || fileContentLoading || (editingItem?.source ?? "user") !== "user"}>
-                    保存
-                  </Button>
-                </div>
-              </div>
-              <div className="flex-1 p-4">
-                {selectedFile ? (
-                  fileContentLoading ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                        <p>正在加载文件内容...</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <textarea value={fileContent} onChange={e => setFileContent(e.target.value)} className={`w-full h-full border rounded p-3 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${(editingItem?.source ?? "user") !== "user" ? "bg-gray-100 text-gray-600 cursor-not-allowed" : "bg-white"}`} placeholder={(editingItem?.source ?? "user") !== "user" ? "此资源为只读，无法编辑..." : selectedFile.endsWith(".js") ? "JavaScript工具文件内容..." : selectedFile.endsWith(".md") ? "Markdown文档内容..." : "文件内容..."} readOnly={(editingItem?.source ?? "user") !== "user"} />
-                  )
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    <div className="text-center">
-                      <p>请从左侧选择要编辑的文件</p>
-                      {editingItem?.type === "tool" && <p className="text-xs mt-2 text-gray-400">工具通常包含 .tool.js 文件和 README.md 文档</p>}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
       <Toaster />
     </div>
   )
