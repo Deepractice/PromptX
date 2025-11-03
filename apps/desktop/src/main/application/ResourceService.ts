@@ -95,4 +95,25 @@ export class ResourceService {
       return { success: false, message: error.message || '执行失败' }
     }
   }
+
+  /**
+   * 更新资源元数据（名称和描述）
+   */
+  async updateResourceMetadata(id: string, updates: { name?: string; description?: string }): Promise<{ success: boolean; message?: string }> {
+    try {
+      const resource = await this.repository.findById(id)
+      
+      if (!resource) {
+        return { success: false, message: '资源不存在' }
+      }
+
+      if (resource.source !== 'user') {
+        return { success: false, message: '仅支持修改用户资源的元数据' }
+      }
+
+      return await this.repository.updateMetadata(id, updates)
+    } catch (error: any) {
+      return { success: false, message: error.message || '更新失败' }
+    }
+  }
 }

@@ -126,10 +126,10 @@ export class PromptXResourceRepository implements ResourceRepository {
       const resources: Resource[] = []
       
       // 处理角色
-      this.processRoles(roleCategories, resources)
+      await this.processRoles(roleCategories, resources)
       
       // 处理工具
-      this.processTools(toolCategories, resources)
+      await this.processTools(toolCategories, resources)
       
       console.log(`Loaded ${resources.length} resources from PromptX (roles: ${roleCategories.system?.length + roleCategories.project?.length + roleCategories.user?.length || 0}, tools: ${toolCategories.system?.length + toolCategories.project?.length + toolCategories.user?.length || 0})`)
       
@@ -141,63 +141,91 @@ export class PromptXResourceRepository implements ResourceRepository {
     }
   }
 
-  private processRoles(categories: any, resources: Resource[]) {
+  private async processRoles(categories: any, resources: Resource[]) {
     // 处理系统角色
     if (categories.system) {
-      categories.system.forEach((role: any) => {
-        resources.push(this.convertToResource(role, 'role', 'system'))
-      })
+      for (const role of categories.system) {
+        const resource = await this.convertToResource(role, 'role', 'system')
+        resources.push(resource)
+      }
     }
     
     // 处理项目角色
     if (categories.project) {
-      categories.project.forEach((role: any) => {
-        resources.push(this.convertToResource(role, 'role', 'project'))
-      })
+      for (const role of categories.project) {
+        const resource = await this.convertToResource(role, 'role', 'project')
+        resources.push(resource)
+      }
     }
     
     // 处理用户角色
     if (categories.user) {
-      categories.user.forEach((role: any) => {
-        resources.push(this.convertToResource(role, 'role', 'user'))
-      })
+      for (const role of categories.user) {
+        const resource = await this.convertToResource(role, 'role', 'user')
+        resources.push(resource)
+      }
     }
   }
 
-  private processTools(categories: any, resources: Resource[]) {
+  private async processTools(categories: any, resources: Resource[]) {
     // 处理系统工具
     if (categories.system) {
-      categories.system.forEach((tool: any) => {
-        resources.push(this.convertToResource(tool, 'tool', 'system'))
-      })
+      for (const tool of categories.system) {
+        const resource = await this.convertToResource(tool, 'tool', 'system')
+        resources.push(resource)
+      }
     }
     
     // 处理项目工具
     if (categories.project) {
-      categories.project.forEach((tool: any) => {
-        resources.push(this.convertToResource(tool, 'tool', 'project'))
-      })
+      for (const tool of categories.project) {
+        const resource = await this.convertToResource(tool, 'tool', 'project')
+        resources.push(resource)
+      }
     }
     
     // 处理用户工具
     if (categories.user) {
-      categories.user.forEach((tool: any) => {
-        resources.push(this.convertToResource(tool, 'tool', 'user'))
-      })
+      for (const tool of categories.user) {
+        const resource = await this.convertToResource(tool, 'tool', 'user')
+        resources.push(resource)
+      }
     }
   }
 
-  private convertToResource(promptxResource: any, type: ResourceType, source: ResourceSource): Resource {
+  private async convertToResource(promptxResource: any, type: ResourceType, source: ResourceSource): Promise<Resource> {
+    const resourceId = promptxResource.id || promptxResource.resourceId || 'unknown'
+    
+    // 对于用户资源，尝试读取自定义元数据
+    let customMetadata: any = {}
+    if (source === 'user') {
+      try {
+        const path = require('path')
+        const fs = require('fs-extra')
+        const os = require('os')
+        
+        const resourceDir = path.join(os.homedir(), '.promptx', 'resource', type, resourceId)
+        const metadataFile = path.join(resourceDir, 'metadata.json')
+        
+        if (await fs.pathExists(metadataFile)) {
+          customMetadata = await fs.readJson(metadataFile)
+        }
+      } catch (error) {
+        // 如果读取失败，使用默认值
+        console.warn(`Failed to read custom metadata for ${resourceId}:`, error)
+      }
+    }
+    
     const resource: Resource = {
-      id: promptxResource.id || promptxResource.resourceId || 'unknown',
-      name: promptxResource.name || promptxResource.title || promptxResource.id || 'Unknown',
-      description: promptxResource.description || promptxResource.brief || '暂无描述',
+      id: resourceId,
+      name: customMetadata.name || promptxResource.name || promptxResource.title || resourceId || 'Unknown',
+      description: customMetadata.description || promptxResource.description || promptxResource.brief || '暂无描述',
       type,
       source,
       category: promptxResource.category || 'general',
       tags: promptxResource.tags || [],
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: customMetadata.updatedAt ? new Date(customMetadata.updatedAt) : new Date()
     }
 
     // 添加角色特有字段
@@ -216,5 +244,64 @@ export class PromptXResourceRepository implements ResourceRepository {
     }
 
     return resource
+  }
+
+  async updateMetadata(id: string, updates: { name?: string; description?: string }): Promise<{ success: boolean; message?: string }> {
+    try {
+      // 只支持更新用户资源
+      const resource = await this.findById(id)
+      if (!resource) {
+        return { success: false, message: '资源不存在' }
+      }
+
+      if (resource.source !== 'user') {
+        return { success: false, message: '仅支持修改用户资源的元数据' }
+      }
+
+      // 获取资源的实际存储路径
+      const path = require('path')
+      const fs = require('fs-extra')
+      const os = require('os')
+
+      const resourceDir = path.join(os.homedir(), '.promptx', 'resource', resource.type, id)
+      const metadataFile = path.join(resourceDir, 'metadata.json')
+
+      // 检查资源目录是否存在
+      const exists = await fs.pathExists(resourceDir)
+      if (!exists) {
+        return { success: false, message: '资源目录不存在' }
+      }
+
+      // 读取现有元数据或创建新的
+      let metadata: any = {}
+      if (await fs.pathExists(metadataFile)) {
+        try {
+          metadata = await fs.readJson(metadataFile)
+        } catch (e) {
+          // 如果读取失败，使用空对象
+          metadata = {}
+        }
+      }
+
+      // 更新元数据
+      if (updates.name !== undefined) {
+        metadata.name = updates.name
+      }
+      if (updates.description !== undefined) {
+        metadata.description = updates.description
+      }
+      metadata.updatedAt = new Date().toISOString()
+
+      // 保存元数据
+      await fs.writeJson(metadataFile, metadata, { spaces: 2 })
+
+      // 清除缓存，强制下次重新加载
+      this.resourcesCache = null
+
+      return { success: true, message: '元数据更新成功' }
+    } catch (error: any) {
+      console.error('Failed to update resource metadata:', error)
+      return { success: false, message: error.message || '更新元数据失败' }
+    }
   }
 }

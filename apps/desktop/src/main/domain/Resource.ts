@@ -40,6 +40,9 @@ export interface ResourceRepository {
   search(query: string): Promise<Resource[]>
   getGroupedBySource(): Promise<GroupedResources>
   getStatistics(): Promise<ResourceStatistics>
+  
+  // 更新操作
+  updateMetadata(id: string, updates: { name?: string; description?: string }): Promise<{ success: boolean; message?: string }>
 }
 
 /**
