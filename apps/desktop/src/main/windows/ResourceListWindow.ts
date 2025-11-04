@@ -422,10 +422,8 @@ export class ResourceListWindow {
     if (process.env.NODE_ENV === 'development') {
       this.window.loadURL('http://localhost:5173/#/resources')
     } else {
-      const fileUrl = pathToFileURL(
-        path.join(__dirname, '../renderer/index.html')
-      ).toString()
-      this.window.loadURL(`${fileUrl}#/resources`)
+      const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
+      this.window.loadFile(indexHtmlPath, { hash: '/resources' })
     }
 
     this.window.once('ready-to-show', () => {

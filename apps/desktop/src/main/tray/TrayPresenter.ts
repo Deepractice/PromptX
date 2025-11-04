@@ -431,7 +431,7 @@ export class TrayPresenter {
 
     this.settingsWindow = new BrowserWindow({
       width: 600,
-      height: 1000,
+      height: 800,
       title: t('tray.windows.settings'),
       webPreferences: {
         nodeIntegration: false,
@@ -442,16 +442,13 @@ export class TrayPresenter {
       minimizable: false,
       maximizable: false
     })
-
     if (process.env.NODE_ENV === 'development') {
       // 开发环境：指向 React Hash 路由
       this.settingsWindow.loadURL('http://localhost:5173/#/settings')
     } else {
-      // 生产环境：加载打包后的入口，再附加 Hash 路由
-      const fileUrl = pathToFileURL(
-        path.join(__dirname, '../renderer/index.html')
-      ).toString()
-      this.settingsWindow.loadURL(`${fileUrl}#/settings`)
+      // 生产环境：直接加载打包后的入口文件，并用 hash 附加路由
+      const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
+      this.settingsWindow.loadFile(indexHtmlPath, { hash: '/settings' })
     }
 
     this.settingsWindow.on('closed', () => {
