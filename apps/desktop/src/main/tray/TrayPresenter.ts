@@ -24,6 +24,7 @@ import { ResourceManager } from '~/main/ResourceManager'
 import packageJson from '../../../package.json'
 import type { NativeImage } from 'electron'
 import { pathToFileURL } from 'node:url'
+import { t } from '../i18n'
 
 interface TrayMenuItem {
   id?: string
@@ -56,7 +57,7 @@ export class TrayPresenter {
     this.tray = this.createTray()
     // Load app icon for dialogs
     this.loadAppIcon()
-    
+
     // Setup status listener
     this.statusListener = (status) => this.updateStatus(status)
     this.serverPort.onStatusChange(this.statusListener)
@@ -65,17 +66,17 @@ export class TrayPresenter {
     this.updateManager.onUpdateAvailable(() => {
       this.initializeMenu()
     })
-    
+
     // Listen to all state changes to update menu
     this.updateManager.updater.on('state-changed', () => {
       this.initializeMenu()
     })
-    
+
     // Listen to download progress to update menu
     this.updateManager.updater.on('download-progress', () => {
       this.initializeMenu()
     })
-    
+
     // Initialize menu
     this.initializeMenu()
   }
@@ -191,7 +192,7 @@ export class TrayPresenter {
   async buildMenu(): Promise<TrayMenuItem[]> {
     const statusResult = await this.serverPort.getStatus()
     const status = statusResult.ok ? statusResult.value : ServerStatus.ERROR
-    
+
     const menuItems: TrayMenuItem[] = []
 
     // Status indicator
@@ -226,17 +227,17 @@ export class TrayPresenter {
     if (status === ServerStatus.RUNNING) {
       menuItems.push({
         id: 'copy',
-        label: 'Copy Server Address',
+        label: t('tray.menu.copyAddress'),
         click: () => this.handleCopyAddress()
       })
     }
 
     menuItems.push({ type: 'separator' })
-    
+
     // Resource management (roles and tools)
     menuItems.push({
       id: 'resources',
-      label: 'Manage Resources',
+      label: t('tray.menu.manageResources'),
       click: () => this.handleShowResources()
     })
 
@@ -245,14 +246,14 @@ export class TrayPresenter {
     // Show logs
     menuItems.push({
       id: 'logs',
-      label: 'Show Logs',
+      label: t('tray.menu.showLogs'),
       click: () => this.handleShowLogs()
     })
 
     // Settings 
     menuItems.push({
       id: 'settings',
-      label: 'Settings...',
+      label: t('tray.menu.settings'),
       click: () => this.handleShowSettings()
     })
 
@@ -261,54 +262,54 @@ export class TrayPresenter {
     // Update-related menu items based on state
     const updateState = this.updateManager.getUpdateState()
     const updateInfo = this.updateManager.getUpdateInfo()
-    
+
     switch (updateState) {
       case 'checking':
         menuItems.push({
           id: 'checking',
-          label: 'Checking for Updates...',
+          label: t('tray.menu.update.checking'),
           enabled: false
         })
         break
-        
+
       case 'update-available':
         menuItems.push({
           id: 'download-update',
-          label: `Download Update (${updateInfo?.version})`,
+          label: `${t('tray.menu.update.available')} (${updateInfo?.version})`,
           click: () => this.handleDownloadUpdate()
         })
         break
-        
+
       case 'downloading':
         const progress = this.updateManager.getProgress()
         menuItems.push({
           id: 'downloading',
-          label: `Downloading... ${progress ? Math.round(progress.percent) + '%' : ''}`,
+          label: `${t('tray.menu.update.downloading')} ${progress ? Math.round(progress.percent) + '%' : ''}`,
           enabled: false
         })
         break
-        
+
       case 'ready-to-install':
         const version = updateInfo?.version || ''
         menuItems.push({
           id: 'install-update',
-          label: version ? `Install Update (${version})` : 'Install Update',
+          label: version ? `${t('tray.menu.update.readyToInstall')} (${version})` : t('tray.menu.update.readyToInstall'),
           click: () => this.handleInstallUpdate()
         })
         break
-        
+
       case 'error':
         menuItems.push({
           id: 'retry-update',
-          label: 'Retry Update Check',
+          label: t('tray.menu.update.error'),
           click: () => this.handleCheckForUpdates()
         })
         break
-        
+
       default: // idle
         menuItems.push({
           id: 'check-updates',
-          label: 'Check for Updates...',
+          label: t('tray.menu.update.idle'),
           click: () => this.handleCheckForUpdates()
         })
         break
@@ -317,7 +318,7 @@ export class TrayPresenter {
     // About
     menuItems.push({
       id: 'about',
-      label: 'About PromptX',
+      label: t('tray.menu.about'),
       click: () => this.handleShowAbout()
     })
 
@@ -326,7 +327,7 @@ export class TrayPresenter {
     // Quit
     menuItems.push({
       id: 'quit',
-      label: 'Quit PromptX',
+      label: t('tray.menu.quit'),
       click: () => this.handleQuit()
     })
 
@@ -336,50 +337,50 @@ export class TrayPresenter {
   private getStatusLabel(status: ServerStatus): string {
     switch (status) {
       case ServerStatus.RUNNING:
-        return 'Running'
+        return t('tray.status.running')
       case ServerStatus.STOPPED:
-        return 'Stopped'
+        return t('tray.status.stopped')
       case ServerStatus.STARTING:
-        return 'Starting...'
+        return t('tray.status.starting')
       case ServerStatus.STOPPING:
-        return 'Stopping...'
+        return t('tray.status.stopping')
       case ServerStatus.ERROR:
-        return 'Error'
+        return t('tray.status.error')
       default:
-        return 'Unknown'
+        return t('tray.status.unknown')
     }
   }
 
   private getToggleLabel(status: ServerStatus): string {
     switch (status) {
       case ServerStatus.RUNNING:
-        return 'Stop Server'
+        return t('tray.menu.stopServer')
       case ServerStatus.STOPPED:
       case ServerStatus.ERROR:
-        return 'Start Server'
+        return t('tray.menu.startServer')
       case ServerStatus.STARTING:
-        return 'Starting...'
+        return t('tray.menu.starting')
       case ServerStatus.STOPPING:
-        return 'Stopping...'
+        return t('tray.menu.stopping')
       default:
-        return 'Toggle Server'
+        return t('tray.menu.toggleServer')
     }
   }
 
   private canToggle(status: ServerStatus): boolean {
-    return status === ServerStatus.RUNNING || 
-           status === ServerStatus.STOPPED ||
-           status === ServerStatus.ERROR
+    return status === ServerStatus.RUNNING ||
+      status === ServerStatus.STOPPED ||
+      status === ServerStatus.ERROR
   }
 
   async handleToggleServer(): Promise<void> {
     const statusResult = await this.serverPort.getStatus()
     if (!statusResult.ok) {
-return
-}
+      return
+    }
 
     const status = statusResult.value
-    
+
     if (status === ServerStatus.RUNNING) {
       await this.stopServerUseCase.execute()
     } else if (status === ServerStatus.STOPPED || status === ServerStatus.ERROR) {
@@ -407,7 +408,7 @@ return
     this.logsWindow = new BrowserWindow({
       width: 800,
       height: 600,
-      title: 'PromptX Logs',
+      title: t('tray.windows.logs'),
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true
@@ -421,7 +422,7 @@ return
       this.logsWindow = null
     })
   }
-  
+
   private handleShowSettings(): void {
     if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
       this.settingsWindow.focus()
@@ -431,7 +432,7 @@ return
     this.settingsWindow = new BrowserWindow({
       width: 600,
       height: 1000,
-      title: 'PromptX Settings',
+      title: t('tray.windows.settings'),
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -481,7 +482,7 @@ return
 
   async handleShowAbout(): Promise<void> {
     const aboutInfo = this.getAboutInfo()
-    
+
     const result = await dialog.showMessageBox({
       type: 'info',
       title: 'About PromptX',
@@ -538,10 +539,18 @@ return
 
     // Update tooltip
     const statusLabel = this.getStatusLabel(status)
-    this.tray.setToolTip(`PromptX Desktop - ${statusLabel}`)
+    this.tray.setToolTip(`${t('tray.tooltip')} - ${statusLabel}`)
 
     // Rebuild menu
     this.initializeMenu()
+  }
+
+  /**
+   * 刷新托盘菜单
+   * 用于语言切换等场景下重新构建菜单
+   */
+  async refreshMenu(): Promise<void> {
+    await this.initializeMenu()
   }
 
   destroy(): void {

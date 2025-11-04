@@ -1,0 +1,163 @@
+{
+  "settings": {
+    "title": "设置",
+    "subtitle": "自定义您的 PromptX 体验",
+    "language": {
+      "title": "语言",
+      "description": "选择您的首选语言",
+      "english": "English",
+      "chinese": "简体中文"
+    },
+    "autoStart": {
+      "title": "开机自启",
+      "description": "计算机启动时自动启动 PromptX",
+      "enable": "启用开机自启"
+    },
+    "server": {
+      "title": "服务器配置",
+      "description": "配置服务器主机、端口和调试设置",
+      "host": {
+        "label": "服务器主机",
+        "placeholder": "127.0.0.1",
+        "description": "服务器监听的主机地址，例如 127.0.0.1"
+      },
+      "port": {
+        "label": "服务器端口",
+        "placeholder": "5203",
+        "description": "服务器监听的端口，范围 1-65535"
+      },
+      "debug": {
+        "label": "调试模式",
+        "description": "输出更多日志信息用于故障排除"
+      },
+      "save": "保存配置",
+      "saving": "保存中...",
+      "reset": "重置为默认"
+    }
+  },
+  "resources": {
+    "search": {
+      "placeholder": "搜索资源 / 角色 / 工具"
+    },
+    "cards": {
+      "roles": {
+        "title": "角色",
+        "description": "可激活的角色数量"
+      },
+      "tools": {
+        "title": "工具",
+        "description": "可执行的工具数量"
+      },
+      "sources": {
+        "title": "来源",
+        "description": "各来源资源计数"
+      }
+    },
+    "filters": {
+      "type": "类型:",
+      "source": "来源:",
+      "all": "全部",
+      "roles": "角色",
+      "tools": "工具",
+      "system": "系统",
+      "user": "用户"
+    },
+    "actions": {
+      "edit": "编辑",
+      "download": "下载",
+      "delete": "删除"
+    },
+    "messages": {
+      "loadFailed": "加载资源失败",
+      "searchFailed": "搜索失败",
+      "downloadSuccess": "已保存到：{{path}}",
+      "downloadFailed": "下载失败",
+      "deleteConfirm": "确认删除{{type}} \"{{name}}\"？此操作不可恢复。",
+      "deleteSuccess": "删除成功",
+      "deleteFailed": "删除失败",
+      "deleteOnlyUser": "仅支持删除用户资源（system/project不可删除）",
+      "noMore": "没有更多了:-I"
+    },
+    "types": {
+      "role": "角色",
+      "tool": "工具"
+    },
+    "editor": {
+      "title": "编辑{{type}}：{{name}}",
+      "fields": {
+        "name": "名称",
+        "description": "描述",
+        "namePlaceholder": "请输入资源名称",
+        "descriptionPlaceholder": "请输入资源描述"
+      },
+      "fileList": "文件列表",
+      "editFile": "编辑：{{file}}",
+      "selectFile": "请选择文件",
+      "fileContent": "文件内容...",
+      "selectFilePrompt": "请从左侧选择要编辑的文件",
+      "buttons": {
+        "saveResourceInfo": "保存资源信息",
+        "saveFile": "保存文件",
+        "close": "关闭",
+        "saving": "保存中..."
+      },
+      "messages": {
+        "loadFilesFailed": "加载文件列表失败",
+        "readFileFailed": "读取文件失败",
+        "editorOpenFailed": "打开编辑器失败",
+        "saveFailed": "保存失败",
+        "saveSuccess": "保存成功",
+        "resourceInfoSaveSuccess": "资源信息保存成功",
+        "saveResourceInfoFailed": "保存资源信息失败",
+        "onlyUserEditable": "只能编辑用户资源（系统/项目为只读）",
+        "loading": "加载中...",
+        "loadingFileContent": "正在加载文件内容..."
+      },
+      "readOnly": "⚠️ 此资源为只读模式（{{source}}）"
+    }
+  },
+  "tray": {
+    "tooltip": "PromptX 桌面版",
+    "status": {
+      "running": "运行中",
+      "stopped": "已停止",
+      "starting": "启动中...",
+      "stopping": "停止中...",
+      "error": "错误",
+      "unknown": "未知"
+    },
+    "menu": {
+      "status": "状态：{{status}}",
+      "startServer": "启动服务器",
+      "stopServer": "停止服务器",
+      "toggleServer": "切换服务器",
+      "copyAddress": "复制服务器地址",
+      "manageResources": "管理资源",
+      "showLogs": "显示日志",
+      "settings": "设置...",
+      "checkUpdates": "检查更新...",
+      "checkingUpdates": "正在检查更新...",
+      "downloadUpdate": "下载更新 ({{version}})",
+      "downloading": "下载中... {{percent}}%",
+      "installUpdate": "安装更新 ({{version}})",
+      "retryUpdate": "重试更新检查",
+      "about": "关于 PromptX",
+      "quit": "退出 PromptX"
+    },
+    "windows": {
+      "logs": "PromptX 日志",
+      "settings": "PromptX 设置"
+    }
+  },
+  "messages": {
+    "autoStartEnabled": "已成功启用开机自启",
+    "autoStartDisabled": "已成功禁用开机自启",
+    "autoStartError": "切换开机自启失败",
+    "configSaved": "配置保存成功",
+    "configSaveError": "保存配置失败",
+    "configReset": "已重置为默认配置",
+    "configResetError": "重置配置失败",
+    "loadError": "加载设置失败，请重试",
+    "languageChanged": "语言切换成功"
+  }
+}

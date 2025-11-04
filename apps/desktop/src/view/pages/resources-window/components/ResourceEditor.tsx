@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 type ResourceItem = {
   id: string
@@ -20,6 +21,7 @@ interface ResourceEditorProps {
 }
 
 export default function ResourceEditor({ isOpen, onClose, editingItem, onResourceUpdated }: ResourceEditorProps) {
+  const { t } = useTranslation()
   const [editorLoading, setEditorLoading] = useState(false)
   const [editorError, setEditorError] = useState<string | null>(null)
   const [fileList, setFileList] = useState<string[]>([])
@@ -90,10 +92,10 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
         source: editingItem.source ?? "user",
         relativePath
       })
-      if (!fr?.success) throw new Error(fr?.message || "读取文件失败")
+      if (!fr?.success) throw new Error(fr?.message || t("resources.editor.messages.readFileFailed"))
       setFileContent(fr.content || "")
     } catch (e: any) {
-      setEditorError(e?.message || "读取文件失败")
+      setEditorError(e?.message || t("resources.editor.messages.readFileFailed"))
       setFileContent("")
     } finally {
       setFileContentLoading(false)
@@ -103,7 +105,7 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
   const handleSaveFile = async () => {
     if (!editingItem || !selectedFile) return
     if ((editingItem.source ?? "user") !== "user") {
-      toast.error("仅支持修改用户资源（system/project不可编辑）")
+      toast.error(t("resources.editor.messages.onlyUserEditable"))
       return
     }
     setEditorLoading(true)
@@ -116,10 +118,10 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
         relativePath: selectedFile,
         content: fileContent
       })
-      if (!sr?.success) throw new Error(sr?.message || "保存失败")
-      toast.success("保存成功")
+      if (!sr?.success) throw new Error(sr?.message || t("resources.editor.messages.saveFailed"))
+      toast.success(t("resources.editor.messages.saveSuccess"))
     } catch (e: any) {
-      setEditorError(e?.message || "保存失败")
+      setEditorError(e?.message || t("resources.editor.messages.saveFailed"))
     } finally {
       setEditorLoading(false)
     }
@@ -128,7 +130,7 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
   const handleSaveResourceInfo = async () => {
     if (!editingItem) return
     if ((editingItem.source ?? "user") !== "user") {
-      toast.error("仅支持修改用户资源（system/project不可编辑）")
+      toast.error(t("resources.editor.messages.onlyUserEditable"))
       return
     }
     setEditorLoading(true)
@@ -141,13 +143,13 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
         name: editingName,
         description: editingDescription
       })
-      if (!sr?.success) throw new Error(sr?.message || "保存失败")
+      if (!sr?.success) throw new Error(sr?.message || t("resources.editor.messages.saveFailed"))
 
       setResourceInfoChanged(false)
       onResourceUpdated()
-      toast.success("资源信息保存成功")
+      toast.success(t("resources.editor.messages.resourceInfoSaveSuccess"))
     } catch (e: any) {
-      setEditorError(e?.message || "保存资源信息失败")
+      setEditorError(e?.message || t("resources.editor.messages.saveResourceInfoFailed"))
     } finally {
       setEditorLoading(false)
     }
@@ -171,7 +173,10 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
       <DialogContent className="max-w-7xl w-[90vw] h-[80vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>
-            编辑 {editingItem?.type === "role" ? "角色" : "工具"}: {editingItem?.name}
+            {t("resources.editor.title", { 
+              type: t(`resources.types.${editingItem?.type}`), 
+              name: editingItem?.name 
+            })}
           </DialogTitle>
         </DialogHeader>
 
@@ -179,27 +184,27 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
         <div className="p-4 border-b bg-gray-50">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("resources.editor.fields.name")}</label>
               <Input
                 value={editingName}
                 onChange={e => {
                   setEditingName(e.target.value)
                   setResourceInfoChanged(true)
                 }}
-                placeholder="输入资源名称"
+                placeholder={t("resources.editor.fields.namePlaceholder")}
                 className="w-full"
                 disabled={editorLoading || (editingItem?.source ?? "user") !== "user"}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("resources.editor.fields.description")}</label>
               <Input
                 value={editingDescription}
                 onChange={e => {
                   setEditingDescription(e.target.value)
                   setResourceInfoChanged(true)
                 }}
-                placeholder="输入资源描述"
+                placeholder={t("resources.editor.fields.descriptionPlaceholder")}
                 className="w-full"
                 disabled={editorLoading || (editingItem?.source ?? "user") !== "user"}
               />
@@ -212,7 +217,7 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
                 disabled={editorLoading || !editingName.trim()} 
                 className="text-sm text-white"
               >
-                {editorLoading ? "保存中..." : "保存资源信息"}
+                {editorLoading ? t("resources.editor.buttons.saving") : t("resources.editor.buttons.saveResourceInfo")}
               </Button>
             </div>
           )}
@@ -222,8 +227,8 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
         <div className="flex border-b flex-1 overflow-hidden">
           {/* 左侧文件列表 */}
           <div className="w-1/3 border-r bg-gray-50 p-4 overflow-y-auto">
-            <h3 className="font-medium mb-3">文件列表</h3>
-            {editorLoading && <p className="text-sm text-gray-500">加载中...</p>}
+            <h3 className="font-medium mb-3">{t("resources.editor.fileList")}</h3>
+            {editorLoading && <p className="text-sm text-gray-500">{t("resources.editor.messages.loading")}</p>}
             {editorError && <p className="text-sm text-red-600">{editorError}</p>}
             <div className="space-y-1">
               {fileList.map(file => {
@@ -261,7 +266,7 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
             {/* 编辑器头部 */}
             <div className="p-3 border-b bg-white flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
-                {selectedFile ? `编辑: ${selectedFile}` : "请选择文件"}
+                {selectedFile ? t("resources.editor.editFile", { file: selectedFile }) : t("resources.editor.selectFile")}
               </span>
               {selectedFile && (
                 <Button 
@@ -270,7 +275,7 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
                   size="sm"
                   className="text-white"
                 >
-                  {editorLoading ? "保存中..." : "保存文件"}
+                  {editorLoading ? t("resources.editor.buttons.saving") : t("resources.editor.buttons.saveFile")}
                 </Button>
               )}
             </div>
@@ -279,19 +284,19 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
             <div className="flex-1 p-4 overflow-hidden">
               {fileContentLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">加载文件内容中...</p>
+                  <p className="text-gray-500">{t("resources.editor.messages.loadingFileContent")}</p>
                 </div>
               ) : selectedFile ? (
                 <textarea
                   value={fileContent}
                   onChange={e => setFileContent(e.target.value)}
                   className="w-full h-full resize-none border rounded-md p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="文件内容..."
+                  placeholder={t("resources.editor.fileContent")}
                   disabled={(editingItem?.source ?? "user") !== "user"}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">请从左侧选择要编辑的文件</p>
+                  <p className="text-gray-500">{t("resources.editor.selectFilePrompt")}</p>
                 </div>
               )}
             </div>
@@ -303,12 +308,12 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
           <div className="text-sm text-gray-600">
             {(editingItem?.source ?? "user") !== "user" && (
               <span className="text-orange-600">
-                ⚠️ 此资源为只读模式（{editingItem?.source}）
+                {t("resources.editor.readOnly", { source: editingItem?.source })}
               </span>
             )}
           </div>
           <Button variant="outline" onClick={handleClose}>
-            关闭
+            {t("resources.editor.buttons.close")}
           </Button>
         </div>
       </DialogContent>

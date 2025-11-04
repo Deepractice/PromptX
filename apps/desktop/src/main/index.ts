@@ -15,7 +15,10 @@ import { ElectronAutoStartAdapter } from '~/main/infrastructure/adapters/Electro
 import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
+import * as fs from 'node:fs'
+import { mainI18n, t } from '~/main/i18n'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
+
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
@@ -27,7 +30,7 @@ class PromptXDesktopApp {
   private autoStartService: AutoStartService | null = null
   private autoStartWindow: AutoStartWindow | null = null
 
-   async initialize(): Promise<void> {
+  async initialize(): Promise<void> {
     logger.info('Initializing PromptX Desktop...')
 
     // Setup Node.js environment for ToolSandbox
@@ -51,12 +54,13 @@ class PromptXDesktopApp {
       mac: { useLaunchAgent: true }  // macOS: 使用 LaunchAgent 更稳定
     })
     this.autoStartService = new AutoStartService(autoStartAdapter)
-    
+
     // === 创建 autoStartWindow 来处理 IPC ===
     this.autoStartWindow = new AutoStartWindow(this.autoStartService)
 
     // === 然后设置其他 IPC ===
     this.setupServerConfigIPC()
+    this.setupLanguageIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -92,7 +96,7 @@ class PromptXDesktopApp {
       await startUseCase.execute()
       logger.info('PromptX server started automatically')
     } catch (error) {
-        const err = String(error);
+      const err = String(error);
       logger.error('Failed to auto-start server:', err)
     }
 
@@ -108,22 +112,22 @@ class PromptXDesktopApp {
     // Set Node.js executable path for PromptX ToolSandbox
     // In Electron, use the Electron executable which contains Node.js
     process.env.PROMPTX_NODE_EXECUTABLE = process.execPath
-    
+
     // NOTE: ELECTRON_RUN_AS_NODE is NOT set globally anymore
     // It will be set locally only when spawning Node.js processes in ToolSandbox
     // This prevents Chromium internal services from receiving incorrect parameters
-    
+
     logger.info(`Node.js environment configured for ToolSandbox: ${process.execPath}`)
     logger.info(`ELECTRON_RUN_AS_NODE will be set locally per subprocess to avoid conflicts`)
-    
+
     // Also set ELECTRON_NODE_PATH for compatibility
     process.env.ELECTRON_NODE_PATH = process.execPath
-    
+
     // Pass utilityProcess to ToolSandbox via global object
     try {
       const { utilityProcess } = require('electron')
       if (utilityProcess && typeof utilityProcess.fork === 'function') {
-        ;(global as any).PROMPTX_UTILITY_PROCESS = utilityProcess
+        ; (global as any).PROMPTX_UTILITY_PROCESS = utilityProcess
         process.env.PROMPTX_UTILITY_PROCESS_AVAILABLE = 'true'
         logger.info('UtilityProcess configured for ToolSandbox')
       } else {
@@ -134,7 +138,7 @@ class PromptXDesktopApp {
       logger.error(`Failed to configure UtilityProcess: ${error}`)
       process.env.PROMPTX_UTILITY_PROCESS_AVAILABLE = 'false'
     }
-    
+
     // Update PATH to include Electron directory for child processes
     const electronDir = path.dirname(process.execPath)
     const currentPath = process.env.PATH || ''
@@ -210,6 +214,47 @@ class PromptXDesktopApp {
     })
   }
 
+  private setupLanguageIPC(): void {
+    // 获取当前语言设置
+    ipcMain.handle('settings:getLanguage', async () => {
+      try {
+        const configPath = path.join(app.getPath('userData'), 'language.json')
+        if (fs.existsSync(configPath)) {
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+          return config.language || 'en'
+        }
+        return 'en' // 默认英文
+      } catch (error) {
+        logger.error('Failed to get language setting:', String(error))
+        return 'en'
+      }
+    })
+
+    // 设置语言
+    ipcMain.handle('settings:setLanguage', async (_event, language: string) => {
+      try {
+        const configPath = path.join(app.getPath('userData'), 'language.json')
+        const config = { language }
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+        
+        // 更新主进程的i18n语言设置
+        mainI18n.setLocale(language)
+        
+        // 如果托盘已经初始化，重新构建菜单以应用新语言
+        if (this.trayPresenter) {
+          await this.trayPresenter.refreshMenu()
+          logger.info(`Tray menu refreshed with new language: ${language}`)
+        }
+        
+        logger.info(`Language set to: ${language}`)
+        return { success: true }
+      } catch (error) {
+        logger.error('Failed to set language:', String(error))
+        throw new Error('Failed to save language setting')
+      }
+    })
+  }
+
   private setupInfrastructure(): void {
     // Create adapters
     this.serverPort = new PromptXServerAdapter()
@@ -271,7 +316,7 @@ class PromptXDesktopApp {
       if (!isQuitting) {
         event.preventDefault()
         isQuitting = true
-        
+
         // Perform cleanup
         this.performCleanup().then(() => {
           logger.info('Cleanup completed, exiting...')
@@ -313,7 +358,7 @@ class PromptXDesktopApp {
       this.trayPresenter.destroy()
       this.trayPresenter = null
     }
-    
+
     if (this.autoStartWindow) {
       this.autoStartWindow.cleanup()
       this.autoStartWindow = null
@@ -328,10 +373,10 @@ process.on('uncaughtException', (error: Error) => {
     logger.debug('Ignoring EPIPE error:', error.message)
     return
   }
-  
+
   // Log other errors but don't crash
   logger.error('Uncaught exception:', error)
-  
+
   // For critical errors, show dialog
   if (!error.message?.includes('write') && !error.message?.includes('stream')) {
     dialog.showErrorBox('Unexpected Error', error.message)
@@ -345,7 +390,7 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
     logger.debug('Ignoring unhandled EPIPE rejection:', reason.message)
     return
   }
-  
+
   logger.error('Unhandled promise rejection:', reason)
 })
 

@@ -1,0 +1,77 @@
+{
+  "tray": {
+    "tooltip": "PromptX",
+    "status": {
+      "running": "运行中",
+      "stopped": "已停止",
+      "starting": "启动中",
+      "stopping": "停止中",
+      "error": "错误",
+      "unknown": "未知"
+    },
+    "menu": {
+      "startServer": "启动服务器",
+      "stopServer": "停止服务器",
+      "starting": "启动中...",
+      "stopping": "停止中...",
+      "toggleServer": "切换服务器",
+      "copyAddress": "复制服务器地址",
+      "manageResources": "管理资源",
+      "showLogs": "显示日志",
+      "settings": "设置",
+      "update": {
+        "checking": "检查更新中...",
+        "available": "有可用更新",
+        "downloading": "下载更新中...",
+        "readyToInstall": "准备安装",
+        "error": "更新错误",
+        "idle": "检查更新"
+      },
+      "about": "关于 PromptX",
+      "quit": "退出 PromptX"
+    },
+    "windows": {
+      "logs": "PromptX 日志",
+      "settings": "PromptX 设置",
+      "resources": "PromptX Resources - 资源管理"
+    }
+  },
+  "autoStart": {
+    "enabled": "已启用开机自启动",
+    "disabled": "已禁用开机自启动",
+    "enableFailed": "启用自启动失败",
+    "disableFailed": "禁用自启动失败",
+    "getStatusFailed": "获取自启动状态失败",
+    "toggleFailed": "切换自启动状态失败"
+  },
+  "resources": {
+    "notFound": "资源不存在",
+    "onlyUserEditable": "仅支持修改用户资源的元数据",
+    "onlyUserDeletable": "仅支持删除用户资源（system/project不可删除）",
+    "missingParams": "缺少必要参数",
+    "cancelled": "已取消",
+    "projectNotInitialized": "当前项目未初始化",
+    "systemResourceNotFound": "未在系统资源注册表中找到该资源",
+    "cannotResolveSystemPath": "无法解析系统资源路径",
+    "directoryNotExists": "资源目录不存在",
+    "downloadFailed": "下载失败",
+    "deleteFailed": "删除失败",
+    "listFilesFailed": "列出文件失败",
+    "fileNotExists": "文件不存在",
+    "readFileFailed": "读取文件失败",
+    "saveFailed": "保存失败",
+    "updateMetadataFailed": "更新元数据失败",
+    "noFieldsToUpdate": "没有提供要更新的字段",
+    "noDescription": "暂无描述",
+    "metadataUpdateSuccess": "元数据更新成功",
+    "activationSuccess": "角色已激活",
+    "activationFailed": "激活失败",
+    "onlyRoleActivatable": "只能激活角色类型的资源",
+    "selectSaveLocation": "选择保存{{type}}资源的位置",
+    "cannotLocateResourceDir": "无法定位资源目录"
+  },
+  "errors": {
+    "configLoadFailed": "配置文件存在但加载失败",
+    "defaultLanguage": "英文"
+  }
+}

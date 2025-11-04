@@ -1,0 +1,163 @@
+{
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your PromptX experience",
+    "language": {
+      "title": "Language",
+      "description": "Choose your preferred language",
+      "english": "English",
+      "chinese": "简体中文"
+    },
+    "autoStart": {
+      "title": "Auto Start",
+      "description": "Launch PromptX automatically when computer starts",
+      "enable": "Enable auto start"
+    },
+    "server": {
+      "title": "Server Configuration",
+      "description": "Configure server host, port and debug settings",
+      "host": {
+        "label": "Server Host",
+        "placeholder": "127.0.0.1",
+        "description": "Host address for the server to listen on, e.g. 127.0.0.1"
+      },
+      "port": {
+        "label": "Server Port",
+        "placeholder": "5203",
+        "description": "Port for the server to listen on, range 1-65535"
+      },
+      "debug": {
+        "label": "Debug Mode",
+        "description": "Output more log information for troubleshooting"
+      },
+      "save": "Save Configuration",
+      "saving": "Saving...",
+      "reset": "Reset to Default"
+    }
+  },
+  "resources": {
+    "search": {
+      "placeholder": "Search resources / roles / tools"
+    },
+    "cards": {
+      "roles": {
+        "title": "Roles",
+        "description": "Number of activatable roles"
+      },
+      "tools": {
+        "title": "Tools", 
+        "description": "Number of executable tools"
+      },
+      "sources": {
+        "title": "Sources",
+        "description": "Resource count by source"
+      }
+    },
+    "filters": {
+      "type": "Type:",
+      "source": "Source:",
+      "all": "All",
+      "roles": "Roles",
+      "tools": "Tools",
+      "system": "System",
+      "user": "User"
+    },
+    "actions": {
+      "edit": "Edit",
+      "download": "Download",
+      "delete": "Delete"
+    },
+    "messages": {
+      "loadFailed": "Failed to load resources",
+      "searchFailed": "Search failed",
+      "downloadSuccess": "Saved to: {{path}}",
+      "downloadFailed": "Download failed",
+      "deleteConfirm": "Confirm delete {{type}} \"{{name}}\"? This action cannot be undone.",
+      "deleteSuccess": "Deleted successfully",
+      "deleteFailed": "Delete failed",
+      "deleteOnlyUser": "Only user resources can be deleted (system/project cannot be deleted)",
+      "noMore": "No more items :-I"
+    },
+    "types": {
+      "role": "role",
+      "tool": "tool"
+    },
+    "editor": {
+      "title": "Edit {{type}}: {{name}}",
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "namePlaceholder": "Enter resource name",
+        "descriptionPlaceholder": "Enter resource description"
+      },
+      "fileList": "File List",
+      "editFile": "Edit: {{file}}",
+      "selectFile": "Please select a file",
+      "fileContent": "File content...",
+      "selectFilePrompt": "Please select a file to edit from the left",
+      "buttons": {
+        "saveResourceInfo": "Save Resource Info",
+        "saveFile": "Save File",
+        "close": "Close",
+        "saving": "Saving..."
+      },
+      "messages": {
+        "loadFilesFailed": "Failed to load file list",
+        "readFileFailed": "Failed to read file",
+        "editorOpenFailed": "Failed to open editor",
+        "saveFailed": "Save failed",
+        "saveSuccess": "Saved successfully",
+        "resourceInfoSaveSuccess": "Resource info saved successfully",
+        "saveResourceInfoFailed": "Failed to save resource info",
+        "onlyUserEditable": "Only user resources can be edited (system/project are read-only)",
+        "loading": "Loading...",
+        "loadingFileContent": "Loading file content..."
+      },
+      "readOnly": "⚠️ This resource is in read-only mode ({{source}})"
+    }
+  },
+  "tray": {
+    "tooltip": "PromptX Desktop",
+    "status": {
+      "running": "Running",
+      "stopped": "Stopped",
+      "starting": "Starting...",
+      "stopping": "Stopping...",
+      "error": "Error",
+      "unknown": "Unknown"
+    },
+    "menu": {
+      "status": "Status: {{status}}",
+      "startServer": "Start Server",
+      "stopServer": "Stop Server",
+      "toggleServer": "Toggle Server",
+      "copyAddress": "Copy Server Address",
+      "manageResources": "Manage Resources",
+      "showLogs": "Show Logs",
+      "settings": "Settings...",
+      "checkUpdates": "Check for Updates...",
+      "checkingUpdates": "Checking for Updates...",
+      "downloadUpdate": "Download Update ({{version}})",
+      "downloading": "Downloading... {{percent}}%",
+      "installUpdate": "Install Update ({{version}})",
+      "retryUpdate": "Retry Update Check",
+      "about": "About PromptX",
+      "quit": "Quit PromptX"
+    },
+    "windows": {
+      "logs": "PromptX Logs",
+      "settings": "PromptX Settings"
+    }
+  },
+  "messages": {
+    "autoStartEnabled": "Auto start enabled successfully",
+    "autoStartDisabled": "Auto start disabled successfully",
+    "autoStartError": "Failed to toggle auto start",
+    "configSaved": "Configuration saved successfully",
+    "configSaveError": "Failed to save configuration",
+    "configReset": "Configuration reset to default",
+    "configResetError": "Failed to reset configuration",
+    "loadError": "Failed to load settings, please try again",
+    "languageChanged": "Language changed successfully"
+  }
+}

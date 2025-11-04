@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Search, Pickaxe, UserRoundPen, Database, SquarePen, FolderDown, Trash } from "lucide-react"
 import { toast, Toaster } from "sonner"
 import ResourceEditor from "./components/ResourceEditor"
+import { useTranslation } from "react-i18next"
 
 type ResourceItem = {
   id: string
@@ -14,6 +15,7 @@ type ResourceItem = {
 }
 
 export default function ResourcesPage() {
+  const { t } = useTranslation()
   const [items, setItems] = useState<ResourceItem[]>([])
   const [query, setQuery] = useState("")
 
@@ -49,11 +51,11 @@ export default function ResourcesPage() {
 
         // 使用统一的计算函数
       } else {
-        toast.error("加载资源失败")
+        toast.error(t("resources.messages.loadFailed"))
       }
     } catch (e: any) {
       console.error("Failed to load resources:", e)
-      toast.error(e?.message || "加载资源失败")
+      toast.error(e?.message || t("resources.messages.loadFailed"))
     }
   }
 
@@ -76,11 +78,11 @@ export default function ResourcesPage() {
         }))
         setItems(list)
       } else {
-        toast.error("搜索失败")
+        toast.error(t("resources.messages.searchFailed"))
       }
     } catch (e: any) {
       console.error("Search failed:", e)
-      toast.error(e?.message || "搜索失败")
+      toast.error(e?.message || t("resources.messages.searchFailed"))
     }
   }
 
@@ -112,21 +114,22 @@ export default function ResourcesPage() {
         source: item.source ?? "user"
       })
       if (res?.success) {
-        toast.success(`已保存到：${res.path}`)
+        toast.success(t("resources.messages.downloadSuccess", { path: res.path }))
       } else {
-        toast.error(res?.message || "下载失败")
+        toast.error(res?.message || t("resources.messages.downloadFailed"))
       }
     } catch (err) {
-      toast.error(`下载失败：${String(err)}`)
+      toast.error(t("resources.messages.downloadFailed") + `：${String(err)}`)
     }
   }
   // 删除处理
   const handleDelete = async (item: ResourceItem) => {
     if ((item.source ?? "user") !== "user") {
-      toast.error("仅支持删除用户资源（system/project不可删除）")
+      toast.error(t("resources.messages.deleteOnlyUser"))
       return
     }
-    const ok = window.confirm(`确认删除${item.type === "role" ? "角色" : "工具"} "${item.name}"？此操作不可恢复。`)
+    const typeText = t(`resources.types.${item.type}`)
+    const ok = window.confirm(t("resources.messages.deleteConfirm", { type: typeText, name: item.name }))
     if (!ok) return
 
     try {
@@ -142,12 +145,12 @@ export default function ResourcesPage() {
 
         // 重新计算统计信息
 
-        toast.success("删除成功")
+        toast.success(t("resources.messages.deleteSuccess"))
       } else {
-        toast.error(res?.message || "删除失败")
+        toast.error(res?.message || t("resources.messages.deleteFailed"))
       }
     } catch (err) {
-      toast.error(`删除失败：${String(err)}`)
+      toast.error(t("resources.messages.deleteFailed") + `：${String(err)}`)
     }
   }
 
@@ -171,16 +174,16 @@ export default function ResourcesPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex items-center gap-3">
         <Search className="h-5 w-5 text-muted-foreground" />
-        <Input placeholder="搜索资源 / 角色 / 工具" value={query} onChange={e => handleSearch(e.target.value)} className="max-w-md" />
+        <Input placeholder={t("resources.search.placeholder")} value={query} onChange={e => handleSearch(e.target.value)} className="max-w-md" />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border border-[#e5e7eb]  hover:scale-[1.01] transition-colors duration-200 cursor-pointer">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserRoundPen className="h-4 w-4" />
-              角色
+              {t("resources.cards.roles.title")}
             </CardTitle>
-            <CardDescription>可激活的角色数量</CardDescription>
+            <CardDescription>{t("resources.cards.roles.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{roleCount}</div>
@@ -190,9 +193,9 @@ export default function ResourcesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Pickaxe className="h-4 w-4" />
-              工具
+              {t("resources.cards.tools.title")}
             </CardTitle>
-            <CardDescription>可执行的工具数量</CardDescription>
+            <CardDescription>{t("resources.cards.tools.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{toolCount}</div>
@@ -202,9 +205,9 @@ export default function ResourcesPage() {
           <CardHeader className="pb-1 ">
             <CardTitle className="flex items-center gap-2">
               <Database className="h-4 w-4" />
-              来源
+              {t("resources.cards.sources.title")}
             </CardTitle>
-            <CardDescription>各来源资源计数</CardDescription>
+            <CardDescription>{t("resources.cards.sources.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1 text-lg  font-bold text-muted-foreground">
@@ -222,15 +225,15 @@ export default function ResourcesPage() {
       <div className="flex items-center gap-4 mb-4">
         {/* Type Filter */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Type:</span>
+          <span className="text-sm text-muted-foreground">{t("resources.filters.type")}</span>
           <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "all" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("all")}>
-            All
+            {t("resources.filters.all")}
           </button>
           <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "role" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("role")}>
-            Roles
+            {t("resources.filters.roles")}
           </button>
           <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "tool" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("tool")}>
-            Tools
+            {t("resources.filters.tools")}
           </button>
         </div>
 
@@ -239,15 +242,15 @@ export default function ResourcesPage() {
 
         {/* Source Filter */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Source:</span>
+          <span className="text-sm text-muted-foreground">{t("resources.filters.source")}</span>
           <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "all" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("all")}>
-            All
+            {t("resources.filters.all")}
           </button>
           <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "system" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("system")}>
-            System
+            {t("resources.filters.system")}
           </button>
           <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "user" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("user")}>
-            User
+            {t("resources.filters.user")}
           </button>
         </div>
       </div>
@@ -275,7 +278,7 @@ export default function ResourcesPage() {
             <CardContent className="space-y-3 px-4 pb-4 mb-0">
               {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
               <div className="flex gap-4">
-                <div className={`inline-flex items-center rounded-2xl px-2 py-1 text-sm ${item.type === "role" ? "bg-[#DDF4FF] text-[#1f6feb]" : "bg-[#FBEFFF] text-[#B472DF]"}`}>{item.type}</div>
+                <div className={`inline-flex items-center rounded-2xl px-2 py-1 text-sm ${item.type === "role" ? "bg-[#DDF4FF] text-[#1f6feb]" : "bg-[#FBEFFF] text-[#B472DF]"}`}>{t(`resources.types.${item.type}`)}</div>
                 <div className={`inline-flex items-center rounded-2xl px-2 py-1 text-sm ${(item.source ?? "user") === "system" ? "bg-[#a8dafc] text-[#1063e0]" : "bg-[#D3F3DA] text-[#56A69C]"}`}>{item.source ?? "user"}</div>
                 <span className="text-sm inline-flex items-center px-2 py-1 text-[#666]">ID: {item.id}</span>
               </div>
@@ -284,7 +287,7 @@ export default function ResourcesPage() {
         ))}
       </div>
       <div className="flex justify-center py-4">
-        <span className="text-sm text-muted-foreground">没有更多了:-I</span>
+        <span className="text-sm text-muted-foreground">{t("resources.messages.noMore")}</span>
       </div>
 
       {/* 编辑器弹窗组件 */}

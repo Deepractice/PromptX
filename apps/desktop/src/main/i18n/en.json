@@ -1,0 +1,77 @@
+{
+  "tray": {
+    "tooltip": "PromptX",
+    "status": {
+      "running": "Running",
+      "stopped": "Stopped",
+      "starting": "Starting",
+      "stopping": "Stopping",
+      "error": "Error",
+      "unknown": "Unknown"
+    },
+    "menu": {
+      "startServer": "Start Server",
+      "stopServer": "Stop Server",
+      "starting": "Starting...",
+      "stopping": "Stopping...",
+      "toggleServer": "Toggle Server",
+      "copyAddress": "Copy Server Address",
+      "manageResources": "Manage Resources",
+      "showLogs": "Show Logs",
+      "settings": "Settings",
+      "update": {
+        "checking": "Checking for updates...",
+        "available": "Update available",
+        "downloading": "Downloading update...",
+        "readyToInstall": "Ready to install",
+        "error": "Update error",
+        "idle": "Check for updates"
+      },
+      "about": "About PromptX",
+      "quit": "Quit PromptX"
+    },
+    "windows": {
+      "logs": "PromptX Logs",
+      "settings": "PromptX Settings",
+      "resources": "PromptX Resources - Resource Management"
+    }
+  },
+  "autoStart": {
+    "enabled": "Auto-start enabled",
+    "disabled": "Auto-start disabled",
+    "enableFailed": "Failed to enable auto-start",
+    "disableFailed": "Failed to disable auto-start",
+    "getStatusFailed": "Failed to get auto-start status",
+    "toggleFailed": "Failed to toggle auto-start status"
+  },
+  "resources": {
+    "notFound": "Resource not found",
+    "onlyUserEditable": "Only user resources can be edited",
+    "onlyUserDeletable": "Only user resources can be deleted (system/project resources cannot be deleted)",
+    "missingParams": "Missing required parameters",
+    "cancelled": "Cancelled",
+    "projectNotInitialized": "Current project is not initialized",
+    "systemResourceNotFound": "Resource not found in system registry",
+    "cannotResolveSystemPath": "Cannot resolve system resource path",
+    "directoryNotExists": "Resource directory does not exist",
+    "downloadFailed": "Download failed",
+    "deleteFailed": "Delete failed",
+    "listFilesFailed": "Failed to list files",
+    "fileNotExists": "File does not exist",
+    "readFileFailed": "Failed to read file",
+    "saveFailed": "Failed to save",
+    "updateMetadataFailed": "Failed to update metadata",
+    "noFieldsToUpdate": "No fields to update",
+    "noDescription": "No description available",
+    "metadataUpdateSuccess": "Metadata updated successfully",
+    "activationSuccess": "Role activated successfully",
+    "activationFailed": "Role activation failed",
+    "onlyRoleActivatable": "Only role resources can be activated",
+    "selectSaveLocation": "Select save location for {{type}} resource",
+    "cannotLocateResourceDir": "Cannot locate resource directory"
+  },
+  "errors": {
+    "configLoadFailed": "Configuration file exists but failed to load",
+    "defaultLanguage": "English"
+  }
+}

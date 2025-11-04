@@ -2,6 +2,7 @@ import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron'
 import { ResourceService } from '~/main/application/ResourceService'
 import * as path from 'path'
 import { pathToFileURL } from 'node:url'
+import { t } from '~/main/i18n'
 
 /**
  * Resource List Window - 资源管理窗口
@@ -99,7 +100,7 @@ export class ResourceListWindow {
         const type = payload?.type
         const source = payload?.source ?? 'user'
         if (!id || !type) {
-          return { success: false, message: '缺少资源ID或类型' }
+          return { success: false, message: t('resources.missingParams') }
         }
 
         const path = require('path')
@@ -109,11 +110,11 @@ export class ResourceListWindow {
 
         // 选择目标目录
         const ret = await dialog.showOpenDialog({
-          title: `选择保存${type}资源的位置`,
+          title: t('resources.selectSaveLocation', { type }),
           properties: ['openDirectory', 'createDirectory']
         })
         if (ret.canceled || !ret.filePaths?.[0]) {
-          return { success: false, message: '已取消' }
+          return { success: false, message: t('resources.cancelled') }
         }
         const destDir = ret.filePaths[0]
 
@@ -128,7 +129,7 @@ export class ResourceListWindow {
             const projectResDir = resolver.getResourceDirectory()
             sourceDir = path.join(projectResDir, type, id)
           } catch (e: any) {
-            return { success: false, message: '当前项目未初始化，无法下载项目资源' }
+            return { success: false, message: t('resources.projectNotInitialized') }
           }
         } else {
           // system/package
@@ -136,18 +137,18 @@ export class ResourceListWindow {
             const resourcePkg = require('@promptx/resource')
             const res = resourcePkg.findResourceById(id)
             if (!res || !res.metadata?.path) {
-              return { success: false, message: '未在系统资源注册表中找到该资源' }
+              return { success: false, message: t('resources.systemResourceNotFound') }
             }
             const absMainFile = resourcePkg.getResourcePath(res.metadata.path)
             sourceDir = path.dirname(absMainFile)
           } catch (e: any) {
-            return { success: false, message: '无法解析系统资源路径' }
+            return { success: false, message: t('resources.cannotResolveSystemPath') }
           }
         }
 
-        if (!sourceDir) return { success: false, message: '无法定位资源目录' }
+        if (!sourceDir) return { success: false, message: t('resources.cannotLocateResourceDir') }
         const exists = await fs.pathExists(sourceDir)
-        if (!exists) return { success: false, message: `资源目录不存在：${sourceDir}` }
+        if (!exists) return { success: false, message: t('resources.directoryNotExists') + `: ${sourceDir}` }
 
         const target = path.join(destDir, `${type}-${id}`)
         await fs.copy(sourceDir, target, { overwrite: true, errorOnExist: false })
@@ -155,7 +156,7 @@ export class ResourceListWindow {
         return { success: true, path: target }
       } catch (error: any) {
         console.error('Failed to download resource:', error)
-        return { success: false, message: error?.message || '下载失败' }
+        return { success: false, message: error?.message || t('resources.downloadFailed') }
       }
     })
 
@@ -167,10 +168,10 @@ export class ResourceListWindow {
         const source = payload?.source ?? 'user'
 
         if (!id || !type) {
-          return { success: false, message: '缺少资源ID或类型' }
+          return { success: false, message: t('resources.missingParams') }
         }
         if (source !== 'user') {
-          return { success: false, message: '仅支持删除用户资源（system/project不可删除）' }
+          return { success: false, message: t('resources.onlyUserDeletable') }
         }
 
         const fs = require('fs-extra')
@@ -180,7 +181,7 @@ export class ResourceListWindow {
         const targetDir = path.join(os.homedir(), '.promptx', 'resource', type, id)
         const exists = await fs.pathExists(targetDir)
         if (!exists) {
-          return { success: false, message: `资源目录不存在：${targetDir}` }
+          return { success: false, message: t('resources.directoryNotExists') + `: ${targetDir}` }
         }
 
         await fs.remove(targetDir)
@@ -198,7 +199,7 @@ export class ResourceListWindow {
         return { success: true }
       } catch (error: any) {
         console.error('Failed to delete resource:', error)
-        return { success: false, message: error?.message || '删除失败' }
+        return { success: false, message: error?.message || t('resources.deleteFailed') }
       }
     })
 
@@ -208,7 +209,7 @@ export class ResourceListWindow {
         const id = payload?.id
         const type = payload?.type
         const source = payload?.source ?? 'user'
-        if (!id || !type) return { success: false, message: '缺少资源ID或类型' }
+        if (!id || !type) return { success: false, message: t('resources.missingParams') }
 
         const path = require('path')
         const fs = require('fs-extra')
@@ -225,7 +226,7 @@ export class ResourceListWindow {
             const projectResDir = resolver.getResourceDirectory()
             sourceDir = path.join(projectResDir, type, id)
           } catch {
-            return { success: false, message: '当前项目未初始化，无法访问项目资源' }
+            return { success: false, message: t('resources.projectNotInitialized') }
           }
         } else {
           // system/package
@@ -233,17 +234,17 @@ export class ResourceListWindow {
             const resourcePkg = require('@promptx/resource')
             const res = resourcePkg.findResourceById(id)
             if (!res || !res.metadata?.path) {
-              return { success: false, message: '未在系统资源注册表中找到该资源' }
+              return { success: false, message: t('resources.systemResourceNotFound') }
             }
             const absMainFile = resourcePkg.getResourcePath(res.metadata.path)
             sourceDir = path.dirname(absMainFile)
           } catch {
-            return { success: false, message: '无法解析系统资源路径' }
+            return { success: false, message: t('resources.cannotResolveSystemPath') }
           }
         }
 
         if (!sourceDir || !(await fs.pathExists(sourceDir))) {
-          return { success: false, message: `资源目录不存在：${sourceDir}` }
+          return { success: false, message: t('resources.directoryNotExists') + `: ${sourceDir}` }
         }
 
         // 递归列出文件，返回相对路径
@@ -271,7 +272,7 @@ export class ResourceListWindow {
         return { success: true, files: result, baseDir: sourceDir }
       } catch (error: any) {
         console.error('Failed to list files:', error)
-        return { success: false, message: error?.message || '列出文件失败' }
+        return { success: false, message: error?.message || t('resources.listFilesFailed') }
       }
     })
 
@@ -280,7 +281,7 @@ export class ResourceListWindow {
       try {
         const { id, type, relativePath } = payload || {}
         const source = payload?.source ?? 'user'
-        if (!id || !type || !relativePath) return { success: false, message: '缺少必要参数' }
+        if (!id || !type || !relativePath) return { success: false, message: t('resources.missingParams') }
 
         const path = require('path')
         const fs = require('fs-extra')
@@ -296,28 +297,28 @@ export class ResourceListWindow {
             const projectResDir = resolver.getResourceDirectory()
             baseDir = path.join(projectResDir, type, id)
           } catch {
-            return { success: false, message: '当前项目未初始化，无法访问项目资源' }
+            return { success: false, message: t('resources.projectNotInitialized') }
           }
         } else {
           try {
             const resourcePkg = require('@promptx/resource')
             const res = resourcePkg.findResourceById(id)
-            if (!res || !res.metadata?.path) return { success: false, message: '系统资源未找到' }
+            if (!res || !res.metadata?.path) return { success: false, message: t('resources.systemResourceNotFound') }
             const absMainFile = resourcePkg.getResourcePath(res.metadata.path)
             baseDir = path.dirname(absMainFile)
           } catch {
-            return { success: false, message: '无法解析系统资源路径' }
+            return { success: false, message: t('resources.cannotResolveSystemPath') }
           }
         }
 
         const absPath = path.join(baseDir!, relativePath)
         const exists = await fs.pathExists(absPath)
-        if (!exists) return { success: false, message: `文件不存在：${relativePath}` }
+        if (!exists) return { success: false, message: t('resources.fileNotExists') + `: ${relativePath}` }
         const content = await fs.readFile(absPath, 'utf-8')
         return { success: true, content, path: absPath }
       } catch (error: any) {
         console.error('Failed to read file:', error)
-        return { success: false, message: error?.message || '读取文件失败' }
+        return { success: false, message: error?.message || t('resources.readFileFailed') }
       }
     })
 
@@ -326,8 +327,8 @@ export class ResourceListWindow {
       try {
         const { id, type, relativePath, content } = payload || {}
         const source = payload?.source ?? 'user'
-        if (!id || !type || !relativePath) return { success: false, message: '缺少必要参数' }
-        if (source !== 'user') return { success: false, message: '仅支持修改用户资源（system/project不可编辑）' }
+        if (!id || !type || !relativePath) return { success: false, message: t('resources.missingParams') }
+        if (source !== 'user') return { success: false, message: t('resources.onlyUserEditable') }
 
         const path = require('path')
         const fs = require('fs-extra')
@@ -336,13 +337,13 @@ export class ResourceListWindow {
         const baseDir = path.join(os.homedir(), '.promptx', 'resource', type, id)
         const absPath = path.join(baseDir, relativePath)
         const exists = await fs.pathExists(absPath)
-        if (!exists) return { success: false, message: `文件不存在：${relativePath}` }
+        if (!exists) return { success: false, message: t('resources.fileNotExists') + `: ${relativePath}` }
 
         await fs.writeFile(absPath, content, 'utf-8')
         return { success: true, path: absPath }
       } catch (error: any) {
         console.error('Failed to save file:', error)
-        return { success: false, message: error?.message || '保存失败' }
+        return { success: false, message: error?.message || t('resources.saveFailed') }
       }
     })
 
@@ -353,11 +354,11 @@ export class ResourceListWindow {
         const source = payload?.source ?? 'user'
         
         if (!id || !type) {
-          return { success: false, message: '缺少资源ID或类型' }
+          return { success: false, message: t('resources.missingParams') }
         }
         
         if (source !== 'user') {
-          return { success: false, message: '仅支持修改用户资源的元数据' }
+          return { success: false, message: t('resources.onlyUserEditable') }
         }
 
         const updates: { name?: string; description?: string } = {}
@@ -365,14 +366,14 @@ export class ResourceListWindow {
         if (description !== undefined) updates.description = description
 
         if (Object.keys(updates).length === 0) {
-          return { success: false, message: '没有提供要更新的字段' }
+          return { success: false, message: t('resources.noFieldsToUpdate') }
         }
 
         const result = await this.resourceService.updateResourceMetadata(id, updates)
         return result
       } catch (error: any) {
         console.error('Failed to update resource metadata:', error)
-        return { success: false, message: error?.message || '更新元数据失败' }
+        return { success: false, message: error?.message || t('resources.updateMetadataFailed') }
       }
     })
   }
@@ -404,7 +405,7 @@ export class ResourceListWindow {
     this.window = new BrowserWindow({
       width: 900,
       height: 700,
-      title: 'PromptX Resources - 资源管理',
+      title: t('tray.windows.resources'),
       webPreferences: {
         preload: preloadPath,
         contextIsolation: true,

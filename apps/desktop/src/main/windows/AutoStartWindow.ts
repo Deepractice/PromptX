@@ -9,6 +9,7 @@
 
 import { IpcMainInvokeEvent, ipcMain } from 'electron'
 import { AutoStartService } from '~/main/application/AutoStartService'
+import { t } from '~/main/i18n'
 
 /**
  * 自启动窗口管理器
@@ -49,13 +50,13 @@ export class AutoStartWindow {
         await this.autoStartService.enableAutoStart()
         return {
           success: true,
-          message: '已启用开机自启动'
+          message: t('autoStart.enabled')
         }
       } catch (error: any) {
         console.error('Failed to enable auto-start:', error)
         return {
           success: false,
-          error: error.message || '启用自启动失败'
+          error: error.message || t('autoStart.enableFailed')
         }
       }
     })
@@ -66,13 +67,13 @@ export class AutoStartWindow {
         await this.autoStartService.disableAutoStart()
         return {
           success: true,
-          message: '已禁用开机自启动'
+          message: t('autoStart.disabled')
         }
       } catch (error: any) {
         console.error('Failed to disable auto-start:', error)
         return {
           success: false,
-          error: error.message || '禁用自启动失败'
+          error: error.message || t('autoStart.disableFailed')
         }
       }
     })
@@ -91,7 +92,7 @@ export class AutoStartWindow {
         console.error('Failed to get auto-start status:', error)
         return {
           success: false,
-          error: error.message || '获取自启动状态失败'
+          error: error.message || t('autoStart.getStatusFailed')
         }
       }
     })
@@ -105,13 +106,13 @@ export class AutoStartWindow {
           data: {
             enabled: newStatus
           },
-          message: newStatus ? '已启用开机自启动' : '已禁用开机自启动'
+          message: newStatus ? t('autoStart.enabled') : t('autoStart.disabled')
         }
       } catch (error: any) {
         console.error('Failed to toggle auto-start:', error)
         return {
           success: false,
-          error: error.message || '切换自启动状态失败'
+          error: error.message || t('autoStart.toggleFailed')
         }
       }
     })

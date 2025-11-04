@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast, Toaster } from "sonner"
+import { LanguageSelector } from "./components/LanguageSelector"
 interface ServerConfig {
   host: string
   port: number
@@ -17,6 +19,7 @@ interface StatusMessage {
 }
 
 function SettingsWindow() {
+  const { t } = useTranslation()
   const [autoStart, setAutoStart] = useState(false)
   const [serverConfig, setServerConfig] = useState<ServerConfig>({
     host: "127.0.0.1",
@@ -53,7 +56,7 @@ function SettingsWindow() {
       }
     } catch (error) {
       console.error("Failed to load settings:", error)
-      showMessage("error", "加载设置失败，请重试")
+      showMessage("error", t('messages.loadError'))
     }
   }
 
@@ -68,15 +71,15 @@ function SettingsWindow() {
     try {
       if (enabled) {
         await window.electronAPI?.invoke("auto-start:enable")
-        showMessage("success", "已启用开机自启动")
+        showMessage("success", t('messages.autoStartEnabled'))
       } else {
         await window.electronAPI?.invoke("auto-start:disable")
-        showMessage("success", "已禁用开机自启动")
+        showMessage("success", t('messages.autoStartDisabled'))
       }
       setAutoStart(enabled)
     } catch (error) {
       console.error("Failed to toggle auto-start:", error)
-      showMessage("error", "操作失败，请重试")
+      showMessage("error", t('messages.autoStartError'))
     }
   }
 
@@ -91,10 +94,10 @@ function SettingsWindow() {
     setIsLoading(true)
     try {
       await window.electronAPI?.invoke("server-config:update", serverConfig)
-      showMessage("success", "配置已保存并应用")
+      showMessage("success", t('messages.configSaved'))
     } catch (error) {
       console.error("Failed to save config:", error)
-      showMessage("error", "保存配置失败，请重试")
+      showMessage("error", t('messages.configSaveError'))
     } finally {
       setIsLoading(false)
     }
@@ -109,10 +112,10 @@ function SettingsWindow() {
       }
       setServerConfig(defaultConfig)
       await window.electronAPI?.invoke("server-config:reset", defaultConfig)
-      showMessage("success", "已重置为默认配置")
+      showMessage("success", t('messages.configReset'))
     } catch (error) {
       console.error("Failed to reset config:", error)
-      showMessage("error", "重置配置失败，请重试")
+      showMessage("error", t('messages.configResetError'))
     }
   }
 
@@ -122,23 +125,26 @@ function SettingsWindow() {
       <div className="mx-auto max-w-4xl">
         {/* 页面标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="mt-2 text-sm text-gray-600">Customize your PromptX experience</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('settings.title')}</h1>
+          <p className="mt-2 text-sm text-gray-600">{t('settings.subtitle')}</p>
         </div>
 
        
 
         <div className="space-y-6">
+          {/* 语言设置 */}
+          <LanguageSelector />
+
           {/* 自启动设置 */}
           <Card>
             <CardHeader>
-              <CardTitle>Auto Start</CardTitle>
-              <CardDescription>Launch PromptX automatically when computer starts</CardDescription>
+              <CardTitle>{t('settings.autoStart.title')}</CardTitle>
+              <CardDescription>{t('settings.autoStart.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2 ">
                 <Switch id="auto-start" checked={autoStart} onCheckedChange={handleAutoStartToggle} />
-                <Label htmlFor="auto-start">Enable auto start</Label>
+                <Label htmlFor="auto-start">{t('settings.autoStart.enable')}</Label>
               </div>
             </CardContent>
           </Card>
@@ -146,40 +152,40 @@ function SettingsWindow() {
           {/* 服务器配置 */}
           <Card>
             <CardHeader>
-              <CardTitle>Server Configuration</CardTitle>
-              <CardDescription>Configure server host, port and debug settings</CardDescription>
+              <CardTitle>{t('settings.server.title')}</CardTitle>
+              <CardDescription>{t('settings.server.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* 服务器主机 */}
               <div className="space-y-2">
-                <Label htmlFor="server-host">Server Host</Label>
-                <Input id="server-host" type="text" placeholder="127.0.0.1" value={serverConfig.host} onChange={e => handleServerConfigChange("host", e.target.value)} />
-                <p className="text-sm text-gray-500">Host address for the server to listen on, e.g. 127.0.0.1</p>
+                <Label htmlFor="server-host">{t('settings.server.host.label')}</Label>
+                <Input id="server-host" type="text" placeholder={t('settings.server.host.placeholder')} value={serverConfig.host} onChange={e => handleServerConfigChange("host", e.target.value)} />
+                <p className="text-sm text-gray-500">{t('settings.server.host.description')}</p>
               </div>
 
               {/* 服务器端口 */}
               <div className="space-y-2">
-                <Label htmlFor="server-port">Server Port</Label>
-                <Input id="server-port" type="number" min="1" max="65535" placeholder="5203" value={serverConfig.port} onChange={e => handleServerConfigChange("port", parseInt(e.target.value) || 5203)} />
-                <p className="text-sm text-gray-500">Port for the server to listen on, range 1-65535</p>
+                <Label htmlFor="server-port">{t('settings.server.port.label')}</Label>
+                <Input id="server-port" type="number" min="1" max="65535" placeholder={t('settings.server.port.placeholder')} value={serverConfig.port} onChange={e => handleServerConfigChange("port", parseInt(e.target.value) || 5203)} />
+                <p className="text-sm text-gray-500">{t('settings.server.port.description')}</p>
               </div>
 
               {/* 调试模式 */}
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Switch id="debug-mode" checked={serverConfig.debug} onCheckedChange={checked => handleServerConfigChange("debug", checked)} />
-                  <Label htmlFor="debug-mode">Debug Mode</Label>
+                  <Label htmlFor="debug-mode">{t('settings.server.debug.label')}</Label>
                 </div>
-                <p className="text-sm text-gray-500">Output more log information for troubleshooting</p>
+                <p className="text-sm text-gray-500">{t('settings.server.debug.description')}</p>
               </div>
 
               {/* 操作按钮 */}
               <div className="flex space-x-3 pt-4">
                 <Button onClick={handleSaveConfig} disabled={isLoading} variant="outline" className="bg-black text-white">
-                  {isLoading ? "Saving..." : "Save Configuration"}
+                  {isLoading ? t('settings.server.saving') : t('settings.server.save')}
                 </Button>
                 <Button variant="outline" onClick={handleResetConfig} disabled={isLoading}>
-                  Reset to Default
+                  {t('settings.server.reset')}
                 </Button>
               </div>
             </CardContent>

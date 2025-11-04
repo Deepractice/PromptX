@@ -9,6 +9,8 @@
     "jsx": "react-jsx",
     "lib": ["ES2020", "DOM"],
     "types": ["react", "react-dom"],
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "~/*": ["src/*"],
@@ -18,7 +20,7 @@
       "@/hooks/*": ["src/view/hooks/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/**/*.json"],
   "exclude": ["out", "dist", "node_modules", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     { "path": "./tsconfig.node.json" }
