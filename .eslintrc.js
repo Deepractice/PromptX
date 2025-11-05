@@ -11,8 +11,14 @@ module.exports = {
   ],
   parserOptions: {
     ecmaVersion: 12,
-    sourceType: "module"
+    sourceType: 'module'
   },
+  overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      parser: '@typescript-eslint/parser'
+    }
+  ],
   rules: {
     'no-console': 'off',
     'no-unused-vars': 'warn',

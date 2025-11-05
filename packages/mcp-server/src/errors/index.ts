@@ -17,14 +17,6 @@ export {
   ErrorHelper
 } from './MCPError.js';
 
-// 错误恢复策略
-export {
-  ExponentialBackoffStrategy,
-  CircuitBreakerStrategy,
-  CompositeStrategy,
-  NoOpStrategy
-} from './ErrorRecoveryStrategies.js';
-
 // 错误收集器
 export {
   ErrorCollector,

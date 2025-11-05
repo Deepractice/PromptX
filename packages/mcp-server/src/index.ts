@@ -1,8 +1,8 @@
 /**
  * @promptx/mcp-server
- * 
+ *
  * MCP (Model Context Protocol) Server implementation for PromptX
- * 
+ *
  * 基于Issue #317的重构设计，提供：
  * - 清晰的接口定义和职责分离
  * - Template Method模式的基类实现
@@ -16,7 +16,6 @@
 export type {
   MCPServer,
   MCPServerOptions,
-  MCPServerFactory,
   MCPTransport,
   ServerState,
   ToolHandler,
