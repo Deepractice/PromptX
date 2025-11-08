@@ -76,7 +76,8 @@
       "deleteSuccess": "删除成功",
       "deleteFailed": "删除失败",
       "deleteOnlyUser": "仅支持删除用户资源（system/project不可删除）",
-      "noMore": "没有更多了:-I"
+      "noMore": "没有更多了:-I",
+      "editOnlyUser": "只能查看/编辑用户资源"
     },
     "types": {
       "role": "角色",

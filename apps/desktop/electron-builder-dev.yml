@@ -23,18 +23,7 @@ files:
   - "!**/{test,__tests__,tests,testing}"
   - "!**/{example,examples,docs,doc}"
   - "!**/*.{md,MD,markdown,txt}"
-  # 注意：资源文件现在从 packages 目录复制，不需要排除 node_modules 中的文件
-
-# 将资源文件作为额外资源复制到应用程序目录外
-extraResources:
-  - from: "../../packages/resource/dist/resources"
-    to: "resources"
-    filter: ["**/*"]
-  - from: "../../packages/resource/dist/registry.json"
-    to: "registry.json"
-
-# asar 配置 - 不需要特殊的 unpack 规则，因为资源文件不在 asar 中
-# asarUnpack:
+  - "node_modules/@promptx/resource/dist/resources/**/*"
 
 mac:
   category: public.app-category.developer-tools

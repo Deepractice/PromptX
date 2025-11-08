@@ -76,7 +76,8 @@
       "deleteSuccess": "Deleted successfully",
       "deleteFailed": "Delete failed",
       "deleteOnlyUser": "Only user resources can be deleted (system/project cannot be deleted)",
-      "noMore": "No more items :-I"
+      "noMore": "No more items :-I",
+      "editOnlyUser": "Only user resources can be edited "
     },
     "types": {
       "role": "role",

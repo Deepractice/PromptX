@@ -160,6 +160,10 @@ export default function ResourcesPage() {
 
   // 编辑（弹窗）
   const handleEdit = async (item: ResourceItem) => {
+    if ((item.source ?? "user") !== "user") {
+      toast.error(t("resources.messages.editOnlyUser"))
+      return
+    }
     setEditingItem(item)
     setEditorOpen(true)
   }
@@ -267,9 +271,9 @@ export default function ResourcesPage() {
                 </span>
                 <span className="flex items-center gap-3">
                   {/* 编辑 */}
-                  <SquarePen className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]" onClick={() => handleEdit(item)} />
+                  {item.source === "user" && <SquarePen className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]" onClick={() => handleEdit(item)} />}
                   {/* 查看/外链 */}
-                  <FolderDown className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]" onClick={() => handleView(item)} />
+                  {item.source === "user" && <FolderDown className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]" onClick={() => handleView(item)} />}
                   {/* 删除 */}
                   {item.source === "user" && <Trash className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-red-600" onClick={() => handleDelete(item)} />}
                 </span>

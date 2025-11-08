@@ -27,9 +27,6 @@
     "minimatch": "^10.0.1",
     "semver": "^7.7.2"
   },
-  "optionalDependencies": {
-    "electron-util": "^0.17.2"
-  },
   "publishConfig": {
     "access": "public"
   },
