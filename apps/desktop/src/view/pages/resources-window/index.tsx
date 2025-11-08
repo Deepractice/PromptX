@@ -271,11 +271,35 @@ export default function ResourcesPage() {
                 </span>
                 <span className="flex items-center gap-3">
                   {/* 编辑 */}
-                  {item.source === "user" && <SquarePen className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]" onClick={() => handleEdit(item)} />}
+                  {item.source === "user" && (
+                    <SquarePen
+                      className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]"
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleEdit(item)
+                      }}
+                    />
+                  )}
                   {/* 查看/外链 */}
-                  {item.source === "user" && <FolderDown className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]" onClick={() => handleView(item)} />}
+                  {item.source === "user" && (
+                    <FolderDown
+                      className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-[#1f6feb]"
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleView(item)
+                      }}
+                    />
+                  )}
                   {/* 删除 */}
-                  {item.source === "user" && <Trash className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-red-600" onClick={() => handleDelete(item)} />}
+                  {item.source === "user" && (
+                    <Trash
+                      className="h-5 w-5 cursor-pointer transition-transform duration-200 hover:scale-[1.1] hover:text-red-600"
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleDelete(item)
+                      }}
+                    />
+                  )}
                 </span>
               </CardTitle>
             </CardHeader>
