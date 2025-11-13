@@ -1,0 +1,74 @@
+# Introduction
+
+Welcome to PromptX documentation!
+
+## What is PromptX?
+
+PromptX is an **AI Agent Context Platform** built on the Model Context Protocol (MCP). It enables AI applications like Claude Desktop and Cursor to access:
+
+- 🎭 **Professional AI Roles** - Pre-configured expert personas with domain knowledge
+- 💭 **Cognitive Memory System** - Not RAG, but real semantic memory networks
+- 🔧 **Intelligent Tools** - Extensible tool ecosystem with sandboxed execution
+
+## Key Features
+
+### Cognitive Memory (Not RAG)
+
+Traditional RAG systems chunk and search documents. PromptX implements a **cognitive memory system** inspired by human memory:
+
+- **Semantic Networks**: Concepts connected by meaningful relationships
+- **Spreading Activation**: Memory recall through network activation
+- **DMN Mode**: Default Mode Network for exploratory thinking
+- **Engrams**: Complete memory traces, not fragments
+
+### AI Role System
+
+Create and activate professional AI roles with:
+
+- Personality and communication style
+- Domain expertise and knowledge base
+- Personal memory and experience
+- Behavioral principles and workflows
+
+Built-in roles include:
+- **Nuwa** - AI role creator expert
+- **Luban** - Tool development master
+- **Sean** - Product decision maker (founder role)
+- **Writer** - Professional content creator
+
+### ToolX Runtime
+
+Sandboxed tool execution environment supporting:
+
+- File operations (Excel, Word, PDF)
+- Custom tool creation via YAML
+- Worker pool for concurrent execution
+- Security and parameter validation
+
+## Quick Links
+
+- [Quick Start](/docs/quick-start) - Get running in 5 minutes
+- [Core Concepts](/docs/concepts) - Understand key ideas
+- [AI Roles](/docs/roles) - Learn about role system
+- [Cognitive Memory](/docs/memory) - Dive into memory architecture
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│   AI Client (Claude, Cursor, etc.)     │
+└──────────────┬──────────────────────────┘
+               │ MCP Protocol
+┌──────────────▼──────────────────────────┐
+│         PromptX MCP Server              │
+│  ┌─────────────────────────────────┐   │
+│  │  Role System  │  Memory System   │   │
+│  ├─────────────────────────────────┤   │
+│  │        ToolX Runtime             │   │
+│  └─────────────────────────────────┘   │
+└─────────────────────────────────────────┘
+```
+
+## Next Steps
+
+Ready to get started? Follow the [Quick Start](/docs/quick-start) guide to install and configure PromptX.

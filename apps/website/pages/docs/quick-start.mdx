@@ -1,0 +1,128 @@
+# Quick Start
+
+Get PromptX running in 5 minutes.
+
+## Installation
+
+### Option 1: Desktop App (Recommended)
+
+Download the desktop app for your platform:
+
+- [macOS (Apple Silicon)](/download)
+- [macOS (Intel)](/download)
+- [Windows](/download)
+- [Linux](/download)
+
+The desktop app includes:
+- HTTP MCP server (port 5203)
+- Visual resource manager
+- Auto-updater
+- System tray integration
+
+### Option 2: NPM Package
+
+For developers who want to integrate PromptX into their own MCP setup:
+
+```bash
+pnpm add @promptx/mcp-server
+# or
+npm install @promptx/mcp-server
+```
+
+## Configuration
+
+### Claude Desktop
+
+Edit your Claude Desktop config file:
+
+**macOS/Linux**: `~/.config/claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "promptx": {
+      "command": "node",
+      "args": [
+        "/path/to/@promptx/mcp-server/dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+Or if using the desktop app:
+
+```json
+{
+  "mcpServers": {
+    "promptx": {
+      "url": "http://localhost:5203/mcp"
+    }
+  }
+}
+```
+
+### Cursor
+
+Add to your Cursor settings:
+
+```json
+{
+  "mcp.servers": {
+    "promptx": {
+      "url": "http://localhost:5203/mcp"
+    }
+  }
+}
+```
+
+## First Steps
+
+### 1. Discover Available Resources
+
+```
+User: Use promptx_discover to see what's available
+```
+
+You'll see:
+- System roles (Nuwa, Luban, Sean, Writer)
+- Available tools (PDF reader, Excel tool, etc.)
+- Memory commands (recall, remember)
+
+### 2. Activate Your First Role
+
+```
+User: Use promptx_action to activate nuwa
+```
+
+Nuwa (女娲) is the AI role creator expert. She'll help you create custom roles.
+
+### 3. Try Memory System
+
+```
+User: Use promptx_recall with role=assistant and query=null
+```
+
+This triggers DMN (Default Mode Network) mode - you'll see the entire memory landscape.
+
+### 4. Create a Memory
+
+```
+User: Use promptx_remember to save this conversation
+```
+
+AI will store key learnings as engrams in the semantic network.
+
+## What's Next?
+
+- [Core Concepts](/docs/concepts) - Understand PromptX architecture
+- [AI Roles](/docs/roles) - Learn about role system
+- [Cognitive Memory](/docs/memory) - Deep dive into memory
+- [Tools](/docs/tools) - Use and create tools
+
+## Need Help?
+
+- [GitHub Issues](https://github.com/Deepractice/PromptX/issues)
+- [Discord Community](https://discord.gg/promptx)
+- [Documentation](/docs)
