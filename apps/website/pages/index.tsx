@@ -51,7 +51,7 @@ export default function Home() {
             <div className="relative" style={{ paddingBottom: '56.25%' }}>
               <iframe
                 className="absolute inset-0 h-full w-full"
-                src="https://www.youtube.com/embed/R6ENaj9i0oE"
+                src="https://www.youtube.com/embed/R6ENaj9i0oE?vq=hd720"
                 title="PromptX Demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

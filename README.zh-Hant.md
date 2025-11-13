@@ -51,6 +51,16 @@ AI：    瞬間變身專業產品經理，獲得完整專業知識和工作方�
 AI：    以專業產品經理身份，提供深度產品策略建議
 ```
 
+### 🎬 觀看 PromptX 實戰演示
+
+<div align="center">
+
+[![PromptX 演示影片](https://img.youtube.com/vi/R6ENaj9i0oE/maxresdefault.jpg)](https://www.youtube.com/watch?v=R6ENaj9i0oE)
+
+*點擊觀看：了解 PromptX 如何透過記憶、角色和智慧工具改變 AI 互動*
+
+</div>
+
 ### 🚀 為什麼這是革命性的？
 
 **❌ 傳統方式：**

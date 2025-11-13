@@ -1,128 +1,209 @@
 # Quick Start
 
-Get PromptX running in 5 minutes.
+Get PromptX up and running in 5 minutes.
 
-## Installation
+## Prerequisites
 
-### Option 1: Desktop App (Recommended)
+Before you begin, make sure you have:
 
-Download the desktop app for your platform:
+- **Operating System**: macOS 10.15+, Windows 10+, or Linux
+- **AI Application**: Claude Desktop, Cursor, or any MCP-enabled application
+- **Internet Connection**: For downloading the application
 
-- [macOS (Apple Silicon)](/download)
-- [macOS (Intel)](/download)
-- [Windows](/download)
-- [Linux](/download)
+---
+
+## Step 1: Install PromptX
+
+Choose one of the following installation methods:
+
+### Option A: Desktop Application (Recommended)
+
+Download and install the desktop application for your operating system:
+
+- **macOS**: [Apple Silicon](https://promptx.deepractice.ai/download/latest/promptx-desktop-mac-arm64.dmg) | [Intel](https://promptx.deepractice.ai/download/latest/promptx-desktop-mac-x64.dmg)
+- **Windows**: [64-bit Installer](https://promptx.deepractice.ai/download/latest/promptx-desktop-win32-x64-setup.exe)
+- **Linux**: [All Formats](https://promptx.deepractice.ai/download/latest/)
 
 The desktop app includes:
-- HTTP MCP server (port 5203)
+- HTTP MCP server on port 5203
 - Visual resource manager
 - Auto-updater
 - System tray integration
 
-### Option 2: NPM Package
+Once installed, launch the PromptX desktop app. It will automatically start the MCP server.
 
-For developers who want to integrate PromptX into their own MCP setup:
+### Option B: NPX (For Developers)
+
+If you have Node.js (18.17.0+) installed:
 
 ```bash
-pnpm add @promptx/mcp-server
-# or
-npm install @promptx/mcp-server
+npx -y @promptx/mcp-server
 ```
 
-## Configuration
+### Option C: Docker
 
-### Claude Desktop
+Run PromptX in a Docker container:
 
-Edit your Claude Desktop config file:
+```bash
+docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:latest
+```
 
-**macOS/Linux**: `~/.config/claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+---
+
+## Step 2: Configure Your AI Application
+
+Add the PromptX MCP server to your AI application's configuration.
+
+### For Claude Desktop
+
+**Configuration File Location:**
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
+
+Add the following configuration:
 
 ```json
 {
   "mcpServers": {
     "promptx": {
-      "command": "node",
-      "args": [
-        "/path/to/@promptx/mcp-server/dist/index.js"
-      ]
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:5203/mcp"
     }
   }
 }
 ```
 
-Or if using the desktop app:
+### For Cursor
+
+Open Cursor settings and add to your MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "promptx": {
-      "url": "http://localhost:5203/mcp"
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:5203/mcp"
     }
   }
 }
 ```
 
-### Cursor
+---
 
-Add to your Cursor settings:
+## Step 3: Restart & Verify
 
-```json
-{
-  "mcp.servers": {
-    "promptx": {
-      "url": "http://localhost:5203/mcp"
-    }
-  }
-}
-```
+1. **Restart your AI application** (Claude Desktop or Cursor)
+2. **Verify the connection**: Look for PromptX in the list of available MCP servers
+3. **Check the status**: The PromptX desktop app should show "Connected" status
 
-## First Steps
+### Troubleshooting
 
-### 1. Discover Available Resources
+If PromptX doesn't appear:
+- Ensure the PromptX desktop app is running
+- Check that port 5203 is not being used by another application
+- Verify the configuration file was saved correctly
+- Check logs at `~/.promptx/logs/`
 
-```
-User: Use promptx_discover to see what's available
-```
+---
 
-You'll see:
-- System roles (Nuwa, Luban, Sean, Writer)
-- Available tools (PDF reader, Excel tool, etc.)
-- Memory commands (recall, remember)
+## Step 4: Try Your First Commands
 
-### 2. Activate Your First Role
+Now let's test PromptX! Open your AI application and try these:
+
+### Discover Available Resources
+
+Ask your AI:
 
 ```
-User: Use promptx_action to activate nuwa
+Show me what experts are available
 ```
 
-Nuwa (女娲) is the AI role creator expert. She'll help you create custom roles.
-
-### 3. Try Memory System
+or simply:
 
 ```
-User: Use promptx_recall with role=assistant and query=null
+What can PromptX do?
 ```
 
-This triggers DMN (Default Mode Network) mode - you'll see the entire memory landscape.
+You should see a list of:
+- **System roles**: Nuwa, Luban, Writer, Sean
+- **Available tools**: PDF reader, Excel, Word, filesystem
+- **Memory commands**: recall, remember
 
-### 4. Create a Memory
+### Activate Your First Role
+
+Try activating Nuwa, the AI role creator:
 
 ```
-User: Use promptx_remember to save this conversation
+Activate Nuwa
 ```
 
-AI will store key learnings as engrams in the semantic network.
+or more naturally:
+
+```
+I need help creating a custom AI role
+```
+
+Once activated, Nuwa will introduce herself and you can start working together!
+
+### Use the Memory System
+
+Store information:
+
+```
+Remember that I prefer using TypeScript for all projects
+```
+
+Later, recall it:
+
+```
+What are my project preferences?
+```
+
+### Explore Tools
+
+Ask about available tools:
+
+```
+What tools can you access?
+```
+
+You'll see tools like:
+- 📄 PDF Reader
+- 📊 Excel Operations
+- 📝 Word Documents
+- 📁 File Management
+
+---
 
 ## What's Next?
 
-- [Core Concepts](/docs/concepts) - Understand PromptX architecture
-- [AI Roles](/docs/roles) - Learn about role system
-- [Cognitive Memory](/docs/memory) - Deep dive into memory
-- [Tools](/docs/tools) - Use and create tools
+Congratulations! You've successfully set up PromptX. Here's what to explore next:
 
-## Need Help?
+### Core Features
 
-- [GitHub Issues](https://github.com/Deepractice/PromptX/issues)
-- [Discord Community](https://discord.gg/promptx)
-- [Documentation](/docs)
+- **[AI Roles](/docs/roles)** - Learn about the role system and create custom roles
+- **[ToolX Runtime](/docs/toolx)** - Explore the tool ecosystem
+
+### Get Help
+
+- **[GitHub Issues](https://github.com/Deepractice/PromptX/issues)** - Report bugs or request features
+- **[Discord Community](https://discord.gg/rdmPr54K)** - Chat with other users
+
+---
+
+## Tips for Success
+
+💡 **Start Small**: Begin with one role and gradually explore more features
+
+💡 **Use Natural Language**: You don't need to memorize commands - just talk naturally
+
+💡 **Build Memory**: Store important information to make AI interactions more personalized
+
+💡 **Experiment**: Try different roles for different tasks
+
+💡 **Join Community**: Share your experiences and learn from others
+
+---
+
+Need help? Join our [Discord community](https://discord.gg/rdmPr54K) or check the [full documentation](/docs).

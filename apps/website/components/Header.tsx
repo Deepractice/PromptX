@@ -52,10 +52,10 @@ export function Header() {
         {/* CTA Button */}
         <div className="hidden md:block">
           <Link
-            href="/docs/quick-start"
+            href="/download"
             className="rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-700"
           >
-            Get Started →
+            Download
           </Link>
         </div>
 
@@ -116,10 +116,10 @@ export function Header() {
               Community
             </a>
             <Link
-              href="/docs/quick-start"
+              href="/download"
               className="block rounded-lg bg-primary-600 px-4 py-2 text-center font-semibold text-white hover:bg-primary-700"
             >
-              Get Started →
+              Download
             </Link>
           </div>
         </div>

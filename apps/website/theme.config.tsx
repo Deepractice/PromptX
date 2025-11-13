@@ -4,8 +4,9 @@ import { DocsThemeConfig } from 'nextra-theme-docs';
 const config: DocsThemeConfig = {
   logo: (
     <div className="flex items-center gap-2">
-      <span className="text-2xl font-bold bg-gradient-warm-purple bg-clip-text text-transparent">
-        PromptX
+      <span className="text-2xl font-bold">
+        <span className="text-primary-600">Prompt</span>
+        <span className="text-creative-600">X</span>
       </span>
     </div>
   ),
@@ -13,18 +14,18 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/Deepractice/PromptX',
   },
   chat: {
-    link: 'https://discord.gg/promptx',
+    link: 'https://discord.gg/rdmPr54K',
   },
   docsRepositoryBase: 'https://github.com/Deepractice/PromptX/tree/main/apps/website',
   footer: {
-    text: (
-      <div className="flex w-full flex-col items-center sm:items-start">
-        <p className="text-sm">
-          © {new Date().getFullYear()} Deepractice. Built with{' '}
-          <span className="text-creative-500">passion</span> and{' '}
-          <span className="text-rational-500">precision</span>.
-        </p>
-      </div>
+    content: (
+      <span>
+        MIT {new Date().getFullYear()} ©{' '}
+        <a href="https://deepractice.ai" target="_blank" rel="noopener noreferrer">
+          Deepractice
+        </a>
+        .
+      </span>
     ),
   },
   useNextSeoProps() {
@@ -38,23 +39,23 @@ const config: DocsThemeConfig = {
       <meta property="og:title" content="PromptX - AI Agent Context Platform" />
       <meta
         property="og:description"
-        content="Let AI have professional memory and roles. Built on MCP protocol."
+        content="Let AI have professional roles, tools & memory. Built on MCP protocol."
       />
       <link rel="icon" href="/favicon.ico" />
     </>
   ),
   primaryHue: {
-    dark: 25, // orange hue
-    light: 195, // sky blue hue
+    dark: 210, // primary blue
+    light: 210, // primary blue
   },
   primarySaturation: {
-    dark: 95,
-    light: 95,
+    dark: 80,
+    light: 80,
   },
   sidebar: {
     titleComponent({ title, type }) {
       if (type === 'separator') {
-        return <div className="text-xs font-semibold text-rational-400">{title}</div>;
+        return <div className="text-xs font-semibold uppercase text-gray-500">{title}</div>;
       }
       return <>{title}</>;
     },
@@ -75,9 +76,19 @@ const config: DocsThemeConfig = {
     prev: true,
     next: true,
   },
-  darkMode: true,
+  darkMode: false,
   nextThemes: {
-    defaultTheme: 'dark',
+    defaultTheme: 'light',
+  },
+  navbar: {
+    extraContent: (
+      <a
+        href="/download"
+        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-700"
+      >
+        Download
+      </a>
+    ),
   },
 };
 

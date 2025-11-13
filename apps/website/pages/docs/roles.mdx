@@ -1,0 +1,522 @@
+# AI Roles
+
+PromptX roles are not just system prompts. They are complete AI personalities with domain knowledge, personal memory, behavioral principles, and professional tools.
+
+## What is a Role?
+
+An AI role in PromptX is like hiring a professional expert. Each role has:
+
+- **Personality** - Unique character traits and communication style
+- **Expertise** - Deep domain knowledge and professional skills
+- **Memory** - Personal experience and knowledge accumulated over time
+- **Tools** - Specialized capabilities and integrations
+- **Principles** - Work methods and decision-making frameworks
+
+Think of roles as different hats your AI can wear - each one bringing a complete professional identity.
+
+---
+
+## Built-in Roles
+
+PromptX comes with carefully crafted system roles, each an expert in their domain.
+
+### 🎭 Nuwa - AI Role Creator
+
+**Specialty**: Creating custom AI roles
+
+Nuwa (女娲) is named after the Chinese goddess of creation. She is your expert for designing and creating custom AI roles.
+
+**Best for:**
+- Designing roles for specific domains
+- Understanding role architecture
+- Creating DPML role definitions
+- Optimizing role behaviors
+
+**Personality**: Creative, patient, detail-oriented, systematic
+
+**Example Usage:**
+```
+User: Activate Nuwa, I need to create a role for a Python teaching assistant
+```
+
+### 🔧 Luban - Tool Integration Master
+
+**Specialty**: Building and integrating tools
+
+Luban (鲁班) is named after the legendary Chinese craftsman. He helps you create tools and integrate external services.
+
+**Best for:**
+- Integrating APIs and services
+- Creating custom tools
+- Tool configuration
+- Debugging tool issues
+
+**Personality**: Practical, precise, methodical, problem-solver
+
+**Example Usage:**
+```
+User: Activate Luban, I want to connect PromptX to our PostgreSQL database
+```
+
+### ✍️ Writer - Professional Content Creator
+
+**Specialty**: Creating authentic, engaging content
+
+Writer is your professional content creation expert who specializes in producing human-like, compelling writing.
+
+**Best for:**
+- Technical documentation
+- Marketing copy
+- Blog posts and articles
+- Product announcements
+
+**Personality**: Articulate, observant, conversational, authentic
+
+**Key Method**: ISSUE framework for gathering rich context through conversation
+
+**Example Usage:**
+```
+User: Activate Writer, I need to write a blog post about our new feature
+```
+
+### 🎯 Sean - Product Decision Maker
+
+**Specialty**: Product strategy and decision-making
+
+Sean is the founder's role, embodying product thinking and the Shield-Spear Decision Framework.
+
+**Best for:**
+- Product strategy decisions
+- Feature prioritization
+- Market positioning
+- Business model validation
+
+**Personality**: Strategic, pragmatic, user-focused, decisive
+
+**Framework**: Shield-Spear methodology for balancing defense and offense
+
+**Example Usage:**
+```
+User: Activate Sean, should we build feature X or Y first?
+```
+
+---
+
+## How to Activate a Role
+
+There are several ways to activate a role in PromptX:
+
+### Natural Language (Recommended)
+
+Just talk naturally - the AI will understand your intent:
+
+```
+I need help creating a custom role
+```
+
+```
+Can I talk to Nuwa?
+```
+
+```
+I want to integrate an API
+```
+
+### Direct Activation
+
+Explicitly request a role:
+
+```
+Activate Nuwa
+```
+
+```
+Switch to Luban
+```
+
+### Task-Based
+
+Describe your task, and the AI may suggest appropriate roles:
+
+```
+I need to write marketing copy for our landing page
+```
+
+The AI might respond: "This sounds like a perfect task for Writer. Would you like me to activate Writer for you?"
+
+---
+
+## Role Capabilities
+
+### Memory System Integration
+
+Each role has its own memory network. When you work with a role:
+
+1. **Personal Memory** - The role remembers your conversations and preferences
+2. **Domain Knowledge** - Accumulated expertise in their field
+3. **Project Context** - Information specific to your projects
+
+Example:
+```
+User: Remember that I prefer TypeScript over JavaScript
+Nuwa: I'll remember your TypeScript preference for future role designs.
+
+[Later conversation]
+User: Create a developer role for me
+Nuwa: I'll design a developer role with TypeScript expertise, based on your preferences.
+```
+
+### Tool Access
+
+Roles have access to appropriate tools for their domain:
+
+- **Writer** - Word tool, grammar checkers
+- **Luban** - Tool creator, API integrators
+- **All roles** - File system, basic operations
+
+### Behavioral Consistency
+
+Roles maintain consistent personality and methods:
+
+- **Nuwa** always uses structured role design methodology
+- **Writer** always follows ISSUE framework for gathering context
+- **Sean** always applies Shield-Spear decision framework
+
+---
+
+## Creating Custom Roles
+
+You can create custom roles for your specific needs using Nuwa.
+
+### Step 1: Activate Nuwa
+
+```
+User: Activate Nuwa, I want to create a custom role
+```
+
+### Step 2: Describe Your Needs
+
+Nuwa will ask you questions to understand:
+- What domain or task?
+- What personality traits?
+- What knowledge is needed?
+- What tools should it have?
+
+### Step 3: Iterate and Refine
+
+Work with Nuwa to refine the role definition until it matches your needs.
+
+### Example: Creating a "DevOps Expert" Role
+
+```
+User: Activate Nuwa, I need a DevOps expert role
+
+Nuwa: I'll help you create a DevOps expert role. Let me ask a few questions:
+
+1. What specific DevOps areas should this role cover? (CI/CD, infrastructure, monitoring, etc.)
+2. What cloud platforms do you use? (AWS, GCP, Azure?)
+3. What's the personality style - cautious and security-focused, or fast and experimental?
+4. Should this role have access to specific tools or APIs?
+
+User: Focus on Kubernetes and AWS, security-focused personality, needs access to kubectl
+
+Nuwa: Perfect! I'll create a role with:
+- Deep Kubernetes and AWS expertise
+- Security-first mindset with defense-in-depth principles
+- Access to kubectl and AWS CLI tools
+- Cautious, methodical personality
+- Best practices for infrastructure as code
+
+Would you like me to generate the role definition?
+```
+
+---
+
+## Role Configuration (DPML)
+
+Roles are defined using DPML (Deepractice Prompt Markup Language), an XML-based markup language with Markdown content.
+
+### Role File Structure
+
+A complete role consists of multiple files:
+
+```
+{roleId}/
+├── {roleId}.role.md          # Main role definition
+├── thought/                   # Thinking patterns (optional)
+│   └── *.thought.md
+├── execution/                 # Behavior workflows (optional)
+│   └── *.execution.md
+└── knowledge/                 # Private knowledge (optional)
+    └── *.knowledge.md
+```
+
+### Main Role File
+
+The main role file uses XML tags to structure the role definition:
+
+```xml
+# Role Display Name
+
+<role>
+
+<personality>
+Core identity and thinking patterns...
+
+@!thought://thinking-pattern-name
+@!thought://another-pattern
+</personality>
+
+<principle>
+Behavioral rules and workflows...
+
+@!execution://workflow-name
+@!execution://another-workflow
+</principle>
+
+<knowledge>
+@!knowledge://domain-knowledge
+@!knowledge://private-info
+</knowledge>
+
+</role>
+```
+
+### Core Tags
+
+- `<role>` - Root container for the role
+- `<personality>` - Identity and thinking patterns
+- `<principle>` - Behavioral rules and workflows
+- `<knowledge>` - Private domain knowledge
+
+### Resource References
+
+Use `@!` to reference external files:
+
+- `@!thought://name` - References `thought/name.thought.md`
+- `@!execution://name` - References `execution/name.execution.md`
+- `@!knowledge://name` - References `knowledge/name.knowledge.md`
+
+### Thought Files
+
+Thought files define cognitive patterns and use semantic sub-tags:
+
+```xml
+<thought>
+  <exploration>
+    ## Open-ended exploration
+    Content for divergent thinking...
+  </exploration>
+
+  <reasoning>
+    ## Logical reasoning
+    Content for deductive thinking...
+  </reasoning>
+
+  <challenge>
+    ## Critical thinking
+    Content for questioning assumptions...
+  </challenge>
+
+  <plan>
+    ## Strategic planning
+    Content for action planning...
+  </plan>
+</thought>
+```
+
+**Sub-tag usage:**
+- Use 1-4 sub-tags based on content type
+- Not all sub-tags are required
+- Organize content with Markdown inside sub-tags
+
+### Execution Files
+
+Execution files define behavioral workflows:
+
+```xml
+<execution>
+  <process>
+    ## Main workflow
+
+    ### Step 1: ...
+    ### Step 2: ...
+  </process>
+
+  <constraint>
+    ## Hard constraints
+    - Time limit: X minutes
+    - Must satisfy: ...
+  </constraint>
+
+  <rule>
+    ## Conditional rules
+    - IF condition THEN action
+    - ELSE alternative
+  </rule>
+
+  <guideline>
+    ## Best practices
+    - Guideline 1
+    - Guideline 2
+  </guideline>
+
+  <criteria>
+    ## Success criteria
+    - ✅ Criterion 1
+    - ✅ Criterion 2
+  </criteria>
+</execution>
+```
+
+**Sub-tag usage:**
+- `<process>` is usually required
+- Other sub-tags are optional
+- Use only what's needed
+
+### Knowledge Files
+
+Knowledge files contain private domain information:
+
+```xml
+<knowledge>
+## Domain-specific information
+
+Content organized with Markdown...
+
+### Section 1
+...
+
+### Section 2
+...
+</knowledge>
+```
+
+**Note:** Knowledge files don't use sub-tags - content goes directly under `<knowledge>`.
+
+### Example: Simplified Role
+
+```xml
+# Python Mentor
+
+<role>
+
+<personality>
+I am a patient Python mentor who teaches through examples
+and encourages best practices.
+
+Core traits:
+- Patient and encouraging
+- Example-driven teaching
+- Focus on fundamentals
+
+@!thought://teaching-methodology
+@!thought://code-review-mindset
+</personality>
+
+<principle>
+@!execution://teaching-workflow
+@!execution://code-review-process
+</principle>
+
+<knowledge>
+@!knowledge://python-best-practices
+@!knowledge://common-pitfalls
+</knowledge>
+
+</role>
+```
+
+### File Locations
+
+- **System roles**: Built into PromptX at `packages/resource/resources/role/`
+- **User roles**: `~/.promptx/user/role/`
+- **Project roles**: `<project>/.promptx/resource/role/`
+
+### Key Principles
+
+1. **Simple tags only** - No attributes on tags
+2. **Semantic sub-tags** - Use meaningful categorization
+3. **Markdown inside tags** - Rich formatting within XML structure
+4. **Modular references** - Separate concerns into different files
+5. **No generic knowledge** - Only put private/specific information in knowledge files
+
+---
+
+## Best Practices
+
+### Choose the Right Role
+
+Match the role to your task:
+
+- **Creating roles or personas** → Nuwa
+- **Integrating APIs or building tools** → Luban
+- **Writing content** → Writer
+- **Product decisions** → Sean
+- **General tasks** → Assistant (default)
+
+### Build Role Memory
+
+Help roles remember important context:
+
+```
+Remember that our brand voice is friendly and approachable
+```
+
+```
+Note that we use React and TypeScript for all frontend projects
+```
+
+### Switch Roles as Needed
+
+Don't hesitate to switch roles during a conversation:
+
+```
+User: [Working with Nuwa on role design]
+User: Thanks Nuwa! Now I need to integrate this with our API
+User: Activate Luban
+```
+
+### Combine Role Expertise
+
+Use multiple roles for complex projects:
+
+1. **Sean** for strategy and prioritization
+2. **Nuwa** to design supporting roles
+3. **Luban** to build necessary tools
+4. **Writer** to document everything
+
+---
+
+## Frequently Asked Questions
+
+### Can I modify system roles?
+
+System roles (Nuwa, Luban, Writer, Sean) cannot be modified directly, but you can create your own variants using Nuwa.
+
+### How many roles can I have active at once?
+
+Only one role is active at a time. Switch between roles as needed for different tasks.
+
+### Do roles remember conversations across sessions?
+
+Yes! Roles use the cognitive memory system to maintain long-term memory across sessions.
+
+### Can roles access my files?
+
+Roles have access to tools you've authorized. They won't access files without your explicit instruction.
+
+### What happens to role memory when I delete a role?
+
+The memory is preserved in the database. If you recreate a role with the same ID, it will retain the memory.
+
+---
+
+## What's Next?
+
+- **[ToolX Runtime](/docs/toolx)** - Understand role tools and capabilities
+- **[Quick Start](/docs/quick-start)** - Get started with PromptX
+
+---
+
+Need help? Join our [Discord community](https://discord.gg/rdmPr54K) or check the [GitHub Issues](https://github.com/Deepractice/PromptX/issues).

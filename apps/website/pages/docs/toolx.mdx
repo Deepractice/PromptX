@@ -1,0 +1,538 @@
+# ToolX Runtime
+
+ToolX is the intelligent tool runtime that powers PromptX. It turns AI into your professional assistant with specialized capabilities - from reading PDFs to managing files, from processing Excel to creating Word documents.
+
+## What is ToolX?
+
+Think of ToolX as a **universal remote control** for specialized tools. Instead of learning complex APIs or command-line interfaces, you simply tell AI what you want in natural language, and ToolX handles all the technical details.
+
+**Key Concept:**
+```
+You → Natural Conversation → AI → ToolX → Professional Tools → Results
+```
+
+You don't need to learn tool syntax or parameters. Just talk to AI naturally, and it will use the right tools automatically.
+
+---
+
+## Built-in Tools
+
+PromptX comes with carefully crafted system tools, each a specialist in their domain.
+
+### 📄 PDF Reader
+
+**Specialty**: Smart PDF reading and analysis
+
+Turn AI into your PDF reading expert with intelligent page-by-page reading and caching.
+
+**Best for:**
+- Reading research papers and reports
+- Extracting specific pages or sections
+- Analyzing document structure
+- Finding information across pages
+- Progressive reading of large PDFs
+
+**Example Usage:**
+```
+User: Read pages 1-5 of /Users/sean/Documents/report.pdf
+AI: [Uses PDF Reader tool to extract content]
+
+User: Find sections about data analysis
+AI: [Searches across pages to locate relevant content]
+
+User: What charts are on page 10?
+AI: [Extracts images from the specified page]
+```
+
+**Smart Features:**
+- **Intelligent Caching** - Once a page is read, it's cached for instant access
+- **On-Demand Reading** - Read only the pages you need
+- **Image Extraction** - Automatically extracts and displays images
+
+### 📊 Excel Tool
+
+**Specialty**: Data analysis and report generation
+
+Turn AI into your data analysis assistant and Excel expert.
+
+**Best for:**
+- Analyzing sales reports and finding trends
+- Generating formatted Excel reports
+- Creating charts and visualizations
+- Merging and processing data
+- Automating data updates
+
+**Example Usage:**
+```
+User: Analyze this sales report and find best-performing products
+AI: [Uses Excel Tool to read and analyze data]
+
+User: Create a column chart showing product comparison
+AI: [Generates professional charts from data]
+
+User: Merge data from Table A and Table B
+AI: [Intelligently merges data and generates new file]
+```
+
+**Smart Features:**
+- **Data Analysis** - Automatically identifies patterns and insights
+- **Chart Generation** - Creates professional visualizations
+- **Batch Processing** - Updates multiple cells while maintaining formatting
+
+### 📝 Word Tool
+
+**Specialty**: Document reading and professional writing
+
+Turn AI into your document expert and writing assistant.
+
+**Best for:**
+- Reading contracts and extracting key terms
+- Creating professional documents with structure
+- Batch editing and replacing text
+- Summarizing document content
+- Converting document formats
+
+**Example Usage:**
+```
+User: Read this contract and tell me the key terms
+AI: [Uses Word Tool to extract and analyze content]
+
+User: Create a project proposal with these sections
+AI: [Generates professional Word document]
+
+User: Replace "Company A" with "Company B" throughout
+AI: [Intelligently finds and replaces while preserving format]
+```
+
+**Smart Features:**
+- **Structure Analysis** - Understands heading hierarchy
+- **Format Preservation** - Maintains document formatting during edits
+- **Content Extraction** - Extracts text and images
+
+### 📁 Filesystem Tool
+
+**Specialty**: File and directory management
+
+Professional file operations through natural conversation.
+
+**Best for:**
+- Reading and writing files
+- Creating and organizing directories
+- Searching for files
+- Batch file operations
+- File metadata inspection
+
+**Example Usage:**
+```
+User: Create a new directory for this project
+AI: [Uses Filesystem tool to create directory]
+
+User: List all JavaScript files in src/
+AI: [Lists matching files with details]
+
+User: Copy these files to the backup folder
+AI: [Performs batch copy operations]
+```
+
+### 🎭 Role Creator
+
+**Specialty**: Creating custom AI roles
+
+Nuwa's specialized tool for designing and implementing new AI roles.
+
+**Best for:**
+- Designing role personalities and expertise
+- Defining behavioral principles
+- Creating DPML role definitions
+- Structuring role knowledge
+
+**Example Usage:**
+```
+User: (As Nuwa) Create a DevOps expert role
+AI: [Uses Role Creator to generate role files and structure]
+```
+
+This tool is primarily used by Nuwa when helping users create custom roles.
+
+### 🔧 Tool Creator
+
+**Specialty**: Building new tools
+
+Luban's specialized tool for integrating external services and creating new capabilities.
+
+**Best for:**
+- Integrating external APIs
+- Creating tool configurations
+- Building tool wrappers
+- Defining tool parameters
+
+**Example Usage:**
+```
+User: (As Luban) Create a tool to connect to PostgreSQL
+AI: [Uses Tool Creator to generate tool definition and code]
+```
+
+This tool is primarily used by Luban when helping users integrate new services.
+
+---
+
+## How Tools Work
+
+### Natural Language Interface
+
+You don't need to know tool syntax. Just talk naturally:
+
+```
+❌ Don't do this:
+toolx.execute("pdf-reader", { path: "/path/to/file.pdf", pages: "1-5" })
+
+✅ Do this instead:
+"Read pages 1-5 of this PDF"
+```
+
+AI automatically:
+1. Understands your intent
+2. Selects the right tool
+3. Determines correct parameters
+4. Executes the operation
+5. Formats results naturally
+
+### Multi-Tool Workflows
+
+AI can chain multiple tools together:
+
+```
+User: Read this Excel file, analyze the data, and create a Word report
+
+AI will automatically:
+1. Use Excel Tool to read data
+2. Analyze the data using built-in logic
+3. Use Word Tool to create formatted report
+4. Use Filesystem Tool to save the file
+```
+
+### Error Handling
+
+Tools provide helpful error messages and suggestions:
+
+```
+User: Read this PDF
+AI: I need the file path. Could you provide the full path to the PDF?
+
+User: Read /Users/sean/report.pdf
+AI: [Successfully reads the file]
+```
+
+---
+
+## Tool Architecture
+
+### How ToolX Executes Tools
+
+```
+Natural Language Request
+        ↓
+    AI Agent (analyzes intent)
+        ↓
+    ToolX Runtime (loads tool)
+        ↓
+    Tool Module (executes operation)
+        ↓
+    Results (formatted naturally)
+```
+
+### Tool Types
+
+**System Tools** - Built into PromptX
+- Located at: `packages/resource/resources/tool/`
+- Maintained by PromptX team
+- Available to all users
+
+**User Tools** - Created by you
+- Located at: `~/.promptx/user/tool/`
+- Personal tools for specific needs
+- Accessible across projects
+
+**Project Tools** - Project-specific
+- Located at: `<project>/.promptx/resource/tool/`
+- Shared with team members
+- Project-scoped functionality
+
+### Tool Discovery
+
+Tools are automatically discovered and loaded:
+
+```
+User: What tools are available?
+AI: [Uses discover function to list all tools]
+
+System Tools:
+- pdf-reader
+- excel-tool
+- word-tool
+- filesystem
+- role-creator
+- tool-creator
+
+User Tools:
+- (your custom tools)
+
+Project Tools:
+- (project-specific tools)
+```
+
+---
+
+## Creating Custom Tools
+
+You can create custom tools for your specific needs using Luban.
+
+### Step 1: Activate Luban
+
+```
+User: Activate Luban, I want to create a custom tool
+```
+
+### Step 2: Describe Your Needs
+
+Luban will ask you questions to understand:
+- What operation does the tool perform?
+- What parameters are needed?
+- What external services to integrate?
+- What output format is expected?
+
+### Step 3: Tool Implementation
+
+Luban will use the Tool Creator to:
+- Generate tool configuration
+- Write tool code
+- Set up parameters and validation
+- Create documentation
+
+### Example: Creating a "Database Query" Tool
+
+```
+User: Activate Luban, I need a tool to query PostgreSQL
+
+Luban: I'll help you create a PostgreSQL query tool. Let me ask a few questions:
+
+1. What's the database connection info? (host, port, database name)
+2. What types of queries should it support? (SELECT, INSERT, UPDATE, etc.)
+3. Should it support transactions?
+4. What error handling is needed?
+
+User: It should support SELECT queries, connection to localhost:5432
+
+Luban: Perfect! I'll create a tool with:
+- PostgreSQL connection pooling
+- Safe SELECT query execution
+- Parameter sanitization to prevent SQL injection
+- Result formatting for easy reading
+
+Would you like me to generate the tool?
+```
+
+### Tool Structure
+
+Custom tools follow this structure:
+
+```
+my-tool/
+├── my-tool.tool.js        # Main tool implementation
+├── README.md              # User-facing documentation
+└── package.json           # Dependencies (optional)
+```
+
+---
+
+## Tool Configuration
+
+### Tool File Format
+
+Tools are implemented as JavaScript modules:
+
+```javascript
+// my-tool.tool.js
+export default {
+  name: 'my-tool',
+  description: 'What this tool does',
+
+  parameters: {
+    required: ['param1'],
+    optional: ['param2']
+  },
+
+  async execute(params) {
+    // Tool implementation
+    return result;
+  }
+};
+```
+
+### Parameter Definition
+
+Tools define their parameters clearly:
+
+```javascript
+parameters: {
+  required: ['filePath'],
+  optional: ['encoding', 'timeout'],
+
+  schema: {
+    filePath: {
+      type: 'string',
+      description: 'Path to the file'
+    },
+    encoding: {
+      type: 'string',
+      default: 'utf-8',
+      description: 'File encoding'
+    }
+  }
+}
+```
+
+### Tool Modes
+
+ToolX supports different execution modes:
+
+- **execute** (default) - Run the tool operation
+- **manual** - Display tool documentation
+- **configure** - Set tool environment variables
+- **log** - View tool execution logs
+- **dryrun** - Simulate execution without changes
+
+---
+
+## Best Practices
+
+### Let AI Choose Tools
+
+Don't specify which tool to use. Let AI decide:
+
+```
+✅ Good:
+"Read this PDF and summarize it"
+
+❌ Unnecessary:
+"Use pdf-reader tool to read this PDF and summarize it"
+```
+
+AI knows which tools to use based on context.
+
+### Provide Clear Context
+
+Give AI the information it needs:
+
+```
+✅ Good:
+"Read pages 10-15 of /Users/sean/report.pdf"
+
+❌ Vague:
+"Read that file"
+```
+
+### Chain Operations Naturally
+
+Describe multi-step workflows naturally:
+
+```
+"Read this Excel file, find the top 5 products by sales,
+and create a Word report with a chart"
+```
+
+AI will automatically:
+1. Use Excel Tool to read data
+2. Analyze to find top products
+3. Use Word Tool to create report
+4. Include visualization
+
+### Trust Tool Expertise
+
+Tools have built-in best practices:
+
+- **PDF Reader** uses intelligent caching
+- **Excel Tool** maintains formatting
+- **Word Tool** preserves document structure
+- **Filesystem** handles permissions safely
+
+You don't need to micromanage - tools do the right thing automatically.
+
+---
+
+## Troubleshooting
+
+### Tool Not Found
+
+If a tool isn't available:
+
+```
+User: What tools are available?
+AI: [Lists all available tools]
+
+User: I need a tool that's not listed
+AI: You can create custom tools with Luban's help
+```
+
+### Tool Errors
+
+Tools provide helpful error messages:
+
+```
+Error: File not found: /path/to/file.pdf
+Suggestion: Check the file path and make sure the file exists
+
+Error: Invalid page range: 10-5
+Suggestion: End page must be greater than start page
+```
+
+### Permission Issues
+
+Tools respect system permissions:
+
+```
+Error: Permission denied: cannot write to /system/file
+Suggestion: Choose a location where you have write permissions
+```
+
+---
+
+## Advanced Topics
+
+### Tool Performance
+
+ToolX optimizes tool execution:
+
+- **Lazy Loading** - Tools load only when needed
+- **Caching** - Results cached when appropriate
+- **Parallel Execution** - Multiple tools can run concurrently
+- **Resource Management** - Memory and file handles managed automatically
+
+### Tool Security
+
+Tools operate with security in mind:
+
+- **Sandboxing** - Tools run in isolated environments
+- **Parameter Validation** - Input sanitized before execution
+- **Permission Checks** - File system access controlled
+- **Error Isolation** - Tool failures don't crash the system
+
+### Tool Extensibility
+
+The tool system is designed for growth:
+
+- Create tools for your specific domain
+- Share tools with your team
+- Contribute tools to the community
+- Build tool ecosystems for your organization
+
+---
+
+## What's Next?
+
+- **[AI Roles](/docs/roles)** - Understand the role system and how roles use tools
+- **[Quick Start](/docs/quick-start)** - Get started with PromptX
+
+---
+
+Need help? Join our [Discord community](https://discord.gg/rdmPr54K) or check the [GitHub Issues](https://github.com/Deepractice/PromptX/issues).

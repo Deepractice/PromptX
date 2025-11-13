@@ -51,6 +51,16 @@ User: "Help me redesign the product page"
 AI:   Provides in-depth product strategy advice as a professional product manager
 ```
 
+### 🎬 See PromptX in Action
+
+<div align="center">
+
+[![PromptX Demo Video](https://img.youtube.com/vi/R6ENaj9i0oE/maxresdefault.jpg)](https://www.youtube.com/watch?v=R6ENaj9i0oE)
+
+*Click to watch: See how PromptX transforms AI interactions with memory, roles, and intelligent tools*
+
+</div>
+
 ### 🚀 Why is this revolutionary?
 
 **❌ Traditional approach:**
