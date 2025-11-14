@@ -35,9 +35,86 @@
       "reset": "Reset to Default"
     }
   },
+  "logs": {
+    "title": "Application Logs",
+    "subtitle": "View and manage application logs",
+    "management": "Logs Management",
+    "description": "View, filter, and manage application logs",
+    "search": {
+      "placeholder": "Search logs..."
+    },
+    "filters": {
+      "all": "All",
+      "normal": "Normal",
+      "error": "Error",
+      "clearDate": "Clear"
+    },
+    "list": {
+      "title": "Log Files",
+      "count": "Log Files ({{count}})",
+      "empty": "No logs found"
+    },
+    "viewer": {
+      "selectPrompt": "Select a log file to view its content",
+      "loading": "Loading...",
+      "empty": "Log is empty"
+    },
+    "actions": {
+      "clearAll": "Clear All",
+      "delete": "Delete"
+    },
+    "messages": {
+      "loadFailed": "Failed to load logs",
+      "readFailed": "Failed to read log",
+      "deleteFailed": "Failed to delete log",
+      "deleteSuccess": "Log deleted successfully",
+      "deleteConfirm": "Delete log file: {{name}}?",
+      "clearAllConfirm": "Are you sure you want to delete ALL log files?",
+      "clearSuccess": "Cleared {{count}} log files",
+      "clearFailed": "Failed to clear logs"
+    }
+  },
   "resources": {
     "search": {
       "placeholder": "Search resources / roles / tools"
+    },
+    "import": {
+      "title": "Import Resource",
+      "description": "Import a role or tool from a file or URL",
+      "button": "Import Resource",
+      "methods": {
+        "file": "File Import",
+        "url": "URL Import (Coming Soon)"
+      },
+      "fields": {
+        "resourceType": "Resource Type",
+        "zipFile": "ZIP File",
+        "browse": "Browse",
+        "upload": "Upload",
+        "customId": "Custom ID (Optional)",
+        "customIdPlaceholder": "Leave empty to use original ID",
+        "customIdHint": "The ID will be used as the folder name",
+        "customName": "Custom Name (Optional)",
+        "customNamePlaceholder": "Display name for the resource",
+        "customDescription": "Custom Description (Optional)",
+        "customDescriptionPlaceholder": "Brief description of the resource"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "import": "Import",
+        "importing": "Importing..."
+      },
+      "messages": {
+        "selectFile": "Please select a file",
+        "importSuccess": "Resource imported successfully",
+        "importFailed": "Failed to import resource",
+        "invalidStructure": "Invalid resource structure",
+        "fileNotFound": "File not found",
+        "resourceExists": "Resource exists",
+        "resourceExistsMessage": "Resource \"{{id}}\" already exists. Overwrite?",
+        "cancelled": "Operation cancelled"
+      },
+      "urlComingSoon": "URL import feature is coming soon..."
     },
     "cards": {
       "roles": {

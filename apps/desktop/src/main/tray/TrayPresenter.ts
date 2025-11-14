@@ -406,17 +406,22 @@ export class TrayPresenter {
     }
 
     this.logsWindow = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 1200,
+      height: 800,
       title: t('tray.windows.logs'),
       webPreferences: {
         nodeIntegration: false,
-        contextIsolation: true
+        contextIsolation: true,
+        preload: path.join(__dirname, '../preload/preload.cjs')
       }
     })
 
-    // TODO: Load actual logs content
-    this.logsWindow.loadURL('data:text/html,<h1>Logs Window (TODO)</h1>')
+    if (process.env.NODE_ENV === 'development') {
+      this.logsWindow.loadURL('http://localhost:5173/#/logs')
+    } else {
+      const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
+      this.logsWindow.loadFile(indexHtmlPath, { hash: '/logs' })
+    }
 
     this.logsWindow.on('closed', () => {
       this.logsWindow = null

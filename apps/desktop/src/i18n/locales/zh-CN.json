@@ -35,9 +35,86 @@
       "reset": "重置为默认"
     }
   },
+  "logs": {
+    "title": "应用日志",
+    "subtitle": "查看和管理应用日志",
+    "management": "日志管理",
+    "description": "查看、筛选和管理应用日志",
+    "search": {
+      "placeholder": "搜索日志..."
+    },
+    "filters": {
+      "all": "全部",
+      "normal": "普通",
+      "error": "错误",
+      "clearDate": "清除"
+    },
+    "list": {
+      "title": "日志文件",
+      "count": "日志文件（{{count}}）",
+      "empty": "未找到日志"
+    },
+    "viewer": {
+      "selectPrompt": "选择一个日志文件以查看其内容",
+      "loading": "加载中...",
+      "empty": "日志为空"
+    },
+    "actions": {
+      "clearAll": "清空全部",
+      "delete": "删除"
+    },
+    "messages": {
+      "loadFailed": "加载日志失败",
+      "readFailed": "读取日志失败",
+      "deleteFailed": "删除日志失败",
+      "deleteSuccess": "日志删除成功",
+      "deleteConfirm": "删除日志文件：{{name}}？",
+      "clearAllConfirm": "确定要删除所有日志文件吗？",
+      "clearSuccess": "已清除 {{count}} 个日志文件",
+      "clearFailed": "清除日志失败"
+    }
+  },
   "resources": {
     "search": {
       "placeholder": "搜索资源 / 角色 / 工具"
+    },
+    "import": {
+      "title": "导入资源",
+      "description": "从文件或 URL 导入角色或工具",
+      "button": "导入资源",
+      "methods": {
+        "file": "文件导入",
+        "url": "URL 导入（即将推出）"
+      },
+      "fields": {
+        "resourceType": "资源类型",
+        "zipFile": "ZIP 文件",
+        "browse": "浏览",
+        "upload": "上传",
+        "customId": "自定义 ID（可选）",
+        "customIdPlaceholder": "留空则使用原始 ID",
+        "customIdHint": "ID 将用作文件夹名称",
+        "customName": "自定义名称（可选）",
+        "customNamePlaceholder": "资源的显示名称",
+        "customDescription": "自定义描述（可选）",
+        "customDescriptionPlaceholder": "资源的简要描述"
+      },
+      "actions": {
+        "cancel": "取消",
+        "import": "导入",
+        "importing": "导入中..."
+      },
+      "messages": {
+        "selectFile": "请选择文件",
+        "importSuccess": "资源导入成功",
+        "importFailed": "导入资源失败",
+        "invalidStructure": "无效的资源结构",
+        "fileNotFound": "文件未找到",
+        "resourceExists": "资源已存在",
+        "resourceExistsMessage": "资源 \"{{id}}\" 已存在。是否覆盖？",
+        "cancelled": "操作已取消"
+      },
+      "urlComingSoon": "URL 导入功能即将推出..."
     },
     "cards": {
       "roles": {

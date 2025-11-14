@@ -61,6 +61,8 @@ class PromptXDesktopApp {
     // === 然后设置其他 IPC ===
     this.setupServerConfigIPC()
     this.setupLanguageIPC()
+    this.setupLogsIPC()
+    this.setupDialogIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -251,6 +253,117 @@ class PromptXDesktopApp {
       } catch (error) {
         logger.error('Failed to set language:', String(error))
         throw new Error('Failed to save language setting')
+      }
+    })
+  }
+
+  private setupLogsIPC(): void {
+    const os = require('os')
+    const logsDir = path.join(os.homedir(), '.promptx', 'logs')
+
+    // 获取日志文件列表
+    ipcMain.handle('logs:list', async () => {
+      try {
+        if (!fs.existsSync(logsDir)) {
+          return { success: true, logs: [] }
+        }
+
+        const files = fs.readdirSync(logsDir)
+        const logs = files
+          .filter(file => file.startsWith('promptx-') && file.endsWith('.log'))
+          .map(file => {
+            const filePath = path.join(logsDir, file)
+            const stats = fs.statSync(filePath)
+            const isError = file.includes('error')
+
+            return {
+              name: file,
+              path: filePath,
+              size: stats.size,
+              modified: stats.mtime,
+              type: isError ? 'error' : 'normal'
+            }
+          })
+          .sort((a, b) => b.modified.getTime() - a.modified.getTime())
+
+        return { success: true, logs }
+      } catch (error) {
+        logger.error('Failed to list logs:', String(error))
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 读取日志文件内容
+    ipcMain.handle('logs:read', async (_event, filename: string) => {
+      try {
+        const filePath = path.join(logsDir, filename)
+
+        if (!fs.existsSync(filePath)) {
+          return { success: false, error: 'Log file not found' }
+        }
+
+        const content = fs.readFileSync(filePath, 'utf-8')
+        return { success: true, content }
+      } catch (error) {
+        logger.error('Failed to read log:', String(error))
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 删除日志文件
+    ipcMain.handle('logs:delete', async (_event, filename: string) => {
+      try {
+        const filePath = path.join(logsDir, filename)
+
+        if (!fs.existsSync(filePath)) {
+          return { success: false, error: 'Log file not found' }
+        }
+
+        fs.unlinkSync(filePath)
+        logger.info(`Log file deleted: ${filename}`)
+        return { success: true }
+      } catch (error) {
+        logger.error('Failed to delete log:', String(error))
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 清空所有日志
+    ipcMain.handle('logs:clear', async () => {
+      try {
+        if (!fs.existsSync(logsDir)) {
+          return { success: true, deleted: 0 }
+        }
+
+        const files = fs.readdirSync(logsDir)
+        let deleted = 0
+
+        for (const file of files) {
+          if (file.startsWith('promptx-') && file.endsWith('.log')) {
+            const filePath = path.join(logsDir, file)
+            fs.unlinkSync(filePath)
+            deleted++
+          }
+        }
+
+        logger.info(`Cleared ${deleted} log files`)
+        return { success: true, deleted }
+      } catch (error) {
+        logger.error('Failed to clear logs:', String(error))
+        return { success: false, error: String(error) }
+      }
+    })
+  }
+
+  private setupDialogIPC(): void {
+    // 打开文件选择对话框
+    ipcMain.handle('dialog:openFile', async (_event, options?: any) => {
+      try {
+        const result = await dialog.showOpenDialog(options || {})
+        return result
+      } catch (error) {
+        logger.error('Failed to open file dialog:', String(error))
+        return { canceled: true, filePaths: [] }
       }
     })
   }
