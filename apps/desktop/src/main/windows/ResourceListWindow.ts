@@ -1,4 +1,4 @@
-import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron'
+import { BrowserWindow, IpcMainInvokeEvent, ipcMain, dialog } from 'electron'
 import { ResourceService } from '~/main/application/ResourceService'
 import * as path from 'path'
 import { pathToFileURL } from 'node:url'
@@ -93,7 +93,7 @@ export class ResourceListWindow {
       }
     })
 
-    // 新增：下载资源（分享即下载）
+    // 新增：下载资源（分享即下载，导出为 ZIP 压缩包）
     ipcMain.handle('resources:download', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string }) => {
       try {
         const id = payload?.id
@@ -107,16 +107,7 @@ export class ResourceListWindow {
         const fs = require('fs-extra')
         const os = require('os')
         const { dialog } = require('electron')
-
-        // 选择目标目录
-        const ret = await dialog.showOpenDialog({
-          title: t('resources.selectSaveLocation', { type }),
-          properties: ['openDirectory', 'createDirectory']
-        })
-        if (ret.canceled || !ret.filePaths?.[0]) {
-          return { success: false, message: t('resources.cancelled') }
-        }
-        const destDir = ret.filePaths[0]
+        const AdmZip = require('adm-zip')
 
         // 定位资源目录
         let sourceDir: string | null = null
@@ -150,10 +141,45 @@ export class ResourceListWindow {
         const exists = await fs.pathExists(sourceDir)
         if (!exists) return { success: false, message: t('resources.directoryNotExists') + `: ${sourceDir}` }
 
-        const target = path.join(destDir, `${type}-${id}`)
-        await fs.copy(sourceDir, target, { overwrite: true, errorOnExist: false })
+        // 让用户选择保存 ZIP 文件的位置
+        const ret = await dialog.showSaveDialog({
+          title: t('resources.selectSaveLocation', { type }),
+          defaultPath: `${type}-${id}.zip`,
+          filters: [
+            { name: 'ZIP Archive', extensions: ['zip'] },
+            { name: 'All Files', extensions: ['*'] }
+          ]
+        })
 
-        return { success: true, path: target }
+        if (ret.canceled || !ret.filePath) {
+          return { success: false, message: t('resources.cancelled') }
+        }
+        const zipFilePath = ret.filePath
+
+        // 创建 ZIP 压缩包（跨平台兼容）
+        const zip = new AdmZip()
+
+        // 递归添加目录中的所有文件
+        const addDirectoryToZip = async (dirPath: string, zipPath: string = '') => {
+          const entries = await fs.readdir(dirPath, { withFileTypes: true })
+          for (const entry of entries) {
+            const fullPath = path.join(dirPath, entry.name)
+            const zipEntryPath = zipPath ? path.join(zipPath, entry.name) : entry.name
+
+            if (entry.isDirectory()) {
+              await addDirectoryToZip(fullPath, zipEntryPath)
+            } else {
+              zip.addLocalFile(fullPath, zipPath)
+            }
+          }
+        }
+
+        await addDirectoryToZip(sourceDir)
+
+        // 写入 ZIP 文件
+        zip.writeZip(zipFilePath)
+
+        return { success: true, path: zipFilePath }
       } catch (error: any) {
         console.error('Failed to download resource:', error)
         return { success: false, message: error?.message || t('resources.downloadFailed') }
@@ -374,6 +400,151 @@ export class ResourceListWindow {
       } catch (error: any) {
         console.error('Failed to update resource metadata:', error)
         return { success: false, message: error?.message || t('resources.updateMetadataFailed') }
+      }
+    })
+
+    // 新增：导入资源（从压缩包）
+    ipcMain.handle('resources:import', async (_evt, payload: {
+      filePath: string
+      type: 'role' | 'tool'
+      customId?: string
+      name?: string
+      description?: string
+    }) => {
+      try {
+        const { filePath, type, customId, name, description } = payload || {}
+
+        if (!filePath || !type) {
+          return { success: false, message: t('resources.missingParams') }
+        }
+
+        const fs = require('fs-extra')
+        const path = require('path')
+        const os = require('os')
+        const AdmZip = require('adm-zip')
+
+        // 验证文件存在
+        if (!(await fs.pathExists(filePath))) {
+          return { success: false, message: t('resources.fileNotFound') }
+        }
+
+        // 创建临时目录
+        const tempDir = path.join(os.tmpdir(), `promptx-import-${Date.now()}`)
+        await fs.ensureDir(tempDir)
+
+        try {
+          // 解压文件
+          const zip = new AdmZip(filePath)
+          zip.extractAllTo(tempDir, true)
+
+          // 查找资源目录（可能在根目录或一级子目录中）
+          let resourceDir: string | null = null
+          let resourceId: string | null = null
+
+          const entries = await fs.readdir(tempDir)
+
+          // 检查是否直接在根目录
+          const mainFiles = entries.filter((f: string) =>
+            f.endsWith('.role.md') || f.endsWith('.tool.js')
+          )
+
+          if (mainFiles.length > 0) {
+            resourceDir = tempDir
+            resourceId = mainFiles[0].replace(/\.(role\.md|tool\.js)$/, '')
+          } else if (entries.length === 1) {
+            // 检查一级子目录
+            const subDir = path.join(tempDir, entries[0])
+            const stat = await fs.stat(subDir)
+            if (stat.isDirectory()) {
+              const subEntries = await fs.readdir(subDir)
+              const subMainFiles = subEntries.filter((f: string) =>
+                f.endsWith('.role.md') || f.endsWith('.tool.js')
+              )
+              if (subMainFiles.length > 0) {
+                resourceDir = subDir
+                resourceId = subMainFiles[0].replace(/\.(role\.md|tool\.js)$/, '')
+              }
+            }
+          }
+
+          if (!resourceDir || !resourceId) {
+            await fs.remove(tempDir)
+            return { success: false, message: t('resources.invalidResourceStructure') }
+          }
+
+          // 使用自定义ID或原ID
+          const finalId = customId || resourceId
+
+          // 目标目录
+          const userResourceDir = path.join(os.homedir(), '.promptx', 'resource', type, finalId)
+
+          // 检查是否已存在
+          if (await fs.pathExists(userResourceDir)) {
+            const overwrite = await dialog.showMessageBox({
+              type: 'question',
+              buttons: ['Cancel', 'Overwrite'],
+              defaultId: 0,
+              title: t('resources.resourceExists'),
+              message: t('resources.resourceExistsMessage', { id: finalId })
+            })
+
+            if (overwrite.response === 0) {
+              await fs.remove(tempDir)
+              return { success: false, message: t('resources.cancelled') }
+            }
+
+            await fs.remove(userResourceDir)
+          }
+
+          // 复制到用户目录
+          await fs.copy(resourceDir, userResourceDir)
+
+          // 如果提供了自定义名称或描述，更新主文件
+          if (name || description) {
+            const mainFile = type === 'role'
+              ? path.join(userResourceDir, `${finalId}.role.md`)
+              : path.join(userResourceDir, `${finalId}.tool.js`)
+
+            if (await fs.pathExists(mainFile)) {
+              let content = await fs.readFile(mainFile, 'utf-8')
+
+              // 简单的替换（可以根据实际格式调整）
+              if (type === 'role' && (name || description)) {
+                // TODO: 更新role文件的name和description
+                // 这需要根据具体的DPML格式来解析和修改
+              }
+            }
+          }
+
+          // 清理临时目录
+          await fs.remove(tempDir)
+
+          // 刷新资源发现
+          try {
+            const core = require('@promptx/core')
+            const { DiscoverCommand } = core.pouch.commands
+            const discover = new DiscoverCommand()
+            await discover.refreshAllResources()
+          } catch (refreshErr) {
+            console.warn('Resource refresh after import failed:', refreshErr)
+          }
+
+          return {
+            success: true,
+            id: finalId,
+            message: t('resources.importSuccess', { id: finalId })
+          }
+
+        } finally {
+          // 确保清理临时目录
+          if (await fs.pathExists(tempDir)) {
+            await fs.remove(tempDir)
+          }
+        }
+
+      } catch (error: any) {
+        console.error('Failed to import resource:', error)
+        return { success: false, message: error?.message || t('resources.importFailed') }
       }
     })
   }

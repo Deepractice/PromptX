@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, Pickaxe, UserRoundPen, Database, SquarePen, FolderDown, Trash } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Search, Pickaxe, UserRoundPen, Database, SquarePen, FolderDown, Trash, Upload } from "lucide-react"
 import { toast, Toaster } from "sonner"
 import ResourceEditor from "./components/ResourceEditor"
+import { ResourceImporter } from "./components/ResourceImporter"
 import { useTranslation } from "react-i18next"
 
 type ResourceItem = {
@@ -158,6 +160,9 @@ export default function ResourcesPage() {
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<ResourceItem | null>(null)
 
+  // 导入器状态
+  const [importerOpen, setImporterOpen] = useState(false)
+
   // 编辑（弹窗）
   const handleEdit = async (item: ResourceItem) => {
     if ((item.source ?? "user") !== "user") {
@@ -176,9 +181,15 @@ export default function ResourcesPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
-      <div className="flex items-center gap-3">
-        <Search className="h-5 w-5 text-muted-foreground" />
-        <Input placeholder={t("resources.search.placeholder")} value={query} onChange={e => handleSearch(e.target.value)} className="max-w-md" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1">
+          <Search className="h-5 w-5 text-muted-foreground" />
+          <Input placeholder={t("resources.search.placeholder")} value={query} onChange={e => handleSearch(e.target.value)} className="max-w-md" />
+        </div>
+        <Button onClick={() => setImporterOpen(true)} className="bg-black text-white">
+          <Upload className="h-4 w-4 mr-2" />
+          {t("resources.import.button")}
+        </Button>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border border-[#e5e7eb]  hover:scale-[1.01] transition-colors duration-200 cursor-pointer">
@@ -320,6 +331,9 @@ export default function ResourcesPage() {
 
       {/* 编辑器弹窗组件 */}
       <ResourceEditor isOpen={editorOpen} onClose={closeEditor} editingItem={editingItem} onResourceUpdated={loadResources} />
+
+      {/* 导入器弹窗组件 */}
+      <ResourceImporter isOpen={importerOpen} onClose={() => setImporterOpen(false)} onImportSuccess={loadResources} />
 
       <Toaster />
     </div>
