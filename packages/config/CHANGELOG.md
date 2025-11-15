@@ -1,5 +1,7 @@
 # @promptx/config Changelog
 
+## 1.27.3
+
 ## 1.27.2
 
 ## 1.27.1
