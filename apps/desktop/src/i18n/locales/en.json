@@ -157,8 +157,8 @@
       "editOnlyUser": "Only user resources can be edited "
     },
     "types": {
-      "role": "role",
-      "tool": "tool"
+      "role": "Role",
+      "tool": "Tool"
     },
     "editor": {
       "title": "Edit {{type}}: {{name}}",

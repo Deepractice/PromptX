@@ -59,6 +59,7 @@
     "deleteFailed": "Delete failed",
     "listFilesFailed": "Failed to list files",
     "fileNotExists": "File does not exist",
+    "fileNotFound": "File not found",
     "readFileFailed": "Failed to read file",
     "saveFailed": "Failed to save",
     "updateMetadataFailed": "Failed to update metadata",
@@ -69,7 +70,12 @@
     "activationFailed": "Role activation failed",
     "onlyRoleActivatable": "Only role resources can be activated",
     "selectSaveLocation": "Select save location for {{type}} resource",
-    "cannotLocateResourceDir": "Cannot locate resource directory"
+    "cannotLocateResourceDir": "Cannot locate resource directory",
+    "importSuccess": "Resource {{id}} imported successfully",
+    "importFailed": "Failed to import resource",
+    "invalidResourceStructure": "Invalid resource structure: cannot find .role.md or .tool.js file",
+    "resourceExists": "Resource Already Exists",
+    "resourceExistsMessage": "Resource \"{{id}}\" already exists. Do you want to overwrite it?"
   },
   "errors": {
     "configLoadFailed": "Configuration file exists but failed to load",

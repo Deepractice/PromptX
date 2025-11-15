@@ -59,6 +59,7 @@
     "deleteFailed": "删除失败",
     "listFilesFailed": "列出文件失败",
     "fileNotExists": "文件不存在",
+    "fileNotFound": "文件未找到",
     "readFileFailed": "读取文件失败",
     "saveFailed": "保存失败",
     "updateMetadataFailed": "更新元数据失败",
@@ -69,7 +70,12 @@
     "activationFailed": "激活失败",
     "onlyRoleActivatable": "只能激活角色类型的资源",
     "selectSaveLocation": "选择保存{{type}}资源的位置",
-    "cannotLocateResourceDir": "无法定位资源目录"
+    "cannotLocateResourceDir": "无法定位资源目录",
+    "importSuccess": "资源 {{id}} 导入成功",
+    "importFailed": "导入资源失败",
+    "invalidResourceStructure": "无效的资源结构：找不到 .role.md 或 .tool.js 文件",
+    "resourceExists": "资源已存在",
+    "resourceExistsMessage": "资源 \"{{id}}\" 已存在。是否覆盖？"
   },
   "errors": {
     "configLoadFailed": "配置文件存在但加载失败",
