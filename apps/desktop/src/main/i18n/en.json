@@ -16,6 +16,7 @@
       "stopping": "Stopping...",
       "toggleServer": "Toggle Server",
       "copyAddress": "Copy Server Address",
+      "openMainWindow": "Open Main Window",
       "manageResources": "Manage Resources",
       "showLogs": "Show Logs",
       "settings": "Settings",

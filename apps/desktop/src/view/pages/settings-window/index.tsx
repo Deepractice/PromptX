@@ -120,15 +120,10 @@ function SettingsWindow() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 flex flex-col">
+    <div className="min-h-[calc(100vh-53px)]  p-8 flex flex-col">
       <Toaster />
       <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col">
         {/* 页面标题 */}
-        <div className="mb-8 shrink-0">
-          <h1 className="text-3xl font-bold text-gray-900">{t("settings.title")}</h1>
-          <p className="mt-2 text-sm text-gray-600">{t("settings.subtitle")}</p>
-        </div>
-
         <div className="space-y-6 flex-1 overflow-y-auto">
           {/* 语言设置 */}
           <LanguageSelector />

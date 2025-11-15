@@ -1,7 +1,87 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 @theme {
-    --color-input: #818181;
-    --color-primary:  #000000;
     --color-background: #ffffff;
+    --color-foreground: #0a0a0a;
+    --color-card: #ffffff;
+    --color-card-foreground: #0a0a0a;
+    --color-popover: #ffffff;
+    --color-popover-foreground: #0a0a0a;
+    --color-primary: #000000;
     --color-primary-foreground: #ffffff;
+    --color-secondary: #f5f5f5;
+    --color-secondary-foreground: #0a0a0a;
+    --color-muted: #f5f5f5;
+    --color-muted-foreground: #737373;
+    --color-accent: #f5f5f5;
+    --color-accent-foreground: #0a0a0a;
+    --color-destructive: #ef4444;
+    --color-destructive-foreground: #ffffff;
+    --color-border: #e5e5e5;
+    --color-input: #e5e5e5;
+    --color-ring: #0a0a0a;
+}
+
+:root {
+    --sidebar: hsl(0 0% 98%);
+    --sidebar-foreground: hsl(240 5.3% 26.1%);
+    --sidebar-primary: hsl(240 5.9% 10%);
+    --sidebar-primary-foreground: hsl(0 0% 98%);
+    --sidebar-accent: hsl(240 4.8% 95.9%);
+    --sidebar-accent-foreground: hsl(240 5.9% 10%);
+    --sidebar-border: hsl(220 13% 91%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+.dark {
+    --color-background: #0a0a0a;
+    --color-foreground: #fafafa;
+    --color-card: #0a0a0a;
+    --color-card-foreground: #fafafa;
+    --color-popover: #0a0a0a;
+    --color-popover-foreground: #fafafa;
+    --color-primary: #fafafa;
+    --color-primary-foreground: #0a0a0a;
+    --color-secondary: #262626;
+    --color-secondary-foreground: #fafafa;
+    --color-muted: #262626;
+    --color-muted-foreground: #a3a3a3;
+    --color-accent: #262626;
+    --color-accent-foreground: #fafafa;
+    --color-destructive: #7f1d1d;
+    --color-destructive-foreground: #fafafa;
+    --color-border: #262626;
+    --color-input: #262626;
+    --color-ring: #d4d4d4;
+
+    --sidebar: hsl(240 5.9% 10%);
+    --sidebar-foreground: hsl(240 4.8% 95.9%);
+    --sidebar-primary: hsl(224.3 76.3% 48%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(240 3.7% 15.9%);
+    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+    --sidebar-border: hsl(240 3.7% 15.9%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+@theme inline {
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
 }

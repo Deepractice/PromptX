@@ -16,6 +16,7 @@
       "stopping": "停止中...",
       "toggleServer": "切换服务器",
       "copyAddress": "复制服务器地址",
+      "openMainWindow": "打开主窗口",
       "manageResources": "管理资源",
       "showLogs": "显示日志",
       "settings": "设置",

@@ -74,7 +74,7 @@ export function LanguageSelector() {
               variant="outline"
               className={`w-full justify-between ${
                 currentLanguage === language.code 
-                  ? 'bg-black text-white border-black hover:bg-gray-800' 
+                  ? 'bg-black text-white border-black hover:bg-gray-800 hover:text-white' 
                   : 'bg-white text-black border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => handleLanguageChange(language.code)}

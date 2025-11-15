@@ -38,8 +38,7 @@ interface TrayMenuItem {
 export class TrayPresenter {
   private tray: Tray
   private currentStatus: ServerStatus = ServerStatus.STOPPED
-  private logsWindow: BrowserWindow | null = null
-  private settingsWindow: BrowserWindow | null = null
+  private mainWindow: BrowserWindow | null = null
   private statusListener: (status: ServerStatus) => void
   private resourceManager: ResourceManager
   private appIcon: NativeImage | undefined
@@ -234,27 +233,11 @@ export class TrayPresenter {
 
     menuItems.push({ type: 'separator' })
 
-    // Resource management (roles and tools)
+    // Open main window (unified interface)
     menuItems.push({
-      id: 'resources',
-      label: t('tray.menu.manageResources'),
-      click: () => this.handleShowResources()
-    })
-
-    menuItems.push({ type: 'separator' })
-
-    // Show logs
-    menuItems.push({
-      id: 'logs',
-      label: t('tray.menu.showLogs'),
-      click: () => this.handleShowLogs()
-    })
-
-    // Settings 
-    menuItems.push({
-      id: 'settings',
-      label: t('tray.menu.settings'),
-      click: () => this.handleShowSettings()
+      id: 'main-window',
+      label: t('tray.menu.openMainWindow'),
+      click: () => this.handleOpenMainWindow()
     })
 
     menuItems.push({ type: 'separator' })
@@ -314,7 +297,6 @@ export class TrayPresenter {
         })
         break
     }
-
     // About
     menuItems.push({
       id: 'about',
@@ -395,20 +377,16 @@ export class TrayPresenter {
     }
   }
 
-  async handleShowResources(): Promise<void> {
-    this.resourceManager.showResourceList()
-  }
-
-  async handleShowLogs(): Promise<void> {
-    if (this.logsWindow && !this.logsWindow.isDestroyed()) {
-      this.logsWindow.focus()
+  private handleOpenMainWindow(): void {
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.focus()
       return
     }
 
-    this.logsWindow = new BrowserWindow({
-      width: 1200,
-      height: 800,
-      title: t('tray.windows.logs'),
+    this.mainWindow = new BrowserWindow({
+      width: 1400,
+      height: 900,
+      title: 'PromptX Desktop',
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -417,47 +395,14 @@ export class TrayPresenter {
     })
 
     if (process.env.NODE_ENV === 'development') {
-      this.logsWindow.loadURL('http://localhost:5173/#/logs')
+      this.mainWindow.loadURL('http://localhost:5173/#/main')
     } else {
       const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
-      this.logsWindow.loadFile(indexHtmlPath, { hash: '/logs' })
+      this.mainWindow.loadFile(indexHtmlPath, { hash: '/main' })
     }
 
-    this.logsWindow.on('closed', () => {
-      this.logsWindow = null
-    })
-  }
-
-  private handleShowSettings(): void {
-    if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
-      this.settingsWindow.focus()
-      return
-    }
-
-    this.settingsWindow = new BrowserWindow({
-      width: 600,
-      height: 800,
-      title: t('tray.windows.settings'),
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, '../preload/preload.cjs')
-      },
-      resizable: false,
-      minimizable: false,
-      maximizable: false
-    })
-    if (process.env.NODE_ENV === 'development') {
-      // 开发环境：指向 React Hash 路由
-      this.settingsWindow.loadURL('http://localhost:5173/#/settings')
-    } else {
-      // 生产环境：直接加载打包后的入口文件，并用 hash 附加路由
-      const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
-      this.settingsWindow.loadFile(indexHtmlPath, { hash: '/settings' })
-    }
-
-    this.settingsWindow.on('closed', () => {
-      this.settingsWindow = null
+    this.mainWindow.on('closed', () => {
+      this.mainWindow = null
     })
   }
 
@@ -561,9 +506,9 @@ export class TrayPresenter {
       this.serverPort.removeStatusListener(this.statusListener)
     }
 
-    // Close logs window if open
-    if (this.logsWindow && !this.logsWindow.isDestroyed()) {
-      this.logsWindow.close()
+    // Close main window if open
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.close()
     }
 
     // Destroy resource manager

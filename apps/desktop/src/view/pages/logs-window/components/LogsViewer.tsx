@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash, FileText, AlertCircle, Search, Calendar } from "lucide-react"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Trash, FileText, AlertCircle, Search } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 
@@ -23,7 +23,7 @@ export function LogsViewer() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<"all" | "error" | "normal">("all")
-  const [dateFilter, setDateFilter] = useState("")
+  const [dateFilter, setDateFilter] = useState<Date | null>(null)
 
   useEffect(() => {
     loadLogs()
@@ -63,7 +63,8 @@ export function LogsViewer() {
     if (dateFilter) {
       filtered = filtered.filter(log => {
         const logDate = log.modified.toISOString().split("T")[0]
-        return logDate === dateFilter
+        const filterDate = dateFilter.toISOString().split("T")[0]
+        return logDate === filterDate
       })
     }
 
@@ -151,14 +152,10 @@ export function LogsViewer() {
   }
 
   return (
-    <Card className="h-full flex flex-col min-h-[600px]">
-      <CardHeader className="shrink-0">
-        <CardTitle>{t("logs.management")}</CardTitle>
-        <CardDescription>{t("logs.description")}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 flex flex-col flex-1 overflow-hidden">
+    <div className="h-full flex flex-col min-h-[600px]">  
+      <div className="space-y-4 flex flex-col flex-1 overflow-hidden">
         {/* 筛选区域 */}
-        <div className="flex flex-wrap gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0 mt-4">
           {/* 搜索 */}
           <div className="flex-1 min-w-[180px] max-w-xs">
             <div className="relative">
@@ -184,13 +181,12 @@ export function LogsViewer() {
 
           {/* 日期筛选 */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} className="w-36" />
-            {dateFilter && (
-              <Button variant="ghost" size="sm" onClick={() => setDateFilter("")}>
-                {t("logs.filters.clearDate")}
-              </Button>
-            )}
+            <DatePicker
+              value={dateFilter}
+              onChange={(date) => setDateFilter(date || null)}
+              placeholder={t("datePicker.placeholder")}
+              className="w-48"
+            />
           </div>
 
           {/* 清空所有日志 */}
@@ -250,7 +246,7 @@ export function LogsViewer() {
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

@@ -210,6 +210,7 @@
       "stopServer": "Stop Server",
       "toggleServer": "Toggle Server",
       "copyAddress": "Copy Server Address",
+      "openMainWindow": "Open Main Window",
       "manageResources": "Manage Resources",
       "showLogs": "Show Logs",
       "settings": "Settings...",
@@ -237,5 +238,36 @@
     "configResetError": "Failed to reset configuration",
     "loadError": "Failed to load settings, please try again",
     "languageChanged": "Language changed successfully"
+  },
+  "sidebar": {
+    "resources": "Resources",
+    "logs": "Logs",
+    "settings": "Settings",
+    "update": "Check for Updates"
+  },
+  "update": {
+    "title": "Software Update",
+    "description": "Check for and install software updates",
+    "currentVersion": "Current Version",
+    "checkNow": "Check Now",
+    "checking": "Checking...",
+    "upToDate": "You're up to date!",
+    "upToDateMessage": "You're running the latest version",
+    "newVersion": "New Version Available",
+    "download": "Download",
+    "downloading": "Downloading...",
+    "downloadComplete": "Download complete",
+    "readyToInstall": "Update ready to install",
+    "installNow": "Install Now",
+    "releaseNotes": "What's New",
+    "checkFailed": "Failed to check for updates",
+    "downloadFailed": "Failed to download update",
+    "installFailed": "Failed to install update",
+    "errorMessage": "An error occurred while checking for updates"
+  },
+  "datePicker": {
+    "placeholder": "Select date",
+    "selectDate": "Select Date",
+    "clear": "Clear"
   }
 }

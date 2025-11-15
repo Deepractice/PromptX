@@ -210,6 +210,7 @@
       "stopServer": "停止服务器",
       "toggleServer": "切换服务器",
       "copyAddress": "复制服务器地址",
+      "openMainWindow": "打开主窗口",
       "manageResources": "管理资源",
       "showLogs": "显示日志",
       "settings": "设置...",
@@ -237,5 +238,36 @@
     "configResetError": "重置配置失败",
     "loadError": "加载设置失败，请重试",
     "languageChanged": "语言切换成功"
+  },
+  "sidebar": {
+    "resources": "资源管理",
+    "logs": "日志",
+    "settings": "设置",
+    "update": "检查更新"
+  },
+  "update": {
+    "title": "软件更新",
+    "description": "检查并安装软件更新",
+    "currentVersion": "当前版本",
+    "checkNow": "立即检查",
+    "checking": "检查中...",
+    "upToDate": "已是最新版本！",
+    "upToDateMessage": "您正在运行最新版本",
+    "newVersion": "发现新版本",
+    "download": "下载",
+    "downloading": "下载中...",
+    "downloadComplete": "下载完成",
+    "readyToInstall": "更新已准备好安装",
+    "installNow": "立即安装",
+    "releaseNotes": "更新内容",
+    "checkFailed": "检查更新失败",
+    "downloadFailed": "下载更新失败",
+    "installFailed": "安装更新失败",
+    "errorMessage": "检查更新时发生错误"
+  },
+  "datePicker": {
+    "placeholder": "选择日期",
+    "selectDate": "选择日期",
+    "clear": "清除"
   }
 }
