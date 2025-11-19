@@ -580,7 +580,8 @@ export class ResourceListWindow {
       webPreferences: {
         preload: preloadPath,
         contextIsolation: true,
-        nodeIntegration: false
+        nodeIntegration: false,
+        autoplayPolicy: 'user-gesture-required' // 禁用媒体自动播放
       },
       show: false,
       resizable: true,

@@ -11,7 +11,7 @@ export class ElectronNotificationAdapter implements INotificationPort {
     const notification = new Notification({
       title: options.title || this.getDefaultTitle(options.type),
       body: options.body,
-      silent: options.silent ?? false,
+      silent: options.silent ?? true, // 默认静音，避免启动时播放系统声音
       icon: this.getIconForType(options.type)
     })
 
