@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Pickaxe, UserRoundPen, Database, SquarePen, FolderDown, Trash, Upload } from "lucide-react"
+import { Search, Pickaxe, UserRoundPen, Database, SquarePen, FolderDown, Trash, Upload, RefreshCw } from "lucide-react"
 import { toast, Toaster } from "sonner"
 import ResourceEditor from "./components/ResourceEditor"
 import { ResourceImporter } from "./components/ResourceImporter"
@@ -237,37 +237,44 @@ export default function ResourcesPage() {
         </Card>
       </div>
       {/* 筛选栏放在网格上方 */}
-      <div className="flex items-center gap-4 mb-4">
-        {/* Type Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("resources.filters.type")}</span>
-          <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "all" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("all")}>
-            {t("resources.filters.all")}
-          </button>
-          <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "role" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("role")}>
-            {t("resources.filters.roles")}
-          </button>
-          <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "tool" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("tool")}>
-            {t("resources.filters.tools")}
-          </button>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          {/* Type Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{t("resources.filters.type")}</span>
+            <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "all" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("all")}>
+              {t("resources.filters.all")}
+            </button>
+            <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "role" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("role")}>
+              {t("resources.filters.roles")}
+            </button>
+            <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${typeFilter === "tool" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setTypeFilter("tool")}>
+              {t("resources.filters.tools")}
+            </button>
+          </div>
+
+          {/* 分隔线 */}
+          <div className="h-6 w-px bg-muted" />
+
+          {/* Source Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{t("resources.filters.source")}</span>
+            <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "all" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("all")}>
+              {t("resources.filters.all")}
+            </button>
+            <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "system" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("system")}>
+              {t("resources.filters.system")}
+            </button>
+            <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "user" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("user")}>
+              {t("resources.filters.user")}
+            </button>
+          </div>
         </div>
 
-        {/* 分隔线 */}
-        <div className="h-6 w-px bg-muted" />
-
-        {/* Source Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("resources.filters.source")}</span>
-          <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "all" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("all")}>
-            {t("resources.filters.all")}
-          </button>
-          <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "system" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("system")}>
-            {t("resources.filters.system")}
-          </button>
-          <button className={`rounded-md border px-3 py-1 text-sm transition-colors ${sourceFilter === "user" ? "bg-[#eef6ff] text-[#1f6feb] border-[#cfe4ff]" : "bg-background text-foreground hover:bg-muted"}`} onClick={() => setSourceFilter("user")}>
-            {t("resources.filters.user")}
-          </button>
-        </div>
+        {/* 刷新按钮 */}
+        <Button  size="icon" onClick={loadResources} className="bg-black text-white" >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* 原来的网格容器保持不变，只把 items.map 改为 filteredItems.map */}
