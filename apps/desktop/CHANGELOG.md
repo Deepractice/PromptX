@@ -1,5 +1,28 @@
 # @promptx/desktop
 
+## 1.27.4
+
+### Patch Changes
+
+- [#497](https://github.com/Deepractice/PromptX/pull/497) [`46a7f1d`](https://github.com/Deepractice/PromptX/commit/46a7f1dc3abee1dd597e0238f8427c393c7598f2) Thanks [@dfwgj](https://github.com/dfwgj)! - feat: add refresh button and batch import functionality
+
+  - Add refresh button to reload resource list
+  - Add batch import feature for importing multiple resources at once
+  - Improve resource management user experience
+
+- [#497](https://github.com/Deepractice/PromptX/pull/497) [`46a7f1d`](https://github.com/Deepractice/PromptX/commit/46a7f1dc3abee1dd597e0238f8427c393c7598f2) Thanks [@dfwgj](https://github.com/dfwgj)! - fix: disable notification sounds on macOS startup (#493)
+
+  - Set notification adapter to silent by default to prevent system sounds on app launch
+  - Add autoplayPolicy to BrowserWindow webPreferences to prevent media autoplay
+  - Fix issue where macOS played notification sound every time the app started
+
+  This change improves the user experience by making notifications silent by default, following desktop application best practices. Users can still see notifications, but without the disruptive sound effects.
+
+- Updated dependencies []:
+  - @promptx/config@1.27.4
+  - @promptx/core@1.27.4
+  - @promptx/mcp-server@1.27.4
+
 ## 1.27.3
 
 ### Patch Changes

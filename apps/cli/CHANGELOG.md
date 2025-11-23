@@ -1,5 +1,14 @@
 # @promptx/cli
 
+## 1.27.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/core@1.27.4
+  - @promptx/logger@1.27.4
+  - @promptx/mcp-server@1.27.4
+
 ## 1.27.3
 
 ### Patch Changes
