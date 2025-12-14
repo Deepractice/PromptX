@@ -1,5 +1,13 @@
 # @promptx/core
 
+## 1.27.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/logger@1.27.4
+  - @promptx/resource@1.27.4
+
 ## 1.27.3
 
 ### Patch Changes
