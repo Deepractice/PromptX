@@ -1,4 +1,7 @@
 {
+  "app": {
+    "alreadyRunning": "PromptX 已在系统托盘中运行"
+  },
   "tray": {
     "tooltip": "PromptX",
     "status": {
@@ -75,7 +78,16 @@
     "importFailed": "导入资源失败",
     "invalidResourceStructure": "无效的资源结构：找不到 .role.md 或 .tool.js 文件",
     "resourceExists": "资源已存在",
-    "resourceExistsMessage": "资源 \"{{id}}\" 已存在。是否覆盖？"
+    "resourceExistsMessage": "资源 \"{{id}}\" 已存在。是否覆盖？",
+    "import": {
+      "errors": {
+        "invalidRoleType": "无效的角色资源：压缩包中未找到 .md 文件",
+        "invalidToolType": "无效的工具资源：压缩包中未找到 .js 文件",
+        "mismatchRoleExpectedTool": "类型不匹配：选择了角色资源但压缩包中是工具资源",
+        "mismatchToolExpectedRole": "类型不匹配：选择了工具资源但压缩包中是角色资源",
+        "validationFailed": "验证资源类型失败"
+      }
+    }
   },
   "errors": {
     "configLoadFailed": "配置文件存在但加载失败",

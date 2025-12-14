@@ -1,7 +1,7 @@
 // Import polyfills first, before any other modules
 import '~/main/polyfills'
 
-import { BrowserWindow, app, dialog, ipcMain } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { TrayPresenter } from '~/main/tray/TrayPresenter'
 import { ResourceManager } from '~/main/ResourceManager'
 import { PromptXServerAdapter } from '~/main/infrastructure/adapters/PromptXServerAdapter'
@@ -18,7 +18,6 @@ import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { mainI18n, t } from '~/main/i18n'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
-
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
@@ -102,6 +101,15 @@ class PromptXDesktopApp {
       logger.error('Failed to auto-start server:', err)
     }
 
+    // Register global callback for second-instance to open main window
+    // This is used by bootstrap.ts when user clicks shortcut while app is running
+    ;(global as any).__promptxOpenMainWindow = () => {
+      this.trayPresenter?.openMainWindow()
+    }
+
+    // Auto open main window on startup for better UX
+    logger.info('Opening main window...')
+    this.trayPresenter?.openMainWindow()
 
     // Auto check and download updates on startup (non-blocking)
     logger.info('Scheduling automatic update check and download...')
@@ -273,17 +281,23 @@ class PromptXDesktopApp {
           .filter(file => file.startsWith('promptx-') && file.endsWith('.log'))
           .map(file => {
             const filePath = path.join(logsDir, file)
-            const stats = fs.statSync(filePath)
-            const isError = file.includes('error')
+            try {
+              const stats = fs.statSync(filePath)
+              const isError = file.includes('error')
 
-            return {
-              name: file,
-              path: filePath,
-              size: stats.size,
-              modified: stats.mtime,
-              type: isError ? 'error' : 'normal'
+              return {
+                name: file,
+                path: filePath,
+                size: stats.size,
+                modified: stats.mtime,
+                type: isError ? 'error' : 'normal'
+              }
+            } catch {
+              // 文件可能在读取期间被删除或锁定，跳过
+              return null
             }
           })
+          .filter((log): log is NonNullable<typeof log> => log !== null)
           .sort((a, b) => b.modified.getTime() - a.modified.getTime())
 
         return { success: true, logs }
@@ -337,16 +351,24 @@ class PromptXDesktopApp {
 
         const files = fs.readdirSync(logsDir)
         let deleted = 0
+        let skipped = 0
 
         for (const file of files) {
           if (file.startsWith('promptx-') && file.endsWith('.log')) {
             const filePath = path.join(logsDir, file)
-            fs.unlinkSync(filePath)
-            deleted++
+            try {
+              fs.unlinkSync(filePath)
+              deleted++
+            } catch {
+              // 文件可能被锁定（如当前正在写入的日志），跳过
+              skipped++
+            }
           }
         }
 
-        logger.info(`Cleared ${deleted} log files`)
+        if (deleted > 0 || skipped === 0) {
+          logger.info(`Cleared ${deleted} log files${skipped > 0 ? `, ${skipped} skipped (in use)` : ''}`)
+        }
         return { success: true, deleted }
       } catch (error) {
         logger.error('Failed to clear logs:', String(error))
@@ -416,6 +438,9 @@ class PromptXDesktopApp {
   }
 
   private setupAppEvents(): void {
+    // NOTE: second-instance handler is set up in bootstrap.ts
+    // to ensure it's registered before app initialization completes
+
     // Prevent app from quitting when all windows are closed
     app.on('window-all-closed', () => {
       // Keep app running in system tray on all platforms
@@ -525,6 +550,7 @@ process.stderr.on('error', (error: any) => {
 })
 
 // Application entry point
+// Single instance lock is already checked in bootstrap.ts
 const application = new PromptXDesktopApp()
 
 application.initialize().catch((error) => {

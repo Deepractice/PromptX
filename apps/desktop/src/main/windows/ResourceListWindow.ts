@@ -15,6 +15,71 @@ export class ResourceListWindow {
     this.setupIpcHandlers()
   }
 
+  /**
+   * 验证资源类型是否与压缩包内容匹配
+   * @param resourceDir 解压后的资源目录
+   * @param expectedType 用户选择的资源类型 ('role' | 'tool')
+   * @returns { valid: boolean, message?: string }
+   */
+  private async validateResourceType(
+    resourceDir: string,
+    expectedType: 'role' | 'tool'
+  ): Promise<{ valid: boolean; message?: string }> {
+    const fs = require('fs-extra')
+
+    try {
+      const files = await fs.readdir(resourceDir)
+
+      // 检查是否包含角色文件 (.md)
+      const hasMdFile = files.some((f: string) => f.endsWith('.md'))
+      // 检查是否包含工具文件 (.js)
+      const hasJsFile = files.some((f: string) => f.endsWith('.js'))
+
+      // TODO: 用户自定义的识别逻辑放在这里
+      // 可以根据实际需求扩展验证规则，例如：
+      // - 检查文件内容格式
+      // - 检查特定的元数据字段
+      // - 检查文件命名规范等
+
+      if (expectedType === 'role') {
+        if (!hasMdFile) {
+          return {
+            valid: false,
+            message: t('resources.import.errors.invalidRoleType')
+          }
+        }
+        // 如果同时有 .js 文件但用户选择了 role，可能是选错了类型
+        if (hasJsFile && !hasMdFile) {
+          return {
+            valid: false,
+            message: t('resources.import.errors.mismatchRoleExpectedTool')
+          }
+        }
+      } else if (expectedType === 'tool') {
+        if (!hasJsFile) {
+          return {
+            valid: false,
+            message: t('resources.import.errors.invalidToolType')
+          }
+        }
+        // 如果同时有 .md 文件但用户选择了 tool，可能是选错了类型
+        if (hasMdFile && !hasJsFile) {
+          return {
+            valid: false,
+            message: t('resources.import.errors.mismatchToolExpectedRole')
+          }
+        }
+      }
+
+      return { valid: true }
+    } catch (error: any) {
+      return {
+        valid: false,
+        message: t('resources.import.errors.validationFailed')
+      }
+    }
+  }
+
   private setupIpcHandlers(): void {
     // 防止重复注册
     if (ResourceListWindow.handlersRegistered) {
@@ -471,6 +536,15 @@ export class ResourceListWindow {
             await fs.remove(tempDir)
             return { success: false, message: t('resources.invalidResourceStructure') }
           }
+
+          // ==================== 资源类型验证 ====================
+          // 验证压缩包内的文件类型是否与用户选择的资源类型匹配
+          const validationResult = await this.validateResourceType(resourceDir, type)
+          if (!validationResult.valid) {
+            await fs.remove(tempDir)
+            return { success: false, message: validationResult.message }
+          }
+          // ======================================================
 
           // 使用自定义ID或原ID
           const finalId = customId || resourceId

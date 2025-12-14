@@ -237,7 +237,7 @@ export class TrayPresenter {
     menuItems.push({
       id: 'main-window',
       label: t('tray.menu.openMainWindow'),
-      click: () => this.handleOpenMainWindow()
+      click: () => this.openMainWindow()
     })
 
     menuItems.push({ type: 'separator' })
@@ -377,7 +377,7 @@ export class TrayPresenter {
     }
   }
 
-  private handleOpenMainWindow(): void {
+  public openMainWindow(): void {
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
       this.mainWindow.focus()
       return

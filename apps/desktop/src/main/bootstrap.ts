@@ -57,5 +57,44 @@ if (typeof globalThis.File === 'undefined') {
   }
 }
 
-// Now import the actual app
-import('./index.js')
+// ==================== Single Instance Lock ====================
+// Check BEFORE importing main app to avoid logger file lock conflicts
+import { app, BrowserWindow } from 'electron'
+
+// Global callback for opening main window (set by main app after initialization)
+;(global as any).__promptxOpenMainWindow = null
+
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  // Another instance is already running, quit immediately
+  console.log('Another instance is already running. Quitting...')
+  app.quit()
+} else {
+  // Set up second-instance handler IMMEDIATELY after getting lock
+  // This ensures we catch second instance attempts even during app initialization
+  app.on('second-instance', () => {
+    console.log('Second instance detected, focusing existing window...')
+
+    // Focus existing window if any
+    const windows = BrowserWindow.getAllWindows()
+    if (windows.length > 0) {
+      const mainWindow = windows[0]
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+      mainWindow.show()
+      mainWindow.focus()
+    } else {
+      // No window exists, use callback to open main window
+      const openMainWindow = (global as any).__promptxOpenMainWindow
+      if (typeof openMainWindow === 'function') {
+        openMainWindow()
+      }
+    }
+  })
+
+  // Now import the actual app (only if we got the lock)
+  import('./index.js')
+}
+// ==============================================================

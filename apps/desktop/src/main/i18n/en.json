@@ -1,4 +1,7 @@
 {
+  "app": {
+    "alreadyRunning": "PromptX is already running in the system tray"
+  },
   "tray": {
     "tooltip": "PromptX",
     "status": {
@@ -75,7 +78,16 @@
     "importFailed": "Failed to import resource",
     "invalidResourceStructure": "Invalid resource structure: cannot find .role.md or .tool.js file",
     "resourceExists": "Resource Already Exists",
-    "resourceExistsMessage": "Resource \"{{id}}\" already exists. Do you want to overwrite it?"
+    "resourceExistsMessage": "Resource \"{{id}}\" already exists. Do you want to overwrite it?",
+    "import": {
+      "errors": {
+        "invalidRoleType": "Invalid role resource: no .md file found in the archive",
+        "invalidToolType": "Invalid tool resource: no .js file found in the archive",
+        "mismatchRoleExpectedTool": "Type mismatch: selected 'role' but the archive contains a tool resource",
+        "mismatchToolExpectedRole": "Type mismatch: selected 'tool' but the archive contains a role resource",
+        "validationFailed": "Failed to validate resource type"
+      }
+    }
   },
   "errors": {
     "configLoadFailed": "Configuration file exists but failed to load",

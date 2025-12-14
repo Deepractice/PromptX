@@ -78,11 +78,11 @@ export function ResourceImporter({ isOpen, onClose, onImportSuccess }: ResourceI
             successCount++
           } else {
             failCount++
-            console.error(`Failed to import ${filePath}:`, result?.message)
+            toast.error(t(String(result?.message || 'resources.import.messages.importFailed')))
           }
         } catch (err) {
           failCount++
-          console.error(`Error importing ${filePath}:`, err)
+          toast.error(t(String(err || 'resources.import.messages.importFailed')))
         }
       }
 
@@ -95,12 +95,10 @@ export function ResourceImporter({ isOpen, onClose, onImportSuccess }: ResourceI
         resetForm()
         onClose()
         onImportSuccess?.()
-      } else {
-        toast.error(t('resources.import.messages.importFailed'))
-      }
+      } 
     } catch (error) {
       console.error("Import process failed:", error)
-      toast.error(t('resources.import.messages.importFailed'))
+      toast.error(t(String(error)))
     } finally {
       setIsImporting(false)
     }

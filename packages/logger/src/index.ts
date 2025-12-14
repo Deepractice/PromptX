@@ -98,51 +98,56 @@ export function createLogger(config: LoggerConfig = {}): pino.Logger {
       const logDir = fileConfig.dirname || path.join(os.homedir(), '.promptx', 'logs')
       const today = new Date().toISOString().split('T')[0]
       const logPath = path.join(logDir, `promptx-${today}.log`)
-      
-      // Use pino.destination with sync mode for Electron
-      const dest = pino.destination({
-        dest: logPath,
-        sync: true  // Use sync to avoid worker thread issues in Electron
-      })
-      
-      return pino({
-        level: finalConfig.level || 'info',
-        base: { pid: process.pid },
-        mixin: () => getCallerInfo(),
-        // Simple formatting without pino-pretty to avoid worker threads
-        formatters: {
-          level: (label) => {
-            return { level: label }
-          },
-          log: (obj) => {
-            const { package: pkg, file, line, ...rest } = obj
-            return {
-              ...rest,
-              location: pkg && file ? `${pkg} [${file}:${line}]` : undefined
+
+      try {
+        // Use pino.destination with sync mode for Electron
+        const dest = pino.destination({
+          dest: logPath,
+          sync: true  // Use sync to avoid worker thread issues in Electron
+        })
+
+        return pino({
+          level: finalConfig.level || 'info',
+          base: { pid: process.pid },
+          mixin: () => getCallerInfo(),
+          // Simple formatting without pino-pretty to avoid worker threads
+          formatters: {
+            level: (label) => {
+              return { level: label }
+            },
+            log: (obj) => {
+              const { package: pkg, file, line, ...rest } = obj
+              return {
+                ...rest,
+                location: pkg && file ? `${pkg} [${file}:${line}]` : undefined
+              }
             }
           }
-        }
-      }, dest)
-    } else {
-      // Console only mode for Electron without pino-pretty
-      return pino({
-        level: finalConfig.level || 'info',
-        base: { pid: process.pid },
-        mixin: () => getCallerInfo(),
-        formatters: {
-          level: (label) => {
-            return { level: label }
-          },
-          log: (obj) => {
-            const { package: pkg, file, line, ...rest } = obj
-            return {
-              ...rest,
-              location: pkg && file ? `${pkg} [${file}:${line}]` : undefined
-            }
-          }
-        }
-      })
+        }, dest)
+      } catch (err) {
+        // File may be locked by another instance, fall back to console only
+        console.warn(`[logger] Cannot open log file (may be locked by another instance): ${logPath}`)
+      }
     }
+
+    // Console only mode for Electron without pino-pretty (or file open failed)
+    return pino({
+      level: finalConfig.level || 'info',
+      base: { pid: process.pid },
+      mixin: () => getCallerInfo(),
+      formatters: {
+        level: (label) => {
+          return { level: label }
+        },
+        log: (obj) => {
+          const { package: pkg, file, line, ...rest } = obj
+          return {
+            ...rest,
+            location: pkg && file ? `${pkg} [${file}:${line}]` : undefined
+          }
+        }
+      }
+    })
   } else {
     // Use transports for non-Electron environments (better for servers)
     const targets: any[] = []
