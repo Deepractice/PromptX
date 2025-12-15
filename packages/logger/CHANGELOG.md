@@ -1,5 +1,18 @@
 # @promptx/logger
 
+## 1.27.5
+
+### Patch Changes
+
+- [#511](https://github.com/Deepractice/PromptX/pull/511) [`e09b76d`](https://github.com/Deepractice/PromptX/commit/e09b76dcaf3e3e8c57cb9bb9f12d4133b3e665f5) Thanks [@dfwgj](https://github.com/dfwgj)! - feat: single instance lock and UX improvements
+
+  - Add single instance lock to prevent multiple app instances
+  - Auto open main window on startup for better UX
+  - Focus existing window when user clicks shortcut while app is running
+  - Add resource type validation framework for import
+  - Fix logger file lock issue with graceful fallback to console
+  - Fix logs list refresh after clearing all logs
+
 ## 1.27.4
 
 ## 1.27.3

@@ -1,5 +1,37 @@
 # @promptx/desktop
 
+## 1.27.5
+
+### Patch Changes
+
+- [#511](https://github.com/Deepractice/PromptX/pull/511) [`e09b76d`](https://github.com/Deepractice/PromptX/commit/e09b76dcaf3e3e8c57cb9bb9f12d4133b3e665f5) Thanks [@dfwgj](https://github.com/dfwgj)! - feat: add refresh button and batch import functionality
+
+  - Add refresh button to reload resource list
+  - Add batch import feature for importing multiple resources at once
+  - Improve resource management user experience
+
+- [#511](https://github.com/Deepractice/PromptX/pull/511) [`e09b76d`](https://github.com/Deepractice/PromptX/commit/e09b76dcaf3e3e8c57cb9bb9f12d4133b3e665f5) Thanks [@dfwgj](https://github.com/dfwgj)! - fix: disable notification sounds on macOS startup (#493)
+
+  - Set notification adapter to silent by default to prevent system sounds on app launch
+  - Add autoplayPolicy to BrowserWindow webPreferences to prevent media autoplay
+  - Fix issue where macOS played notification sound every time the app started
+
+  This change improves the user experience by making notifications silent by default, following desktop application best practices. Users can still see notifications, but without the disruptive sound effects.
+
+- [#511](https://github.com/Deepractice/PromptX/pull/511) [`e09b76d`](https://github.com/Deepractice/PromptX/commit/e09b76dcaf3e3e8c57cb9bb9f12d4133b3e665f5) Thanks [@dfwgj](https://github.com/dfwgj)! - feat: single instance lock and UX improvements
+
+  - Add single instance lock to prevent multiple app instances
+  - Auto open main window on startup for better UX
+  - Focus existing window when user clicks shortcut while app is running
+  - Add resource type validation framework for import
+  - Fix logger file lock issue with graceful fallback to console
+  - Fix logs list refresh after clearing all logs
+
+- Updated dependencies []:
+  - @promptx/core@1.27.5
+  - @promptx/mcp-server@1.27.5
+  - @promptx/config@1.27.5
+
 ## 1.27.4
 
 ### Patch Changes
