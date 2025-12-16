@@ -1,5 +1,14 @@
 # @promptx/mcp-server
 
+## 1.27.6
+
+### Patch Changes
+
+- Updated dependencies [[`9bd7f80`](https://github.com/Deepractice/PromptX/commit/9bd7f807884288693c49cfa0b0bbec1e2ec8d0f1)]:
+  - @promptx/core@1.27.6
+  - @promptx/config@1.27.6
+  - @promptx/logger@1.27.6
+
 ## 1.27.5
 
 ### Patch Changes

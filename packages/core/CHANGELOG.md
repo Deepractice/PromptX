@@ -1,5 +1,15 @@
 # @promptx/core
 
+## 1.27.6
+
+### Patch Changes
+
+- [`9bd7f80`](https://github.com/Deepractice/PromptX/commit/9bd7f807884288693c49cfa0b0bbec1e2ec8d0f1) Thanks [@deepracticexs](https://github.com/deepracticexs)! - chore: fix npm publish workflow authentication
+
+- Updated dependencies []:
+  - @promptx/logger@1.27.6
+  - @promptx/resource@1.27.6
+
 ## 1.27.5
 
 ### Patch Changes

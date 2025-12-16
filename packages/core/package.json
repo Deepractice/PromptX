@@ -1,6 +1,6 @@
 {
   "name": "@promptx/core",
-  "version": "1.27.5",
+  "version": "1.27.6",
   "description": "Core library for PromptX - DPML-powered AI prompt framework",
   "main": "dist/index.js",
   "type": "commonjs",
