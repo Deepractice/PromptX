@@ -87,6 +87,12 @@
         "mismatchToolExpectedRole": "类型不匹配：选择了工具资源但压缩包中是角色资源",
         "validationFailed": "验证资源类型失败"
       }
+    },
+    "preview": {
+      "onlyRoleSupported": "仅支持角色资源预览",
+      "resolveFailed": "资源解析失败",
+      "failed": "预览生成失败",
+      "empty": "预览内容为空"
     }
   },
   "errors": {

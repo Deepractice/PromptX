@@ -177,7 +177,9 @@
         "saveResourceInfo": "保存资源信息",
         "saveFile": "保存文件",
         "close": "关闭",
-        "saving": "保存中..."
+        "saving": "保存中...",
+        "copyPrompt": "复制提示词",
+        "copySuccess": "提示词已复制到剪贴板"
       },
       "messages": {
         "loadFilesFailed": "加载文件列表失败",
@@ -190,6 +192,15 @@
         "onlyUserEditable": "只能编辑用户资源（系统/项目为只读）",
         "loading": "加载中...",
         "loadingFileContent": "正在加载文件内容..."
+      },
+      "tabs": {
+        "editor": "编辑器",
+        "preview": "预览"
+      },
+      "preview": {
+        "loading": "正在加载预览...",
+        "empty": "暂无预览内容",
+        "failed": "预览加载失败"
       },
       "readOnly": "⚠️ 此资源为只读模式（{{source}}）"
     }

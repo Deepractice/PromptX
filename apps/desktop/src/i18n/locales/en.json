@@ -177,7 +177,9 @@
         "saveResourceInfo": "Save Resource Info",
         "saveFile": "Save File",
         "close": "Close",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "copyPrompt": "Copy Prompt",
+        "copySuccess": "Prompt copied to clipboard"
       },
       "messages": {
         "loadFilesFailed": "Failed to load file list",
@@ -190,6 +192,15 @@
         "onlyUserEditable": "Only user resources can be edited (system/project are read-only)",
         "loading": "Loading...",
         "loadingFileContent": "Loading file content..."
+      },
+      "tabs": {
+        "editor": "Editor",
+        "preview": "Preview"
+      },
+      "preview": {
+        "loading": "Loading preview...",
+        "empty": "No preview content",
+        "failed": "Failed to load preview"
       },
       "readOnly": "⚠️ This resource is in read-only mode ({{source}})"
     }

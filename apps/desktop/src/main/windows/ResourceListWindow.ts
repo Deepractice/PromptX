@@ -621,6 +621,54 @@ export class ResourceListWindow {
         return { success: false, message: error?.message || t('resources.importFailed') }
       }
     })
+
+    // 预览完整提示词（DPML -> Prompt）
+    ipcMain.handle('resources:previewPrompt', async (_evt, payload: {
+      id: string
+      type: 'role' | 'tool'
+      source: string
+    }) => {
+      try {
+        const { id, type, source } = payload || {}
+
+        if (!id || !type) {
+          return { success: false, message: t('resources.missingParams') }
+        }
+
+        // 只支持角色类型的预览
+        if (type !== 'role') {
+          return { success: false, message: t('resources.preview.onlyRoleSupported') }
+        }
+
+        // 使用 CLI 执行 action 命令（与 MCP action 工具相同的方式）
+        const core = await import('@promptx/core')
+        const coreExports = (core as any).default || core
+        const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli
+
+        if (!cli || !cli.execute) {
+          return { success: false, message: 'CLI not available in @promptx/core' }
+        }
+
+        // 执行 action 命令获取渲染后的提示词
+        const result = await cli.execute('action', [id])
+
+        // result 包含渲染后的完整提示词
+        if (result && typeof result === 'string') {
+          return { success: true, prompt: result }
+        } else if (result && result.output) {
+          return { success: true, prompt: result.output }
+        } else if (result && result.content) {
+          return { success: true, prompt: result.content }
+        } else {
+          // 尝试将结果转为字符串
+          const promptText = String(result || '')
+          return { success: true, prompt: promptText || t('resources.preview.empty') }
+        }
+      } catch (error: any) {
+        console.error('Failed to preview prompt:', error)
+        return { success: false, message: error?.message || t('resources.preview.failed') }
+      }
+    })
   }
 
   show(): void {

@@ -2,8 +2,10 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
+import { Eye, FileCode, Copy } from "lucide-react"
 
 type ResourceItem = {
   id: string
@@ -33,6 +35,11 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
   const [editingName, setEditingName] = useState<string>("")
   const [editingDescription, setEditingDescription] = useState<string>("")
   const [resourceInfoChanged, setResourceInfoChanged] = useState(false)
+
+  // 预览状态
+  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor")
+  const [previewContent, setPreviewContent] = useState<string>("")
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   // 当编辑项改变时，初始化状态
   useEffect(() => {
@@ -155,6 +162,40 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
     }
   }
 
+  const loadPreview = async () => {
+    if (!editingItem || editingItem.type !== 'role') return
+
+    setPreviewLoading(true)
+    setPreviewContent("")
+
+    try {
+      const result = await window.electronAPI?.invoke("resources:previewPrompt", {
+        id: editingItem.id,
+        type: editingItem.type,
+        source: editingItem.source ?? "user"
+      })
+
+      if (result?.success) {
+        setPreviewContent(result.prompt || "")
+      } else {
+        setPreviewContent(`⚠️ ${result?.message || t("resources.editor.preview.failed")}`)
+      }
+    } catch (error: any) {
+      console.error("Failed to load preview:", error)
+      setPreviewContent(`⚠️ ${error?.message || t("resources.editor.preview.failed")}`)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  // 切换到预览标签时加载预览
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as "editor" | "preview")
+    if (tab === "preview" && editingItem?.type === "role") {
+      loadPreview()
+    }
+  }
+
   const handleClose = () => {
     setFileList([])
     setSelectedFile(null)
@@ -165,6 +206,8 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
     setEditingName("")
     setEditingDescription("")
     setResourceInfoChanged(false)
+    setActiveTab("editor")
+    setPreviewContent("")
     onClose()
   }
 
@@ -224,7 +267,7 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
         </div>
 
         {/* 弹窗内容 */}
-        <div className="flex border-b flex-1 overflow-hidden">
+        <div className="flex border-b flex-1 min-h-0">
           {/* 左侧文件列表 */}
           <div className="w-1/3 border-r bg-gray-50 p-4 overflow-y-auto">
             <h3 className="font-medium mb-3">{t("resources.editor.fileList")}</h3>
@@ -261,45 +304,89 @@ export default function ResourceEditor({ isOpen, onClose, editingItem, onResourc
             </div>
           </div>
 
-          {/* 右侧编辑器 */}
-          <div className="flex-1 flex flex-col">
-            {/* 编辑器头部 */}
-            <div className="p-3 border-b bg-white flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">
-                {selectedFile ? t("resources.editor.editFile", { file: selectedFile }) : t("resources.editor.selectFile")}
-              </span>
-              {selectedFile && (
-                <Button 
-                  onClick={handleSaveFile} 
-                  disabled={editorLoading || (editingItem?.source ?? "user") !== "user"} 
-                  size="sm"
-                  className="text-white"
-                >
-                  {editorLoading ? t("resources.editor.buttons.saving") : t("resources.editor.buttons.saveFile")}
-                </Button>
-              )}
-            </div>
+          {/* 右侧内容区域 */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* 标签页头部 */}
+              <div className="p-3 border-b bg-white flex items-center justify-between">
+                <TabsList className="h-8">
+                  <TabsTrigger value="editor" className="text-sm px-3 py-1">
+                    <FileCode className="h-4 w-4 mr-1" />
+                    {t("resources.editor.tabs.editor")}
+                  </TabsTrigger>
+                  {editingItem?.type === "role" && (
+                    <TabsTrigger value="preview" className="text-sm px-3 py-1">
+                      <Eye className="h-4 w-4 mr-1" />
+                      {t("resources.editor.tabs.preview")}
+                    </TabsTrigger>
+                  )}
+                </TabsList>
 
-            {/* 编辑器内容 */}
-            <div className="flex-1 p-4 overflow-hidden">
-              {fileContentLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">{t("resources.editor.messages.loadingFileContent")}</p>
+                {activeTab === "editor" && selectedFile && (
+                  <Button
+                    onClick={handleSaveFile}
+                    disabled={editorLoading || (editingItem?.source ?? "user") !== "user"}
+                    size="sm"
+                    className="text-white"
+                  >
+                    {editorLoading ? t("resources.editor.buttons.saving") : t("resources.editor.buttons.saveFile")}
+                  </Button>
+                )}
+                {activeTab === "preview" && previewContent && (
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(previewContent)
+                      toast.success(t("resources.editor.buttons.copySuccess"))
+                    }}
+                    size="sm"
+                    className="text-white"
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    {t("resources.editor.buttons.copyPrompt")}
+                  </Button>
+                )}
+              </div>
+
+              {/* 编辑器标签页 */}
+              <TabsContent value="editor" className="flex-1 m-0 overflow-hidden">
+                <div className="h-full p-4">
+                  {fileContentLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-500">{t("resources.editor.messages.loadingFileContent")}</p>
+                    </div>
+                  ) : selectedFile ? (
+                    <textarea
+                      value={fileContent}
+                      onChange={e => setFileContent(e.target.value)}
+                      className="w-full h-full resize-none border rounded-md p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={t("resources.editor.fileContent")}
+                      disabled={(editingItem?.source ?? "user") !== "user"}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-500">{t("resources.editor.selectFilePrompt")}</p>
+                    </div>
+                  )}
                 </div>
-              ) : selectedFile ? (
-                <textarea
-                  value={fileContent}
-                  onChange={e => setFileContent(e.target.value)}
-                  className="w-full h-full resize-none border rounded-md p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t("resources.editor.fileContent")}
-                  disabled={(editingItem?.source ?? "user") !== "user"}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">{t("resources.editor.selectFilePrompt")}</p>
-                </div>
-              )}
-            </div>
+              </TabsContent>
+
+              {/* 预览标签页 */}
+              <TabsContent value="preview" className="flex-1 m-0 min-h-0 overflow-y-auto p-4">
+                {previewLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">{t("resources.editor.preview.loading")}</p>
+                  </div>
+                ) : previewContent ? (
+                  <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-md border">
+                    {previewContent}
+                  </pre>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">{t("resources.editor.preview.empty")}</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 
