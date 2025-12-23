@@ -1,5 +1,21 @@
 # @promptx/desktop
 
+## 1.27.7
+
+### Patch Changes
+
+- [#515](https://github.com/Deepractice/PromptX/pull/515) [`0e4980f`](https://github.com/Deepractice/PromptX/commit/0e4980fa9844f077c634b2a6758d5f28a7d5cc24) Thanks [@dfwgj](https://github.com/dfwgj)! - feat: 资源编辑器预览模式添加复制提示词按钮
+
+  - 在资源编辑器的预览标签页中，将原本的"保存文件"按钮替换为"复制提示词"按钮
+  - 点击按钮可将预览的完整提示词内容复制到剪贴板，并显示成功提示
+  - 修复预览内容区域无法滚动的问题，通过在多层 flex 容器中添加 min-h-0 解决
+  - 新增中英文翻译：copyPrompt（复制提示词）、copySuccess（复制成功提示）
+
+- Updated dependencies []:
+  - @promptx/core@1.27.7
+  - @promptx/mcp-server@1.27.7
+  - @promptx/config@1.27.7
+
 ## 1.27.6
 
 ### Patch Changes

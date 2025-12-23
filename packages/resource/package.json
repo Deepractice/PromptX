@@ -1,6 +1,6 @@
 {
   "name": "@promptx/resource",
-  "version": "1.27.6",
+  "version": "1.27.7",
   "description": "PromptX resource templates and prompt definitions",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
