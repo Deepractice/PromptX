@@ -26,7 +26,8 @@ class SemanticRenderer {
     const semanticHeaders = {
       'thought': `\n## ✅ 💭 思维模式：${resource}`,
       'execution': `\n## ✅ ⚖️ 行为原则：${resource}`,
-      'knowledge': `\n## ✅ 📚 知识体系：${resource}`
+      'knowledge': `\n## ✅ 📚 知识体系：${resource}`,
+      'role': `\n## 🎭 组合角色：${resource}`
     };
 
     const header = semanticHeaders[protocol] || `\n## ✅ 📎 引用：${resource}`;
@@ -81,9 +82,10 @@ class SemanticRenderer {
    * @param {string} tagSemantics.fullSemantics - 完整的语义内容
    * @param {Array} tagSemantics.references - 引用列表
    * @param {ResourceManager} resourceManager - 资源管理器
+   * @param {Set} visitedRoles - 已访问的角色集合（用于循环引用检测）
    * @returns {string} 完整融合的语义内容
    */
-  async renderSemanticContent(tagSemantics, resourceManager) {
+  async renderSemanticContent(tagSemantics, resourceManager, visitedRoles = new Set()) {
     if (!tagSemantics || !tagSemantics.fullSemantics) {
       return ''
     }
@@ -105,17 +107,45 @@ class SemanticRenderer {
     for (const ref of sortedReferences) {
       try {
         // 解析引用内容
-        const logger = require('@promptx/logger')
+        let logger
+        try {
+          logger = require('@promptx/logger')
+        } catch (e) {
+          // logger is optional in test environment
+          logger = { debug: () => {} }
+        }
         logger.debug(`[SemanticRenderer] 正在解析引用: ${ref.fullMatch}`)
+
+        // 角色协议的循环引用检测
+        if (ref.protocol === 'role') {
+          if (visitedRoles.has(ref.resource)) {
+            const cycleChain = [...visitedRoles, ref.resource].join(' -> ')
+            const errorMsg = this.renderMode === 'semantic'
+              ? `\n⚠️ 检测到循环引用：${cycleChain}\n`
+              : `<!-- 循环引用检测: ${cycleChain} -->`;
+            content = content.replace(ref.fullMatch, errorMsg)
+            continue
+          }
+          visitedRoles.add(ref.resource)
+        }
+
         const result = await resourceManager.resolve(ref.fullMatch)
         logger.debug(`[SemanticRenderer] 解析结果:`, { success: result.success, error: result.error?.message })
 
         // 检查解析是否成功
         if (result.success) {
-          // 提取标签内容（去掉外层DPML标签）
-          const cleanContent = this.extractTagInnerContent(result.content, ref.protocol)
-          // 使用新的语义化包装方法
-          const wrappedContent = this.wrapReferenceContent(ref.protocol, ref.resource, cleanContent)
+          let wrappedContent
+
+          // 对于角色协议，需要递归解析角色内部的引用
+          if (ref.protocol === 'role') {
+            wrappedContent = await this.renderRoleContent(result.content, ref.resource, resourceManager, visitedRoles)
+          } else {
+            // 提取标签内容（去掉外层DPML标签）
+            const cleanContent = this.extractTagInnerContent(result.content, ref.protocol)
+            // 使用新的语义化包装方法
+            wrappedContent = this.wrapReferenceContent(ref.protocol, ref.resource, cleanContent)
+          }
+
           // 在原始位置替换@引用为实际内容
           const refIndex = content.indexOf(ref.fullMatch)
           if (refIndex !== -1) {
@@ -145,6 +175,51 @@ class SemanticRenderer {
     }
 
     return content.trim()
+  }
+
+  /**
+   * 递归渲染角色内容
+   * @param {string} roleContent - 角色文件的原始内容
+   * @param {string} roleName - 角色名称
+   * @param {ResourceManager} resourceManager - 资源管理器
+   * @param {Set} visitedRoles - 已访问的角色集合
+   * @returns {string} 渲染后的角色内容
+   */
+  async renderRoleContent(roleContent, roleName, resourceManager, visitedRoles) {
+    const DPMLContentParser = require('./DPMLContentParser')
+    const parser = new DPMLContentParser()
+
+    // 解析角色文档的各个标签
+    const roleSemantics = parser.parseRoleDocument(roleContent)
+
+    // 构建渲染后的角色内容
+    const renderedParts = []
+
+    // 添加角色头
+    renderedParts.push(`\n## 🎭 组合角色：${roleName}`)
+
+    // 递归渲染每个标签
+    const tagHeaders = {
+      'personality': '💭 思维模式',
+      'principle': '⚖️ 行为原则',
+      'knowledge': '📚 知识体系'
+    }
+
+    for (const [tagName, header] of Object.entries(tagHeaders)) {
+      if (roleSemantics[tagName]) {
+        // 递归渲染标签内容（可能包含更多引用）
+        const renderedContent = await this.renderSemanticContent(
+          roleSemantics[tagName],
+          resourceManager,
+          new Set(visitedRoles) // 传递副本，避免影响其他分支
+        )
+        if (renderedContent) {
+          renderedParts.push(`\n### ${header}\n${renderedContent}`)
+        }
+      }
+    }
+
+    return renderedParts.join('\n')
   }
 
   /**
