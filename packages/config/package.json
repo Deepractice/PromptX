@@ -1,6 +1,6 @@
 {
   "name": "@promptx/config",
-  "version": "1.27.7",
+  "version": "1.27.8",
   "description": "Configuration management for PromptX",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,5 +1,20 @@
 # @promptx/resource
 
+## 1.27.8
+
+### Patch Changes
+
+- [#525](https://github.com/Deepractice/PromptX/pull/525) [`39f34fd`](https://github.com/Deepractice/PromptX/commit/39f34fd8745f81bc1bf3f412a33ae9a24c6d2a6c) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Refactor jiangziya role: clarify responsibility boundary with nuwa
+
+  - Update role positioning from "role creator" to "role design consultant"
+  - Add handoff-to-nuwa execution workflow to prevent jiangziya from implementing roles himself
+  - Clarify division of responsibilities: jiangziya designs strategy, nuwa implements DPML code
+  - Add step 13 in complete-workflow: handoff to nuwa after design completion
+  - Include handoff templates and constraints to guide proper role transition
+
+- Updated dependencies []:
+  - @promptx/logger@1.27.8
+
 ## 1.27.7
 
 ### Patch Changes
