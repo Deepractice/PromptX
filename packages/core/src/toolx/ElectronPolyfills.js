@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 /**
  * ElectronPolyfills - 为Electron环境提供缺失的全局对象

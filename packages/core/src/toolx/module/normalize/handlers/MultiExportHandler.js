@@ -7,7 +7,7 @@
  */
 
 const ModuleHandler = require('../base/ModuleHandler');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class MultiExportHandler extends ModuleHandler {
   constructor() {

@@ -1,5 +1,5 @@
 const Database = require('better-sqlite3');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 const path = require('path');
 const fs = require('fs-extra');
 

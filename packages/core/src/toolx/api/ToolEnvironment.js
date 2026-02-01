@@ -1,7 +1,7 @@
 const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 /**
  * ToolEnvironment - 工具环境变量管理器

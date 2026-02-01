@@ -6,7 +6,7 @@ const CognitionLayer = require('../layers/CognitionLayer')
 const RoleLayer = require('../layers/RoleLayer')
 const { getGlobalResourceManager } = require('../../resource')
 const CognitionManager = require('../../cognition/CognitionManager')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * 记忆检索命令 - 基于认知体系

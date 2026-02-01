@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * EnhancedResourceRegistry - 增强的资源注册表

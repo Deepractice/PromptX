@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 /**
  * ActivationStrategy - 激活策略基类

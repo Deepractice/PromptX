@@ -1,5 +1,5 @@
 const BaseArea = require('../BaseArea')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * RoleListArea - 角色列表展示区域

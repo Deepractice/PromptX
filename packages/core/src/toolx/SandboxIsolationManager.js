@@ -1,6 +1,6 @@
 const path = require('path');
 const Module = require('module');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 const ElectronPolyfills = require('./ElectronPolyfills');
 
 /**

@@ -5,7 +5,7 @@
  * 支持动态添加、删除处理器，调整处理顺序
  */
 
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class ModuleNormalizer {
   constructor() {

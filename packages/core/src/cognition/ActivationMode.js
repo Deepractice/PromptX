@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 /**
  * ActivationMode - 认知激活模式配置

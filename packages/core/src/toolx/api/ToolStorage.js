@@ -7,7 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class ToolStorage {
   constructor(toolId, sandboxPath) {

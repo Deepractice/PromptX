@@ -3,7 +3,7 @@ const fs = require('fs')
 const fsPromises = require('fs').promises
 const ResourceProtocol = require('./ResourceProtocol')
 const { QueryParams } = require('../types')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 const { getDirectoryService } = require('~/utils/DirectoryService')
 
 /**

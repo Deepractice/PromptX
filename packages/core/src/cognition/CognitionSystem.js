@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 const Network = require('./Network');
 const Remember = require('./Remember');
 const Prime = require('./Prime');

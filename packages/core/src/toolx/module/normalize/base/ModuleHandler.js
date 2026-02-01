@@ -5,7 +5,7 @@
  * 所有具体的模块规范化处理器都应继承此类
  */
 
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class ModuleHandler {
   constructor(name, priority = 100) {

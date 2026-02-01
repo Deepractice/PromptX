@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const path = require('path')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * CrossPlatformFileScanner - 跨平台文件扫描器

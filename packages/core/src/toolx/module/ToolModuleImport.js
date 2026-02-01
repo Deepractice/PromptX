@@ -11,7 +11,7 @@
  * 4. 模块缓存管理
  */
 
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { createDefaultNormalizer } = require('./normalize');

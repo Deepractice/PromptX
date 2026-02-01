@@ -2,15 +2,17 @@
  * 资源协议接口基类
  * 定义所有DPML资源协议的统一规范
  */
+import logger from "@promptx/logger"
+
 class ResourceProtocol {
   /**
    * 构造函数
    * @param {string} name - 协议名称
    * @param {object} options - 配置选项
    */
-  constructor (name, options = {}) {
+  constructor(name, options = {}) {
     if (new.target === ResourceProtocol) {
-      throw new Error('ResourceProtocol是抽象类，不能直接实例化')
+      throw new Error("ResourceProtocol是抽象类，不能直接实例化")
     }
 
     this.name = name
@@ -24,8 +26,8 @@ class ResourceProtocol {
    * 协议信息 - 需要子类实现
    * @returns {object} 协议信息
    */
-  getProtocolInfo () {
-    throw new Error('子类必须实现 getProtocolInfo() 方法')
+  getProtocolInfo() {
+    throw new Error("子类必须实现 getProtocolInfo() 方法")
   }
 
   /**
@@ -34,8 +36,8 @@ class ResourceProtocol {
    * @param {QueryParams} queryParams - 查询参数
    * @returns {Promise<string>} 解析后的路径
    */
-  async resolvePath (resourcePath, queryParams) {
-    throw new Error('子类必须实现 resolvePath() 方法')
+  async resolvePath(resourcePath, queryParams) {
+    throw new Error("子类必须实现 resolvePath() 方法")
   }
 
   /**
@@ -44,8 +46,8 @@ class ResourceProtocol {
    * @param {QueryParams} queryParams - 查询参数
    * @returns {Promise<string>} 资源内容
    */
-  async loadContent (resolvedPath, queryParams) {
-    throw new Error('子类必须实现 loadContent() 方法')
+  async loadContent(resolvedPath, queryParams) {
+    throw new Error("子类必须实现 loadContent() 方法")
   }
 
   /**
@@ -53,19 +55,19 @@ class ResourceProtocol {
    * @param {string} resourcePath - 资源路径
    * @returns {boolean} 是否有效
    */
-  validatePath (resourcePath) {
-    return typeof resourcePath === 'string' && resourcePath.length > 0
+  validatePath(resourcePath) {
+    return typeof resourcePath === "string" && resourcePath.length > 0
   }
 
   /**
    * 支持的查询参数列表 - 可选实现
    * @returns {object} 参数说明
    */
-  getSupportedParams () {
+  getSupportedParams() {
     return {
       line: 'string - 行范围，如 "1-10"',
-      format: 'string - 输出格式',
-      cache: 'boolean - 是否缓存'
+      format: "string - 输出格式",
+      cache: "boolean - 是否缓存"
     }
   }
 
@@ -75,11 +77,10 @@ class ResourceProtocol {
    * @param {QueryParams} queryParams - 查询参数
    * @returns {Promise<string>} 资源内容
    */
-  async resolve (resourcePath, queryParams) {
+  async resolve(resourcePath, queryParams) {
     // 1. 验证路径格式
     if (!this.validatePath(resourcePath)) {
       const error = new Error(`无效的资源路径: ${resourcePath}`)
-      const logger = require('@promptx/logger')
       logger.error(`[ResourceProtocol] 路径验证失败: ${resourcePath}`)
       logger.error(`[ResourceProtocol] 调用堆栈:`, error.stack)
       throw error
@@ -116,7 +117,7 @@ class ResourceProtocol {
    * @param {QueryParams} queryParams - 查询参数
    * @returns {string} 缓存键
    */
-  generateCacheKey (resourcePath, queryParams) {
+  generateCacheKey(resourcePath, queryParams) {
     const params = queryParams ? queryParams.getAll() : {}
     return `${this.name}:${resourcePath}:${JSON.stringify(params)}`
   }
@@ -127,7 +128,7 @@ class ResourceProtocol {
    * @param {QueryParams} queryParams - 查询参数
    * @returns {string} 过滤后的内容
    */
-  applyCommonParams (content, queryParams) {
+  applyCommonParams(content, queryParams) {
     if (!queryParams) {
       return content
     }
@@ -140,7 +141,7 @@ class ResourceProtocol {
     }
 
     // 应用格式化（基础实现，子类可以重写）
-    if (queryParams.format && queryParams.format !== 'text') {
+    if (queryParams.format && queryParams.format !== "text") {
       result = this.applyFormat(result, queryParams.format)
     }
 
@@ -153,18 +154,18 @@ class ResourceProtocol {
    * @param {string} lineRange - 行范围，如 "5-10" 或 "5"
    * @returns {string} 过滤后的内容
    */
-  applyLineFilter (content, lineRange) {
-    const lines = content.split('\n')
+  applyLineFilter(content, lineRange) {
+    const lines = content.split("\n")
 
-    if (lineRange.includes('-')) {
-      const [start, end] = lineRange.split('-').map(n => parseInt(n.trim(), 10))
+    if (lineRange.includes("-")) {
+      const [start, end] = lineRange.split("-").map(n => parseInt(n.trim(), 10))
       const startIndex = Math.max(0, start - 1)
       const endIndex = Math.min(lines.length, end)
-      return lines.slice(startIndex, endIndex).join('\n')
+      return lines.slice(startIndex, endIndex).join("\n")
     } else {
       const lineNum = parseInt(lineRange, 10)
       const lineIndex = lineNum - 1
-      return lines[lineIndex] || ''
+      return lines[lineIndex] || ""
     }
   }
 
@@ -174,16 +175,16 @@ class ResourceProtocol {
    * @param {string} format - 格式
    * @returns {string} 格式化后的内容
    */
-  applyFormat (content, format) {
+  applyFormat(content, format) {
     // 基础实现，子类可以重写
     switch (format) {
-      case 'json':
+      case "json":
         try {
           return JSON.stringify(JSON.parse(content), null, 2)
         } catch {
           return content
         }
-      case 'trim':
+      case "trim":
         return content.trim()
       default:
         return content
@@ -193,7 +194,7 @@ class ResourceProtocol {
   /**
    * 清除缓存
    */
-  clearCache () {
+  clearCache() {
     this.cache.clear()
   }
 
@@ -201,7 +202,7 @@ class ResourceProtocol {
    * 获取缓存统计
    * @returns {object} 缓存统计信息
    */
-  getCacheStats () {
+  getCacheStats() {
     return {
       protocol: this.name,
       size: this.cache.size,

@@ -8,7 +8,7 @@ const DPMLContentParser = require('../../dpml/DPMLContentParser')
 const SemanticRenderer = require('../../dpml/SemanticRenderer')
 const ProjectManager = require('~/project/ProjectManager')
 const { getGlobalProjectManager } = require('~/project/ProjectManager')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * ActionCommand - 角色激活命令

@@ -1,7 +1,7 @@
 const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
 const CognitionManager = require('../../cognition/CognitionManager')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * 思考锦囊命令 - 基于认知心理学的思维链式推理

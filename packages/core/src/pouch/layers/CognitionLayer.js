@@ -1,6 +1,6 @@
 const BaseLayer = require('./BaseLayer')
 const CognitionArea = require('../areas/CognitionArea')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * CognitionLayer - 认知层

@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 const RegistryData = require('../resource/RegistryData')
 const ResourceData = require('../resource/ResourceData')
 const fs = require('fs-extra')

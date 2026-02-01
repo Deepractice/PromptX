@@ -4,7 +4,7 @@
  */
 
 const BaseDiscovery = require('./BaseDiscovery')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * 包级资源发现器

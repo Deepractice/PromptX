@@ -8,71 +8,64 @@
  * - xml: 保留XML标签（用于调试）
  * - semantic: 转换为自然语言格式（默认）
  */
+import logger from "@promptx/logger"
+
 class SemanticRenderer {
   constructor(options = {}) {
-    this.renderMode = options.renderMode || 'semantic';
+    this.renderMode = options.renderMode || "semantic"
   }
 
   /**
    * 根据协议类型生成语义化的引用包装
    */
   wrapReferenceContent(protocol, resource, content) {
-    if (this.renderMode === 'xml') {
+    if (this.renderMode === "xml") {
       // 保留原始 XML 格式（用于调试）
-      return `<reference protocol="${protocol}" resource="${resource}">\n${content}\n</reference>`;
+      return `<reference protocol="${protocol}" resource="${resource}">\n${content}\n</reference>`
     }
 
     // 语义化包装：根据不同协议使用不同的语义标记
     const semanticHeaders = {
-      'thought': `\n## ✅ 💭 思维模式：${resource}`,
-      'execution': `\n## ✅ ⚖️ 行为原则：${resource}`,
-      'knowledge': `\n## ✅ 📚 知识体系：${resource}`
-    };
+      thought: `\n## ✅ 💭 思维模式：${resource}`,
+      execution: `\n## ✅ ⚖️ 行为原则：${resource}`,
+      knowledge: `\n## ✅ 📚 知识体系：${resource}`
+    }
 
-    const header = semanticHeaders[protocol] || `\n## ✅ 📎 引用：${resource}`;
+    const header = semanticHeaders[protocol] || `\n## ✅ 📎 引用：${resource}`
 
     // 对内容进行语义化处理
-    const semanticContent = this.semanticizeContent(content);
+    const semanticContent = this.semanticizeContent(content)
 
-    return `${header}\n${semanticContent}`;
+    return `${header}\n${semanticContent}`
   }
 
   /**
    * 将 XML 标签语义化为自然语言
    */
   semanticizeContent(content) {
-    if (this.renderMode === 'xml') {
-      return content;
+    if (this.renderMode === "xml") {
+      return content
     }
 
-    let result = content;
+    let result = content
 
     // 思维层标签语义化
-    result = result.replace(/<exploration>([\s\S]*?)<\/exploration>/gi,
-      '\n### 🔍 探索与发现\n$1');
-    result = result.replace(/<reasoning>([\s\S]*?)<\/reasoning>/gi,
-      '\n### 💡 逻辑推理\n$1');
-    result = result.replace(/<challenge>([\s\S]*?)<\/challenge>/gi,
-      '\n### ⚡ 挑战与权衡\n$1');
-    result = result.replace(/<plan>([\s\S]*?)<\/plan>/gi,
-      '\n### 📋 实施计划\n$1');
+    result = result.replace(/<exploration>([\s\S]*?)<\/exploration>/gi, "\n### 🔍 探索与发现\n$1")
+    result = result.replace(/<reasoning>([\s\S]*?)<\/reasoning>/gi, "\n### 💡 逻辑推理\n$1")
+    result = result.replace(/<challenge>([\s\S]*?)<\/challenge>/gi, "\n### ⚡ 挑战与权衡\n$1")
+    result = result.replace(/<plan>([\s\S]*?)<\/plan>/gi, "\n### 📋 实施计划\n$1")
 
     // 执行层标签语义化
-    result = result.replace(/<constraint>([\s\S]*?)<\/constraint>/gi,
-      '\n### ⚖️ 约束条件\n$1');
-    result = result.replace(/<rule>([\s\S]*?)<\/rule>/gi,
-      '\n### 📏 执行规则\n$1');
-    result = result.replace(/<guideline>([\s\S]*?)<\/guideline>/gi,
-      '\n### 📖 实践指南\n$1');
-    result = result.replace(/<process>([\s\S]*?)<\/process>/gi,
-      '\n### 🔄 工作流程\n$1');
-    result = result.replace(/<criteria>([\s\S]*?)<\/criteria>/gi,
-      '\n### ✅ 成功标准\n$1');
+    result = result.replace(/<constraint>([\s\S]*?)<\/constraint>/gi, "\n### ⚖️ 约束条件\n$1")
+    result = result.replace(/<rule>([\s\S]*?)<\/rule>/gi, "\n### 📏 执行规则\n$1")
+    result = result.replace(/<guideline>([\s\S]*?)<\/guideline>/gi, "\n### 📖 实践指南\n$1")
+    result = result.replace(/<process>([\s\S]*?)<\/process>/gi, "\n### 🔄 工作流程\n$1")
+    result = result.replace(/<criteria>([\s\S]*?)<\/criteria>/gi, "\n### ✅ 成功标准\n$1")
 
     // 移除多余的空行
-    result = result.replace(/\n{3,}/g, '\n\n');
+    result = result.replace(/\n{3,}/g, "\n\n")
 
-    return result;
+    return result
   }
 
   /**
@@ -85,15 +78,15 @@ class SemanticRenderer {
    */
   async renderSemanticContent(tagSemantics, resourceManager) {
     if (!tagSemantics || !tagSemantics.fullSemantics) {
-      return ''
+      return ""
     }
 
     let content = tagSemantics.fullSemantics
 
     if (!tagSemantics.references || tagSemantics.references.length === 0) {
       // 即使没有引用，也要语义化现有内容
-      if (this.renderMode === 'semantic') {
-        content = this.semanticizeContent(content);
+      if (this.renderMode === "semantic") {
+        content = this.semanticizeContent(content)
       }
       return content.trim()
     }
@@ -105,7 +98,6 @@ class SemanticRenderer {
     for (const ref of sortedReferences) {
       try {
         // 解析引用内容
-        const logger = require('@promptx/logger')
         logger.debug(`[SemanticRenderer] 正在解析引用: ${ref.fullMatch}`)
         const result = await resourceManager.resolve(ref.fullMatch)
         logger.debug(`[SemanticRenderer] 解析结果:`, { success: result.success, error: result.error?.message })
@@ -125,23 +117,19 @@ class SemanticRenderer {
           }
         } else {
           // 解析失败时也语义化
-          const errorMsg = this.renderMode === 'semantic'
-            ? `\n⚠️ 引用加载失败：${ref.resource} - ${result.error?.message || '未知错误'}\n`
-            : `<!-- 引用解析失败: ${ref.fullMatch} - ${result.error?.message || 'Unknown error'} -->`;
+          const errorMsg = this.renderMode === "semantic" ? `\n⚠️ 引用加载失败：${ref.resource} - ${result.error?.message || "未知错误"}\n` : `<!-- 引用解析失败: ${ref.fullMatch} - ${result.error?.message || "Unknown error"} -->`
           content = content.replace(ref.fullMatch, errorMsg)
         }
       } catch (error) {
         // 引用解析失败时的优雅降级
-        const errorMsg = this.renderMode === 'semantic'
-          ? `\n⚠️ 引用解析异常：${ref.resource} - ${error.message}\n`
-          : `<!-- 引用解析失败: ${ref.fullMatch} - ${error.message} -->`;
+        const errorMsg = this.renderMode === "semantic" ? `\n⚠️ 引用解析异常：${ref.resource} - ${error.message}\n` : `<!-- 引用解析失败: ${ref.fullMatch} - ${error.message} -->`
         content = content.replace(ref.fullMatch, errorMsg)
       }
     }
 
     // 最后对整体内容进行语义化处理
-    if (this.renderMode === 'semantic') {
-      content = this.semanticizeContent(content);
+    if (this.renderMode === "semantic") {
+      content = this.semanticizeContent(content)
     }
 
     return content.trim()
@@ -156,13 +144,13 @@ class SemanticRenderer {
   extractTagInnerContent(content, protocol) {
     // 根据协议类型确定标签名
     const tagName = protocol
-    const regex = new RegExp(`<${tagName}>([\\s\\S]*?)</${tagName}>`, 'i')
+    const regex = new RegExp(`<${tagName}>([\\s\\S]*?)</${tagName}>`, "i")
     const match = content.match(regex)
-    
+
     if (match && match[1]) {
       return match[1].trim()
     }
-    
+
     // 如果没有匹配到标签，返回原内容（可能已经是纯内容）
     return content.trim()
   }

@@ -9,7 +9,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const os = require('os');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class PackageInstaller {
   /**

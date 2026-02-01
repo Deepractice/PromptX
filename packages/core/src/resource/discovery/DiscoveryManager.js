@@ -1,7 +1,7 @@
 const PackageDiscovery = require('./PackageDiscovery')
 const ProjectDiscovery = require('../../project/ProjectDiscovery')
 const UserDiscovery = require('./UserDiscovery')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * DiscoveryManager - 资源发现管理器

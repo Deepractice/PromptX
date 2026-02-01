@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class ToolLoggerQuery {
   constructor(toolId, sandboxPath) {

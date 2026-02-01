@@ -7,7 +7,7 @@ const RegistryData = require('../../resource/RegistryData')
 const ProjectDiscovery = require('../../project/ProjectDiscovery')
 const ProjectManager = require('~/project/ProjectManager')
 const { getGlobalProjectManager } = require('~/project/ProjectManager')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 const path = require('path')
 const fs = require('fs-extra')
 

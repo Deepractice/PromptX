@@ -1,5 +1,5 @@
 const BaseArea = require('./BaseArea')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 const CognitivePrompts = require('../../cognition/CognitivePrompts')
 
 /**

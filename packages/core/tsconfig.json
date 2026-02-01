@@ -4,8 +4,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "composite": true,
-    // Core 包需要保持 CommonJS 以兼容某些环境
-    "module": "commonjs"
+    "module": "NodeNext"
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules", "**/*.spec.ts", "**/*.test.ts"]

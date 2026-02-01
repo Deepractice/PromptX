@@ -2,7 +2,7 @@ const PouchStateMachine = require('./state/PouchStateMachine')
 const PouchRegistry = require('./PouchRegistry')
 const commands = require('./commands')
 const { COMMANDS } = require('~/constants')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * 锦囊CLI主入口

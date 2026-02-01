@@ -1,4 +1,4 @@
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 const fs = require('fs');
 const path = require('path');
 

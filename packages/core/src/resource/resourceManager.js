@@ -2,7 +2,7 @@ const fs = require('fs')
 const RegistryData = require('./RegistryData')
 const ResourceProtocolParser = require('./resourceProtocolParser') 
 const DiscoveryManager = require('./discovery/DiscoveryManager')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 // 导入协议处理器
 const PackageProtocol = require('./protocols/PackageProtocol')

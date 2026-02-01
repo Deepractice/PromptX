@@ -2,7 +2,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const os = require('os')
 const crypto = require('crypto')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 const ProjectDiscovery = require('./ProjectDiscovery')
 
 /**

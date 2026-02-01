@@ -1,5 +1,5 @@
 const Cue = require('./Cue');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 /**
  * FrequencyCue - 带频率统计的认知线索

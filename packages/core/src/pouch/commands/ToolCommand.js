@@ -2,7 +2,7 @@ const BasePouchCommand = require('../BasePouchCommand')
 const { getGlobalResourceManager } = require('../../resource')
 const ToolSandbox = require('~/toolx/ToolSandbox')
 const ToolManualFormatter = require('~/toolx/ToolManualFormatter')
-const logger = require('@promptx/logger')
+import logger from '@promptx/logger'
 
 /**
  * Tool命令处理器

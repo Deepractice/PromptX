@@ -17,7 +17,7 @@ const Mind = require('./Mind');
 const ActivationContext = require('./ActivationContext');
 const HippocampalActivationStrategy = require('./ActivationStrategy').HippocampalActivationStrategy;
 const ActivationMode = require('./ActivationMode');
-const logger = require('@promptx/logger');
+import logger from '@promptx/logger';
 
 class TwoPhaseRecallStrategy {
   constructor(options = {}) {

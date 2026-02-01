@@ -3,7 +3,9 @@
   "version": "1.27.8",
   "description": "Core library for PromptX - DPML-powered AI prompt framework",
   "main": "dist/index.js",
-  "type": "commonjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "require": "./dist/index.js",
