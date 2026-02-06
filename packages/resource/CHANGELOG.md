@@ -1,5 +1,40 @@
 # @promptx/resource
 
+## 1.27.8
+
+### Patch Changes
+
+- [#525](https://github.com/Deepractice/PromptX/pull/525) [`39f34fd`](https://github.com/Deepractice/PromptX/commit/39f34fd8745f81bc1bf3f412a33ae9a24c6d2a6c) Thanks [@deepracticexs](https://github.com/deepracticexs)! - Refactor jiangziya role: clarify responsibility boundary with nuwa
+
+  - Update role positioning from "role creator" to "role design consultant"
+  - Add handoff-to-nuwa execution workflow to prevent jiangziya from implementing roles himself
+  - Clarify division of responsibilities: jiangziya designs strategy, nuwa implements DPML code
+  - Add step 13 in complete-workflow: handoff to nuwa after design completion
+  - Include handoff templates and constraints to guide proper role transition
+
+- Updated dependencies []:
+  - @promptx/logger@1.27.8
+
+## 1.27.7
+
+### Patch Changes
+
+- [#517](https://github.com/Deepractice/PromptX/pull/517) [`cbfde30`](https://github.com/Deepractice/PromptX/commit/cbfde302b22273ceafdfdfa01007e56e14919c43) Thanks [@deepracticexs](https://github.com/deepracticexs)! - refactor(roles): 更新系统角色
+
+  ### 新增角色
+
+  - **jiangziya (姜子牙)**: AI 战略顾问，擅长企业 AI 转型战略规划
+  - **shaqing (傻青)**: 心理陪伴与创作引导角色，帮助用户理解自我、重建内在主权
+  - **teacheryo**: 教育引导角色，基于建构主义和苏格拉底式对话
+
+  ### 移除角色
+
+  - **assistant**: 通用助手角色（功能已被其他专业角色覆盖）
+  - **noface**: 无脸角色（重构中）
+
+- Updated dependencies []:
+  - @promptx/logger@1.27.7
+
 ## 1.27.6
 
 ### Patch Changes

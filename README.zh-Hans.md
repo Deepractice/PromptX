@@ -250,11 +250,11 @@ PromptX 内置专业文档处理工具，让 AI 成为你的办公助手。
 
 ## 📄 **学术研究**
 
-PromptX 已提交至 **WWW Companion '26** 会议。
+PromptX 已被 **WWW Companion '26** 会议录用。
 
 **论文:** *PromptX: A Cognitive Agent Platform with Long-term Memory*
 
-🔗 [阅读论文](https://research.deepractice.ai) | [PDF 下载](https://research.deepractice.ai/PromptX_WWW26_Paper.pdf)
+🔗 [阅读论文](https://research.deepractice.ai) | [PDF 下载](./paper/PromptX_WWW26_Paper.pdf)
 
 <details>
 <summary>📚 引用 (BibTeX)</summary>

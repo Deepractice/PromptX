@@ -1,5 +1,21 @@
 # @promptx/core
 
+## 1.27.8
+
+### Patch Changes
+
+- Updated dependencies [[`39f34fd`](https://github.com/Deepractice/PromptX/commit/39f34fd8745f81bc1bf3f412a33ae9a24c6d2a6c)]:
+  - @promptx/resource@1.27.8
+  - @promptx/logger@1.27.8
+
+## 1.27.7
+
+### Patch Changes
+
+- Updated dependencies [[`cbfde30`](https://github.com/Deepractice/PromptX/commit/cbfde302b22273ceafdfdfa01007e56e14919c43)]:
+  - @promptx/resource@1.27.7
+  - @promptx/logger@1.27.7
+
 ## 1.27.6
 
 ### Patch Changes
