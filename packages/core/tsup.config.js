@@ -32,6 +32,10 @@ export default defineConfig({
     'zod',
     'fastmcp',
     'fs-extra',
+    'rolexjs',
+    '@rolexjs/core',
+    '@rolexjs/local-platform',
+    '@rolexjs/parser',
     // ... 其他外部依赖
   ],
   noExternal: [], // 不强制打包任何模块

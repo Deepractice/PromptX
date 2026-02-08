@@ -23,6 +23,9 @@ const pouch = require('./pouch')
 // 项目管理模块
 const project = require('./project')
 
+// RoleX V2 角色系统桥接
+const rolex = require('./rolex')
+
 // 工具模块
 const utils = {
   version: require('./utils/version'),
@@ -39,6 +42,7 @@ module.exports = {
   toolx,
   pouch,
   project,
+  rolex,
   utils,
 
   // 便捷导出

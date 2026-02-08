@@ -11,6 +11,7 @@ const ProjectManager = require('~/project/ProjectManager')
 const { getGlobalProjectManager } = require('~/project/ProjectManager')
 const ProjectDiscovery = require('../../project/ProjectDiscovery')
 const UserDiscovery = require('../../resource/discovery/UserDiscovery')
+const { getRolexBridge } = require('../../rolex/RolexBridge')
 const logger = require('@promptx/logger')
 
 /**
@@ -66,7 +67,8 @@ class DiscoverCommand extends BasePouchCommand {
     const categories = {
       system: [],
       project: [],
-      user: []
+      user: [],
+      rolex: []
     }
     
     const items = Object.values(registry)
@@ -104,6 +106,7 @@ class DiscoverCommand extends BasePouchCommand {
     
     if (lowerSource === 'user') return 'user'
     if (lowerSource === 'project') return 'project'
+    if (lowerSource === 'rolex') return 'rolex'
     if (['package', 'merged', 'fallback', 'system'].includes(lowerSource)) {
       logger.info(`[DiscoverCommand] normalizeSource: "${source}" -> "system"`)
       return 'system'
@@ -119,15 +122,17 @@ class DiscoverCommand extends BasePouchCommand {
     const systemRoles = roleCategories.system?.length || 0
     const projectRoles = roleCategories.project?.length || 0
     const userRoles = roleCategories.user?.length || 0
+    const rolexRoles = roleCategories.rolex?.length || 0
     const systemTools = toolCategories.system?.length || 0
     const projectTools = toolCategories.project?.length || 0
     const userTools = toolCategories.user?.length || 0
-    
+
     return {
-      totalRoles: systemRoles + projectRoles + userRoles,
+      totalRoles: systemRoles + projectRoles + userRoles + rolexRoles,
       systemRoles,
       projectRoles,
       userRoles,
+      rolexRoles,
       totalTools: systemTools + projectTools + userTools,
       systemTools,
       projectTools,
@@ -222,6 +227,22 @@ class DiscoverCommand extends BasePouchCommand {
     })
     
     logger.info(`[DiscoverCommand] Found ${Object.keys(registry).length} roles`)
+
+    // 合并 V2 角色（RoleX）
+    try {
+      const bridge = getRolexBridge()
+      const v2Roles = await bridge.listV2Roles()
+      v2Roles.forEach(role => {
+        registry[`v2:${role.id}`] = role
+      })
+      if (v2Roles.length > 0) {
+        logger.info(`[DiscoverCommand] Found ${v2Roles.length} V2 roles from RoleX`)
+      }
+    } catch (error) {
+      // RoleX 不可用时静默跳过
+      logger.debug('[DiscoverCommand] RoleX not available, skipping V2 roles:', error.message)
+    }
+
     return registry
   }
   

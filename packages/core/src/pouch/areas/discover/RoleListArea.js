@@ -26,8 +26,13 @@ class RoleListArea extends BaseArea {
       roles.sort((a, b) => a.id.localeCompare(b.id))
       
       roles.forEach(role => {
-        const command = `action("${role.id}")`
-        content += `- \`${role.id}\`: ${role.name || role.title || '未命名角色'} → ${command}\n`
+        if (role.version === 'v2') {
+          const command = `action({ operation: "activate", role: "${role.id}" })`
+          content += `- \`${role.id}\` [V2]: ${role.name || '未命名角色'} → ${command}\n`
+        } else {
+          const command = `action("${role.id}")`
+          content += `- \`${role.id}\`: ${role.name || role.title || '未命名角色'} → ${command}\n`
+        }
       })
     }
     
@@ -38,7 +43,8 @@ class RoleListArea extends BaseArea {
     const icons = {
       'system': '📦',
       'project': '🏗️',
-      'user': '👤'
+      'user': '👤',
+      'rolex': '🎭'
     }
     return icons[source] || '📄'
   }
@@ -47,7 +53,8 @@ class RoleListArea extends BaseArea {
     const titles = {
       'system': '系统角色',
       'project': '项目角色',
-      'user': '用户角色'
+      'user': '用户角色',
+      'rolex': 'V2角色 (RoleX)'
     }
     return titles[source] || '其他角色'
   }

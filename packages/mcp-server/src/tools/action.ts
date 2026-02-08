@@ -97,29 +97,76 @@ export const actionTool: ToolWithHandler = {
   inputSchema: {
     type: 'object',
     properties: {
+      operation: {
+        type: 'string',
+        enum: ['activate', 'born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'growup'],
+        description: '操作类型。默认 activate（激活角色）。V2角色支持完整生命周期操作：born(创建)、want(目标)、plan(计划)、todo(任务)、finish(完成任务)、achieve(达成目标)、abandon(放弃目标)、focus(聚焦)、growup(成长)'
+      },
       role: {
         type: 'string',
         description: '要激活的角色ID，如：copywriter, product-manager, java-backend-developer'
+      },
+      name: {
+        type: 'string',
+        description: '名称参数，用于 born(角色名)、want(目标名)、todo(任务名)、focus(聚焦项)、growup(成长项)'
+      },
+      source: {
+        type: 'string',
+        description: 'Gherkin 源文本，用于 born/want/todo/growup 操作'
+      },
+      type: {
+        type: 'string',
+        description: 'growup 类型: knowledge(知识)、experience(经验)、voice(声音)'
+      },
+      experience: {
+        type: 'string',
+        description: 'achieve/abandon 的经验反思文本'
+      },
+      testable: {
+        type: 'boolean',
+        description: 'want/todo 的可测试标记'
       }
     },
     required: ['role']
   },
-  handler: async (args: { role: string }) => {
-    // 动态导入 @promptx/core
+  handler: async (args: { role: string; operation?: string; name?: string; source?: string; type?: string; experience?: string; testable?: boolean }) => {
+    const operation = args.operation || 'activate';
+
+    // 非 activate 操作 → 直接走 RoleX V2 路径
+    if (operation !== 'activate') {
+      const core = await import('@promptx/core');
+      const coreExports = core.default || core;
+      const { RolexActionDispatcher } = (coreExports as any).rolex;
+      const dispatcher = new RolexActionDispatcher();
+      const result = await dispatcher.dispatch(operation, args);
+      return outputAdapter.convertToMCPFormat(result);
+    }
+
+    // activate 操作 → 先检查 V2，命中则走 RoleX，否则走 V1
+    try {
+      const core = await import('@promptx/core');
+      const coreExports = core.default || core;
+      const { RolexActionDispatcher } = (coreExports as any).rolex;
+      const dispatcher = new RolexActionDispatcher();
+
+      if (await dispatcher.isV2Role(args.role)) {
+        const result = await dispatcher.dispatch('activate', args);
+        return outputAdapter.convertToMCPFormat(result);
+      }
+    } catch {
+      // RoleX 不可用（包未安装等），静默降级到 V1
+    }
+
+    // V1 路径：现有 DPML 逻辑
     const core = await import('@promptx/core');
     const coreExports = core.default || core;
-    
-    // 获取 cli 对象
     const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
-    
+
     if (!cli || !cli.execute) {
       throw new Error('CLI not available in @promptx/core');
     }
-    
-    // 执行 action 命令
+
     const result = await cli.execute('action', [args.role]);
-    
-    // 使用 OutputAdapter 格式化输出
     return outputAdapter.convertToMCPFormat(result);
   }
 };
