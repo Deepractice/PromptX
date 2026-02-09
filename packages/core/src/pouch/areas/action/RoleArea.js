@@ -5,7 +5,7 @@ const BaseArea = require('../BaseArea')
  * 负责渲染角色相关内容：人格特征、行为原则、专业知识
  */
 class RoleArea extends BaseArea {
-  constructor(roleId, roleSemantics, semanticRenderer, resourceManager, thoughts, executions, roleName) {
+  constructor(roleId, roleSemantics, semanticRenderer, resourceManager, thoughts, executions, roleName, sectionFilter) {
     super('ROLE_AREA')
     this.roleId = roleId
     this.roleName = roleName || roleId
@@ -14,6 +14,8 @@ class RoleArea extends BaseArea {
     this.resourceManager = resourceManager
     this.thoughts = thoughts || []
     this.executions = executions || []
+    // Default (undefined): personality only
+    this.sectionFilter = sectionFilter
   }
 
   /**
@@ -21,31 +23,55 @@ class RoleArea extends BaseArea {
    */
   async render() {
     let content = ''
-    
+
+    const filter = this.sectionFilter
+    const loadPersonality = !filter || filter === 'personality' || filter === 'all'
+    const loadPrinciple = filter === 'principle' || filter === 'all'
+    const loadKnowledge = filter === 'knowledge' || filter === 'all'
+
     // 角色激活标题
-    content += `🎭 **角色激活完成：\`${this.roleId}\` (${this.roleName})** - 所有技能已自动加载\n\n`
-    
+    const loaded = []
+    if (loadPersonality) loaded.push('人格特征')
+    if (loadPrinciple) loaded.push('行为原则')
+    if (loadKnowledge) loaded.push('专业知识')
+    content += `🎭 **角色激活：\`${this.roleId}\` (${this.roleName})** - 已加载：${loaded.join('、')}\n`
+
+    // 提示可按需加载的部分
+    const available = []
+    if (!loadPrinciple && this.roleSemantics?.principle) available.push('行为原则(principle)')
+    if (!loadKnowledge && this.roleSemantics?.knowledge) available.push('专业知识(knowledge)')
+    if (available.length > 0) {
+      content += `💡 如需深入了解方法论或专业知识，可通过 \`action({ role: "${this.roleId}", roleResources: "principle" | "knowledge" | "all" })\` 按需加载：${available.join('、')}\n`
+    }
+    content += '\n'
+
     // 1. 人格特征
-    const personalityContent = await this.renderPersonality()
-    if (personalityContent) {
-      content += personalityContent + '\n'
+    if (loadPersonality) {
+      const personalityContent = await this.renderPersonality()
+      if (personalityContent) {
+        content += personalityContent + '\n'
+      }
     }
-    
+
     // 2. 行为原则
-    const principleContent = await this.renderPrinciple()
-    if (principleContent) {
-      content += principleContent + '\n'
+    if (loadPrinciple) {
+      const principleContent = await this.renderPrinciple()
+      if (principleContent) {
+        content += principleContent + '\n'
+      }
     }
-    
+
     // 3. 专业知识
-    const knowledgeContent = await this.renderKnowledge()
-    if (knowledgeContent) {
-      content += knowledgeContent + '\n'
+    if (loadKnowledge) {
+      const knowledgeContent = await this.renderKnowledge()
+      if (knowledgeContent) {
+        content += knowledgeContent + '\n'
+      }
     }
-    
+
     // 4. 激活总结
     content += this.renderSummary()
-    
+
     return content
   }
 
@@ -141,28 +167,33 @@ class RoleArea extends BaseArea {
    * 渲染激活总结
    */
   renderSummary() {
+    const filter = this.sectionFilter
+    const loadPersonality = !filter || filter === 'personality' || filter === 'all'
+    const loadPrinciple = filter === 'principle' || filter === 'all'
+    const loadKnowledge = filter === 'knowledge' || filter === 'all'
+
     let content = '---\n'
     content += '# 🎯 角色激活总结\n'
-    content += `✅ **\`${this.roleId}\` 角色已完全激活！**\n`
-    content += '📋 **已获得能力**：\n'
-    
+    content += `✅ **\`${this.roleId}\` 角色已激活**\n`
+    content += '📋 **已加载能力**：\n'
+
     const components = []
-    if (this.roleSemantics?.personality) components.push('👤 人格特征')
-    if (this.roleSemantics?.principle) components.push('⚖️ 行为原则')
-    if (this.roleSemantics?.knowledge) components.push('📚 专业知识')
-    
+    if (loadPersonality && this.roleSemantics?.personality) components.push('👤 人格特征')
+    if (loadPrinciple && this.roleSemantics?.principle) components.push('⚖️ 行为原则')
+    if (loadKnowledge && this.roleSemantics?.knowledge) components.push('📚 专业知识')
+
     content += `- 🎭 角色组件：${components.join(', ')}\n`
-    
+
     if (this.thoughts.length > 0) {
       content += `- 🧠 思维模式：${this.thoughts.length}个专业思维模式已加载\n`
     }
-    
+
     if (this.executions.length > 0) {
       content += `- ⚡ 执行技能：${this.executions.length}个执行技能已激活\n`
     }
-    
+
     content += `💡 **现在可以立即开始以 \`${this.roleId}\` 身份提供专业服务！**\n`
-    
+
     return content
   }
 }

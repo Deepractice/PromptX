@@ -10,37 +10,39 @@ const outputAdapter = new MCPOutputAdapter();
  */
 export const projectTool: ToolWithHandler = {
   name: 'project',
-  description: `📁 [项目管理] 绑定IDE当前工作项目
+  description: `Bind the current IDE project directory
 
-【规范名称】promptx_project
-【调用说明】在提示词中使用 promptx_project，实际调用时自动映射到 mcp__[server]__project
+## What It Does
 
-重要原则：
-✅ 使用IDE提供的项目根目录（如VSCode工作区、Cursor项目）
-✅ 不要自行推测或识别项目位置
-✅ 以IDE的项目概念为准，而非文件路径推断
+Registers the IDE workspace root so PromptX can discover project-level roles and tools.
 
-何时调用：
-当IDE打开了一个项目时，使用IDE的工作目录路径调用此工具。
+## When to Use
 
-示例：
-- VSCode打开 /Users/name/MyProject → 绑定此目录
-- 看到文件 /Users/name/MyProject/src/index.js → 仍然绑定项目根 /Users/name/MyProject
-- 不要因为看到子文件就绑定子目录
+Call this when the IDE has a project open, **before** running \`discover\`.
 
-不调用会怎样：
-- 只能使用系统级和用户级资源
-- 无法访问项目专属资源`,
+## Important
+
+- Use the IDE's workspace root path, not a subdirectory
+- Do not guess or infer the project path from file paths
+- Without binding: only system-level and user-level resources are available
+
+## Example
+
+\`\`\`
+IDE opens /Users/name/MyProject
+→ bind /Users/name/MyProject (correct)
+→ bind /Users/name/MyProject/src (wrong — don't use subdirectories)
+\`\`\``,
   inputSchema: {
     type: 'object',
     properties: {
       workingDirectory: {
         type: 'string',
-        description: 'IDE当前打开的项目根目录路径。使用IDE工作区路径，不要自行判断或推测项目位置。'
+        description: 'IDE workspace root directory path. Use the IDE-provided path, do not guess.'
       },
       ideType: {
         type: 'string',
-        description: 'IDE或编辑器类型（可选）。如：cursor, vscode, claude等。'
+        description: 'IDE or editor type (optional), e.g.: cursor, vscode, claude'
       }
     },
     required: []

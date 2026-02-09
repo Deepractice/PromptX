@@ -10,65 +10,42 @@ const outputAdapter = new MCPOutputAdapter();
  */
 export const learnTool: ToolWithHandler = {
   name: 'learn',
-  description: `🧠 [专业资源学习器] PromptX资源管理体系的统一学习入口
-通过标准化协议体系加载各类专业资源，是AI获取专业能力和理解工具使用的核心通道。
+  description: `Load and learn PromptX resources by protocol URL
 
-何时使用此工具:
-- 用户要求使用某个工具但你不了解其用法
-- 需要获取特定领域的专业思维模式和执行技能
-- 想要了解某个角色的完整定义和能力边界
-- 需要查看工具的使用手册和参数说明
-- 学习项目特定的资源和配置信息
-- 获取最新的专业知识和最佳实践
-- 理解复杂概念前需要学习相关基础知识
+## What It Does
 
-核心学习能力:
-- 支持12种标准协议的资源加载和解析
-- 智能识别资源类型并选择合适的加载策略
-- 保持manual文档的原始格式不进行语义渲染
-- 支持跨项目资源访问和继承机制
-- 自动处理资源间的依赖关系
-- 提供结构化的学习内容展示
-- 资源内容的实时加载和更新
+Unified entry point for loading professional resources: role definitions, thinking models, execution skills, knowledge bases, tool manuals, and more.
 
-使用说明:
-- 确保资源路径或ID的正确性
-- 对于工具使用必须先学习manual再考虑使用tool
+## When to Use
 
-支持的资源协议:
-- @role://角色ID - 完整角色定义
-- @thought://资源ID - 专业思维模式
-- @execution://资源ID - 执行技能实践
-- @knowledge://资源ID - 领域专业知识
-- @manual://工具名 - 工具使用手册（必须真实存在）
-- @tool://工具名 - 工具源代码
-- @package://包名 - 工具包资源
-- @project://路径 - 项目特定资源
-- @file://路径 - 文件系统资源
-- @prompt://ID - 提示词模板
-- @user://资源 - 用户自定义资源
-- @resource://ID - 通用资源引用
+- Need to use a tool but don't know how → learn its \`@manual://\`
+- Want domain expertise → learn \`@knowledge://\` or \`@thought://\`
+- Need to understand a role → learn \`@role://\`
 
-重要提醒:
-- 只能学习真实存在的资源，绝不虚构
-- 资源不存在时会返回错误，不要猜测
-- 工具manual必须先存在才能学习使用
+## Supported Protocols
 
-你应该:
-1. 看到工具相关需求时立即学习对应的@manual://工具名
-2. 在不确定资源内容时主动使用learn查看
-3. 遵循"学习→理解→使用"的标准流程
-4. 为用户推荐相关的学习资源
-5. 记住已学习的内容避免重复学习
-6. 识别资源间的关联并建议深入学习
-7. 在激活角色后学习其依赖的所有资源
-8. 将学习到的知识立即应用到当前任务中`,
+| Protocol | Purpose | Example |
+|---|---|---|
+| @role:// | Full role definition | @role://luban |
+| @thought:// | Thinking models | @thought://creativity |
+| @execution:// | Execution skills | @execution://best-practice |
+| @knowledge:// | Domain knowledge | @knowledge://scrum |
+| @manual:// | Tool documentation | @manual://filesystem |
+| @tool:// | Tool source code | @tool://pdf-reader |
+| @project:// | Project resources | @project://config |
+| @file:// | File system resources | @file://path |
+
+## Rules
+
+- Only real resources can be loaded — never fabricate
+- Always learn \`@manual://\` before using a tool for the first time
+- Follow the learn → understand → use workflow`,
   inputSchema: {
     type: 'object',
     properties: {
       resource: {
         type: 'string',
-        description: '资源URL，支持格式：thought://creativity, execution://best-practice, knowledge://scrum'
+        description: 'Resource URL, e.g.: @thought://creativity, @execution://best-practice, @knowledge://scrum, @manual://filesystem'
       }
     },
     required: ['resource']

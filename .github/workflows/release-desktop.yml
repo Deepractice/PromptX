@@ -482,7 +482,7 @@ jobs:
           # 配置 R2 endpoint
           R2_ENDPOINT="https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com"
 
-          # 上传所有发布文件到 R2（仅版本目录）
+          # 上传所有发布文件到 R2
           for file in release-files/*; do
             if [ -f "$file" ]; then
               filename=$(basename "$file")
@@ -491,10 +491,16 @@ jobs:
               # 上传到版本目录
               aws s3 cp "$file" "s3://promptx-releases/$VERSION/$filename" \
                 --endpoint-url "$R2_ENDPOINT"
+
+              # 同时更新 latest 目录（用于自动更新检测）
+              aws s3 cp "$file" "s3://promptx-releases/latest/$filename" \
+                --endpoint-url "$R2_ENDPOINT"
             fi
           done
 
-          echo "✅ All files uploaded to R2: promptx-releases/$VERSION/"
+          echo "✅ All files uploaded to R2:"
+          echo "   - Version: promptx-releases/$VERSION/"
+          echo "   - Latest:  promptx-releases/latest/"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}

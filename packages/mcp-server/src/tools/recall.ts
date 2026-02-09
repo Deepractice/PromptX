@@ -5,70 +5,57 @@ const outputAdapter = new MCPOutputAdapter();
 
 export const recallTool: ToolWithHandler = {
   name: 'recall',
-  description: `【认知习惯】基于记忆网络的语义场激活
+  description: `Retrieve memories from a role's semantic network
 
-【规范名称】promptx_recall
-【调用说明】在提示词中使用 promptx_recall，实际调用时自动映射到 mcp__[server]__recall
+## Workflow
 
-⚡ 触发时机（形成条件反射）：
-新任务 → 先DMN看全景 → 选词 → 多轮深挖
+1. **DMN scan** — \`recall(role, null)\` → see the full memory landscape (hub nodes)
+2. **Drill down** — pick keywords from the network → \`recall(role, "keyword")\` → get details
+3. **Repeat** — follow new keywords in each result until you have enough context
 
-📋 **推荐工作流（重要）**：
+> Always start with DMN (null query) to see what exists. Never guess keywords.
 
-**步骤1：DMN全景扫描**
-recall(role, null) → 看到网络全景图
-• 目的：了解角色有哪些记忆域，避免"猜词"失败
-• 返回：核心枢纽节点 + 深度激活扩散的网络全景
-• 何时用：新任务开始、不确定有什么记忆时
+## Query Parameter
 
-**步骤2-N：多轮深入挖掘**
-从网络图选词 → recall → 分析结果 → 继续深入
-• 从返回的网络图中选择相关关键词
-• recall获取该领域的详细记忆
-• 分析返回内容和新的网络图
-• 发现新线索，继续recall深入
-• **重复直到信息充足，不要一次就停**
+- \`null\` → **DMN mode** (recommended entry point): activates hub nodes, shows full network
+- Single keyword: \`"PromptX"\` → spread from that node
+- Multiple keywords: \`"PromptX testing fix"\` → multi-center activation
 
-💡 **核心原则**：
-• 从全景到细节（DMN → 领域recall → 具体细节）
-• 多轮次深入（不要一次就停止）
-• 利用每次返回的网络图引导下一步
-• 每次recall都会返回新的网络图和记忆
+## Mode Parameter
 
-**query参数说明**：
-- null → **DMN模式**（推荐入口），激活核心枢纽，展示网络全景
-- 单个关键词："PromptX" → 从该节点开始扩散
-- 多个关键词："PromptX 测试 修复" → 多中心激活
+- \`balanced\` (default): balance precision and association
+- \`focused\`: precise lookup, frequent memories first
+- \`creative\`: broad association, distant connections
 
-**mode参数**：
-- balanced（默认）：平衡精确和联想
-- focused：精确查找，常用记忆优先
-- creative：广泛联想，远距离连接
+## Examples
 
-⚠️ **重要约束**：
-只有网络中实际存在的节点才能被激活
-→ 这就是为什么要先DMN：看到实际存在的词，再recall
+**DMN full scan:**
+\`\`\`json
+{ "role": "luban", "query": null }
+\`\`\`
 
-🔄 **认知循环**：
-DMN查看全景 → 多轮recall深挖 → 用记忆回答 → remember保存新知`,
+**Keyword drill-down:**
+\`\`\`json
+{ "role": "luban", "query": "PromptX testing", "mode": "focused" }
+\`\`\``,
   inputSchema: {
     type: 'object',
     properties: {
       role: {
         type: 'string',
-        description: '要检索记忆的角色ID，如：java-developer, product-manager, copywriter'
+        description: 'Role ID to recall memories from, e.g.: java-developer, product-manager'
       },
       query: {
         oneOf: [
           { type: 'string' },
           { type: 'null' }
         ],
-        description: '检索关键词：单词或空格分隔的多词(string)、或null(DMN模式,自动选择枢纽节点)。多词示例："PromptX 测试 修复"。必须使用记忆网络图中实际存在的词。'
+        description: 'Query keywords: string (space-separated) or null (DMN mode — auto-select hub nodes). Keywords must exist in the memory network.'
       },
       mode: {
         type: 'string',
         enum: ['creative', 'balanced', 'focused'],
-        description: '认知激活模式：creative(创造性探索，广泛联想)、balanced(平衡模式，默认)、focused(聚焦检索，精确查找)'
+        description: 'Activation mode: creative (broad association), balanced (default), focused (precise lookup)'
       }
     },
     required: ['role']

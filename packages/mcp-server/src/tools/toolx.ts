@@ -7,152 +7,70 @@ const outputAdapter = new MCPOutputAdapter();
 export const toolxTool: ToolWithHandler = {
   name: 'toolx',
 
-  description: `ToolX is the PromptX tool runtime for loading and executing various tools.
+  description: `ToolX runtime — load and execute PromptX ecosystem tools
 
-## Why ToolX Exists
+## What It Does
 
-ToolX is your gateway to the PromptX tool ecosystem. Think of it as:
-- A **universal remote control** for all PromptX tools
-- Your **interface** to specialized capabilities (file operations, PDF reading, AI role creation, etc.)
-- The **bridge** between you (AI agent) and powerful system tools
+Universal interface for calling PromptX tools (file ops, PDF reading, role creation, etc.).
+Input is a YAML document specifying the tool, mode, and parameters.
 
-Without ToolX, you cannot access any PromptX ecosystem tools.
+## Modes
 
-## When to Use ToolX
+| Mode | Purpose |
+|---|---|
+| manual | Read tool documentation (**always do this first**) |
+| execute | Run the tool with parameters |
+| configure | Set environment variables for a tool |
+| log | View tool execution logs |
+| dryrun | Preview without executing |
 
-### Common Scenarios (IF-THEN rules):
-- IF user needs file operations → USE tool://filesystem via toolx
-- IF user needs to read PDF → USE tool://pdf-reader via toolx
-- IF user needs to create AI role → USE tool://role-creator via toolx
-- IF user needs to create new tool → USE tool://tool-creator via toolx
-- IF you see tool:// in any context → USE toolx to call it
+## Examples
 
-### First Time Using Any Tool
-⚠️ **MUST run mode: manual first** to read the tool's documentation
-⚠️ Example: toolx with mode: manual for tool://filesystem
-
-## How to Use ToolX (Copy These Patterns)
-
-### Pattern 1: Read Tool Manual (First Time)
-
-**Exact code to use:**
-\`\`\`javascript
-// Call the mcp__promptx__toolx function with this exact structure:
-mcp__promptx__toolx({
-  yaml: \`tool: tool://filesystem
-mode: manual\`
-})
+**Read tool manual (do this first):**
+\`\`\`yaml
+tool: tool://filesystem
+mode: manual
 \`\`\`
 
-**What this does:** Shows you how to use the filesystem tool
-
-### Pattern 2: Execute Tool with Parameters
-
-**Exact code to use:**
-\`\`\`javascript
-mcp__promptx__toolx({
-  yaml: \`tool: tool://pdf-reader
+**Execute with parameters:**
+\`\`\`yaml
+tool: tool://pdf-reader
 mode: execute
 parameters:
   path: /path/to/file.pdf
-  action: extract\`
-})
+  action: extract
 \`\`\`
 
-**What this does:** Reads a PDF file at the specified path
-
-### Pattern 3: Configure Tool Environment
-
-**Exact code to use:**
-\`\`\`javascript
-mcp__promptx__toolx({
-  yaml: \`tool: tool://my-tool
+**Configure tool:**
+\`\`\`yaml
+tool: tool://my-tool
 mode: configure
 parameters:
   API_KEY: sk-xxx123
-  TIMEOUT: 30000\`
-})
 \`\`\`
 
-**What this does:** Sets environment variables for the tool
+## Built-in Tools
 
-### Pattern 4: View Tool Logs
+- **tool://filesystem** — File operations (read/write/list/delete)
+- **tool://pdf-reader** — Extract text from PDFs
+- **tool://excel-tool** — Read/write Excel files
+- **tool://word-tool** — Read/write Word documents
+- **tool://role-creator** — Create AI roles (女娲/Nuwa)
+- **tool://tool-creator** — Create new tools (鲁班/Luban)
 
-**Exact code to use:**
-\`\`\`javascript
-mcp__promptx__toolx({
-  yaml: \`tool: tool://my-tool
-mode: log
-parameters:
-  action: tail
-  lines: 100\`
-})
-\`\`\`
+## Rules
 
-**What this does:** Shows the last 100 log entries
-
-## Critical Rules (Must Follow)
-
-### ✅ Correct Format
-The yaml parameter MUST be a complete YAML document:
-- Start with \`tool: tool://tool-name\`
-- Add \`mode: execute\` (or manual/configure/log/dryrun)
-- If needed, add \`parameters:\` section with proper indentation
-
-### ❌ Common Mistakes to Avoid
-- DON'T pass just "tool://filesystem" (missing YAML structure)
-- DON'T add @ prefix like "@tool://filesystem" (system handles it)
-- DON'T forget "tool://" prefix (not "tool: filesystem")
-- DON'T forget to read manual first for new tools
-
-## Available System Tools
-
-Quick reference of built-in tools:
-- **tool://filesystem** - File operations (read/write/list/delete)
-- **tool://pdf-reader** - Extract text and data from PDFs
-- **tool://excel-tool** - Read/write/modify Excel files
-- **tool://word-tool** - Read/write/modify Word documents
-- **tool://role-creator** - Create AI roles (Nuwa's specialty)
-- **tool://tool-creator** - Create new tools (Luban's specialty)
-
-To see all available tools: use the discover function
-
-## Step-by-Step Workflow
-
-### Step 1: Discover Available Tools
-Use the discover function to see what tools exist
-
-### Step 2: Read Tool Manual
-\`\`\`javascript
-mcp__promptx__toolx({
-  yaml: \`tool: tool://TOOLNAME
-mode: manual\`
-})
-\`\`\`
-
-### Step 3: Execute Tool
-Copy the example from manual, modify parameters for your needs
-
-### Step 4: Handle Errors
-If execution fails, check:
-- Is the tool name correct?
-- Are parameters properly indented?
-- Did you read the manual first?
-
-## Architecture Context
-
-You (AI Agent) → Client (VSCode/Cursor) → MCP Protocol → PromptX Server → ToolX → Actual Tool
-
-ToolX is the MCP function \`mcp__promptx__toolx\` that you call with yaml parameter.
-
-`,
+- YAML must start with \`tool: tool://name\`
+- Always read \`manual\` before first use of any tool
+- Do NOT use \`@\` prefix (system handles it internally)
+- Use \`discover\` to see all available tools`,
 
   inputSchema: {
     type: 'object',
     properties: {
       yaml: {
         type: 'string',
-        description: 'YAML 格式的工具调用配置'
+        description: 'YAML-formatted tool invocation config'
       }
     },
     required: ['yaml']

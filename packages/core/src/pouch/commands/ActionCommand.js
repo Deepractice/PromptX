@@ -28,7 +28,7 @@ class ActionCommand extends BasePouchCommand {
    * 组装Layers - 使用新的三层架构
    */
   async assembleLayers(args) {
-    const [roleId] = args
+    const [roleId, sectionFilter] = args
 
     if (!roleId) {
       // 错误情况：只创建角色层显示错误
@@ -64,8 +64,8 @@ class ActionCommand extends BasePouchCommand {
         return
       }
 
-      // 分析角色依赖
-      const dependencies = await this.analyzeRoleDependencies(roleInfo)
+      // 分析角色依赖（根据 sectionFilter 过滤）
+      const dependencies = await this.analyzeRoleDependencies(roleInfo, sectionFilter)
 
       // 设置上下文
       this.context.roleId = roleId
@@ -82,7 +82,8 @@ class ActionCommand extends BasePouchCommand {
         this.resourceManager,
         dependencies.thoughts,
         dependencies.executions,
-        roleInfo.metadata?.title || roleId
+        roleInfo.metadata?.title || roleId,
+        sectionFilter
       )
       roleLayer.addRoleArea(roleArea)
       
@@ -150,7 +151,7 @@ class ActionCommand extends BasePouchCommand {
   /**
    * 分析角色依赖
    */
-  async analyzeRoleDependencies(roleInfo) {
+  async analyzeRoleDependencies(roleInfo, sectionFilter) {
     const dependencies = {
       thoughts: [],
       executions: [],
@@ -160,6 +161,12 @@ class ActionCommand extends BasePouchCommand {
     if (!roleInfo || !roleInfo.semantics) {
       return dependencies
     }
+
+    // Determine which sections to load based on sectionFilter
+    // Default (undefined): personality only
+    const loadPersonality = !sectionFilter || sectionFilter === 'personality' || sectionFilter === 'all'
+    const loadPrinciple = sectionFilter === 'principle' || sectionFilter === 'all'
+    const loadKnowledge = sectionFilter === 'knowledge' || sectionFilter === 'all'
 
     const extractReferences = (component) => {
       const refs = []
@@ -185,11 +192,11 @@ class ActionCommand extends BasePouchCommand {
       return refs
     }
 
-    // 提取所有引用
+    // 提取所有引用（根据 sectionFilter 过滤）
     const allRefs = [
-      ...extractReferences(roleInfo.semantics.personality),
-      ...extractReferences(roleInfo.semantics.principle),
-      ...extractReferences(roleInfo.semantics.knowledge)
+      ...(loadPersonality ? extractReferences(roleInfo.semantics.personality) : []),
+      ...(loadPrinciple ? extractReferences(roleInfo.semantics.principle) : []),
+      ...(loadKnowledge ? extractReferences(roleInfo.semantics.knowledge) : [])
     ]
 
     // 分类并加载资源
