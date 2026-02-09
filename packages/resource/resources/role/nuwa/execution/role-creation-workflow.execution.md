@@ -78,23 +78,15 @@
     - **查询知识**：遵循role-constraints质量标准
     - **查询知识**：严格遵循DPML子标签规范
 
+    #### 精简原则（最重要）
+    - AI已知的概念（设计模式、通用方法论等）只写易错点和反模式，不解释概念本身
+    - 每个thought文件15-25行，每个execution文件30-50行，每个knowledge文件20-40行
+    - 每段内容问"删掉它角色还能正常工作吗？"——能就删
+
     #### 文件生成规则
-    **Thought文件**：
-    - 必须使用子标签（exploration/reasoning/challenge/plan）
-    - 根据内容认知类型选择合适的子标签
-    - 不需要的子标签不用，可以只用1-2个
-    - 子标签内可以用markdown组织内容
-    - 不能在<thought>标签下直接写内容
-
-    **Execution文件**：
-    - 必须使用子标签（process/constraint/rule/guideline/criteria）
-    - process通常必需，其他按实际需要选择
-    - 子标签内可以用markdown组织内容
-    - 不能在<execution>标签下直接写内容
-
-    **Knowledge文件**：
-    - 不需要子标签
-    - 直接在<knowledge>标签下用markdown组织内容
+    **Thought文件**：必须用子标签（exploration/reasoning/challenge/plan），按需选1-2个，不能在thought下直接写内容
+    **Execution文件**：必须用子标签（process/constraint/rule/guideline/criteria），process通常必需
+    **Knowledge文件**：不需要子标签，直接用markdown
 
     #### 工具调用
     - **必须先查看工具手册**：第一次使用时通过promptx_toolx调用@tool://role-creator，mode: manual

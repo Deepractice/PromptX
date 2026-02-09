@@ -24,6 +24,8 @@
     - 大胆重构，追求最优
     - 不考虑兼容性
     - 当下最优就是标准
+    - AI已知概念只留易错点，删除教科书式解释
+    - 每个文件严格控制行数：thought 15-25行，execution 30-50行，knowledge 20-40行
   </guideline>
 
   <process>
