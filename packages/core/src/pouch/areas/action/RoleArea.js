@@ -37,11 +37,14 @@ class RoleArea extends BaseArea {
     content += `🎭 **角色激活：\`${this.roleId}\` (${this.roleName})** - 已加载：${loaded.join('、')}\n`
 
     // 提示可按需加载的部分
-    const available = []
-    if (!loadPrinciple && this.roleSemantics?.principle) available.push('行为原则(principle)')
-    if (!loadKnowledge && this.roleSemantics?.knowledge) available.push('专业知识(knowledge)')
-    if (available.length > 0) {
-      content += `💡 如需深入了解方法论或专业知识，可通过 \`action({ role: "${this.roleId}", roleResources: "principle" | "knowledge" | "all" })\` 按需加载：${available.join('、')}\n`
+    const hints = []
+    if (!loadPrinciple && this.roleSemantics?.principle) hints.push('执行工具或任务前，先加载「行为原则」获取工作流和方法论：roleResources: "principle"')
+    if (!loadKnowledge && this.roleSemantics?.knowledge) hints.push('遇到不确定的专业问题时，先加载「专业知识」获取领域知识：roleResources: "knowledge"')
+    if (hints.length > 0) {
+      content += `💡 按需加载提示：\n`
+      for (const hint of hints) {
+        content += `  - ${hint}\n`
+      }
     }
     content += '\n'
 

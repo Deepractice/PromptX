@@ -73,11 +73,11 @@ On activate, version is auto-detected: V2 takes priority, falls back to V1 if no
 ## On-Demand Resource Loading (V1 Roles)
 
 By default, only **personality** (persona + thought patterns) is loaded to save context.
-Use \`roleResources\` to load additional sections when needed:
+Use \`roleResources\` to load additional sections **before** you need them:
 
-- When user asks about **methodology, workflow, or best practices** → load \`principle\`
-- When user asks about **domain knowledge or technical details** → load \`knowledge\`
-- When you need **full role capabilities** at once → load \`all\`
+- **Before executing tools or tasks** → load \`principle\` first to get workflow, methodology and execution standards
+- **When facing unfamiliar professional questions** → load \`knowledge\` first to get domain expertise
+- **When you need full role capabilities at once** → load \`all\`
 
 \`\`\`json
 { "role": "nuwa", "roleResources": "principle" }
