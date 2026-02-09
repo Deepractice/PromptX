@@ -18,6 +18,7 @@ export const actionTool: ToolWithHandler = {
 **V2 Roles (RoleX)**: Full lifecycle management (born → want → plan → todo → growup).
 
 On activate, version is auto-detected: V2 takes priority, falls back to V1 if not found.
+Use \`version\` parameter to force a specific version: \`"v1"\` for DPML, \`"v2"\` for RoleX.
 
 ## Cognitive Cycle
 
@@ -126,11 +127,16 @@ Use \`roleResources\` to load additional sections **before** you need them:
       testable: {
         type: 'boolean',
         description: 'Testable flag for want/todo operations'
+      },
+      version: {
+        type: 'string',
+        enum: ['v1', 'v2'],
+        description: 'Force role version: "v1" for DPML, "v2" for RoleX. Auto-detected if omitted.'
       }
     },
     required: ['role']
   },
-  handler: async (args: { role: string; operation?: string; roleResources?: string; name?: string; source?: string; type?: string; experience?: string; testable?: boolean }) => {
+  handler: async (args: { role: string; operation?: string; roleResources?: string; name?: string; source?: string; type?: string; experience?: string; testable?: boolean; version?: string }) => {
     const operation = args.operation || 'activate';
 
     // 非 activate 操作 → 直接走 RoleX V2 路径
@@ -143,7 +149,22 @@ Use \`roleResources\` to load additional sections **before** you need them:
       return outputAdapter.convertToMCPFormat(result);
     }
 
-    // activate 操作 → 先检查 V2，命中则走 RoleX，否则走 V1
+    // 强制 V1
+    if (args.version === 'v1') {
+      return activateV1(args);
+    }
+
+    // 强制 V2
+    if (args.version === 'v2') {
+      const core = await import('@promptx/core');
+      const coreExports = core.default || core;
+      const { RolexActionDispatcher } = (coreExports as any).rolex;
+      const dispatcher = new RolexActionDispatcher();
+      const result = await dispatcher.dispatch('activate', args);
+      return outputAdapter.convertToMCPFormat(result);
+    }
+
+    // 自动检测：先检查 V2，命中则走 RoleX，否则走 V1
     try {
       const core = await import('@promptx/core');
       const coreExports = core.default || core;
@@ -158,16 +179,19 @@ Use \`roleResources\` to load additional sections **before** you need them:
       // RoleX 不可用（包未安装等），静默降级到 V1
     }
 
-    // V1 路径：现有 DPML 逻辑
-    const core = await import('@promptx/core');
-    const coreExports = core.default || core;
-    const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
-
-    if (!cli || !cli.execute) {
-      throw new Error('CLI not available in @promptx/core');
-    }
-
-    const result = await cli.execute('action', [args.role, args.roleResources]);
-    return outputAdapter.convertToMCPFormat(result);
+    return activateV1(args);
   }
 };
+
+async function activateV1(args: { role: string; roleResources?: string }) {
+  const core = await import('@promptx/core');
+  const coreExports = core.default || core;
+  const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
+
+  if (!cli || !cli.execute) {
+    throw new Error('CLI not available in @promptx/core');
+  }
+
+  const result = await cli.execute('action', [args.role, args.roleResources]);
+  return outputAdapter.convertToMCPFormat(result);
+}

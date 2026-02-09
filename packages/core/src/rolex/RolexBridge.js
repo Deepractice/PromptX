@@ -18,6 +18,8 @@ class RolexBridge {
     this.initializing = null
     this.currentRoleName = null
     this.rolexRoot = path.join(os.homedir(), '.promptx', 'rolex')
+    this._renderFeature = null
+    this._renderFeatures = null
   }
 
   /**
@@ -38,13 +40,15 @@ class RolexBridge {
       await fs.ensureDir(this.rolexRoot)
 
       const { LocalPlatform } = await import('@rolexjs/local-platform')
-      const { Rolex } = await import('@rolexjs/core')
+      const { Rolex, bootstrap, renderFeature, renderFeatures } = await import('rolexjs')
 
-      this.platform = new LocalPlatform({ root: this.rolexRoot })
+      this.platform = new LocalPlatform(this.rolexRoot)
       this.rolex = new Rolex(this.platform)
+      this._renderFeature = renderFeature
+      this._renderFeatures = renderFeatures
 
       // Bootstrap: 确保种子角色（Nuwa）存在
-      await this.rolex.bootstrap()
+      bootstrap(this.platform)
 
       this.initialized = true
       logger.info('[RolexBridge] RoleX initialized successfully')
@@ -56,11 +60,12 @@ class RolexBridge {
 
   /**
    * 检查指定角色是否为 V2 角色
-   * 通过检查 ~/.promptx/rolex/<roleId>/identity/persona.identity.feature 是否存在
+   * 通过检查 ~/.promptx/rolex/roles/<roleId>/identity/persona.identity.feature 是否存在
    */
   async isV2Role (roleId) {
+    await this.ensureInitialized()
     const featurePath = path.join(
-      this.rolexRoot, roleId, 'identity', 'persona.identity.feature'
+      this.rolexRoot, 'roles', roleId, 'identity', 'persona.identity.feature'
     )
     return fs.pathExists(featurePath)
   }
@@ -70,9 +75,9 @@ class RolexBridge {
    */
   async activate (roleId) {
     await this.ensureInitialized()
-    const result = await this.rolex.identity(roleId)
+    const features = this.rolex.role(roleId).identity()
     this.currentRoleName = roleId
-    return result
+    return this._renderFeatures(features)
   }
 
   /**
@@ -80,7 +85,8 @@ class RolexBridge {
    */
   async born (name, source) {
     await this.ensureInitialized()
-    return this.rolex.born(name, source)
+    const feature = this.rolex.born(name, source)
+    return this._renderFeature(feature)
   }
 
   /**
@@ -88,7 +94,8 @@ class RolexBridge {
    */
   async identity (roleId) {
     await this.ensureInitialized()
-    return this.rolex.identity(roleId || this.currentRoleName)
+    const features = this.rolex.role(roleId || this.currentRoleName).identity()
+    return this._renderFeatures(features)
   }
 
   /**
@@ -96,19 +103,17 @@ class RolexBridge {
    */
   async want (name, source, options = {}) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.want(role, name, source, options)
+    const role = this._requireActiveRole()
+    return this.rolex.role(role).want(name, source, options.testable)
   }
 
   /**
    * 制定计划 (plan)
    */
-  async plan () {
+  async plan (source) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.plan(role)
+    const role = this._requireActiveRole()
+    return this.rolex.role(role).plan(source)
   }
 
   /**
@@ -116,19 +121,18 @@ class RolexBridge {
    */
   async todo (name, source, options = {}) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.todo(role, name, source, options)
+    const role = this._requireActiveRole()
+    return this.rolex.role(role).todo(name, source, options.testable)
   }
 
   /**
    * 完成任务 (finish)
    */
-  async finish () {
+  async finish (name) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.finish(role)
+    const role = this._requireActiveRole()
+    this.rolex.role(role).finish(name)
+    return `Task "${name}" finished.`
   }
 
   /**
@@ -136,9 +140,9 @@ class RolexBridge {
    */
   async achieve (experience) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.achieve(role, experience)
+    const role = this._requireActiveRole()
+    this.rolex.role(role).achieve(experience)
+    return 'Goal achieved.'
   }
 
   /**
@@ -146,9 +150,9 @@ class RolexBridge {
    */
   async abandon (experience) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.abandon(role, experience)
+    const role = this._requireActiveRole()
+    this.rolex.role(role).abandon(experience)
+    return 'Goal abandoned.'
   }
 
   /**
@@ -156,19 +160,18 @@ class RolexBridge {
    */
   async focus (name) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.focus(role, name)
+    const role = this._requireActiveRole()
+    return this.rolex.role(role).focus(name)
   }
 
   /**
-   * 成长 (growup)
+   * 成长 (growup) - 映射到 rolex.teach()
    */
   async growup (name, source, type) {
     await this.ensureInitialized()
-    const role = this.currentRoleName
-    if (!role) throw new Error('No active V2 role. Activate a role first.')
-    return this.rolex.growup(role, name, source, type)
+    const role = this._requireActiveRole()
+    const feature = this.rolex.teach(role, type, name, source)
+    return this._renderFeature(feature)
   }
 
   /**
@@ -177,13 +180,15 @@ class RolexBridge {
   async listV2Roles () {
     try {
       await this.ensureInitialized()
-      const entries = await fs.readdir(this.rolexRoot, { withFileTypes: true })
+      const rolesDir = path.join(this.rolexRoot, 'roles')
+      if (!await fs.pathExists(rolesDir)) return []
+      const entries = await fs.readdir(rolesDir, { withFileTypes: true })
       const roles = []
 
       for (const entry of entries) {
         if (!entry.isDirectory()) continue
         const featurePath = path.join(
-          this.rolexRoot, entry.name, 'identity', 'persona.identity.feature'
+          rolesDir, entry.name, 'identity', 'persona.identity.feature'
         )
         if (await fs.pathExists(featurePath)) {
           roles.push({
@@ -201,6 +206,13 @@ class RolexBridge {
       logger.warn('[RolexBridge] Failed to list V2 roles:', error.message)
       return []
     }
+  }
+
+  _requireActiveRole () {
+    if (!this.currentRoleName) {
+      throw new Error('No active V2 role. Activate a role first.')
+    }
+    return this.currentRoleName
   }
 }
 

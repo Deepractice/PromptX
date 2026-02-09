@@ -70,8 +70,8 @@ class RolexActionDispatcher {
     })
   }
 
-  async _plan () {
-    return this.bridge.plan()
+  async _plan (args) {
+    return this.bridge.plan(args.source)
   }
 
   async _todo (args) {
@@ -81,8 +81,8 @@ class RolexActionDispatcher {
     })
   }
 
-  async _finish () {
-    return this.bridge.finish()
+  async _finish (args) {
+    return this.bridge.finish(args.name)
   }
 
   async _achieve (args) {
