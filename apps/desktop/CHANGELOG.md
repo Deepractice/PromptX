@@ -1,5 +1,21 @@
 # @promptx/desktop
 
+## 1.28.0
+
+### Patch Changes
+
+- 36fb088: feat: 资源编辑器预览模式添加复制提示词按钮
+
+  - 在资源编辑器的预览标签页中，将原本的"保存文件"按钮替换为"复制提示词"按钮
+  - 点击按钮可将预览的完整提示词内容复制到剪贴板，并显示成功提示
+  - 修复预览内容区域无法滚动的问题，通过在多层 flex 容器中添加 min-h-0 解决
+  - 新增中英文翻译：copyPrompt（复制提示词）、copySuccess（复制成功提示）
+
+- Updated dependencies
+  - @promptx/core@1.28.0
+  - @promptx/mcp-server@1.28.0
+  - @promptx/config@1.28.0
+
 ## 1.27.8
 
 ### Patch Changes
