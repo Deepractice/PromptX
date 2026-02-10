@@ -2,11 +2,14 @@
   ## 组织操作 API 速查
 
   ### 角色生命周期
-  | 操作 | 必需参数 | 可选参数 | 说明 |
-  |---|---|---|---|
-  | born | name, source | - | 创建角色 |
-  | activate | role | - | 激活角色 |
-  | growup | name, source, type | - | 教授知识/经验/声音 |
+  | 操作 | 必需参数 | 可选参数 | 前置条件 | 说明 |
+  |---|---|---|---|---|
+  | born | name, source | - | 无 | 创建角色 |
+  | activate | role | version | 无 | 激活角色（设为当前活跃角色） |
+  | growup | name, source, type | - | **必须先 activate** | 教授知识/经验/声音 |
+  | identity | - | role | 无 | 查看角色身份 |
+
+  > ⚠️ 关键：born 只创建角色，不会自动激活。growup 前必须 activate，否则报错 "No active V2 role"。
 
   ### 组织操作
   | 操作 | 必需参数 | 可选参数 | 说明 |
