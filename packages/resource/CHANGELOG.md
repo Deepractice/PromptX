@@ -1,5 +1,40 @@
 # @promptx/resource
 
+## 1.28.0
+
+### Minor Changes
+
+- feat(rolex): integrate RoleX V2 role system with organization operations
+
+  ### RoleX V2 Engine Integration
+
+  - Add RolexBridge singleton with lazy ESM dynamic import
+  - Add RolexActionDispatcher for operation routing
+  - V2 roles support full lifecycle: born/want/plan/todo/finish/achieve/abandon/focus/growup
+  - V2 auto-detected on activate, V1 (DPML) fully backward compatible
+  - Data directory changed to ~/.rolex with diagnostic logging
+
+  ### Organization Operations
+
+  - Add 7 organization operations: found, establish, hire, fire, appoint, dismiss, directory
+  - Extend action MCP tool with org/parent/position parameters
+  - Support Role/Organization/Position three-entity model
+
+  ### Built-in Roles & Resources
+
+  - Add dayu (大禹) built-in role for V1→V2 migration and organization management
+  - Compress nuwa thought files ~70% and add conciseness rules for generated roles
+
+  ### Action Tool Enhancements
+
+  - Add roleResources parameter for on-demand V1 role section loading (personality/principle/knowledge/all)
+  - Add version parameter to force V1 or V2 activation
+  - Extend discover command to merge and display V2 roles
+
+### Patch Changes
+
+- @promptx/logger@1.28.0
+
 ## 1.27.8
 
 ### Patch Changes
