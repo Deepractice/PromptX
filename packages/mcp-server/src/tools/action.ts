@@ -36,6 +36,8 @@ Use \`version\` parameter to force a specific version: \`"v1"\` for DPML, \`"v2"
 | sean | Sean | Product decisions |
 | writer | Writer | Professional writing |
 
+| dayu | 大禹 | Role migration & org management |
+
 > System roles require exact ID match. Use \`discover\` to list all available roles.
 
 ## Examples
@@ -71,6 +73,23 @@ Use \`version\` parameter to force a specific version: \`"v1"\` for DPML, \`"v2"
 { "operation": "achieve", "role": "_", "experience": "learned..." }
 \`\`\`
 
+**Organization: view directory:**
+\`\`\`json
+{ "operation": "directory", "role": "_" }
+\`\`\`
+
+**Organization: found org & hire role:**
+\`\`\`json
+{ "operation": "found", "role": "_", "name": "my-team", "source": "Feature: ..." }
+{ "operation": "hire", "role": "_", "name": "my-dev", "org": "my-team" }
+\`\`\`
+
+**Organization: establish position & appoint:**
+\`\`\`json
+{ "operation": "establish", "role": "_", "name": "lead", "source": "Feature: ...", "org": "my-team" }
+{ "operation": "appoint", "role": "_", "name": "my-dev", "position": "lead", "org": "my-team" }
+\`\`\`
+
 ## On-Demand Resource Loading (V1 Roles)
 
 By default, only **personality** (persona + thought patterns) is loaded to save context.
@@ -96,8 +115,8 @@ Use \`roleResources\` to load additional sections **before** you need them:
     properties: {
       operation: {
         type: 'string',
-        enum: ['activate', 'born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'growup'],
-        description: 'Operation type. Default: activate. V2 lifecycle operations: born, identity, want, plan, todo, finish, achieve, abandon, focus, growup'
+        enum: ['activate', 'born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'growup', 'found', 'establish', 'hire', 'fire', 'appoint', 'dismiss', 'directory'],
+        description: 'Operation type. Default: activate. V2 lifecycle operations: born, identity, want, plan, todo, finish, achieve, abandon, focus, growup. Organization operations: found, establish, hire, fire, appoint, dismiss, directory'
       },
       role: {
         type: 'string',
@@ -128,6 +147,18 @@ Use \`roleResources\` to load additional sections **before** you need them:
         type: 'boolean',
         description: 'Testable flag for want/todo operations'
       },
+      org: {
+        type: 'string',
+        description: 'Organization name for found/establish/hire/fire/appoint/dismiss'
+      },
+      parent: {
+        type: 'string',
+        description: 'Parent organization name for found (nested orgs)'
+      },
+      position: {
+        type: 'string',
+        description: 'Position name for appoint'
+      },
       version: {
         type: 'string',
         enum: ['v1', 'v2'],
@@ -136,7 +167,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
     },
     required: ['role']
   },
-  handler: async (args: { role: string; operation?: string; roleResources?: string; name?: string; source?: string; type?: string; experience?: string; testable?: boolean; version?: string }) => {
+  handler: async (args: { role: string; operation?: string; roleResources?: string; name?: string; source?: string; type?: string; experience?: string; testable?: boolean; org?: string; parent?: string; position?: string; version?: string }) => {
     const operation = args.operation || 'activate';
 
     // 非 activate 操作 → 直接走 RoleX V2 路径

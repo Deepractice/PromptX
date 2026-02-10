@@ -175,6 +175,77 @@ class RolexBridge {
   }
 
   /**
+   * 创建组织 (found)
+   */
+  async found (name, source, parent) {
+    await this.ensureInitialized()
+    this.rolex.found(name, source, parent)
+    return `Organization "${name}" founded.`
+  }
+
+  /**
+   * 创建职位 (establish)
+   */
+  async establish (positionName, source, orgName) {
+    await this.ensureInitialized()
+    this.rolex.establish(positionName, source, orgName)
+    return `Position "${positionName}" established in "${orgName}".`
+  }
+
+  /**
+   * 雇佣角色到组织 (hire)
+   */
+  async hire (roleName, orgName) {
+    await this.ensureInitialized()
+    const { Organization } = await import('rolexjs')
+    const org = new Organization(this.platform, orgName)
+    org.hire(roleName)
+    return `Role "${roleName}" hired into "${orgName}".`
+  }
+
+  /**
+   * 解雇角色 (fire)
+   */
+  async fire (roleName, orgName) {
+    await this.ensureInitialized()
+    const { Organization } = await import('rolexjs')
+    const org = new Organization(this.platform, orgName)
+    org.fire(roleName)
+    return `Role "${roleName}" fired from "${orgName}".`
+  }
+
+  /**
+   * 任命角色到职位 (appoint)
+   */
+  async appoint (roleName, positionName, orgName) {
+    await this.ensureInitialized()
+    const { Organization } = await import('rolexjs')
+    const org = new Organization(this.platform, orgName)
+    org.appoint(roleName, positionName)
+    return `Role "${roleName}" appointed to "${positionName}".`
+  }
+
+  /**
+   * 免职 (dismiss)
+   */
+  async dismiss (roleName, orgName) {
+    await this.ensureInitialized()
+    const { Organization } = await import('rolexjs')
+    const org = new Organization(this.platform, orgName)
+    org.dismiss(roleName)
+    return `Role "${roleName}" dismissed.`
+  }
+
+  /**
+   * 社会目录 (directory)
+   */
+  async directory () {
+    await this.ensureInitialized()
+    const dir = this.rolex.directory()
+    return JSON.stringify(dir, null, 2)
+  }
+
+  /**
    * 列出所有 V2 角色（供 discover 使用）
    */
   async listV2Roles () {
