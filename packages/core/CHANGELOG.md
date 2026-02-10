@@ -1,21 +1,5 @@
 # @promptx/core
 
-## 1.28.0
-
-### Minor Changes
-
-- feat: 新增组织操作和大禹内置角色
-
-  - RolexBridge/ActionDispatcher 新增 7 个组织操作：found, establish, hire, fire, appoint, dismiss, directory
-  - MCP action 工具扩展 operation enum 和 org/parent/position 参数
-  - 新增大禹(dayu)内置角色：V1→V2 角色迁移与组织管理专家
-
-### Patch Changes
-
-- Updated dependencies
-  - @promptx/resource@1.28.0
-  - @promptx/logger@1.28.0
-
 ## 1.27.8
 
 ### Patch Changes
