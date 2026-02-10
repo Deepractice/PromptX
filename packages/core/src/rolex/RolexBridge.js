@@ -17,7 +17,7 @@ class RolexBridge {
     this.initialized = false
     this.initializing = null
     this.currentRoleName = null
-    this.rolexRoot = path.join(os.homedir(), '.promptx', 'rolex')
+    this.rolexRoot = path.join(os.homedir(), '.rolex')
     this._renderFeature = null
     this._renderFeatures = null
   }

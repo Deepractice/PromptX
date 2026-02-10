@@ -173,10 +173,14 @@ Use \`roleResources\` to load additional sections **before** you need them:
 
       if (await dispatcher.isV2Role(args.role)) {
         const result = await dispatcher.dispatch('activate', args);
-        return outputAdapter.convertToMCPFormat(result);
+        if (result) {
+          return outputAdapter.convertToMCPFormat(result);
+        }
+        // V2 返回空结果，降级到 V1
+        console.warn(`[action] V2 activate returned empty for ${args.role}, falling back to V1`);
       }
-    } catch {
-      // RoleX 不可用（包未安装等），静默降级到 V1
+    } catch (e: any) {
+      console.warn(`[action] V2 path failed for ${args.role}, falling back to V1:`, e?.message || e);
     }
 
     return activateV1(args);
@@ -184,6 +188,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
 };
 
 async function activateV1(args: { role: string; roleResources?: string }) {
+  console.info(`[action] Activating V1 (DPML) for role: ${args.role}`);
   const core = await import('@promptx/core');
   const coreExports = core.default || core;
   const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
