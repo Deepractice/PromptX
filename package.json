@@ -21,9 +21,9 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@evilmartians/lefthook": "^1.12.3",
-    "@types/node": "^18.0.0",
-    "@vitest/coverage-v8": "^2.1.9",
-    "@vitest/ui": "^2.1.9",
+    "@types/node": "^22.19.11",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
     "eslint": "^8.57.1",
     "prettier": "^2.8.8",
     "rimraf": "^5.0.10",
@@ -31,7 +31,7 @@
     "tsx": "^4.20.5",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2",
-    "vitest": "^2.1.9"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=18.17.0",
@@ -73,7 +73,5 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  },
-  "dependencies": {
   }
 }

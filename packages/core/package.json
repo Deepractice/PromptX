@@ -33,7 +33,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@npmcli/arborist": "^8.0.1",
+    "@npmcli/arborist": "^9.2.0",
     "@promptx/logger": "workspace:*",
     "@promptx/resource": "workspace:*",
     "@rolexjs/core": "^0.11.0",

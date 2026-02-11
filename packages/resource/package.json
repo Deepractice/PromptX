@@ -21,10 +21,10 @@
     "discover": "node scripts/generate-registry.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
+    "@modelcontextprotocol/server-filesystem": "^2026.1.14",
     "@promptx/logger": "workspace:*",
     "glob": "^13.0.2",
-    "minimatch": "^10.0.1",
+    "minimatch": "^10.1.2",
     "semver": "^7.7.2"
   },
   "publishConfig": {
