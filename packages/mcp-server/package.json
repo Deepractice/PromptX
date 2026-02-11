@@ -22,14 +22,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.4",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@promptx/config": "workspace:*",
     "@promptx/core": "workspace:*",
     "@promptx/logger": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "express": "^4.21.2",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "workerpool": "^9.3.3",
     "zod": "^3.23.8"
   },

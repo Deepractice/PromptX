@@ -23,7 +23,7 @@
   "dependencies": {
     "@modelcontextprotocol/server-filesystem": "^2025.8.21",
     "@promptx/logger": "workspace:*",
-    "glob": "^10.3.10",
+    "glob": "^13.0.2",
     "minimatch": "^10.0.1",
     "semver": "^7.7.2"
   },
