@@ -5,10 +5,6 @@ LABEL maintainer="Deepractice" \
       description="PromptX MCP Server" \
       org.opencontainers.image.source="https://github.com/Deepractice/PromptX"
 
-# 创建非 root 用户
-RUN addgroup -g 1000 app && \
-    adduser -D -u 1000 -G app app
-
 # 工作目录
 WORKDIR /app
 
@@ -16,12 +12,13 @@ WORKDIR /app
 ARG VERSION=latest
 
 # 安装依赖（单层 RUN 减少镜像层数）
+# 使用 node:20-alpine 自带的 node 用户 (UID 1000, GID 1000)
 RUN npm install -g npm@latest @promptx/mcp-server@${VERSION} && \
     mkdir -p /data && \
-    chown -R app:app /data /app
+    chown -R node:node /data /app
 
 # 切换到非 root 用户
-USER app
+USER node
 
 # 暴露端口
 EXPOSE 5203
