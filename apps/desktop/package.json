@@ -78,7 +78,7 @@
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.21",
-    "electron": "32.2.7",
+    "electron": "35.7.5",
     "electron-builder": "^26.0.12",
     "electron-icon-builder": "^2.0.1",
     "electron-vite": "^2.0.0",
