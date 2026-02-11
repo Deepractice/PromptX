@@ -1,6 +1,6 @@
 {
   "name": "@promptx/desktop",
-  "version": "1.28.0",
+  "version": "1.28.1",
   "description": "PromptX Desktop - Local AI prompt management application",
   "author": {
     "name": "Deepractice",
@@ -79,8 +79,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.21",
     "electron": "35.7.5",
-    "electron-builder": "^26.0.12",
-    "electron-icon-builder": "^2.0.1",
+    "electron-builder": "^26.7.0",
     "electron-vite": "^5.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16"

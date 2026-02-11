@@ -1,3 +1,11 @@
+# @promptx/$(basename $pkg)
+
+## 1.28.1
+
+### Patch Changes
+
+- Security patch release - fix all 14 security vulnerabilities. Removed unused electron-icon-builder (deprecated phantomjs dependency), updated electron-builder to 26.7.0, and force-updated indirect dependencies via pnpm overrides to resolve tar, qs, brace-expansion, form-data, lodash, and tough-cookie vulnerabilities.
+
 # @promptx/resource
 
 ## 1.28.0
