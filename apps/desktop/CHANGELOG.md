@@ -1,5 +1,14 @@
 # @promptx/$(basename $pkg)
 
+## 1.28.2
+
+### Patch Changes
+
+- Updated dependencies [[`373e824`](https://github.com/Deepractice/PromptX/commit/373e82494033f44a0f4ab77fb4f7f0183ae80ad8)]:
+  - @promptx/mcp-server@1.28.2
+  - @promptx/config@1.28.2
+  - @promptx/core@1.28.2
+
 ## 1.28.1
 
 ### Patch Changes
