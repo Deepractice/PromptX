@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo/Creative PromptX Duck Logo 4.svg" alt="PromptX Logo" width="120" height="120"/>
+  <img src="assets/logo/PromptX-transparent.png" alt="PromptX Logo" width="120" height="120"/>
   <h1>PromptX · Leading AI Agent Context Platform</h1>
   <h2>✨ Chat is all you need - Revolutionary interaction design that turns AI agents into industry experts</h2>
   <p><strong>Core Capabilities:</strong>AI Role Creation Platform | Intelligent Tool Development Platform | Cognitive Memory System</p>
