@@ -84,7 +84,7 @@ function MainContent() {
   return (
     <div className="flex h-screen w-full">
       <Toaster />
-      <Sidebar className="w-[12vw]">
+      <Sidebar className="w-[12vw] ">
         <SidebarHeader className="border-b">
           <div className="flex items-center gap-2 px-2 py-4">
             <img src={logo} alt="PromptX Logo" className="h-8 w-8" />
@@ -112,7 +112,7 @@ function MainContent() {
         </SidebarContent>
       </Sidebar>
 
-      <main className={`flex-1 overflow-hidden ${open ? 'ml-[12vw]' : ''}`}>
+      <main className={`flex-1 overflow-hidden ${open ? 'ml-[12vw] ' : ''}`}>
         <div className="h-full flex flex-col">
           <div className="flex items-center gap-2 border-b px-4 py-3 bg-background">
             <SidebarTrigger />
@@ -120,7 +120,7 @@ function MainContent() {
               {menuItems.find((item) => item.id === currentPage)?.title}
             </h2>
           </div>
-          <div className="h-[calc(100vh-53px)] overflow-auto">{renderPage()}</div>
+          <div className="h-[calc(100vh-53px)] ">{renderPage()}</div>
         </div>
       </main>
     </div>

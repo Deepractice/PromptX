@@ -32,6 +32,7 @@ import { cn } from "@/components/agentx-ui/utils/utils";
 import { ListItem } from "@/components/agentx-ui/components/element/ListItem";
 import { SearchInput } from "@/components/agentx-ui/components/element/SearchInput";
 import { EmptyState } from "@/components/agentx-ui/components/element/EmptyState";
+import { TimeAgo } from "@/components/agentx-ui/components/element/TimeAgo";
 import { Sidebar } from "@/components/agentx-ui/components/layout/Sidebar";
 
 /**
@@ -143,23 +144,6 @@ export interface ListPaneProps {
    * Additional class name
    */
   className?: string;
-}
-
-/**
- * Format timestamp to relative time string
- */
-function formatRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "Just now";
 }
 
 /**
@@ -283,7 +267,7 @@ export const ListPane: React.ForwardRefExoticComponent<
         )}
 
         {/* List content */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
@@ -315,9 +299,10 @@ export const ListPane: React.ForwardRefExoticComponent<
                   subtitle={
                     item.subtitle ||
                     (item.timestamp ? (
-                      <span className="text-xs text-muted-foreground">
-                        {formatRelativeTime(item.timestamp)}
-                      </span>
+                      <TimeAgo
+                        date={new Date(item.timestamp)}
+                        className="text-xs text-muted-foreground"
+                      />
                     ) : undefined)
                   }
                   trailing={item.trailing}

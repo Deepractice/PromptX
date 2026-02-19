@@ -108,7 +108,7 @@ const markdownComponents = {
       {children}
     </a>
   ),
-  p: ({ children }: any) => <div className="mb-2 last:mb-0">{children}</div>,
+  p: ({ children }: any) => <div className="mb-2 last:mb-0 break-all">{children}</div>,
 };
 
 export interface MarkdownTextProps {
@@ -136,7 +136,7 @@ export interface MarkdownTextProps {
 export function MarkdownText({ children, className }: MarkdownTextProps): React.ReactElement {
   const content = normalizeInlineCodeFences(String(children ?? ""));
   return (
-    <div className={className}>
+    <div className={`break-all ${className || ""}`}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
         {content}
       </ReactMarkdown>

@@ -1,6 +1,6 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/components/agentx-ui/utils/utils";
-import { formatTimeAgo } from "@/components/agentx-ui/utils/timeUtils";
 
 export interface TimeAgoProps extends React.HTMLAttributes<HTMLSpanElement> {
   /**
@@ -17,6 +17,34 @@ export interface TimeAgoProps extends React.HTMLAttributes<HTMLSpanElement> {
    * @default true
    */
   showTooltip?: boolean;
+}
+
+/**
+ * Format time ago with i18n support
+ */
+function useFormatTimeAgo(dateString: string | Date, currentTime: Date): string {
+  const { t } = useTranslation();
+
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+
+  if (isNaN(date.getTime())) {
+    return t("agentxUI.time.unknown");
+  }
+
+  const diffInMs = currentTime.getTime() - date.getTime();
+  const diffInSeconds = Math.floor(diffInMs / 1000);
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInSeconds < 60) return t("agentxUI.time.justNow");
+  if (diffInMinutes === 1) return t("agentxUI.time.minAgo");
+  if (diffInMinutes < 60) return t("agentxUI.time.minsAgo", { count: diffInMinutes });
+  if (diffInHours === 1) return t("agentxUI.time.hourAgo");
+  if (diffInHours < 24) return t("agentxUI.time.hoursAgo", { count: diffInHours });
+  if (diffInDays === 1) return t("agentxUI.time.dayAgo");
+  if (diffInDays < 7) return t("agentxUI.time.daysAgo", { count: diffInDays });
+  return date.toLocaleDateString();
 }
 
 /**
@@ -64,7 +92,7 @@ export const TimeAgo: React.ForwardRefExoticComponent<
       return () => clearInterval(timer);
     }, [updateInterval]);
 
-    const formattedTime = formatTimeAgo(date, currentTime);
+    const formattedTime = useFormatTimeAgo(date, currentTime);
     const fullDate = React.useMemo(() => {
       const dateObj = typeof date === "string" ? new Date(date) : date;
       if (isNaN(dateObj.getTime())) return undefined;

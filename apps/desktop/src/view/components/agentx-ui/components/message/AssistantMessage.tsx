@@ -9,6 +9,7 @@
  */
 
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { MessageAvatar } from "./MessageAvatar";
 import { MessageContent } from "./MessageContent";
 import { cn } from "@/components/agentx-ui/utils/utils";
@@ -45,6 +46,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   streaming = "",
   className,
 }) => {
+  const { t } = useTranslation();
   const [dots, setDots] = React.useState("");
 
   // Animated dots for queued/thinking states
@@ -60,10 +62,10 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   const renderContent = () => {
     switch (status) {
       case "queued":
-        return <span className="text-muted-foreground">Queued{dots}</span>;
+        return <span className="text-muted-foreground">{t("agentxUI.chat.status.queued")}{dots}</span>;
 
       case "thinking":
-        return <span className="text-muted-foreground">Thinking{dots}</span>;
+        return <span className="text-muted-foreground">{t("agentxUI.chat.status.thinking")}{dots}</span>;
 
       case "responding":
         return (

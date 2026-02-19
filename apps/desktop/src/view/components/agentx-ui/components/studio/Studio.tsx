@@ -38,6 +38,7 @@
 import * as React from "react";
 import type { AgentX } from "agentxjs";
 import { ChevronsRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AgentList } from "@/components/agentx-ui/components/container/AgentList";
 import { Chat } from "@/components/agentx-ui/components/container/Chat";
 import { ToastContainer, useToast } from "@/components/agentx-ui/components/element/Toast";
@@ -57,9 +58,9 @@ export interface StudioProps {
   containerId?: string;
   /**
    * Width of the sidebar (AgentList)
-   * @default 280
+   * @default "15vw"
    */
-  sidebarWidth?: number;
+  sidebarWidth?: number | string;
   /**
    * Enable sidebar collapse functionality
    * @default true
@@ -92,13 +93,14 @@ export interface StudioProps {
 export function Studio({
   agentx,
   containerId = "default",
-  sidebarWidth = 280,
+  sidebarWidth = "15vw",
   collapsible = true,
   searchable = true,
   showSaveButton = false, // Default to false in Image-First model
   inputHeightRatio = 0.25,
   className,
 }: StudioProps): React.ReactElement {
+  const { t } = useTranslation();
   // State - only track imageId now (agentId is managed by useAgent)
   const [currentImageId, setCurrentImageId] = React.useState<string | null>(null);
   const [currentImageName, setCurrentImageName] = React.useState<string | undefined>(undefined);
@@ -126,16 +128,16 @@ export function Studio({
 
       // Set name from image
       const image = images.find((img) => img.imageId === imageId);
-      setCurrentImageName(image?.name || "Conversation");
+      setCurrentImageName(image?.name || t("agentxUI.conversations.untitled"));
     },
-    [images]
+    [images, t]
   );
 
   // Handle creating a new conversation
   const handleNew = React.useCallback((imageId: string) => {
     setCurrentImageId(imageId);
-    setCurrentImageName("New Conversation");
-  }, []);
+    setCurrentImageName(t("agentxUI.conversations.new"));
+  }, [t]);
 
   // Listen to agentx system_error events
   React.useEffect(() => {
@@ -160,11 +162,14 @@ export function Studio({
       {/* Sidebar - AgentList or Collapsed Button */}
       {sidebarCollapsed ? (
         /* Collapsed state - show expand button */
-        <div className="flex-shrink-0 border-r border-border bg-muted/30">
+        <div
+          style={{ width: 40, minWidth: 40 }}
+          className="flex-shrink-0 border-r border-border bg-muted/30"
+        >
           <button
             className="w-10 h-10 flex items-center justify-center hover:bg-accent transition-colors"
             onClick={handleExpand}
-            title="Expand sidebar"
+            title={t("agentxUI.sidebar.expand")}
           >
             <ChevronsRight className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -172,7 +177,7 @@ export function Studio({
       ) : (
         /* Expanded state - show AgentList */
         <div
-          style={{ width: sidebarWidth }}
+          style={{ width: sidebarWidth, maxWidth: 250 }}
           className="flex-shrink-0 border-r border-border transition-all duration-200"
         >
           <AgentList

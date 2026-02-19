@@ -220,8 +220,8 @@ export function Chat({
       <div className={cn("flex flex-col h-full bg-background", className)}>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center text-muted-foreground">
-            <p className="text-lg font-medium mb-2">No conversation selected</p>
-            <p className="text-sm">Select a conversation or start a new one</p>
+            <p className="text-lg font-medium mb-2">{t("agentxUI.chat.empty.title")}</p>
+            <p className="text-sm">{t("agentxUI.chat.empty.description")}</p>
           </div>
         </div>
       </div>
@@ -284,7 +284,7 @@ export function Chat({
               />
             </svg>
           </div>
-          <p className="text-white text-lg">Drop to send</p>
+          <p className="text-white text-lg">{t("agentxUI.chat.dropToSend")}</p>
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@
  */
 
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Copy, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
 import { cn } from "@/components/agentx-ui/utils/utils";
 import type { AssistantConversationStatus } from "./types";
@@ -86,6 +87,7 @@ export const AssistantToolbar: React.FC<AssistantToolbarProps> = ({
   onStop,
   className,
 }) => {
+  const { t } = useTranslation();
   const isStreaming =
     status === "queued" ||
     status === "processing" ||
@@ -109,7 +111,7 @@ export const AssistantToolbar: React.FC<AssistantToolbarProps> = ({
           className="text-xs text-muted-foreground/40 cursor-pointer hover:text-muted-foreground/60 transition-colors select-none"
           onClick={onStop}
         >
-          esc to stop
+          {t("agentxUI.chat.actions.escToStop")}
         </span>
       )}
 
@@ -117,12 +119,12 @@ export const AssistantToolbar: React.FC<AssistantToolbarProps> = ({
       {isCompleted && (
         <>
           {onCopy && (
-            <ToolbarButton icon={<Copy className="w-3.5 h-3.5" />} label="Copy" onClick={onCopy} />
+            <ToolbarButton icon={<Copy className="w-3.5 h-3.5" />} label={t("agentxUI.chat.actions.copy")} onClick={onCopy} />
           )}
           {onRegenerate && (
             <ToolbarButton
               icon={<RefreshCw className="w-3.5 h-3.5" />}
-              label="Regenerate"
+              label={t("agentxUI.chat.actions.regenerate")}
               onClick={onRegenerate}
             />
           )}
@@ -130,14 +132,14 @@ export const AssistantToolbar: React.FC<AssistantToolbarProps> = ({
           {onLike && (
             <ToolbarButton
               icon={<ThumbsUp className="w-3.5 h-3.5" />}
-              label="Like"
+              label={t("agentxUI.chat.actions.like")}
               onClick={onLike}
             />
           )}
           {onDislike && (
             <ToolbarButton
               icon={<ThumbsDown className="w-3.5 h-3.5" />}
-              label="Dislike"
+              label={t("agentxUI.chat.actions.dislike")}
               onClick={onDislike}
             />
           )}

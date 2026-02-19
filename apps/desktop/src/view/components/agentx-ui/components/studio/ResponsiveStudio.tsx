@@ -39,9 +39,9 @@ export interface ResponsiveStudioProps {
   breakpoint?: number;
   /**
    * Desktop: Width of the sidebar
-   * @default 280
+   * @default "15vw"
    */
-  sidebarWidth?: number;
+  sidebarWidth?: number | string;
   /**
    * Desktop: Enable search in AgentList
    * @default true
@@ -72,7 +72,7 @@ export function ResponsiveStudio({
   agentx,
   containerId = "default",
   breakpoint = MOBILE_BREAKPOINT,
-  sidebarWidth = 280,
+  sidebarWidth = "15vw",
   searchable = true,
   inputHeightRatio = 0.25,
   placeholder,

@@ -107,7 +107,7 @@ export function ChatHeader({
               </Badge>
               {messageCount > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  {messageCount} {messageCount === 1 ? "message" : "messages"}
+                  {t("agentxUI.chat.messageCount", { count: messageCount })}
                 </span>
               )}
             </div>

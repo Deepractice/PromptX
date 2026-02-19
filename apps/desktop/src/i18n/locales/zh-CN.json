@@ -325,15 +325,28 @@
         "planning": "规划中",
         "executing": "执行中",
         "error": "错误",
-        "idle": "空闲"
+        "idle": "空闲",
+        "queued": "排队中",
+        "processing": "处理中"
       },
+      "messageCount": "{{count}} 条消息",
       "actions": {
         "stop": "停止",
         "send": "发送 (Enter)",
         "remove": "移除",
         "download": "下载",
-        "removeImage": "移除图片"
-      }
+        "removeImage": "移除图片",
+        "escToStop": "按 ESC 停止",
+        "copy": "复制",
+        "regenerate": "重新生成",
+        "like": "赞",
+        "dislike": "踩"
+      },
+      "empty": {
+        "title": "未选择对话",
+        "description": "选择一个对话或开始新对话"
+      },
+      "dropToSend": "拖放以发送"
     },
     "conversations": {
       "title": "对话列表",
@@ -348,6 +361,12 @@
         "placeholder": "输入对话名称",
         "saving": "保存中...",
         "save": "保存"
+      },
+      "delete": {
+        "confirm": "确定要删除 \"{{name}}\" 吗？",
+        "cancel": "取消",
+        "confirm_button": "删除",
+        "deleting": "删除中..."
       },
       "actions": {
         "rename": "重命名",
@@ -384,10 +403,25 @@
     },
     "time": {
       "justNow": "刚刚",
-      "unknown": "未知"
+      "unknown": "未知",
+      "minAgo": "1 分钟前",
+      "minsAgo": "{{count}} 分钟前",
+      "hourAgo": "1 小时前",
+      "hoursAgo": "{{count}} 小时前",
+      "dayAgo": "1 天前",
+      "daysAgo": "{{count}} 天前"
     },
     "mobile": {
       "search": "搜索..."
+    },
+    "page": {
+      "notConfigured": {
+        "title": "AgentX 未配置",
+        "description": "请先在设置页面配置 Anthropic API Key 以使用 AgentX 功能。",
+        "hint": "设置 → AgentX 配置 → 填写 API Key → 保存"
+      },
+      "connectionError": "连接错误",
+      "connecting": "正在连接 AgentX..."
     }
   }
 }

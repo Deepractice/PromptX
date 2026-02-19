@@ -71,12 +71,12 @@ export default function AgentXPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center max-w-md">
-          <p className="text-lg font-medium mb-2">AgentX 未配置</p>
+          <p className="text-lg font-medium mb-2">{t("agentxUI.page.notConfigured.title")}</p>
           <p className="text-muted-foreground text-sm mb-4">
-            请先在设置页面配置 Anthropic API Key 以使用 AgentX 功能。
+            {t("agentxUI.page.notConfigured.description")}
           </p>
           <p className="text-muted-foreground text-xs">
-            设置 → AgentX 配置 → 填写 API Key → 保存
+            {t("agentxUI.page.notConfigured.hint")}
           </p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function AgentXPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-2">Connection Error</p>
+          <p className="text-destructive mb-2">{t("agentxUI.page.connectionError")}</p>
           <p className="text-muted-foreground text-sm">{error}</p>
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function AgentXPage() {
   if (isConnecting || !agentx) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">Connecting to AgentX...</p>
+        <p className="text-muted-foreground">{t("agentxUI.page.connecting")}</p>
       </div>
     )
   }

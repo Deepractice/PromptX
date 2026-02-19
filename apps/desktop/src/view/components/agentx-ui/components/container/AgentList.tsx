@@ -25,7 +25,7 @@
 
 import * as React from "react";
 import type { AgentX } from "agentxjs";
-import { MessageSquare, Bot } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ListPane, type ListPaneItem } from "@/components/agentx-ui/components/pane";
 import {
@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
   Button,
   Input,
 } from "@/components/agentx-ui/components/ui";
@@ -122,12 +123,66 @@ export function AgentList({
   const [editingName, setEditingName] = React.useState("");
   const [isRenaming, setIsRenaming] = React.useState(false);
 
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deletingImageId, setDeletingImageId] = React.useState<string | null>(null);
+  const [deletingImageName, setDeletingImageName] = React.useState("");
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  // First message cache for each image
+  const [firstMessages, setFirstMessages] = React.useState<Record<string, string>>({});
+
+  // Filter out <file path="...">...</file> tags from text
+  const filterFilePathTags = (text: string): string => {
+    return text.replace(/<file\s+path="[^"]*">[^<]*<\/file>\s*/g, '').trim();
+  };
+
+  // Fetch first message for each image
+  React.useEffect(() => {
+    if (!agentx || images.length === 0) return;
+
+    const fetchFirstMessages = async () => {
+      const newFirstMessages: Record<string, string> = {};
+
+      for (const img of images) {
+        // Skip if already cached
+        if (firstMessages[img.imageId]) {
+          newFirstMessages[img.imageId] = firstMessages[img.imageId];
+          continue;
+        }
+
+        try {
+          const response = await agentx.request("image_messages_request", { imageId: img.imageId });
+          const messages = response.data?.messages || [];
+          // Find first user message
+          const firstUserMsg = messages.find((m: any) => m.role === "user");
+          if (firstUserMsg?.content) {
+            // Extract text content
+            let textContent = Array.isArray(firstUserMsg.content)
+              ? firstUserMsg.content.find((c: any) => c.type === "text")?.text || ""
+              : typeof firstUserMsg.content === "string" ? firstUserMsg.content : "";
+            // Filter out file path tags
+            textContent = filterFilePathTags(textContent);
+            if (textContent) {
+              newFirstMessages[img.imageId] = textContent.slice(0, 50) + (textContent.length > 50 ? "..." : "");
+            }
+          }
+        } catch (error) {
+          // Ignore errors, just don't show first message
+        }
+      }
+
+      setFirstMessages(prev => ({ ...prev, ...newFirstMessages }));
+    };
+
+    fetchFirstMessages();
+  }, [agentx, images]);
+
   // Map images to ListPaneItem[]
   const items: ListPaneItem[] = React.useMemo(() => {
     return images.map((img) => ({
       id: img.imageId,
-      title: img.name || t("agentxUI.conversations.untitled"),
-      leading: <Bot className="w-4 h-4 text-muted-foreground" />,
+      title: firstMessages[img.imageId] || img.name || t("agentxUI.conversations.untitled"),
       trailing: (
         <span
           className={cn("w-2 h-2 rounded-full", img.online ? "bg-green-500" : "bg-gray-400")}
@@ -136,7 +191,7 @@ export function AgentList({
       ),
       timestamp: img.updatedAt || img.createdAt,
     }));
-  }, [images, t]);
+  }, [images, firstMessages, t]);
 
   // Handle selecting an image
   const handleSelect = React.useCallback(
@@ -183,17 +238,42 @@ export function AgentList({
     }
   }, [agentx, containerId, createImage, refresh, onNew]);
 
-  // Handle deleting an image
-  const handleDelete = React.useCallback(
-    async (imageId: string) => {
-      try {
-        await deleteImage(imageId);
-      } catch (error) {
-        console.error("Failed to delete conversation:", error);
-      }
+  // Handle delete button click - open confirmation dialog
+  const handleDeleteClick = React.useCallback(
+    (imageId: string) => {
+      const image = images.find((img) => img.imageId === imageId);
+      setDeletingImageId(imageId);
+      setDeletingImageName(image?.name || t("agentxUI.conversations.untitled"));
+      setDeleteDialogOpen(true);
     },
-    [deleteImage]
+    [images, t]
   );
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = React.useCallback(async () => {
+    if (!deletingImageId) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteImage(deletingImageId);
+      setDeleteDialogOpen(false);
+      setDeletingImageId(null);
+      setDeletingImageName("");
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deletingImageId, deleteImage]);
+
+  // Handle delete dialog close
+  const handleDeleteDialogClose = React.useCallback((open: boolean) => {
+    if (!open) {
+      setDeleteDialogOpen(false);
+      setDeletingImageId(null);
+      setDeletingImageName("");
+    }
+  }, []);
 
   // Handle edit button click - open rename dialog
   const handleEdit = React.useCallback((imageId: string, currentTitle: string) => {
@@ -259,7 +339,7 @@ export function AgentList({
         }}
         onSelect={handleSelect}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         onNew={handleNew}
         className={className}
       />
@@ -289,6 +369,34 @@ export function AgentList({
             </Button>
             <Button onClick={handleRename} disabled={isRenaming || !editingName.trim()}>
               {isRenaming ? t("agentxUI.conversations.rename.saving") : t("agentxUI.conversations.rename.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t("agentxUI.conversations.actions.delete")}</DialogTitle>
+            <DialogDescription>
+              {t("agentxUI.conversations.delete.confirm", { name: deletingImageName })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => handleDeleteDialogClose(false)}
+              disabled={isDeleting}
+            >
+              {t("agentxUI.conversations.delete.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+            >
+              {isDeleting ? t("agentxUI.conversations.delete.deleting") : t("agentxUI.conversations.delete.confirm_button")}
             </Button>
           </DialogFooter>
         </DialogContent>

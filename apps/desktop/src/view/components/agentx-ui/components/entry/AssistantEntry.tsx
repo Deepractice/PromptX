@@ -41,6 +41,7 @@
  */
 
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { MessageAvatar } from "@/components/agentx-ui/components/message/MessageAvatar";
 import { TextBlock } from "./blocks/TextBlock";
 import { ToolBlock } from "./blocks/ToolBlock";
@@ -131,6 +132,7 @@ export const AssistantEntry: React.FC<AssistantEntryProps> = ({
   onDislike,
   className,
 }) => {
+  const { t } = useTranslation();
   const [dots, setDots] = React.useState("");
 
   // Animated dots for queued/processing/thinking states
@@ -151,21 +153,21 @@ export const AssistantEntry: React.FC<AssistantEntryProps> = ({
       case "queued":
         return (
           <div className="rounded-lg px-4 py-2 bg-muted inline-block">
-            <span className="text-sm text-muted-foreground">Queued{dots}</span>
+            <span className="text-sm text-muted-foreground">{t("agentxUI.chat.status.queued")}{dots}</span>
           </div>
         );
 
       case "processing":
         return (
           <div className="rounded-lg px-4 py-2 bg-muted inline-block">
-            <span className="text-sm text-muted-foreground">Processing{dots}</span>
+            <span className="text-sm text-muted-foreground">{t("agentxUI.chat.status.processing")}{dots}</span>
           </div>
         );
 
       case "thinking":
         return (
           <div className="rounded-lg px-4 py-2 bg-muted inline-block">
-            <span className="text-sm text-muted-foreground">Thinking{dots}</span>
+            <span className="text-sm text-muted-foreground">{t("agentxUI.chat.status.thinking")}{dots}</span>
           </div>
         );
 

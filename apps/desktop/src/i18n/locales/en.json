@@ -326,15 +326,29 @@
         "planning": "Planning",
         "executing": "Executing",
         "error": "Error",
-        "idle": "Idle"
+        "idle": "Idle",
+        "queued": "Queued",
+        "processing": "Processing"
       },
+      "messageCount": "{{count}} message",
+      "messageCount_other": "{{count}} messages",
       "actions": {
         "stop": "Stop",
         "send": "Send (Enter)",
         "remove": "Remove",
         "download": "Download",
-        "removeImage": "Remove image"
-      }
+        "removeImage": "Remove image",
+        "escToStop": "esc to stop",
+        "copy": "Copy",
+        "regenerate": "Regenerate",
+        "like": "Like",
+        "dislike": "Dislike"
+      },
+      "empty": {
+        "title": "No conversation selected",
+        "description": "Select a conversation or start a new one"
+      },
+      "dropToSend": "Drop to send"
     },
     "conversations": {
       "title": "Conversations",
@@ -349,6 +363,12 @@
         "placeholder": "Enter conversation name",
         "saving": "Saving...",
         "save": "Save"
+      },
+      "delete": {
+        "confirm": "Are you sure you want to delete \"{{name}}\"?",
+        "cancel": "Cancel",
+        "confirm_button": "Delete",
+        "deleting": "Deleting..."
       },
       "actions": {
         "rename": "Rename",
@@ -385,10 +405,25 @@
     },
     "time": {
       "justNow": "Just now",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "minAgo": "1 min ago",
+      "minsAgo": "{{count}} mins ago",
+      "hourAgo": "1 hour ago",
+      "hoursAgo": "{{count}} hours ago",
+      "dayAgo": "1 day ago",
+      "daysAgo": "{{count}} days ago"
     },
     "mobile": {
       "search": "Search..."
+    },
+    "page": {
+      "notConfigured": {
+        "title": "AgentX Not Configured",
+        "description": "Please configure your Anthropic API Key in Settings to use AgentX.",
+        "hint": "Settings → AgentX Configuration → Enter API Key → Save"
+      },
+      "connectionError": "Connection Error",
+      "connecting": "Connecting to AgentX..."
     }
   }
 }
