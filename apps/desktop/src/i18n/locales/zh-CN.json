@@ -37,7 +37,16 @@
       "save": "保存配置",
       "saving": "保存中...",
       "saveSuccess": "AgentX 配置保存成功",
-      "saveFailed": "保存 AgentX 配置失败"
+      "saveFailed": "保存 AgentX 配置失败",
+      "skills": {
+        "title": "Skills 配置",
+        "description": "管理启用的 Skills，这些 Skills 将被用于所有 AgentX 对话",
+        "empty": "暂无可用 Skills",
+        "refresh": "刷新",
+        "loadError": "加载 Skills 失败",
+        "saveSuccess": "Skills 配置已保存",
+        "saveError": "保存 Skills 配置失败"
+      }
     },
     "autoStart": {
       "title": "开机自启",

@@ -37,7 +37,16 @@
       "save": "Save Configuration",
       "saving": "Saving...",
       "saveSuccess": "AgentX configuration saved successfully",
-      "saveFailed": "Failed to save AgentX configuration"
+      "saveFailed": "Failed to save AgentX configuration",
+      "skills": {
+        "title": "Skills Configuration",
+        "description": "Manage enabled Skills that will be used for all AgentX conversations",
+        "empty": "No available Skills",
+        "refresh": "Refresh",
+        "loadError": "Failed to load Skills",
+        "saveSuccess": "Skills configuration saved",
+        "saveError": "Failed to save Skills configuration"
+      }
     },
     "autoStart": {
       "title": "Auto Start",
