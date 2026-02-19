@@ -25,6 +25,7 @@ export interface AgentXConfig {
   baseUrl: string
   model: string
   mcpServers?: MCPServerConfig[]
+  enabledSkills?: string[]  // 启用的 skills 列表
 }
 
 const DEFAULT_CONFIG: AgentXConfig = {
@@ -350,6 +351,60 @@ export class AgentXService {
     }
     // 默认地址
     return 'http://127.0.0.1:5203/mcp'
+  }
+
+  /**
+   * 获取所有可用的 Skills（从 PromptX 核心获取）
+   */
+  async getAvailableSkills(): Promise<{ name: string; description: string; version?: string }[]> {
+    try {
+      // 通过 IPC 调用 PromptX 核心获取 skills 列表
+      // 这里使用预设路径读取 skills 目录
+      const skillsDir = path.join(app.getPath('userData'), 'skills')
+      if (!fs.existsSync(skillsDir)) {
+        return []
+      }
+
+      const skills: { name: string; description: string; version?: string }[] = []
+      const entries = fs.readdirSync(skillsDir, { withFileTypes: true })
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const skillJsonPath = path.join(skillsDir, entry.name, 'skill.json')
+          if (fs.existsSync(skillJsonPath)) {
+            try {
+              const data = JSON.parse(fs.readFileSync(skillJsonPath, 'utf-8'))
+              skills.push({
+                name: entry.name,
+                description: data.description || '',
+                version: data.version || '1.0.0',
+              })
+            } catch {
+              // 忽略解析失败的 skill
+            }
+          }
+        }
+      }
+
+      return skills
+    } catch (error) {
+      logger.error('Failed to get available skills:', String(error))
+      return []
+    }
+  }
+
+  /**
+   * 获取已启用的 Skills 列表
+   */
+  getEnabledSkills(): string[] {
+    return this.config.enabledSkills || []
+  }
+
+  /**
+   * 更新启用的 Skills 列表
+   */
+  async updateEnabledSkills(skills: string[]): Promise<void> {
+    await this.updateConfig({ enabledSkills: skills })
   }
 
   /**

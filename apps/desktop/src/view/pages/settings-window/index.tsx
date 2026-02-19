@@ -19,6 +19,7 @@ import {
 import { toast, Toaster } from "sonner"
 import { LanguageSelector } from "./components/LanguageSelector"
 import { MCPConfig } from "./components/MCPConfig"
+import { SkillsConfig } from "./components/SkillsConfig"
 import { Loader2, CheckCircle2, XCircle, Settings, Bot, RefreshCw } from "lucide-react"
 
 interface ServerConfig {
