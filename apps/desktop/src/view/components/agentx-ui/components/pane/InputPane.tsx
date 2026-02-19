@@ -30,7 +30,7 @@
 import * as React from "react";
 import { Send, Square, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { UserContentPart, ImagePart, FilePart } from "agentxjs";
+import type { UserContentPart, ImagePart } from "agentxjs";
 import { cn } from "@/components/agentx-ui/utils/utils";
 import { InputToolBar, type ToolBarItem } from "./InputToolBar";
 import { EmojiPicker, type Emoji } from "../element/EmojiPicker";
@@ -402,29 +402,22 @@ export const InputPane: React.ForwardRefExoticComponent<
         parts.push({ type: "text", text: textContent });
       }
 
-      // Add attachment parts
+      // Add image attachments only (files are sent as text path info above)
       for (const attachment of attachments) {
-        try {
-          const base64 = await fileToBase64(attachment.file);
-
-          if (attachment.type === "image") {
+        if (attachment.type === "image") {
+          try {
+            const base64 = await fileToBase64(attachment.file);
             parts.push({
               type: "image",
               data: base64,
               mediaType: attachment.file.type as ImagePart["mediaType"],
               name: attachment.filePath || attachment.file.name,
             });
-          } else {
-            parts.push({
-              type: "file",
-              data: base64,
-              mediaType: attachment.file.type as FilePart["mediaType"],
-              filename: attachment.filePath || attachment.file.name,
-            });
+          } catch (error) {
+            console.error(`Failed to read image ${attachment.file.name}:`, error);
           }
-        } catch (error) {
-          console.error(`Failed to read file ${attachment.file.name}:`, error);
         }
+        // Non-image files: path info already added as text, AI will use MCP tools to read
       }
 
       if (parts.length > 0) {
