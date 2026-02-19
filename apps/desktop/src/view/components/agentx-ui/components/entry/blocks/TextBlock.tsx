@@ -68,7 +68,7 @@ export function TextBlock({
   }
 
   return (
-    <div className={cn("rounded-lg px-4 py-2 bg-muted inline-block max-w-full", className)}>
+    <div className={cn("rounded-lg px-4 py-2 bg-muted", className)}>
       <div className="text-sm">
         {displayContent ? (
           <>

@@ -103,6 +103,7 @@ function renderBlock(
           key={block.id}
           block={block}
           streamingText={block.id === currentTextBlockId ? streamingText : undefined}
+          className="w-full"
         />
       );
 
