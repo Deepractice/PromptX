@@ -722,6 +722,10 @@ export class ResourceListWindow {
 
     this.window.once('ready-to-show', () => {
       this.window?.show()
+      // 开发模式下自动打开 DevTools
+      if (process.env.ELECTRON_RENDERER_URL) {
+        this.window?.webContents.openDevTools()
+      }
     })
 
     this.window.on('closed', () => {

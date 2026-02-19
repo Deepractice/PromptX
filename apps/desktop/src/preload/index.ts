@@ -12,6 +12,27 @@ interface AgentXConfig {
   model: string
 }
 
+interface OpenDialogOptions {
+  title?: string
+  defaultPath?: string
+  filters?: { name: string; extensions: string[] }[]
+  properties?: ('openFile' | 'openDirectory' | 'multiSelections' | 'showHiddenFiles')[]
+}
+
+interface OpenDialogResult {
+  canceled: boolean
+  filePaths: string[]
+}
+
+interface ReadFileResult {
+  success: boolean
+  data?: string
+  fileName?: string
+  mimeType?: string
+  size?: number
+  error?: string
+}
+
 interface ElectronAPI {
   getGroupedResources: () => Promise<any>
   searchResources: (query: string) => Promise<any>
@@ -19,6 +40,11 @@ interface ElectronAPI {
   activateRole: (roleId: string) => Promise<any>
   executeTool: (toolId: string, parameters?: any) => Promise<any>
   invoke: (channel: string, ...args: any[]) => Promise<any>
+  // Dialog API
+  dialog: {
+    openFile: (options?: OpenDialogOptions) => Promise<OpenDialogResult>
+    readFile: (filePath: string) => Promise<ReadFileResult>
+  }
   // AgentX API
   agentx: {
     getServerUrl: () => Promise<string>
@@ -38,6 +64,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   activateRole: (roleId: string) => ipcRenderer.invoke('resources:activateRole', roleId),
   executeTool: (toolId: string, parameters?: any) => ipcRenderer.invoke('resources:executeTool', toolId, parameters),
   invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
+  // Dialog API
+  dialog: {
+    openFile: (options?: OpenDialogOptions) => ipcRenderer.invoke('dialog:openFile', options),
+    readFile: (filePath: string) => ipcRenderer.invoke('dialog:readFile', filePath),
+  },
   // AgentX API
   agentx: {
     getServerUrl: () => ipcRenderer.invoke('agentx:getServerUrl'),

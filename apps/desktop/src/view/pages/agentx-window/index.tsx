@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { createAgentX, type AgentX } from "agentxjs"
-import { ResponsiveStudio } from "@agentxjs/ui"
+import { ResponsiveStudio } from "../../components/agentx-ui"
 import { useTranslation } from "react-i18next"
 
 export default function AgentXPage() {

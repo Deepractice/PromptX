@@ -400,6 +400,47 @@ class PromptXDesktopApp {
         return { canceled: true, filePaths: [] }
       }
     })
+
+    // 读取文件内容（返回 base64）
+    ipcMain.handle('dialog:readFile', async (_event, filePath: string) => {
+      try {
+        const fs = await import('fs/promises')
+        const path = await import('path')
+        const buffer = await fs.readFile(filePath)
+        const fileName = path.basename(filePath)
+        // 简单的 MIME 类型检测
+        const ext = path.extname(filePath).toLowerCase()
+        const mimeTypes: Record<string, string> = {
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.gif': 'image/gif',
+          '.webp': 'image/webp',
+          '.pdf': 'application/pdf',
+          '.doc': 'application/msword',
+          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.xls': 'application/vnd.ms-excel',
+          '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          '.ppt': 'application/vnd.ms-powerpoint',
+          '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          '.txt': 'text/plain',
+          '.json': 'application/json',
+          '.xml': 'application/xml',
+          '.zip': 'application/zip',
+        }
+        const mimeType = mimeTypes[ext] || 'application/octet-stream'
+        return {
+          success: true,
+          data: buffer.toString('base64'),
+          fileName,
+          mimeType,
+          size: buffer.length,
+        }
+      } catch (error) {
+        logger.error('Failed to read file:', String(error))
+        return { success: false, error: String(error) }
+      }
+    })
   }
 
   private setupAgentXIPC(): void {
