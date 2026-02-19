@@ -73,6 +73,11 @@ Use \`version\` parameter to force a specific version: \`"v1"\` for DPML, \`"v2"
 { "operation": "achieve", "role": "_", "experience": "learned..." }
 \`\`\`
 
+**V2 growup (teach knowledge to a role):**
+\`\`\`json
+{ "operation": "growup", "role": "target-role", "name": "domain-knowledge", "source": "Feature: ...", "type": "knowledge" }
+\`\`\`
+
 **Organization: view directory:**
 \`\`\`json
 { "operation": "directory", "role": "_" }
@@ -129,15 +134,15 @@ Use \`roleResources\` to load additional sections **before** you need them:
       },
       name: {
         type: 'string',
-        description: 'Name parameter for born(role name), want(goal name), todo(task name), focus(focus item), growup(growth item)'
+        description: 'Name parameter for born(role name), want(goal name), todo(task name), focus(focus item), growup(knowledge name), finish(task name)'
       },
       source: {
         type: 'string',
-        description: 'Gherkin source text for born/want/todo/growup operations'
+        description: 'Gherkin source text for born/want/todo/growup/plan/establish operations'
       },
       type: {
         type: 'string',
-        description: 'Growup type: knowledge, experience, or voice'
+        description: 'Growup type: knowledge, experience, or voice. For growup operation, role parameter specifies the target role to teach.'
       },
       experience: {
         type: 'string',

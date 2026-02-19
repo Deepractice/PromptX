@@ -166,10 +166,14 @@ class RolexBridge {
 
   /**
    * 成长 (growup) - 映射到 rolex.teach()
+   * @param {string} name - 知识名称
+   * @param {string} source - Gherkin 源码
+   * @param {string} type - 类型 (knowledge/experience/voice)
+   * @param {string} [targetRole] - 目标角色，如果不指定则使用当前激活角色
    */
-  async growup (name, source, type) {
+  async growup (name, source, type, targetRole) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
+    const role = targetRole || this._requireActiveRole()
     const feature = this.rolex.teach(role, type, name, source)
     return this._renderFeature(feature)
   }

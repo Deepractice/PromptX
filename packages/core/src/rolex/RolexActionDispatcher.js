@@ -113,7 +113,7 @@ class RolexActionDispatcher {
 
   async _growup (args) {
     if (!args.name) throw new Error('name is required for growup operation')
-    return this.bridge.growup(args.name, args.source, args.type)
+    return this.bridge.growup(args.name, args.source, args.type, args.role)
   }
 
   async _found (args) {

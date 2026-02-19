@@ -69,7 +69,7 @@ export default function AgentXPage() {
 
   if (needsConfig) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full overflow-hidden items-center justify-center">
         <div className="text-center max-w-md">
           <p className="text-lg font-medium mb-2">{t("agentxUI.page.notConfigured.title")}</p>
           <p className="text-muted-foreground text-sm mb-4">
@@ -85,7 +85,7 @@ export default function AgentXPage() {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full overflow-hidden  items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-2">{t("agentxUI.page.connectionError")}</p>
           <p className="text-muted-foreground text-sm">{error}</p>
@@ -96,14 +96,14 @@ export default function AgentXPage() {
 
   if (isConnecting || !agentx) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full overflow-hidden  items-center justify-center">
         <p className="text-muted-foreground">{t("agentxUI.page.connecting")}</p>
       </div>
     )
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full overflow-hidden   w-full">
       <ResponsiveStudio
         agentx={agentx}
         containerId="promptx-desktop"
