@@ -424,6 +424,20 @@
       },
       "connectionError": "Connection Error",
       "connecting": "Connecting to AgentX..."
+    },
+    "welcome": {
+      "tagline": "PromptX, Making AI Accessible",
+      "inputPlaceholder": "Ask me anything...",
+      "presets": {
+        "luban": "Activate Luban to build tools",
+        "lubanPrompt": "Activate Luban, I want to build a tool",
+        "nuwa": "Activate Nuwa to create roles",
+        "nuwaPrompt": "Activate Nuwa, I want to create a role",
+        "role": "Explore available roles",
+        "rolePrompt": "What roles are available?",
+        "tool": "Explore available tools",
+        "toolPrompt": "What tools are available?"
+      }
     }
   }
 }

@@ -41,6 +41,7 @@ import { ChevronsRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AgentList } from "@/components/agentx-ui/components/container/AgentList";
 import { Chat } from "@/components/agentx-ui/components/container/Chat";
+import { WelcomePage } from "@/components/agentx-ui/components/container/WelcomePage";
 import { ToastContainer, useToast } from "@/components/agentx-ui/components/element/Toast";
 import { useImages } from "@/components/agentx-ui/hooks";
 import { cn } from "@/components/agentx-ui/utils";
@@ -105,6 +106,7 @@ export function Studio({
   const [currentImageId, setCurrentImageId] = React.useState<string | null>(null);
   const [currentImageName, setCurrentImageName] = React.useState<string | undefined>(undefined);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [refreshTrigger, setRefreshTrigger] = React.useState(0);
 
   // Toast state
   const { toasts, showToast, dismissToast } = useToast();
@@ -119,7 +121,7 @@ export function Studio({
   }, []);
 
   // Images hook - pass containerId for user isolation
-  const { images } = useImages(agentx, { containerId, autoLoad: true });
+  const { images, createImage, runImage } = useImages(agentx, { containerId, autoLoad: true });
 
   // Handle selecting a conversation
   const handleSelect = React.useCallback(
@@ -138,6 +140,35 @@ export function Studio({
     setCurrentImageId(imageId);
     setCurrentImageName(t("agentxUI.conversations.new"));
   }, [t]);
+
+  // Pending message to send after creating conversation
+  const pendingMessageRef = React.useRef<string | null>(null);
+
+  // Handle welcome page send - create new conversation and send message
+  const handleWelcomeSend = React.useCallback(async (message: string) => {
+    if (!agentx) return;
+
+    try {
+      // Store the message to send after conversation is created
+      pendingMessageRef.current = message;
+
+      // Create a new image
+      const image = await createImage({ name: message.slice(0, 30) });
+
+      // Run the image to get an agent
+      await runImage(image.imageId);
+
+      // Trigger refresh in AgentList
+      setRefreshTrigger(prev => prev + 1);
+
+      // Set current image
+      setCurrentImageId(image.imageId);
+      setCurrentImageName(message.slice(0, 30));
+    } catch (error) {
+      console.error("Failed to create conversation from welcome:", error);
+      pendingMessageRef.current = null;
+    }
+  }, [agentx, createImage, runImage]);
 
   // Listen to agentx system_error events
   React.useEffect(() => {
@@ -189,20 +220,27 @@ export function Studio({
             searchable={searchable}
             showCollapseButton={collapsible}
             onCollapse={handleCollapse}
+            refreshTrigger={refreshTrigger}
           />
         </div>
       )}
 
-      {/* Main area - Chat */}
+      {/* Main area - WelcomePage or Chat */}
       <div className="flex-1 min-w-0">
-        <Chat
-          key={currentImageId || "empty"}
-          agentx={agentx}
-          imageId={currentImageId}
-          agentName={currentImageName}
-          showSaveButton={showSaveButton}
-          inputHeightRatio={inputHeightRatio}
-        />
+        {currentImageId ? (
+          <Chat
+            key={currentImageId}
+            agentx={agentx}
+            imageId={currentImageId}
+            agentName={currentImageName}
+            showSaveButton={showSaveButton}
+            inputHeightRatio={inputHeightRatio}
+            initialMessage={pendingMessageRef.current}
+            onInitialMessageSent={() => { pendingMessageRef.current = null; }}
+          />
+        ) : (
+          <WelcomePage onSend={handleWelcomeSend} />
+        )}
       </div>
 
       {/* Toast notifications */}

@@ -16,6 +16,7 @@
  * Components:
  * - AgentList: Conversation list with CRUD operations
  * - Chat: Chat interface with messages and input
+ * - WelcomePage: Initial welcome page with presets
  */
 
 // AgentList - Conversation list
@@ -33,3 +34,7 @@ export type { ChatHeaderProps } from "./ChatHeader";
 // ToolCard - Collapsible tool call/result card
 export { ToolCard } from "./ToolCard";
 export type { ToolCardProps, ToolStatus } from "./ToolCard";
+
+// WelcomePage - Initial welcome page
+export { WelcomePage } from "./WelcomePage";
+export type { WelcomePageProps, PresetQuestion } from "./WelcomePage";

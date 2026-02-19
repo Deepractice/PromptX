@@ -422,6 +422,20 @@
       },
       "connectionError": "连接错误",
       "connecting": "正在连接 AgentX..."
+    },
+    "welcome": {
+      "tagline": "PromptX，让AI触手可及",
+      "inputPlaceholder": "问我任何问题...",
+      "presets": {
+        "luban": "激活鲁班，打造工具",
+        "lubanPrompt": "激活鲁班，我要打造一个工具",
+        "nuwa": "激活女娲，创建角色",
+        "nuwaPrompt": "激活女娲，我要创建一个角色",
+        "role": "探索可用角色",
+        "rolePrompt": "有哪些可用的角色？",
+        "tool": "探索可用工具",
+        "toolPrompt": "有哪些可用的工具？"
+      }
     }
   }
 }

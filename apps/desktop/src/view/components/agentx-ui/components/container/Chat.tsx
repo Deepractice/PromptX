@@ -26,7 +26,6 @@ import { MessagePane, InputPane, type ToolBarItem } from "@/components/agentx-ui
 import { UserEntry, AssistantEntry, ErrorEntry } from "@/components/agentx-ui/components/entry";
 import { useAgent, type ConversationData } from "@/components/agentx-ui/hooks";
 import { cn } from "@/components/agentx-ui/utils";
-import { ChatHeader } from "./ChatHeader";
 
 export interface ChatProps {
   /**
@@ -59,6 +58,14 @@ export interface ChatProps {
    * @default 0.25
    */
   inputHeightRatio?: number;
+  /**
+   * Initial message to send when component mounts
+   */
+  initialMessage?: string | null;
+  /**
+   * Callback when initial message has been sent
+   */
+  onInitialMessageSent?: () => void;
   /**
    * Additional class name
    */
@@ -108,6 +115,8 @@ export function Chat({
   showSaveButton = false,
   placeholder,
   inputHeightRatio = 0.25,
+  initialMessage,
+  onInitialMessageSent,
   className,
 }: ChatProps): React.ReactElement | null {
   const { t } = useTranslation();
@@ -117,6 +126,20 @@ export function Chat({
     agentx,
     imageId ?? null
   );
+
+  // Send initial message when component mounts with a new imageId
+  const initialMessageSentRef = React.useRef(false);
+  React.useEffect(() => {
+    if (initialMessage && imageId && !initialMessageSentRef.current) {
+      initialMessageSentRef.current = true;
+      // Small delay to ensure agent is ready
+      const timer = setTimeout(() => {
+        send(initialMessage);
+        onInitialMessageSent?.();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [initialMessage, imageId, send, onInitialMessageSent]);
 
   // Use translated placeholder if not provided
   const inputPlaceholder = placeholder ?? t("agentxUI.chat.placeholder");
@@ -214,18 +237,9 @@ export function Chat({
   const inputHeight = `${Math.round(inputHeightRatio * 100)}%`;
   const messageHeight = `${Math.round((1 - inputHeightRatio) * 100)}%`;
 
-  // Show empty state if no conversation selected
+  // Return null if no imageId (WelcomePage handles this case in Studio)
   if (!imageId) {
-    return (
-      <div className={cn("flex flex-col h-full bg-background", className)}>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <p className="text-lg font-medium mb-2">{t("agentxUI.chat.empty.title")}</p>
-            <p className="text-sm">{t("agentxUI.chat.empty.description")}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -236,9 +250,6 @@ export function Chat({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      {/* Header */}
-      <ChatHeader agentName={agentName} status={status} messageCount={conversations.length} />
-
       {/* Message area */}
       <div style={{ height: messageHeight }} className="min-h-0">
         <MessagePane>

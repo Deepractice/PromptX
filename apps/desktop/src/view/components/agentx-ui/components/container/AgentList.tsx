@@ -86,6 +86,10 @@ export interface AgentListProps {
    */
   onCollapse?: () => void;
   /**
+   * Trigger to refresh the list (increment to refresh)
+   */
+  refreshTrigger?: number;
+  /**
    * Additional class name
    */
   className?: string;
@@ -104,6 +108,7 @@ export function AgentList({
   searchable = true,
   showCollapseButton = false,
   onCollapse,
+  refreshTrigger,
   className,
 }: AgentListProps): React.ReactElement {
   const { t } = useTranslation();
@@ -113,6 +118,13 @@ export function AgentList({
       containerId,
     }
   );
+
+  // Refresh when refreshTrigger changes
+  React.useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      refresh();
+    }
+  }, [refreshTrigger, refresh]);
 
   // Use translated title if not provided
   const displayTitle = title ?? t("agentxUI.conversations.title");

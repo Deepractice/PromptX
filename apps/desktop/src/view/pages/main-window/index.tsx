@@ -120,7 +120,7 @@ function MainContent() {
               {menuItems.find((item) => item.id === currentPage)?.title}
             </h2>
           </div>
-          <div className="h-[calc(100vh-53px)] ">{renderPage()}</div>
+          <div className="h-[calc(100vh-53px)] overflow-auto ">{renderPage()}</div>
         </div>
       </main>
     </div>
