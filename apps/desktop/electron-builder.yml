@@ -82,6 +82,11 @@ dmg:
 
 npmRebuild: true
 
+# Electron download mirror
+# Use official GitHub source (fallback if China mirror fails)
+electronDownload:
+  mirror: https://github.com/electron/electron/releases/download/
+
 # 生成更新元数据文件
 generateUpdatesFilesForAllChannels: true
 

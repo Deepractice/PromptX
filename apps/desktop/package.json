@@ -33,7 +33,7 @@
     "package": "pnpm build && electron-builder",
     "package:mac": "pnpm build && electron-builder --config electron-builder-dev.yml",
     "package:mac:skip": "electron-builder --config electron-builder-dev.yml",
-    "package:win": "pnpm build && electron-builder --win",
+    "package:win": "cross-env ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm_config_disturl=https://npmmirror.com/mirrors/node/ pnpm build && electron-builder --win",
     "package:linux": "pnpm build && electron-builder --linux",
     "dist": "pnpm package:mac"
   },
@@ -85,6 +85,7 @@
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.1.0",
     "electron": "38.0.0",
     "electron-builder": "^26.0.12",
     "electron-icon-builder": "^2.0.1",

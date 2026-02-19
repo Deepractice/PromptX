@@ -26,7 +26,7 @@ type PageType = "resources" | "logs" | "settings" | "update" |"agentx"|"roles"|"
 
 function MainContent() {
   const { t } = useTranslation()
-  const [currentPage, setCurrentPage] = useState<PageType>("resources")
+  const [currentPage, setCurrentPage] = useState<PageType>("agentx")
   const { open } = useSidebar()
 
   const menuItems = [
@@ -77,7 +77,7 @@ function MainContent() {
       case "tools":
         return <ToolsPage />
       default:
-        return <ResourcesPage />
+        return <AgentXPage />
     }
   }
 
