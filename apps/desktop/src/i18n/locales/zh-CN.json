@@ -109,8 +109,12 @@
     },
     "skills": {
       "title": "Skills 配置",
-      "description": "管理和配置 AI 技能",
-      "comingSoon": "Skills 配置功能即将推出..."
+      "description": "管理启用的 Skills，这些 Skills 将被用于所有 AgentX 对话",
+      "empty": "暂无可用 Skills",
+      "refresh": "刷新",
+      "loadError": "加载 Skills 失败",
+      "saveSuccess": "Skills 配置已保存",
+      "saveError": "保存 Skills 配置失败"
     }
   },
   "logs": {
