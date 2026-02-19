@@ -420,15 +420,7 @@ function SettingsWindow() {
             <MCPConfig />
 
             {/* Skills 配置 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("settings.skills.title")}</CardTitle>
-                <CardDescription>{t("settings.skills.description")}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{t("settings.skills.comingSoon")}</p>
-              </CardContent>
-            </Card>
+            <SkillsConfig />
           </TabsContent>
         </Tabs>
       </div>
