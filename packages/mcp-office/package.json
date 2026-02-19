@@ -1,0 +1,25 @@
+{
+  "name": "@promptx/mcp-office",
+  "version": "1.0.0",
+  "description": "MCP server for reading Office documents (docx, xlsx, pptx)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-office": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "mammoth": "^1.8.0",
+    "xlsx": "^0.18.5",
+    "pptx-parser": "^1.0.3",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

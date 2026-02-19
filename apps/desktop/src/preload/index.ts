@@ -6,6 +6,12 @@ import { contextBridge, ipcRenderer } from 'electron'
  */
 
 // 定义API接口
+interface AgentXConfig {
+  apiKey: string
+  baseUrl: string
+  model: string
+}
+
 interface ElectronAPI {
   getGroupedResources: () => Promise<any>
   searchResources: (query: string) => Promise<any>
@@ -13,6 +19,16 @@ interface ElectronAPI {
   activateRole: (roleId: string) => Promise<any>
   executeTool: (toolId: string, parameters?: any) => Promise<any>
   invoke: (channel: string, ...args: any[]) => Promise<any>
+  // AgentX API
+  agentx: {
+    getServerUrl: () => Promise<string>
+    getStatus: () => Promise<boolean>
+    start: () => Promise<{ success: boolean; error?: string }>
+    stop: () => Promise<{ success: boolean; error?: string }>
+    getConfig: () => Promise<AgentXConfig>
+    updateConfig: (config: Partial<AgentXConfig>) => Promise<{ success: boolean; error?: string }>
+    testConnection: (config: Partial<AgentXConfig>) => Promise<{ success: boolean; error?: string }>
+  }
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -21,7 +37,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStatistics: () => ipcRenderer.invoke('resources:getStatistics'),
   activateRole: (roleId: string) => ipcRenderer.invoke('resources:activateRole', roleId),
   executeTool: (toolId: string, parameters?: any) => ipcRenderer.invoke('resources:executeTool', toolId, parameters),
-  invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args)
+  invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
+  // AgentX API
+  agentx: {
+    getServerUrl: () => ipcRenderer.invoke('agentx:getServerUrl'),
+    getStatus: () => ipcRenderer.invoke('agentx:getStatus'),
+    start: () => ipcRenderer.invoke('agentx:start'),
+    stop: () => ipcRenderer.invoke('agentx:stop'),
+    getConfig: () => ipcRenderer.invoke('agentx:getConfig'),
+    updateConfig: (config: Partial<AgentXConfig>) => ipcRenderer.invoke('agentx:updateConfig', config),
+    testConnection: (config: Partial<AgentXConfig>) => ipcRenderer.invoke('agentx:testConnection', config),
+  }
 } as ElectronAPI)
 
 // 为window对象添加类型定义

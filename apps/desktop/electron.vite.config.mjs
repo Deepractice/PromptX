@@ -72,6 +72,9 @@ export default defineConfig({
                 '~': resolve(__dirname, 'src')
             },
             preserveSymlinks: true
+        },
+        server: {
+            port: 3000
         }
     }
 });

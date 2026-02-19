@@ -97,6 +97,9 @@ export default defineConfig({
       alias: {
         '@': path.resolve(__dirname, 'src/view')
       }
+    },
+    server: {
+      port: 3000
     }
   }
 })

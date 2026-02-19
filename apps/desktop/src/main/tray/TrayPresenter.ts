@@ -394,8 +394,8 @@ export class TrayPresenter {
       }
     })
 
-    if (process.env.NODE_ENV === 'development') {
-      this.mainWindow.loadURL('http://localhost:5173/#/main')
+    if (process.env.ELECTRON_RENDERER_URL) {
+      this.mainWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}#/main`)
     } else {
       const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
       this.mainWindow.loadFile(indexHtmlPath, { hash: '/main' })

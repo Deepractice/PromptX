@@ -13,6 +13,7 @@ import { UpdateManager } from '~/main/application/UpdateManager'
 import { AutoStartService } from '~/main/application/AutoStartService'
 import { ElectronAutoStartAdapter } from '~/main/infrastructure/adapters/ElectronAutoStartAdapter'
 import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
+import { agentXService } from '~/main/services/AgentXService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
@@ -62,6 +63,7 @@ class PromptXDesktopApp {
     this.setupLanguageIPC()
     this.setupLogsIPC()
     this.setupDialogIPC()
+    this.setupAgentXIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -99,6 +101,16 @@ class PromptXDesktopApp {
     } catch (error) {
       const err = String(error);
       logger.error('Failed to auto-start server:', err)
+    }
+
+    // Auto-start AgentX service
+    logger.info('Auto-starting AgentX service...')
+    try {
+      await agentXService.start()
+      logger.info('AgentX service started automatically')
+    } catch (error) {
+      const err = String(error);
+      logger.error('Failed to auto-start AgentX service:', err)
     }
 
     // Register global callback for second-instance to open main window
@@ -387,6 +399,58 @@ class PromptXDesktopApp {
         logger.error('Failed to open file dialog:', String(error))
         return { canceled: true, filePaths: [] }
       }
+    })
+  }
+
+  private setupAgentXIPC(): void {
+    // 获取 AgentX 服务器 URL
+    ipcMain.handle('agentx:getServerUrl', () => {
+      return agentXService.getServerUrl()
+    })
+
+    // 获取 AgentX 服务状态
+    ipcMain.handle('agentx:getStatus', () => {
+      return agentXService.getStatus()
+    })
+
+    // 启动 AgentX 服务
+    ipcMain.handle('agentx:start', async () => {
+      try {
+        await agentXService.start()
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 停止 AgentX 服务
+    ipcMain.handle('agentx:stop', async () => {
+      try {
+        await agentXService.stop()
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 获取 AgentX 配置
+    ipcMain.handle('agentx:getConfig', () => {
+      return agentXService.getConfig()
+    })
+
+    // 更新 AgentX 配置
+    ipcMain.handle('agentx:updateConfig', async (_event, config) => {
+      try {
+        await agentXService.updateConfig(config)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 测试 AgentX 连接
+    ipcMain.handle('agentx:testConnection', async (_event, config) => {
+      return await agentXService.testConnection(config)
     })
   }
 

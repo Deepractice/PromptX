@@ -14,12 +14,15 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Database, FileText, Settings } from "lucide-react"
+import { Store, FileText, Settings,Pickaxe,MessageSquare,UsersRound } from "lucide-react"
 import ResourcesPage from "../resources-window"
 import LogsPage from "../logs-window"
 import SettingsPage from "../settings-window"
+import ToolsPage from "../settings-window"
+import RolesPage from "../settings-window"
+import AgentXPage from "../agentx-window"
 import logo from "../../../../assets/icons/icon-64x64.png"
-type PageType = "resources" | "logs" | "settings" | "update"
+type PageType = "resources" | "logs" | "settings" | "update" |"agentx"|"roles"|"tools"
 
 function MainContent() {
   const { t } = useTranslation()
@@ -28,9 +31,24 @@ function MainContent() {
 
   const menuItems = [
     {
+      id: "agentx" as PageType,
+      title: t("sidebar.agentx"),
+      icon: MessageSquare,
+    },
+    {
       id: "resources" as PageType,
       title: t("sidebar.resources"),
-      icon: Database,
+      icon: Store,
+    },
+    {
+      id: "roles" as PageType,
+      title: t("sidebar.roles"),
+      icon: UsersRound,
+    },
+    {
+      id: "tools" as PageType,
+      title: t("sidebar.tools"),
+      icon: Pickaxe,
     },
     {
       id: "logs" as PageType,
@@ -46,12 +64,18 @@ function MainContent() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case "agentx":
+        return <AgentXPage />
       case "resources":
         return <ResourcesPage />
       case "logs":
         return <LogsPage />
       case "settings":
         return <SettingsPage />
+      case "roles":
+        return <RolesPage />
+      case "tools":
+        return <ToolsPage />
       default:
         return <ResourcesPage />
     }

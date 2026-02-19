@@ -8,6 +8,33 @@
       "english": "English",
       "chinese": "简体中文"
     },
+    "agentx": {
+      "title": "AgentX Configuration",
+      "description": "Configure AgentX AI assistant API connection",
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "sk-ant-...",
+        "description": "Your Anthropic API Key"
+      },
+      "baseUrl": {
+        "label": "API Base URL",
+        "placeholder": "https://api.anthropic.com",
+        "description": "API server address, defaults to Anthropic official endpoint"
+      },
+      "model": {
+        "label": "Model",
+        "placeholder": "claude-sonnet-4-20250514",
+        "description": "Claude model name to use"
+      },
+      "testConnection": "Test Connection",
+      "testing": "Testing...",
+      "testSuccess": "Connection successful!",
+      "testFailed": "Connection failed",
+      "save": "Save Configuration",
+      "saving": "Saving...",
+      "saveSuccess": "AgentX configuration saved successfully",
+      "saveFailed": "Failed to save AgentX configuration"
+    },
     "autoStart": {
       "title": "Auto Start",
       "description": "Launch PromptX automatically when computer starts",
@@ -35,6 +62,7 @@
       "reset": "Reset to Default"
     }
   },
+
   "logs": {
     "title": "Application Logs",
     "subtitle": "View and manage application logs",
@@ -251,7 +279,10 @@
     "languageChanged": "Language changed successfully"
   },
   "sidebar": {
-    "resources": "Resources",
+    "agentx": "AgentX Chat",
+    "resources": "Agent Shop",
+    "roles":"Roles",
+    "tools":"Tools",
     "logs": "Logs",
     "settings": "Settings",
     "update": "Check for Updates"

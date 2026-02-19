@@ -8,6 +8,33 @@
       "english": "English",
       "chinese": "简体中文"
     },
+    "agentx": {
+      "title": "AgentX 配置",
+      "description": "配置 AgentX AI 助手的 API 连接",
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "sk-ant-...",
+        "description": "您的 Anthropic API Key"
+      },
+      "baseUrl": {
+        "label": "API Base URL",
+        "placeholder": "https://api.anthropic.com",
+        "description": "API 服务器地址，默认为 Anthropic 官方地址"
+      },
+      "model": {
+        "label": "模型",
+        "placeholder": "claude-sonnet-4-20250514",
+        "description": "使用的 Claude 模型名称"
+      },
+      "testConnection": "测试连接",
+      "testing": "测试中...",
+      "testSuccess": "连接成功！",
+      "testFailed": "连接失败",
+      "save": "保存配置",
+      "saving": "保存中...",
+      "saveSuccess": "AgentX 配置保存成功",
+      "saveFailed": "保存 AgentX 配置失败"
+    },
     "autoStart": {
       "title": "开机自启",
       "description": "计算机启动时自动启动 PromptX",
@@ -251,7 +278,10 @@
     "languageChanged": "语言切换成功"
   },
   "sidebar": {
-    "resources": "资源管理",
+    "agentx": "AgentX 对话",
+    "resources": "智能体广场",
+    "roles":"角色",
+    "tools":"工具",
     "logs": "日志",
     "settings": "设置",
     "update": "检查更新"

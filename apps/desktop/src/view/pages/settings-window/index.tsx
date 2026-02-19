@@ -7,10 +7,18 @@ import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast, Toaster } from "sonner"
 import { LanguageSelector } from "./components/LanguageSelector"
+import { Loader2, CheckCircle2, XCircle } from "lucide-react"
+
 interface ServerConfig {
   host: string
   port: number
   debug: boolean
+}
+
+interface AgentXConfig {
+  apiKey: string
+  baseUrl: string
+  model: string
 }
 
 interface StatusMessage {
@@ -26,8 +34,16 @@ function SettingsWindow() {
     port: 5203,
     debug: false
   })
+  const [agentXConfig, setAgentXConfig] = useState<AgentXConfig>({
+    apiKey: "",
+    baseUrl: "https://api.anthropic.com",
+    model: "claude-sonnet-4-20250514"
+  })
   const [statusMessage, setStatusMessage] = useState<StatusMessage>({ type: null, message: "" })
   const [isLoading, setIsLoading] = useState(false)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle")
+  const [isSavingAgentX, setIsSavingAgentX] = useState(false)
 
   // 加载当前设置状态
   useEffect(() => {
@@ -53,6 +69,12 @@ function SettingsWindow() {
       const config = await window.electronAPI?.invoke("server-config:get")
       if (config) {
         setServerConfig(config)
+      }
+
+      // 加载 AgentX 配置
+      const agentxConfig = await window.electronAPI?.agentx.getConfig()
+      if (agentxConfig) {
+        setAgentXConfig(agentxConfig)
       }
     } catch (error) {
       console.error("Failed to load settings:", error)
@@ -119,6 +141,48 @@ function SettingsWindow() {
     }
   }
 
+  // AgentX 配置处理
+  const handleAgentXConfigChange = (field: keyof AgentXConfig, value: string) => {
+    setAgentXConfig(prev => ({ ...prev, [field]: value }))
+    setConnectionStatus("idle")
+  }
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true)
+    setConnectionStatus("idle")
+    try {
+      const result = await window.electronAPI?.agentx.testConnection(agentXConfig)
+      if (result?.success) {
+        setConnectionStatus("success")
+        showMessage("success", t("settings.agentx.testSuccess"))
+      } else {
+        setConnectionStatus("error")
+        showMessage("error", result?.error || t("settings.agentx.testFailed"))
+      }
+    } catch (error) {
+      setConnectionStatus("error")
+      showMessage("error", String(error))
+    } finally {
+      setIsTestingConnection(false)
+    }
+  }
+
+  const handleSaveAgentXConfig = async () => {
+    setIsSavingAgentX(true)
+    try {
+      const result = await window.electronAPI?.agentx.updateConfig(agentXConfig)
+      if (result?.success) {
+        showMessage("success", t("settings.agentx.saveSuccess"))
+      } else {
+        showMessage("error", result?.error || t("settings.agentx.saveFailed"))
+      }
+    } catch (error) {
+      showMessage("error", String(error))
+    } finally {
+      setIsSavingAgentX(false)
+    }
+  }
+
   return (
     <div className="min-h-[calc(100vh-53px)]  p-8 flex flex-col">
       <Toaster />
@@ -127,6 +191,86 @@ function SettingsWindow() {
         <div className="space-y-6 flex-1 overflow-y-auto">
           {/* 语言设置 */}
           <LanguageSelector />
+
+          {/* AgentX 配置 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("settings.agentx.title")}</CardTitle>
+              <CardDescription>{t("settings.agentx.description")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* API Key */}
+              <div className="space-y-2">
+                <Label htmlFor="agentx-apikey">{t("settings.agentx.apiKey.label")}</Label>
+                <Input
+                  id="agentx-apikey"
+                  type="password"
+                  placeholder={t("settings.agentx.apiKey.placeholder")}
+                  value={agentXConfig.apiKey}
+                  onChange={e => handleAgentXConfigChange("apiKey", e.target.value)}
+                />
+                <p className="text-sm text-gray-500">{t("settings.agentx.apiKey.description")}</p>
+              </div>
+
+              {/* Base URL */}
+              <div className="space-y-2">
+                <Label htmlFor="agentx-baseurl">{t("settings.agentx.baseUrl.label")}</Label>
+                <Input
+                  id="agentx-baseurl"
+                  type="text"
+                  placeholder={t("settings.agentx.baseUrl.placeholder")}
+                  value={agentXConfig.baseUrl}
+                  onChange={e => handleAgentXConfigChange("baseUrl", e.target.value)}
+                />
+                <p className="text-sm text-gray-500">{t("settings.agentx.baseUrl.description")}</p>
+              </div>
+
+              {/* Model */}
+              <div className="space-y-2">
+                <Label htmlFor="agentx-model">{t("settings.agentx.model.label")}</Label>
+                <Input
+                  id="agentx-model"
+                  type="text"
+                  placeholder={t("settings.agentx.model.placeholder")}
+                  value={agentXConfig.model}
+                  onChange={e => handleAgentXConfigChange("model", e.target.value)}
+                />
+                <p className="text-sm text-gray-500">{t("settings.agentx.model.description")}</p>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex items-center space-x-3 pt-4">
+                <Button
+                  onClick={handleTestConnection}
+                  disabled={isTestingConnection || !agentXConfig.apiKey}
+                  variant="outline"
+                >
+                  {isTestingConnection ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t("settings.agentx.testing")}
+                    </>
+                  ) : (
+                    t("settings.agentx.testConnection")
+                  )}
+                </Button>
+                <Button
+                  onClick={handleSaveAgentXConfig}
+                  disabled={isSavingAgentX}
+                  variant="outline"
+                  className="bg-black text-white"
+                >
+                  {isSavingAgentX ? t("settings.agentx.saving") : t("settings.agentx.save")}
+                </Button>
+                {connectionStatus === "success" && (
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                )}
+                {connectionStatus === "error" && (
+                  <XCircle className="h-5 w-5 text-red-500" />
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* 自启动设置 */}
           <Card>

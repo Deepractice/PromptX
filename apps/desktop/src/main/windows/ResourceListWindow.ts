@@ -713,8 +713,8 @@ export class ResourceListWindow {
     })
 
     // 加载资源管理页面
-    if (process.env.NODE_ENV === 'development') {
-      this.window.loadURL('http://localhost:5173/#/resources')
+    if (process.env.ELECTRON_RENDERER_URL) {
+      this.window.loadURL(`${process.env.ELECTRON_RENDERER_URL}#/resources`)
     } else {
       const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
       this.window.loadFile(indexHtmlPath, { hash: '/resources' })
