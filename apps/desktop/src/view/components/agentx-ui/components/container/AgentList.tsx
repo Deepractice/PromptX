@@ -26,6 +26,7 @@
 import * as React from "react";
 import type { AgentX } from "agentxjs";
 import { MessageSquare, Bot } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ListPane, type ListPaneItem } from "@/components/agentx-ui/components/pane";
 import {
   Dialog,
@@ -98,18 +99,22 @@ export function AgentList({
   selectedId,
   onSelect,
   onNew,
-  title = "Conversations",
+  title,
   searchable = true,
   showCollapseButton = false,
   onCollapse,
   className,
 }: AgentListProps): React.ReactElement {
+  const { t } = useTranslation();
   const { images, isLoading, createImage, runImage, deleteImage, updateImage, refresh } = useImages(
     agentx,
     {
       containerId,
     }
   );
+
+  // Use translated title if not provided
+  const displayTitle = title ?? t("agentxUI.conversations.title");
 
   // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
@@ -121,17 +126,17 @@ export function AgentList({
   const items: ListPaneItem[] = React.useMemo(() => {
     return images.map((img) => ({
       id: img.imageId,
-      title: img.name || "Untitled",
+      title: img.name || t("agentxUI.conversations.untitled"),
       leading: <Bot className="w-4 h-4 text-muted-foreground" />,
       trailing: (
         <span
           className={cn("w-2 h-2 rounded-full", img.online ? "bg-green-500" : "bg-gray-400")}
-          title={img.online ? "Online" : "Offline"}
+          title={img.online ? t("agentxUI.conversations.status.online") : t("agentxUI.conversations.status.offline")}
         />
       ),
       timestamp: img.updatedAt || img.createdAt,
     }));
-  }, [images]);
+  }, [images, t]);
 
   // Handle selecting an image
   const handleSelect = React.useCallback(
@@ -167,7 +172,7 @@ export function AgentList({
     try {
       console.log("[AgentList] Creating new image with containerId:", containerId);
       // Create a new image
-      const image = await createImage({ name: "New Conversation" });
+      const image = await createImage({ name: t("agentxUI.conversations.new") });
       console.log("[AgentList] New image created:", image.imageId);
 
       // Refresh list
@@ -236,21 +241,21 @@ export function AgentList({
   return (
     <>
       <ListPane
-        title={title}
+        title={displayTitle}
         items={items}
         selectedId={selectedId}
         isLoading={isLoading}
         searchable={searchable}
-        searchPlaceholder="Search conversations..."
+        searchPlaceholder={t("agentxUI.conversations.search")}
         showNewButton
-        newButtonLabel="New conversation"
+        newButtonLabel={t("agentxUI.conversations.new")}
         showCollapseButton={showCollapseButton}
         onCollapse={onCollapse}
         emptyState={{
           icon: <MessageSquare className="w-6 h-6" />,
-          title: "No conversations yet",
-          description: "Start a new conversation to begin",
-          actionLabel: "New conversation",
+          title: t("agentxUI.conversations.empty.title"),
+          description: t("agentxUI.conversations.empty.description"),
+          actionLabel: t("agentxUI.conversations.empty.action"),
         }}
         onSelect={handleSelect}
         onEdit={handleEdit}
@@ -263,14 +268,14 @@ export function AgentList({
       <Dialog open={renameDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Rename Conversation</DialogTitle>
+            <DialogTitle>{t("agentxUI.conversations.actions.rename")}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Input
               value={editingName}
               onChange={(e) => setEditingName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Enter conversation name"
+              placeholder={t("agentxUI.conversations.rename.placeholder")}
               autoFocus
             />
           </div>
@@ -283,7 +288,7 @@ export function AgentList({
               Cancel
             </Button>
             <Button onClick={handleRename} disabled={isRenaming || !editingName.trim()}>
-              {isRenaming ? "Saving..." : "Save"}
+              {isRenaming ? t("agentxUI.conversations.rename.saving") : t("agentxUI.conversations.rename.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

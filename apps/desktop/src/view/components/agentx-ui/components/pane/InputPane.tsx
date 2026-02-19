@@ -29,6 +29,7 @@
 
 import * as React from "react";
 import { Send, Square, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { UserContentPart, ImagePart, FilePart } from "agentxjs";
 import { cn } from "@/components/agentx-ui/utils/utils";
 import { InputToolBar, type ToolBarItem } from "./InputToolBar";
@@ -172,7 +173,7 @@ export const InputPane: React.ForwardRefExoticComponent<
       onStop,
       disabled = false,
       isLoading = false,
-      placeholder = "Type a message...",
+      placeholder,
       toolbarItems,
       toolbarRightItems,
       onToolbarItemClick,
@@ -190,6 +191,8 @@ export const InputPane: React.ForwardRefExoticComponent<
     },
     ref
   ) => {
+    const { t } = useTranslation();
+    const inputPlaceholder = placeholder ?? t("agentxUI.chat.placeholder");
     const [text, setText] = React.useState("");
     const [attachments, setAttachments] = React.useState<Attachment[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
@@ -654,7 +657,7 @@ export const InputPane: React.ForwardRefExoticComponent<
                     <button
                       onClick={() => removeAttachment(attachment.id)}
                       className="p-0.5 rounded-full bg-destructive text-white hover:bg-destructive/90"
-                      title="Remove"
+                      title={t("agentxUI.chat.actions.remove")}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -695,7 +698,7 @@ export const InputPane: React.ForwardRefExoticComponent<
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            placeholder={placeholder}
+            placeholder={inputPlaceholder}
             disabled={disabled}
             className={cn(
               "w-full h-full resize-none bg-transparent",
@@ -719,7 +722,7 @@ export const InputPane: React.ForwardRefExoticComponent<
                   "hover:bg-destructive/90",
                   "active:scale-95"
                 )}
-                title="Stop"
+                title={t("agentxUI.chat.actions.stop")}
               >
                 <Square className="w-4 h-4" />
               </button>
@@ -735,7 +738,7 @@ export const InputPane: React.ForwardRefExoticComponent<
                   "active:scale-95",
                   "disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
-                title="Send (Enter)"
+                title={t("agentxUI.chat.actions.send")}
               >
                 <Send className="w-4 h-4" />
               </button>

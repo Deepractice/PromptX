@@ -23,6 +23,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { ChevronDown, Loader2, CheckCircle2, XCircle, Wrench } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/components/agentx-ui/utils/utils";
 import type { ToolBlockData, ToolBlockStatus } from "../types";
 
@@ -42,9 +43,9 @@ export interface ToolBlockProps {
 }
 
 /**
- * Status configuration
+ * Get status configuration with i18n
  */
-const statusConfig: Record<
+function useStatusConfig(): Record<
   ToolBlockStatus,
   {
     icon: React.ReactNode;
@@ -54,40 +55,44 @@ const statusConfig: Record<
     iconColor: string;
     label: string;
   }
-> = {
-  planning: {
-    icon: <Loader2 className="w-4 h-4 animate-spin" />,
-    bgColor: "bg-amber-50 dark:bg-amber-950/30",
-    borderColor: "border-amber-200 dark:border-amber-800",
-    textColor: "text-amber-700 dark:text-amber-300",
-    iconColor: "text-amber-500",
-    label: "Planning...",
-  },
-  executing: {
-    icon: <Loader2 className="w-4 h-4 animate-spin" />,
-    bgColor: "bg-blue-50 dark:bg-blue-950/30",
-    borderColor: "border-blue-200 dark:border-blue-800",
-    textColor: "text-blue-700 dark:text-blue-300",
-    iconColor: "text-blue-500",
-    label: "Executing...",
-  },
-  success: {
-    icon: <CheckCircle2 className="w-4 h-4" />,
-    bgColor: "bg-green-50 dark:bg-green-950/30",
-    borderColor: "border-green-200 dark:border-green-800",
-    textColor: "text-green-700 dark:text-green-300",
-    iconColor: "text-green-500",
-    label: "Completed",
-  },
-  error: {
-    icon: <XCircle className="w-4 h-4" />,
-    bgColor: "bg-red-50 dark:bg-red-950/30",
-    borderColor: "border-red-200 dark:border-red-800",
-    textColor: "text-red-700 dark:text-red-300",
-    iconColor: "text-red-500",
-    label: "Error",
-  },
-};
+> {
+  const { t } = useTranslation();
+
+  return {
+    planning: {
+      icon: <Loader2 className="w-4 h-4 animate-spin" />,
+      bgColor: "bg-amber-50 dark:bg-amber-950/30",
+      borderColor: "border-amber-200 dark:border-amber-800",
+      textColor: "text-amber-700 dark:text-amber-300",
+      iconColor: "text-amber-500",
+      label: t("agentxUI.tool.status.planning"),
+    },
+    executing: {
+      icon: <Loader2 className="w-4 h-4 animate-spin" />,
+      bgColor: "bg-blue-50 dark:bg-blue-950/30",
+      borderColor: "border-blue-200 dark:border-blue-800",
+      textColor: "text-blue-700 dark:text-blue-300",
+      iconColor: "text-blue-500",
+      label: t("agentxUI.tool.status.executing"),
+    },
+    success: {
+      icon: <CheckCircle2 className="w-4 h-4" />,
+      bgColor: "bg-green-50 dark:bg-green-950/30",
+      borderColor: "border-green-200 dark:border-green-800",
+      textColor: "text-green-700 dark:text-green-300",
+      iconColor: "text-green-500",
+      label: t("agentxUI.tool.status.completed"),
+    },
+    error: {
+      icon: <XCircle className="w-4 h-4" />,
+      bgColor: "bg-red-50 dark:bg-red-950/30",
+      borderColor: "border-red-200 dark:border-red-800",
+      textColor: "text-red-700 dark:text-red-300",
+      iconColor: "text-red-500",
+      label: t("agentxUI.tool.status.error"),
+    },
+  };
+}
 
 /**
  * Format output for display
@@ -111,6 +116,7 @@ export function ToolBlock({
   className,
 }: ToolBlockProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const statusConfig = useStatusConfig();
   const config = statusConfig[block.status];
 
   return (

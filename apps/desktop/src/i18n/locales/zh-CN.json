@@ -310,5 +310,84 @@
     "placeholder": "选择日期",
     "selectDate": "选择日期",
     "clear": "清除"
+  },
+  "agentxUI": {
+    "chat": {
+      "placeholder": "输入消息...",
+      "toolbar": {
+        "emoji": "表情",
+        "file": "文件",
+        "save": "保存对话"
+      },
+      "status": {
+        "thinking": "思考中",
+        "responding": "回复中",
+        "planning": "规划中",
+        "executing": "执行中",
+        "error": "错误",
+        "idle": "空闲"
+      },
+      "actions": {
+        "stop": "停止",
+        "send": "发送 (Enter)",
+        "remove": "移除",
+        "download": "下载",
+        "removeImage": "移除图片"
+      }
+    },
+    "conversations": {
+      "title": "对话列表",
+      "new": "新建对话",
+      "search": "搜索对话...",
+      "empty": {
+        "title": "暂无对话",
+        "description": "开始一个新对话",
+        "action": "新建对话"
+      },
+      "rename": {
+        "placeholder": "输入对话名称",
+        "saving": "保存中...",
+        "save": "保存"
+      },
+      "actions": {
+        "rename": "重命名",
+        "delete": "删除"
+      },
+      "status": {
+        "online": "在线",
+        "offline": "离线"
+      },
+      "untitled": "未命名"
+    },
+    "messages": {
+      "empty": {
+        "title": "暂无消息",
+        "description": "发送消息开始对话"
+      }
+    },
+    "tool": {
+      "status": {
+        "planning": "规划中...",
+        "executing": "执行中...",
+        "completed": "已完成",
+        "error": "错误"
+      }
+    },
+    "sidebar": {
+      "expand": "展开侧边栏",
+      "collapse": "收起侧边栏"
+    },
+    "list": {
+      "empty": {
+        "description": "创建新项目开始使用"
+      }
+    },
+    "time": {
+      "justNow": "刚刚",
+      "unknown": "未知"
+    },
+    "mobile": {
+      "search": "搜索..."
+    }
   }
 }

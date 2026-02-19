@@ -34,6 +34,7 @@
 
 import * as React from "react";
 import { MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { EmptyState } from "@/components/agentx-ui/components/element/EmptyState";
 import { cn } from "@/components/agentx-ui/utils/utils";
 
@@ -68,16 +69,22 @@ export const MessagePane: React.ForwardRefExoticComponent<
   (
     {
       children,
-      emptyState = {
-        icon: <MessageSquare className="w-6 h-6" />,
-        title: "No messages yet",
-        description: "Start the conversation by sending a message",
-      },
+      emptyState,
       className,
     },
     ref
   ) => {
+    const { t } = useTranslation();
     const scrollRef = React.useRef<HTMLDivElement>(null);
+
+    // Default empty state with i18n
+    const defaultEmptyState = {
+      icon: <MessageSquare className="w-6 h-6" />,
+      title: t("agentxUI.messages.empty.title"),
+      description: t("agentxUI.messages.empty.description"),
+    };
+
+    const finalEmptyState = emptyState ?? defaultEmptyState;
 
     // Auto-scroll to bottom when children change
     React.useEffect(() => {
@@ -100,9 +107,9 @@ export const MessagePane: React.ForwardRefExoticComponent<
           {isEmpty ? (
             <div className="h-full flex items-center justify-center">
               <EmptyState
-                icon={emptyState.icon}
-                title={emptyState.title}
-                description={emptyState.description}
+                icon={finalEmptyState.icon}
+                title={finalEmptyState.title}
+                description={finalEmptyState.description}
               />
             </div>
           ) : (

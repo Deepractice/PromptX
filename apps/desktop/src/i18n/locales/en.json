@@ -311,5 +311,84 @@
     "placeholder": "Select date",
     "selectDate": "Select Date",
     "clear": "Clear"
+  },
+  "agentxUI": {
+    "chat": {
+      "placeholder": "Type a message...",
+      "toolbar": {
+        "emoji": "Emoji",
+        "file": "File",
+        "save": "Save conversation"
+      },
+      "status": {
+        "thinking": "Thinking",
+        "responding": "Responding",
+        "planning": "Planning",
+        "executing": "Executing",
+        "error": "Error",
+        "idle": "Idle"
+      },
+      "actions": {
+        "stop": "Stop",
+        "send": "Send (Enter)",
+        "remove": "Remove",
+        "download": "Download",
+        "removeImage": "Remove image"
+      }
+    },
+    "conversations": {
+      "title": "Conversations",
+      "new": "New conversation",
+      "search": "Search conversations...",
+      "empty": {
+        "title": "No conversations yet",
+        "description": "Start a new conversation to begin",
+        "action": "New conversation"
+      },
+      "rename": {
+        "placeholder": "Enter conversation name",
+        "saving": "Saving...",
+        "save": "Save"
+      },
+      "actions": {
+        "rename": "Rename",
+        "delete": "Delete"
+      },
+      "status": {
+        "online": "Online",
+        "offline": "Offline"
+      },
+      "untitled": "Untitled"
+    },
+    "messages": {
+      "empty": {
+        "title": "No messages",
+        "description": "Start the conversation by sending a message"
+      }
+    },
+    "tool": {
+      "status": {
+        "planning": "Planning...",
+        "executing": "Executing...",
+        "completed": "Completed",
+        "error": "Error"
+      }
+    },
+    "sidebar": {
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar"
+    },
+    "list": {
+      "empty": {
+        "description": "Get started by creating a new item"
+      }
+    },
+    "time": {
+      "justNow": "Just now",
+      "unknown": "Unknown"
+    },
+    "mobile": {
+      "search": "Search..."
+    }
   }
 }

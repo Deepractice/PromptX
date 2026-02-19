@@ -21,6 +21,7 @@
 import * as React from "react";
 import type { AgentX } from "agentxjs";
 import { Save, Smile, FolderOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MessagePane, InputPane, type ToolBarItem } from "@/components/agentx-ui/components/pane";
 import { UserEntry, AssistantEntry, ErrorEntry } from "@/components/agentx-ui/components/entry";
 import { useAgent, type ConversationData } from "@/components/agentx-ui/hooks";
@@ -105,15 +106,20 @@ export function Chat({
   agentName,
   onSave,
   showSaveButton = false,
-  placeholder = "Type a message...",
+  placeholder,
   inputHeightRatio = 0.25,
   className,
 }: ChatProps): React.ReactElement | null {
+  const { t } = useTranslation();
+
   // Use Conversation-first, Block-based state
   const { conversations, streamingText, currentTextBlockId, status, send, interrupt } = useAgent(
     agentx,
     imageId ?? null
   );
+
+  // Use translated placeholder if not provided
+  const inputPlaceholder = placeholder ?? t("agentxUI.chat.placeholder");
 
   // Determine loading state
   const isLoading =
@@ -184,16 +190,16 @@ export function Chat({
   // Toolbar items
   const toolbarItems: ToolBarItem[] = React.useMemo(
     () => [
-      { id: "emoji", icon: <Smile className="w-4 h-4" />, label: "Emoji" },
-      { id: "folder", icon: <FolderOpen className="w-4 h-4" />, label: "File" },
+      { id: "emoji", icon: <Smile className="w-4 h-4" />, label: t("agentxUI.chat.toolbar.emoji") },
+      { id: "folder", icon: <FolderOpen className="w-4 h-4" />, label: t("agentxUI.chat.toolbar.file") },
     ],
-    []
+    [t]
   );
 
   const toolbarRightItems: ToolBarItem[] = React.useMemo(() => {
     if (!showSaveButton || !onSave) return [];
-    return [{ id: "save", icon: <Save className="w-4 h-4" />, label: "Save conversation" }];
-  }, [showSaveButton, onSave]);
+    return [{ id: "save", icon: <Save className="w-4 h-4" />, label: t("agentxUI.chat.toolbar.save") }];
+  }, [showSaveButton, onSave, t]);
 
   const handleToolbarClick = React.useCallback(
     (id: string) => {
@@ -251,7 +257,7 @@ export function Chat({
           }}
           onStop={interrupt}
           isLoading={isLoading}
-          placeholder={placeholder}
+          placeholder={inputPlaceholder}
           toolbarItems={toolbarItems}
           toolbarRightItems={toolbarRightItems}
           onToolbarItemClick={handleToolbarClick}

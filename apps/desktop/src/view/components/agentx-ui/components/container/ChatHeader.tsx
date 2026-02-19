@@ -15,6 +15,7 @@
 
 import * as React from "react";
 import { MessageSquare, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { AgentState } from "agentxjs";
 import { Badge } from "@/components/agentx-ui/components/ui";
 import { cn } from "@/components/agentx-ui/utils";
@@ -45,23 +46,25 @@ export interface ChatHeaderProps {
 /**
  * Get status display info
  */
-function getStatusInfo(status?: AgentState): {
+function useStatusInfo(status?: AgentState): {
   text: string;
   variant: "default" | "secondary" | "outline";
 } {
+  const { t } = useTranslation();
+
   switch (status) {
     case "thinking":
-      return { text: "Thinking", variant: "default" };
+      return { text: t("agentxUI.chat.status.thinking"), variant: "default" };
     case "responding":
-      return { text: "Responding", variant: "default" };
+      return { text: t("agentxUI.chat.status.responding"), variant: "default" };
     case "planning_tool":
-      return { text: "Planning", variant: "default" };
+      return { text: t("agentxUI.chat.status.planning"), variant: "default" };
     case "awaiting_tool_result":
-      return { text: "Executing", variant: "default" };
+      return { text: t("agentxUI.chat.status.executing"), variant: "default" };
     case "error":
-      return { text: "Error", variant: "outline" };
+      return { text: t("agentxUI.chat.status.error"), variant: "outline" };
     default:
-      return { text: "Idle", variant: "secondary" };
+      return { text: t("agentxUI.chat.status.idle"), variant: "secondary" };
   }
 }
 
@@ -69,14 +72,16 @@ function getStatusInfo(status?: AgentState): {
  * ChatHeader component
  */
 export function ChatHeader({
-  agentName = "New Conversation",
+  agentName,
   status = "idle",
   messageCount = 0,
   actions,
   className,
 }: ChatHeaderProps): React.ReactElement {
-  const statusInfo = getStatusInfo(status);
+  const { t } = useTranslation();
+  const statusInfo = useStatusInfo(status);
   const isActive = status !== "idle";
+  const displayName = agentName ?? t("agentxUI.conversations.untitled");
 
   return (
     <div className={cn("px-4 py-3 border-b border-border bg-background", className)}>
@@ -91,7 +96,7 @@ export function ChatHeader({
           {/* Name and status */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-sm text-foreground truncate">{agentName}</h2>
+              <h2 className="font-semibold text-sm text-foreground truncate">{displayName}</h2>
               {isActive && (
                 <Loader2 className="w-3 h-3 text-muted-foreground animate-spin flex-shrink-0" />
               )}
