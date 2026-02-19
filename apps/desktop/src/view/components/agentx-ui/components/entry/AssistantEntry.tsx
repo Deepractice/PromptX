@@ -188,7 +188,7 @@ export const AssistantEntry: React.FC<AssistantEntryProps> = ({
   return (
     <div className={cn("flex gap-3 py-2", className)}>
       <MessageAvatar role="assistant" />
-      <div className="flex-1 min-w-0 space-y-2 max-w-3xl">
+      <div className="flex-1 min-w-0 space-y-2 w-[60vw]">
         {/* Status indicator (when no blocks yet) */}
         {showStatusIndicator && renderStatusIndicator()}
 
