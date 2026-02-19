@@ -32,8 +32,8 @@ export { ChatHeader } from "./ChatHeader";
 export type { ChatHeaderProps } from "./ChatHeader";
 
 // ToolCard - Collapsible tool call/result card
-export { ToolCard } from "./ToolCard";
-export type { ToolCardProps, ToolStatus } from "./ToolCard";
+// export { ToolCard } from "./ToolCard";
+// export type { ToolCardProps, ToolStatus } from "./ToolCard";
 
 // WelcomePage - Initial welcome page
 export { WelcomePage } from "./WelcomePage";
