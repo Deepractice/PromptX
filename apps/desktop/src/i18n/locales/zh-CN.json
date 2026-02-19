@@ -2,6 +2,10 @@
   "settings": {
     "title": "设置",
     "subtitle": "自定义您的 PromptX 体验",
+    "tabs": {
+      "system": "系统设置",
+      "agentx": "AgentX 设置"
+    },
     "language": {
       "title": "语言",
       "description": "选择您的首选语言",
@@ -60,6 +64,44 @@
       "save": "保存配置",
       "saving": "保存中...",
       "reset": "重置为默认"
+    },
+    "mcp": {
+      "title": "MCP 配置",
+      "description": "配置 Model Context Protocol 服务器",
+      "add": "添加服务器",
+      "edit": "编辑服务器",
+      "empty": "暂无 MCP 服务器配置",
+      "emptyHint": "点击「添加服务器」添加您的第一个 MCP 服务器",
+      "dialogDescription": "使用 JSON 格式配置 MCP 服务器",
+      "fields": {
+        "name": "服务器名称",
+        "namePlaceholder": "例如：my-mcp-server",
+        "config": "配置 (JSON)",
+        "configHint": "Stdio: {command, args, env} | HTTP/SSE: {type, url}",
+        "enabled": "启用此服务器"
+      },
+      "save": "保存",
+      "saving": "保存中...",
+      "cancel": "取消",
+      "saveSuccess": "MCP 配置保存成功",
+      "saveFailed": "保存 MCP 配置失败",
+      "loadError": "加载 MCP 服务器失败",
+      "validation": {
+        "nameRequired": "服务器名称为必填项",
+        "commandOrUrlRequired": "必须提供 'command'（stdio）或 'url'（http/sse）",
+        "typeRequired": "使用 'url' 时必须指定 'type'（http 或 sse）",
+        "invalidJson": "JSON 格式无效",
+        "invalidConfig": "配置无效",
+        "duplicate": "已存在同名服务器"
+      },
+      "builtin": "内置",
+      "cannotDeleteBuiltin": "无法删除内置服务器",
+      "cannotDisableBuiltin": "无法禁用内置服务器"
+    },
+    "skills": {
+      "title": "Skills 配置",
+      "description": "管理和配置 AI 技能",
+      "comingSoon": "Skills 配置功能即将推出..."
     }
   },
   "logs": {
@@ -275,7 +317,12 @@
     "configReset": "已重置为默认配置",
     "configResetError": "重置配置失败",
     "loadError": "加载设置失败，请重试",
-    "languageChanged": "语言切换成功"
+    "languageChanged": "语言切换成功",
+    "restartRequired": "需要重启",
+    "restartDescription": "服务器配置已保存。应用需要重启才能使更改生效。",
+    "restartNow": "立即重启",
+    "restartLater": "稍后",
+    "restartError": "重启应用失败"
   },
   "sidebar": {
     "agentx": "AgentX 对话",

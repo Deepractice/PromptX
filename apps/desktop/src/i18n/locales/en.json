@@ -2,6 +2,10 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Customize your PromptX experience",
+    "tabs": {
+      "system": "System",
+      "agentx": "AgentX"
+    },
     "language": {
       "title": "Language",
       "description": "Choose your preferred language",
@@ -60,6 +64,44 @@
       "save": "Save Configuration",
       "saving": "Saving...",
       "reset": "Reset to Default"
+    },
+    "mcp": {
+      "title": "MCP Configuration",
+      "description": "Configure Model Context Protocol servers",
+      "add": "Add Server",
+      "edit": "Edit Server",
+      "empty": "No MCP servers configured",
+      "emptyHint": "Click 'Add Server' to add your first MCP server",
+      "dialogDescription": "Configure the MCP server with JSON format",
+      "fields": {
+        "name": "Server Name",
+        "namePlaceholder": "e.g., my-mcp-server",
+        "config": "Configuration (JSON)",
+        "configHint": "Stdio: {command, args, env} | HTTP/SSE: {type, url}",
+        "enabled": "Enable this server"
+      },
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saveSuccess": "MCP configuration saved successfully",
+      "saveFailed": "Failed to save MCP configuration",
+      "loadError": "Failed to load MCP servers",
+      "validation": {
+        "nameRequired": "Server name is required",
+        "commandOrUrlRequired": "Either 'command' (stdio) or 'url' (http/sse) is required",
+        "typeRequired": "The 'type' field is required when using 'url' (http or sse)",
+        "invalidJson": "Invalid JSON format",
+        "invalidConfig": "Invalid configuration",
+        "duplicate": "A server with this name already exists"
+      },
+      "builtin": "Built-in",
+      "cannotDeleteBuiltin": "Cannot delete built-in server",
+      "cannotDisableBuiltin": "Cannot disable built-in server"
+    },
+    "skills": {
+      "title": "Skills Configuration",
+      "description": "Manage and configure AI skills",
+      "comingSoon": "Skills configuration coming soon..."
     }
   },
 
@@ -276,7 +318,12 @@
     "configReset": "Configuration reset to default",
     "configResetError": "Failed to reset configuration",
     "loadError": "Failed to load settings, please try again",
-    "languageChanged": "Language changed successfully"
+    "languageChanged": "Language changed successfully",
+    "restartRequired": "Restart Required",
+    "restartDescription": "Server configuration has been saved. The application needs to restart for changes to take effect.",
+    "restartNow": "Restart Now",
+    "restartLater": "Later",
+    "restartError": "Failed to restart application"
   },
   "sidebar": {
     "agentx": "AgentX Chat",

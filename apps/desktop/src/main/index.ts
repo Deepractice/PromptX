@@ -78,6 +78,9 @@ class PromptXDesktopApp {
     this.updateManager = new UpdateManager()
     logger.info('Update manager initialized')
 
+    // Setup update IPC handlers
+    this.setupUpdateIPC()
+
     // Setup presentation layer
     logger.info('Setting up presentation layer...')
     this.setupPresentation(startUseCase, stopUseCase)
@@ -492,6 +495,38 @@ class PromptXDesktopApp {
     // 测试 AgentX 连接
     ipcMain.handle('agentx:testConnection', async (_event, config) => {
       return await agentXService.testConnection(config)
+    })
+
+    // 获取 MCP 服务器配置
+    ipcMain.handle('agentx:getMcpServers', () => {
+      return agentXService.getMcpServers()
+    })
+
+    // 更新 MCP 服务器配置
+    ipcMain.handle('agentx:updateMcpServers', async (_event, mcpServers) => {
+      try {
+        await agentXService.updateMcpServers(mcpServers)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+  }
+
+  private setupUpdateIPC(): void {
+    // 检查更新
+    ipcMain.handle('check-for-updates', async () => {
+      if (!this.updateManager) {
+        throw new Error('Update manager not initialized')
+      }
+      await this.updateManager.checkForUpdatesManual()
+      return { success: true }
+    })
+
+    // 重启应用
+    ipcMain.handle('app:relaunch', () => {
+      app.relaunch()
+      app.exit(0)
     })
   }
 

@@ -6,10 +6,27 @@ import { contextBridge, ipcRenderer } from 'electron'
  */
 
 // 定义API接口
+interface MCPServerConfig {
+  name: string
+  // stdio 类型
+  command?: string
+  args?: string[]
+  env?: Record<string, string>
+  // http/sse 类型
+  type?: "http" | "sse"
+  url?: string
+  // 通用
+  enabled: boolean
+  builtin?: boolean
+  description?: string
+  [key: string]: unknown
+}
+
 interface AgentXConfig {
   apiKey: string
   baseUrl: string
   model: string
+  mcpServers?: MCPServerConfig[]
 }
 
 interface OpenDialogOptions {
@@ -54,6 +71,8 @@ interface ElectronAPI {
     getConfig: () => Promise<AgentXConfig>
     updateConfig: (config: Partial<AgentXConfig>) => Promise<{ success: boolean; error?: string }>
     testConnection: (config: Partial<AgentXConfig>) => Promise<{ success: boolean; error?: string }>
+    getMcpServers: () => Promise<MCPServerConfig[]>
+    updateMcpServers: (servers: MCPServerConfig[]) => Promise<{ success: boolean; error?: string }>
   }
 }
 
@@ -78,6 +97,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getConfig: () => ipcRenderer.invoke('agentx:getConfig'),
     updateConfig: (config: Partial<AgentXConfig>) => ipcRenderer.invoke('agentx:updateConfig', config),
     testConnection: (config: Partial<AgentXConfig>) => ipcRenderer.invoke('agentx:testConnection', config),
+    getMcpServers: () => ipcRenderer.invoke('agentx:getMcpServers'),
+    updateMcpServers: (servers: MCPServerConfig[]) => ipcRenderer.invoke('agentx:updateMcpServers', servers),
   }
 } as ElectronAPI)
 

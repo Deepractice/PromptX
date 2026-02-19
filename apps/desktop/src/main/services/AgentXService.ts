@@ -4,16 +4,34 @@ import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { app } from 'electron'
 
+export interface MCPServerConfig {
+  name: string
+  // stdio 类型
+  command?: string
+  args?: string[]
+  env?: Record<string, string>
+  // http/sse 类型
+  type?: "http" | "sse"
+  url?: string
+  // 通用
+  enabled: boolean
+  builtin?: boolean  // 内置服务器标记，不可删除
+  description?: string  // 服务器描述
+  [key: string]: unknown  // 支持其他自定义字段
+}
+
 export interface AgentXConfig {
   apiKey: string
   baseUrl: string
   model: string
+  mcpServers?: MCPServerConfig[]
 }
 
 const DEFAULT_CONFIG: AgentXConfig = {
   apiKey: '',
   baseUrl: 'https://api.anthropic.com',
   model: 'claude-sonnet-4-20250514',
+  mcpServers: [],
 }
 
 export class AgentXService {
@@ -120,11 +138,34 @@ export class AgentXService {
       logger.info(`MCP Office path: ${mcpOfficePath}`)
 
       // Build MCP servers config
-      const mcpServers: Record<string, { command: string; args: string[] }> = {}
+      const mcpServers: Record<string, any> = {}
+
+      // Add built-in PromptX MCP server
+      const promptxUrl = this.getPromptXMcpUrl()
+      mcpServers['promptx'] = {
+        type: 'http',
+        url: promptxUrl,
+      }
+      logger.info(`PromptX MCP URL: ${promptxUrl}`)
+
+      // Add built-in mcp-office server
       if (mcpOfficePath) {
         mcpServers['mcp-office'] = {
           command: 'node',
           args: [mcpOfficePath],
+        }
+      }
+
+      // Add user-configured MCP servers
+      if (this.config.mcpServers) {
+        for (const server of this.config.mcpServers) {
+          if (server.enabled && server.name) {
+            const { name, enabled, builtin, description, ...config } = server
+            // 支持 stdio (command) 或 http/sse (type + url)
+            if (config.command || config.url) {
+              mcpServers[server.name] = config
+            }
+          }
         }
       }
 
@@ -251,6 +292,73 @@ export class AgentXService {
 
   getServerUrl(): string {
     return `ws://localhost:${this.port}`
+  }
+
+  /**
+   * 获取所有 MCP 服务器配置（包括内置的）
+   */
+  getMcpServers(): MCPServerConfig[] {
+    const servers: MCPServerConfig[] = []
+
+    // 添加内置的 PromptX MCP 服务器（从系统配置获取地址）
+    const promptxUrl = this.getPromptXMcpUrl()
+    servers.push({
+      name: 'promptx',
+      type: 'http',
+      url: promptxUrl,
+      enabled: true,
+      builtin: true,
+      description: 'PromptX MCP Server (Roles, Tools, Memory)',
+    })
+
+    // 添加内置的 mcp-office 服务器
+    const mcpOfficePath = this.getMcpOfficePath()
+    if (mcpOfficePath) {
+      servers.push({
+        name: 'mcp-office',
+        command: 'node',
+        args: [mcpOfficePath],
+        enabled: true,
+        builtin: true,
+        description: 'Office document reader (Word, Excel, PDF)',
+      })
+    }
+
+    // 添加用户配置的服务器
+    if (this.config.mcpServers) {
+      servers.push(...this.config.mcpServers)
+    }
+
+    return servers
+  }
+
+  /**
+   * 获取 PromptX MCP 服务器 URL（从系统配置读取）
+   */
+  private getPromptXMcpUrl(): string {
+    try {
+      const configPath = path.join(app.getPath('userData'), 'config.json')
+      if (fs.existsSync(configPath)) {
+        const data = fs.readFileSync(configPath, 'utf-8')
+        const config = JSON.parse(data)
+        const host = config.host || '127.0.0.1'
+        const port = config.port || 5203
+        return `http://${host}:${port}/mcp`
+      }
+    } catch (error) {
+      logger.error('Failed to read PromptX server config:', String(error))
+    }
+    // 默认地址
+    return 'http://127.0.0.1:5203/mcp'
+  }
+
+  /**
+   * 更新用户配置的 MCP 服务器（不包括内置的）
+   */
+  async updateMcpServers(servers: MCPServerConfig[]): Promise<void> {
+    // 过滤掉内置服务器，只保存用户配置的
+    const userServers = servers.filter(s => !s.builtin)
+    await this.updateConfig({ mcpServers: userServers })
   }
 }
 
