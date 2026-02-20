@@ -82,6 +82,16 @@ interface ElectronAPI {
     importSkill: (zipPath: string) => Promise<{ success: boolean; skillName?: string; error?: string }>
     deleteSkill: (skillName: string) => Promise<{ success: boolean; error?: string }>
   }
+  // Cognition API
+  cognition: {
+    getOverview: (roleId: string) => Promise<any>
+    listEngrams: (roleId: string, page?: number, pageSize?: number, type?: string, keyword?: string) => Promise<any>
+    getNetwork: (roleId: string, limit?: number) => Promise<any>
+    getCueDetail: (roleId: string, cueWord: string) => Promise<any>
+    updateEngram: (roleId: string, engramId: number, updates: { content?: string; type?: string; strength?: number; schema?: string }) => Promise<any>
+    deleteEngram: (roleId: string, engramId: number) => Promise<any>
+    deleteCue: (roleId: string, cueWord: string) => Promise<any>
+  }
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -115,6 +125,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateEnabledSkills: (skills: string[]) => ipcRenderer.invoke('agentx:updateEnabledSkills', skills),
     importSkill: (zipPath: string) => ipcRenderer.invoke('agentx:importSkill', zipPath),
     deleteSkill: (skillName: string) => ipcRenderer.invoke('agentx:deleteSkill', skillName),
+  },
+  // Cognition API
+  cognition: {
+    getOverview: (roleId: string) => ipcRenderer.invoke('cognition:getOverview', roleId),
+    listEngrams: (roleId: string, page?: number, pageSize?: number, type?: string, keyword?: string) =>
+      ipcRenderer.invoke('cognition:listEngrams', roleId, page, pageSize, type, keyword),
+    getNetwork: (roleId: string, limit?: number) => ipcRenderer.invoke('cognition:getNetwork', roleId, limit),
+    getCueDetail: (roleId: string, cueWord: string) => ipcRenderer.invoke('cognition:getCueDetail', roleId, cueWord),
+    updateEngram: (roleId: string, engramId: number, updates: { content?: string; type?: string; strength?: number; schema?: string }) =>
+      ipcRenderer.invoke('cognition:updateEngram', roleId, engramId, updates),
+    deleteEngram: (roleId: string, engramId: number) => ipcRenderer.invoke('cognition:deleteEngram', roleId, engramId),
+    deleteCue: (roleId: string, cueWord: string) => ipcRenderer.invoke('cognition:deleteCue', roleId, cueWord),
   }
 } as ElectronAPI)
 

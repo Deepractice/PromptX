@@ -7,6 +7,18 @@ export const recallTool: ToolWithHandler = {
   name: 'recall',
   description: `Retrieve memories from a role's semantic network
 
+## MANDATORY: Recall at Conversation Start
+
+**CRITICAL RULE**: When a role is active, you MUST call recall BEFORE answering the user's first message. This is not optional — skipping recall means losing all accumulated knowledge.
+
+\`\`\`
+Step 1: recall(role, null)          → DMN scan, see full memory landscape
+Step 2: recall(role, "relevant-kw") → drill into topic-specific memories
+Step 3: Answer using recalled context
+\`\`\`
+
+> Without recall, every conversation starts from zero. With recall, you build on past experience.
+
 ## Workflow
 
 1. **DMN scan** — \`recall(role, null)\` → see the full memory landscape (hub nodes)
@@ -14,6 +26,14 @@ export const recallTool: ToolWithHandler = {
 3. **Repeat** — follow new keywords in each result until you have enough context
 
 > Always start with DMN (null query) to see what exists. Never guess keywords.
+
+## When to Recall
+
+- **Conversation start** (MANDATORY) — always recall before first response
+- **New topic introduced** — recall related memories before answering
+- **User asks about past context** — recall to find previous discussions
+- **Before making decisions** — check if past experience is relevant
+- **Mid-conversation** — when you realize a topic connects to past knowledge
 
 ## Query Parameter
 
@@ -29,7 +49,7 @@ export const recallTool: ToolWithHandler = {
 
 ## Examples
 
-**DMN full scan:**
+**DMN full scan (always do this first):**
 \`\`\`json
 { "role": "luban", "query": null }
 \`\`\`

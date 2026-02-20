@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Pencil, ArrowDown } from "lucide-react"
 import type { RoleItem } from "./RoleListPanel"
+import MemoryTab from "./MemoryTab"
 
 const AVATAR_COLORS = [
   "from-gray-600 to-gray-800",
@@ -133,9 +134,7 @@ export default function RoleDetailPanel({ selectedRole, onActivate }: Props) {
             </div>
           </TabsContent>
           <TabsContent value="memory" className="p-6 mt-0">
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <p className="text-sm">{t("roles.detail.memoryEmpty")}</p>
-            </div>
+            <MemoryTab roleId={selectedRole.id} />
           </TabsContent>
         </Tabs>
       </div>

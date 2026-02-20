@@ -13,6 +13,7 @@ import { UpdateManager } from '~/main/application/UpdateManager'
 import { AutoStartService } from '~/main/application/AutoStartService'
 import { ElectronAutoStartAdapter } from '~/main/infrastructure/adapters/ElectronAutoStartAdapter'
 import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
+import { CognitionWindow } from '~/main/windows/CognitionWindow'
 import { agentXService } from '~/main/services/AgentXService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
@@ -89,6 +90,9 @@ class PromptXDesktopApp {
     logger.info('Setting up resource manager...')
     this.resourceManager = new ResourceManager()
     logger.info('Resource manager initialized')
+
+    // Setup CognitionWindow for memory/cognition IPC
+    new CognitionWindow()
 
     // Handle app events
     logger.info('Setting up app events...')
