@@ -416,7 +416,11 @@
       "save": "Save",
       "cancel": "Cancel",
       "confirmDelete": "Are you sure?",
-      "deleteCue": "Delete Cue"
+      "deleteCue": "Delete Cue",
+      "typeAtomic": "Atomic",
+      "typeLink": "Link",
+      "typePattern": "Pattern",
+      "allTypes": "All"
     },
     "messages": {
       "loadFailed": "Failed to load roles",

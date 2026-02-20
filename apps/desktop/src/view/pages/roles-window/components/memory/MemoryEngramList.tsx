@@ -17,6 +17,12 @@ const TYPE_COLORS: Record<string, string> = {
   PATTERN: "bg-purple-100 text-purple-700",
 }
 
+const TYPE_I18N: Record<string, string> = {
+  ATOMIC: "roles.memory.typeAtomic",
+  LINK: "roles.memory.typeLink",
+  PATTERN: "roles.memory.typePattern",
+}
+
 export default function MemoryEngramList({ roleId }: { roleId: string }) {
   const { t } = useTranslation()
   const [items, setItems] = useState<Engram[]>([])
@@ -95,10 +101,10 @@ export default function MemoryEngramList({ roleId }: { roleId: string }) {
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
         >
-          <option value="">{t("roles.memory.type")}: All</option>
-          <option value="ATOMIC">ATOMIC</option>
-          <option value="LINK">LINK</option>
-          <option value="PATTERN">PATTERN</option>
+          <option value="">{t("roles.memory.type")}: {t("roles.memory.allTypes")}</option>
+          <option value="ATOMIC">{t("roles.memory.typeAtomic")}</option>
+          <option value="LINK">{t("roles.memory.typeLink")}</option>
+          <option value="PATTERN">{t("roles.memory.typePattern")}</option>
         </select>
       </div>
 
@@ -132,9 +138,9 @@ export default function MemoryEngramList({ roleId }: { roleId: string }) {
                         value={editType}
                         onChange={e => setEditType(e.target.value)}
                       >
-                        <option value="ATOMIC">ATOMIC</option>
-                        <option value="LINK">LINK</option>
-                        <option value="PATTERN">PATTERN</option>
+                        <option value="ATOMIC">{t("roles.memory.typeAtomic")}</option>
+                        <option value="LINK">{t("roles.memory.typeLink")}</option>
+                        <option value="PATTERN">{t("roles.memory.typePattern")}</option>
                       </select>
                       <label className="flex items-center gap-1 text-xs text-muted-foreground">
                         {t("roles.memory.strength")}:
@@ -162,7 +168,7 @@ export default function MemoryEngramList({ roleId }: { roleId: string }) {
                       <p className="text-sm leading-relaxed line-clamp-2 flex-1">{engram.content}</p>
                       <div className="flex items-center gap-1 shrink-0">
                         <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${TYPE_COLORS[engram.type] || "bg-gray-100 text-gray-700"}`}>
-                          {engram.type}
+                          {t(TYPE_I18N[engram.type] || engram.type)}
                         </span>
                         <button
                           className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity"

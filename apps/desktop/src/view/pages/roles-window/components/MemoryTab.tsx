@@ -5,7 +5,7 @@ import MemoryEngramList from "./memory/MemoryEngramList"
 import MemoryNetwork from "./memory/MemoryNetwork"
 import MemoryCueExplorer from "./memory/MemoryCueExplorer"
 
-type SubView = "overview" | "engrams" | "network" | "cues"
+type SubView = "overview" | "engrams" | "network"
 
 export default function MemoryTab({ roleId }: { roleId: string }) {
   const { t } = useTranslation()
@@ -16,18 +16,12 @@ export default function MemoryTab({ roleId }: { roleId: string }) {
     { key: "overview", label: t("roles.memory.overview") },
     { key: "engrams", label: t("roles.memory.engrams") },
     { key: "network", label: t("roles.memory.network") },
-    { key: "cues", label: t("roles.memory.cues") },
   ]
 
-  const handleSelectCue = (word: string) => {
-    setSelectedCue(word)
-    setActiveView("cues")
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4 h-full min-h-0">
       {/* Sub-navigation */}
-      <div className="flex gap-1 rounded-lg bg-muted p-1">
+      <div className="flex gap-1 rounded-lg bg-muted p-1 shrink-0">
         {tabs.map(tab => (
           <button
             key={tab.key}
@@ -44,10 +38,16 @@ export default function MemoryTab({ roleId }: { roleId: string }) {
       </div>
 
       {/* Active sub-view */}
-      {activeView === "overview" && <MemoryOverview roleId={roleId} />}
-      {activeView === "engrams" && <MemoryEngramList roleId={roleId} />}
-      {activeView === "network" && <MemoryNetwork roleId={roleId} onSelectCue={handleSelectCue} />}
-      {activeView === "cues" && <MemoryCueExplorer roleId={roleId} initialCue={selectedCue} />}
+      {activeView === "overview" && <div className="flex-1 overflow-auto scrollbar-hide"><MemoryOverview roleId={roleId} /></div>}
+      {activeView === "engrams" && <div className="flex-1 overflow-auto scrollbar-hide"><MemoryEngramList roleId={roleId} /></div>}
+      {activeView === "network" && (
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
+          <div className="shrink-0">
+            <MemoryNetwork roleId={roleId} onSelectCue={setSelectedCue} selectedCue={selectedCue} />
+          </div>
+          <MemoryCueExplorer roleId={roleId} initialCue={selectedCue} onSelectCue={setSelectedCue} />
+        </div>
+      )}
     </div>
   )
 }

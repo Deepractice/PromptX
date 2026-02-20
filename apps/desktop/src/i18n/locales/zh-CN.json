@@ -415,7 +415,11 @@
       "save": "保存",
       "cancel": "取消",
       "confirmDelete": "确定删除？",
-      "deleteCue": "删除线索"
+      "deleteCue": "删除线索",
+      "typeAtomic": "原子",
+      "typeLink": "关联",
+      "typePattern": "模式",
+      "allTypes": "全部"
     },
     "messages": {
       "loadFailed": "加载角色失败",

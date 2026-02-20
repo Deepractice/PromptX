@@ -83,8 +83,8 @@ export default function RoleDetailPanel({ selectedRole, onActivate }: Props) {
       </div>
 
       {/* Detail Content with Tabs */}
-      <div className="flex-1 overflow-auto">
-        <Tabs defaultValue="structure" className="h-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Tabs defaultValue="structure" className="flex-1 flex flex-col min-h-0">
           <div className="border-b px-6">
             <TabsList className="h-10 bg-transparent p-0 gap-4">
               <TabsTrigger value="structure" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-1 pb-2.5 pt-2">
@@ -95,7 +95,7 @@ export default function RoleDetailPanel({ selectedRole, onActivate }: Props) {
               </TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="structure" className="p-6 mt-0">
+          <TabsContent value="structure" className="p-6 mt-0 overflow-auto scrollbar-hide">
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-medium mb-2">{t("roles.detail.description")}</h3>
@@ -133,7 +133,7 @@ export default function RoleDetailPanel({ selectedRole, onActivate }: Props) {
               </div>
             </div>
           </TabsContent>
-          <TabsContent value="memory" className="p-6 mt-0">
+          <TabsContent value="memory" className="flex-1 flex flex-col min-h-0 p-6 mt-0">
             <MemoryTab roleId={selectedRole.id} />
           </TabsContent>
         </Tabs>

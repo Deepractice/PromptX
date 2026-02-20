@@ -5,7 +5,15 @@ import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } 
 type CueNode = { id: string; recallFrequency: number; connectionCount: number; x?: number; y?: number }
 type Edge = { source: string | CueNode; target: string | CueNode; weight: number }
 
-export default function MemoryNetwork({ roleId, onSelectCue }: { roleId: string; onSelectCue: (word: string) => void }) {
+export default function MemoryNetwork({
+  roleId,
+  onSelectCue,
+  selectedCue,
+}: {
+  roleId: string
+  onSelectCue: (word: string) => void
+  selectedCue?: string
+}) {
   const { t } = useTranslation()
   const svgRef = useRef<SVGSVGElement>(null)
   const [nodes, setNodes] = useState<CueNode[]>([])
@@ -55,6 +63,13 @@ export default function MemoryNetwork({ roleId, onSelectCue }: { roleId: string;
     return `rgb(${80}, ${g}, ${200})`
   }
 
+  const isEdgeConnected = (e: Edge) => {
+    if (!selectedCue) return false
+    const sId = typeof e.source === "string" ? e.source : e.source.id
+    const tId = typeof e.target === "string" ? e.target : e.target.id
+    return sId === selectedCue || tId === selectedCue
+  }
+
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
@@ -96,15 +111,30 @@ export default function MemoryNetwork({ roleId, onSelectCue }: { roleId: string;
         <g transform={`translate(${transform.x + 350}, ${transform.y + 200}) scale(${transform.k})`}>
           {edges.map((e, i) => {
             const s = e.source as CueNode
-            const t = e.target as CueNode
-            return <line key={i} x1={s.x} y1={s.y} x2={t.x} y2={t.y} stroke="currentColor" strokeOpacity={0.15 + (e.weight || 1) * 0.05} strokeWidth={1} />
+            const tgt = e.target as CueNode
+            const connected = isEdgeConnected(e)
+            return (
+              <line
+                key={i}
+                x1={s.x} y1={s.y} x2={tgt.x} y2={tgt.y}
+                stroke={connected ? "rgb(80, 160, 200)" : "currentColor"}
+                strokeOpacity={connected ? 0.6 : 0.15 + (e.weight || 1) * 0.05}
+                strokeWidth={connected ? 2 : 1}
+              />
+            )
           })}
-          {nodes.map(n => (
-            <g key={n.id} transform={`translate(${n.x}, ${n.y})`} onClick={() => onSelectCue(n.id)} style={{ cursor: "pointer" }}>
-              <circle r={getRadius(n)} fill={getColor(n)} opacity={0.8} />
-              <text y={getRadius(n) + 12} textAnchor="middle" fontSize={10} fill="currentColor" opacity={0.7}>{n.id}</text>
-            </g>
-          ))}
+          {nodes.map(n => {
+            const isSelected = n.id === selectedCue
+            return (
+              <g key={n.id} transform={`translate(${n.x}, ${n.y})`} onClick={() => onSelectCue(n.id)} style={{ cursor: "pointer" }}>
+                {isSelected && (
+                  <circle r={getRadius(n) + 4} fill="none" stroke="rgb(80, 160, 200)" strokeWidth={2} opacity={0.8} />
+                )}
+                <circle r={getRadius(n)} fill={getColor(n)} opacity={isSelected ? 1 : 0.8} />
+                <text y={getRadius(n) + 12} textAnchor="middle" fontSize={10} fill="currentColor" opacity={isSelected ? 1 : 0.7} fontWeight={isSelected ? 600 : 400}>{n.id}</text>
+              </g>
+            )
+          })}
         </g>
       </svg>
     </div>
