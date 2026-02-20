@@ -148,6 +148,7 @@ export class PromptXResourceRepository implements ResourceRepository {
     if (categories.system) {
       for (const role of categories.system) {
         const resource = await this.convertToResource(role, 'role', 'system')
+        if (role.version === 'v2') resource.version = 'v2'
         resources.push(resource)
       }
     }
@@ -168,9 +169,9 @@ export class PromptXResourceRepository implements ResourceRepository {
       }
     }
 
-    // 处理 Rolex V2 角色 (source → user, version → v2)
+    // 处理 Rolex V2 用户角色 (非 SEED 的 v2 角色)
     if (categories.rolex) {
-      console.log(`[processRoles] Processing ${categories.rolex.length} V2 rolex roles`)
+      console.log(`[processRoles] Processing ${categories.rolex.length} V2 user roles`)
       for (const role of categories.rolex) {
         const resource = await this.convertToResource(role, 'role', 'user')
         resource.version = 'v2'

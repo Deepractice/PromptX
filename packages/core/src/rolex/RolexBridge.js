@@ -11,6 +11,8 @@ const logger = require('@promptx/logger')
  * 所有 RoleX 导入必须使用 await import() 动态导入。
  */
 class RolexBridge {
+  static SEED_ROLES = ['nuwa', 'waiter']
+
   constructor () {
     this.platform = null
     this.rolex = null
@@ -42,12 +44,17 @@ class RolexBridge {
       const { LocalPlatform } = await import('@rolexjs/local-platform')
       const { Rolex, bootstrap, renderFeature, renderFeatures } = await import('rolexjs')
 
-      this.platform = new LocalPlatform(this.rolexRoot)
-      this.rolex = new Rolex(this.platform)
       this._renderFeature = renderFeature
       this._renderFeatures = renderFeatures
 
-      // Bootstrap: 确保种子角色（Nuwa）存在
+      // 版本检测：rolexjs 更新时强制重建 SEED 角色（在创建 platform 之前）
+      await this._syncSeedRoles()
+
+      // 创建 platform（在 SEED 同步之后，确保读到最新的文件状态）
+      this.platform = new LocalPlatform(this.rolexRoot)
+      this.rolex = new Rolex(this.platform)
+
+      // Bootstrap: 确保种子角色存在
       bootstrap(this.platform)
 
       this.initialized = true
@@ -55,6 +62,63 @@ class RolexBridge {
     } catch (error) {
       logger.warn('[RolexBridge] RoleX initialization failed:', error.message)
       throw error
+    }
+  }
+
+  /**
+   * 同步 SEED 角色 - 当 rolexjs 版本变化时删除旧的 SEED 角色
+   * bootstrap 会在之后重建它们
+   */
+  async _syncSeedRoles () {
+    const SEED_ROLES = RolexBridge.SEED_ROLES
+    const versionFile = path.join(this.rolexRoot, '.seed-version')
+
+    // 读取 rolexjs 当前版本（通过文件路径，避免 ESM exports 限制）
+    let currentVersion = 'unknown'
+    try {
+      const rolexjsDir = path.dirname(require.resolve('rolexjs'))
+      const pkg = await fs.readJson(path.join(rolexjsDir, '..', 'package.json'))
+      currentVersion = pkg.version
+    } catch {
+      // fallback: 无法读取版本，每次都重建
+      currentVersion = Date.now().toString()
+    }
+
+    // 对比已记录的版本
+    let savedVersion = ''
+    try {
+      savedVersion = (await fs.readFile(versionFile, 'utf-8')).trim()
+    } catch {
+      // 无版本文件 = 首次运行或旧安装
+    }
+
+    if (savedVersion !== currentVersion) {
+      logger.info(`[RolexBridge] SEED version changed (${savedVersion || 'none'} → ${currentVersion}), resyncing built-in roles...`)
+      for (const name of SEED_ROLES) {
+        const roleDir = path.join(this.rolexRoot, 'roles', name)
+        if (await fs.pathExists(roleDir)) {
+          await fs.remove(roleDir)
+          logger.info(`[RolexBridge] Removed outdated SEED role: ${name}`)
+        }
+      }
+
+      // 同时从 rolex.json 注册表中移除 SEED 角色，否则 bootstrap 会跳过重建
+      const registryFile = path.join(this.rolexRoot, 'rolex.json')
+      try {
+        if (await fs.pathExists(registryFile)) {
+          const registry = await fs.readJson(registryFile)
+          if (Array.isArray(registry.roles)) {
+            registry.roles = registry.roles.filter(r => !SEED_ROLES.includes(r))
+            await fs.writeJson(registryFile, registry, { spaces: 2 })
+            logger.info('[RolexBridge] Removed SEED roles from rolex.json registry')
+          }
+        }
+      } catch (e) {
+        logger.warn('[RolexBridge] Failed to clean rolex.json registry:', e.message)
+      }
+
+      await fs.writeFile(versionFile, currentVersion)
+      logger.info('[RolexBridge] SEED roles cleared, bootstrap will recreate them')
     }
   }
 
@@ -266,10 +330,11 @@ class RolexBridge {
           rolesDir, entry.name, 'identity', 'persona.identity.feature'
         )
         if (await fs.pathExists(featurePath)) {
+          const isSeed = RolexBridge.SEED_ROLES.includes(entry.name)
           roles.push({
             id: entry.name,
             name: entry.name,
-            source: 'rolex',
+            source: isSeed ? 'system' : 'rolex',
             version: 'v2',
             protocol: 'role'
           })
