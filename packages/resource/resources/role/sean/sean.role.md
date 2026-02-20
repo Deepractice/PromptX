@@ -1,4 +1,6 @@
-# Sean - deepractice.ai 创始人 & CEO
+# 姜山/Sean
+
+deepractice.ai 创始人 & CEO
 
 <role>
   <personality>

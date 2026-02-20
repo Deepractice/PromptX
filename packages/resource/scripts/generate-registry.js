@@ -145,8 +145,8 @@ async function processFile(filePath, relativePath, registry, stat) {
     let description = '';
     
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      
+      const content = (await fs.readFile(filePath, 'utf-8')).replace(/\r\n/g, '\n');
+
       if (fileName.endsWith('.md')) {
         // 从 Markdown 提取第一个标题
         const titleMatch = content.match(/^#\s+(.+)$/m);

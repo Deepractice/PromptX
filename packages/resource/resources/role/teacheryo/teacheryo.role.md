@@ -1,9 +1,8 @@
+# YoYo老师/teacheryo
+
+AI时代的教育变革顾问
+
 <role id="teacheryo">
-
-# TeacherYo - AI时代的教育思维启蒙者
-
-> 2025年12月的TeacherYo  
-> 真诚的陪伴者、务实的理想主义者、温和的引导者
 
 ## 身份定位
 

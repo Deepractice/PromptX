@@ -18,17 +18,21 @@ type RoleItem = {
   description?: string
   type: "role"
   source?: string
+  version?: "v1" | "v2"
 }
 
+type VersionFilter = "v1" | "v2"
+type SourceFilter = "all" | "system" | "plaza" | "user"
+
 const AVATAR_COLORS = [
-  "from-blue-400 to-blue-600",
-  "from-purple-400 to-purple-600",
-  "from-green-400 to-green-600",
-  "from-orange-400 to-orange-600",
-  "from-pink-400 to-pink-600",
-  "from-teal-400 to-teal-600",
-  "from-indigo-400 to-indigo-600",
-  "from-rose-400 to-rose-600",
+  "from-gray-600 to-gray-800",
+  "from-slate-500 to-slate-700",
+  "from-zinc-500 to-zinc-700",
+  "from-neutral-500 to-neutral-700",
+  "from-stone-500 to-stone-700",
+  "from-gray-500 to-gray-700",
+  "from-slate-600 to-slate-800",
+  "from-zinc-600 to-zinc-800",
 ]
 
 function getAvatarColor(name: string) {
@@ -45,6 +49,8 @@ export default function RolesPage() {
   const { t } = useTranslation()
   const [roles, setRoles] = useState<RoleItem[]>([])
   const [query, setQuery] = useState("")
+  const [versionFilter, setVersionFilter] = useState<VersionFilter>("v2")
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all")
   const [loading, setLoading] = useState(false)
   const [activatingId, setActivatingId] = useState<string | null>(null)
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null)
@@ -52,13 +58,42 @@ export default function RolesPage() {
   const filteredRoles = useMemo(() => {
     const q = query.trim().toLowerCase()
     return roles.filter((item) => {
+      const isV2 = item.version === "v2"
+      const versionOk =
+        (versionFilter === "v1" && !isV2) ||
+        (versionFilter === "v2" && isV2)
+      const src = item.source ?? "user"
+      const sourceOk = sourceFilter === "all" ||
+        src === (sourceFilter === "plaza" ? "project" : sourceFilter)
       const queryOk =
         q === "" ||
         item.name.toLowerCase().includes(q) ||
         (item.description?.toLowerCase().includes(q) ?? false)
-      return queryOk
+      return versionOk && sourceOk && queryOk
     })
-  }, [roles, query])
+  }, [roles, versionFilter, sourceFilter, query])
+
+  const versionStats = useMemo(() => {
+    let v1 = 0, v2 = 0
+    roles.forEach((r) => {
+      if (r.version === "v2") v2++
+      else v1++
+    })
+    return { v1, v2 }
+  }, [roles])
+
+  // Source stats within current version
+  const sourceStats = useMemo(() => {
+    const stats = { system: 0, plaza: 0, user: 0 }
+    roles.forEach((r) => {
+      const isV2 = r.version === "v2"
+      if ((versionFilter === "v1" && isV2) || (versionFilter === "v2" && !isV2)) return
+      const src = r.source ?? "user"
+      if (src === "project") stats.plaza++
+      else if (src in stats) stats[src as keyof typeof stats]++
+    })
+    return stats
+  }, [roles, versionFilter])
 
   const loadRoles = async () => {
     setLoading(true)
@@ -76,6 +111,7 @@ export default function RolesPage() {
               description: role.description,
               type: "role",
               source,
+              version: role.version || "v1",
             })
           )
         })
@@ -115,8 +151,42 @@ export default function RolesPage() {
     <div className="flex h-full">
       <Toaster />
       {/* Left Panel - Role List */}
-      <div className="w-[280px] border-r flex flex-col bg-muted/30">
-        <div className="p-3 space-y-3">
+      <div className="w-[280px] border-r flex flex-col bg-muted/30 overflow-hidden">
+        <div className="p-3 space-y-2">
+          {/* Version toggle */}
+          <div className="flex gap-1">
+            {(["v1", "v2"] as const).map((v) => (
+              <button
+                key={v}
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                  versionFilter === v
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+                onClick={() => { setVersionFilter(v); setSourceFilter("all") }}
+              >
+                {v === "v1" ? "V1 DPML" : "V2 Rolex"}
+                <span className="ml-1 opacity-70">({versionStats[v]})</span>
+              </button>
+            ))}
+          </div>
+          {/* Source sub-filter */}
+          <div className="flex gap-1">
+            {(["all", "system", "plaza", "user"] as const).map((f) => (
+              <button
+                key={f}
+                className={`flex-1 rounded-md px-1 py-0.5 text-[10px] transition-colors ${
+                  sourceFilter === f
+                    ? "bg-foreground/80 text-background"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted/80"
+                }`}
+                onClick={() => setSourceFilter(f)}
+              >
+                {t(`roles.filters.${f}`)}
+                {f !== "all" && <span className="ml-0.5 opacity-70">({sourceStats[f]})</span>}
+              </button>
+            ))}
+          </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -143,7 +213,7 @@ export default function RolesPage() {
                   key={`${role.source}-${role.id}`}
                   className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                     selectedRole?.id === role.id && selectedRole?.source === role.source
-                      ? "bg-blue-50 border border-blue-200"
+                      ? "bg-accent border border-border"
                       : "hover:bg-muted"
                   }`}
                   onClick={() => setSelectedRole(role)}
@@ -151,11 +221,11 @@ export default function RolesPage() {
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${getAvatarColor(role.name)} text-white text-sm font-semibold`}>
                     {getInitial(role.name)}
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium truncate">{role.name}</span>
-                      <span className="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                        {role.source === "system" ? "V1" : "V2"}
+                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        {role.version === "v2" ? "V2" : "V1"}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
@@ -183,8 +253,8 @@ export default function RolesPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-semibold">{selectedRole.name}</h2>
-                      <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                        {selectedRole.source === "system" ? "V1 DPML" : "V2 Bot"}
+                      <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        {selectedRole.version === "v2" ? "V2 Rolex" : "V1 DPML"}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">ID: {selectedRole.id}</p>
@@ -214,10 +284,10 @@ export default function RolesPage() {
               <Tabs defaultValue="structure" className="h-full">
                 <div className="border-b px-6">
                   <TabsList className="h-10 bg-transparent p-0 gap-4">
-                    <TabsTrigger value="structure" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent px-1 pb-2.5 pt-2">
+                    <TabsTrigger value="structure" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-1 pb-2.5 pt-2">
                       {t("roles.detail.structure")}
                     </TabsTrigger>
-                    <TabsTrigger value="memory" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent px-1 pb-2.5 pt-2">
+                    <TabsTrigger value="memory" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-1 pb-2.5 pt-2">
                       {t("roles.detail.memory")}
                     </TabsTrigger>
                   </TabsList>
@@ -235,15 +305,15 @@ export default function RolesPage() {
                       <h3 className="text-sm font-medium mb-3">{t("roles.detail.architecture")}</h3>
                       <div className="rounded-lg border bg-muted/30 p-6">
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-full max-w-xs rounded-lg bg-blue-500 px-4 py-3 text-center text-white text-sm font-medium">
+                          <div className="w-full max-w-xs rounded-lg bg-foreground px-4 py-3 text-center text-background text-sm font-medium">
                             Personality Layer
                           </div>
                           <ArrowDown className="h-4 w-4 text-muted-foreground" />
-                          <div className="w-full max-w-xs rounded-lg bg-green-500 px-4 py-3 text-center text-white text-sm font-medium">
+                          <div className="w-full max-w-xs rounded-lg bg-foreground/80 px-4 py-3 text-center text-background text-sm font-medium">
                             Principle Layer
                           </div>
                           <ArrowDown className="h-4 w-4 text-muted-foreground" />
-                          <div className="w-full max-w-xs rounded-lg bg-purple-500 px-4 py-3 text-center text-white text-sm font-medium">
+                          <div className="w-full max-w-xs rounded-lg bg-foreground/60 px-4 py-3 text-center text-background text-sm font-medium">
                             Knowledge Layer
                           </div>
                         </div>
@@ -251,10 +321,10 @@ export default function RolesPage() {
                     </div>
                     {/* Source info */}
                     <div className="flex gap-2 mt-4">
-                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs bg-muted text-muted-foreground border border-border">
                         {selectedRole.source ?? "user"}
                       </span>
-                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs bg-gray-50 text-gray-600 border border-gray-200">
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs bg-muted text-muted-foreground border border-border">
                         {selectedRole.type}
                       </span>
                     </div>

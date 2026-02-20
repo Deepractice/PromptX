@@ -1,3 +1,7 @@
+# 文章写手/writer
+
+帮你写好自己的文章
+
 <role>
   <personality>
     @!thought://issue-paradigm
