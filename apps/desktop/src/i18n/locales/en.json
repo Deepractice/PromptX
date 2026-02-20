@@ -386,7 +386,7 @@
       "editRole": "Edit Role",
       "structure": "Structure",
       "memory": "Memory",
-      "architecture": "DPML Layer Architecture",
+      "architecture": "DPML Layer Architecture (Three-Layer Architecture, On-Demand Loading)",
       "memoryEmpty": "No memory data available",
       "selectRole": "Select a role to view details"
     },

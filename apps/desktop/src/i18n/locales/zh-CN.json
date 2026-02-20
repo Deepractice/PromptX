@@ -385,7 +385,7 @@
       "editRole": "编辑角色",
       "structure": "结构",
       "memory": "记忆",
-      "architecture": "DPML 层级架构",
+      "architecture": "DPML 层级架构（三层架构，按需加载）",
       "memoryEmpty": "暂无记忆数据",
       "selectRole": "选择一个角色查看详情"
     },
