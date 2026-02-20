@@ -381,6 +381,7 @@
     "noDescription": "暂无描述",
     "detail": {
       "description": "描述",
+      "createRole":"创建角色",
       "close": "关闭",
       "editRole": "编辑角色",
       "structure": "结构",
@@ -392,7 +393,8 @@
     "messages": {
       "loadFailed": "加载角色失败",
       "activateSuccess": "角色 \"{{name}}\" 激活成功",
-      "activateFailed": "激活角色失败"
+      "activateFailed": "激活角色失败",
+      "activatePrompt": "激活{{name}}角色"
     }
   },
   "tools": {

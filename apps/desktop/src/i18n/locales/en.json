@@ -382,6 +382,7 @@
     "noDescription": "No description available",
     "detail": {
       "description": "Description",
+      "createRole":"Create Role",
       "close": "Close",
       "editRole": "Edit Role",
       "structure": "Structure",
@@ -393,7 +394,8 @@
     "messages": {
       "loadFailed": "Failed to load roles",
       "activateSuccess": "Role \"{{name}}\" activated successfully",
-      "activateFailed": "Failed to activate role"
+      "activateFailed": "Failed to activate role",
+      "activatePrompt": "Activate role {{name}}"
     }
   },
   "tools": {

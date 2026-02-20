@@ -132,8 +132,14 @@ export default function RoleListPanel({
                 <div className="w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium truncate">{role.name}</span>
-                    <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {role.version === "v2" ? "V2" : "V1"}
+                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                      role.source === "system"
+                        ? "bg-blue-100 text-blue-700"
+                        : role.source === "project"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-green-100 text-green-700"
+                    }`}>
+                      {t(`roles.filters.${role.source === "project" ? "plaza" : (role.source ?? "user")}`)}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">

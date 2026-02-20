@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Toaster } from "sonner"
 import {
@@ -22,6 +22,7 @@ import SettingsPage from "../settings-window"
 import ToolsPage from "../tools-window"
 import RolesPage from "../roles-window"
 import AgentXPage from "../agentx-window"
+import { goToSendMessage } from "../../../utils/goToSendMessage"
 import logo from "../../../../assets/icons/icon-64x64.png"
 type PageType = "resources" | "logs" | "settings" | "update" |"agentx"|"roles"|"tools"
 
@@ -29,6 +30,15 @@ function MainContent() {
   const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState<PageType>("agentx")
   const { open } = useSidebar()
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const page = (e as CustomEvent).detail?.page
+      if (page) setCurrentPage(page)
+    }
+    window.addEventListener("navigate", handler)
+    return () => window.removeEventListener("navigate", handler)
+  }, [])
 
   const menuItems = [
     {
@@ -63,19 +73,22 @@ function MainContent() {
     },
   ]
 
-  const handleCreateTool = () => {
-    // Store pending message for Studio to pick up when ready
-    ;(window as any).__agentx_pending_message = t("agentxUI.welcome.presets.lubanPrompt")
-    setCurrentPage("agentx")
-  }
+
 
   const renderHeaderActions = () => {
     switch (currentPage) {
       case "tools":
         return (
-          <Button size="sm" className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={handleCreateTool}>
+          <Button size="sm" className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={() => goToSendMessage(t("agentxUI.welcome.presets.lubanPrompt"))}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             {t("tools.detail.createTool")}
+          </Button>
+        )
+      case "roles":
+        return (
+          <Button size="sm" className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={() => goToSendMessage(t("agentxUI.welcome.presets.nuwaPrompt"))}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            {t("roles.detail.createRole")}
           </Button>
         )
       default:

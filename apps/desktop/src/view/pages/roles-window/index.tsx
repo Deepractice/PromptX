@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast, Toaster } from "sonner"
+import { goToSendMessage } from "../../../utils/goToSendMessage"
 import RoleListPanel from "./components/RoleListPanel"
 import RoleDetailPanel from "./components/RoleDetailPanel"
 import type { RoleItem, VersionFilter, SourceFilter } from "./components/RoleListPanel"
@@ -12,7 +13,6 @@ export default function RolesPage() {
   const [versionFilter, setVersionFilter] = useState<VersionFilter>("v2")
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all")
   const [loading, setLoading] = useState(false)
-  const [activatingId, setActivatingId] = useState<string | null>(null)
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null)
 
   const filteredRoles = useMemo(() => {
@@ -86,20 +86,8 @@ export default function RolesPage() {
     }
   }
 
-  const handleActivate = async (role: RoleItem) => {
-    setActivatingId(role.id)
-    try {
-      const result = await window.electronAPI?.activateRole(role.id)
-      if (result?.success) {
-        toast.success(t("roles.messages.activateSuccess", { name: role.name }))
-      } else {
-        toast.error(result?.message || t("roles.messages.activateFailed"))
-      }
-    } catch (e: any) {
-      toast.error(e?.message || t("roles.messages.activateFailed"))
-    } finally {
-      setActivatingId(null)
-    }
+  const handleActivate = (role: RoleItem) => {
+    goToSendMessage(t("roles.messages.activatePrompt", { name: role.name }))
   }
 
   useEffect(() => {
@@ -125,7 +113,6 @@ export default function RolesPage() {
       />
       <RoleDetailPanel
         selectedRole={selectedRole}
-        activatingId={activatingId}
         onActivate={handleActivate}
       />
     </div>

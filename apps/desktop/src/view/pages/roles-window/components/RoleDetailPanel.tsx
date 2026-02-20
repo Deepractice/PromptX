@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Pencil, ArrowDown } from "lucide-react"
+import { Pencil, ArrowDown } from "lucide-react"
 import type { RoleItem } from "./RoleListPanel"
 
 const AVATAR_COLORS = [
@@ -27,11 +27,10 @@ function getInitial(name: string) {
 
 type Props = {
   selectedRole: RoleItem | null
-  activatingId: string | null
   onActivate: (role: RoleItem) => void
 }
 
-export default function RoleDetailPanel({ selectedRole, activatingId, onActivate }: Props) {
+export default function RoleDetailPanel({ selectedRole, onActivate }: Props) {
   const { t } = useTranslation()
 
   if (!selectedRole) {
@@ -54,26 +53,28 @@ export default function RoleDetailPanel({ selectedRole, activatingId, onActivate
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold">{selectedRole.name}</h2>
-                <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  {selectedRole.version === "v2" ? "V2 Rolex" : "V1 DPML"}
+                <span className={`rounded px-2 py-0.5 text-xs font-medium ${
+                  selectedRole.source === "system" ? "bg-blue-100 text-blue-700"
+                    : selectedRole.source === "project" ? "bg-amber-100 text-amber-700"
+                    : "bg-green-100 text-green-700"
+                }`}>
+                  {t(`roles.filters.${selectedRole.source === "project" ? "plaza" : (selectedRole.source ?? "user")}`)}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">ID: {selectedRole.id}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              {t("roles.detail.editRole")}
-            </Button>
+            {(selectedRole.source ?? "user") === "user" && (
+              <Button variant="outline" size="sm">
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                {t("roles.detail.editRole")}
+              </Button>
+            )}
             <Button
               size="sm"
-              disabled={activatingId === selectedRole.id}
               onClick={() => onActivate(selectedRole)}
             >
-              {activatingId === selectedRole.id ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-              ) : null}
               {t("roles.activate")}
             </Button>
           </div>
