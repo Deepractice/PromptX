@@ -170,6 +170,26 @@ export function Studio({
     }
   }, [agentx, createImage, runImage]);
 
+  // Check for pending external message (e.g. from "Create Tool" button)
+  React.useEffect(() => {
+    if (!agentx) return;
+    const pending = (window as any).__agentx_pending_message;
+    if (pending) {
+      delete (window as any).__agentx_pending_message;
+      handleWelcomeSend(pending);
+    }
+  }, [agentx, handleWelcomeSend]);
+
+  // Listen for external new-chat requests via custom event
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const message = (e as CustomEvent).detail?.message;
+      if (message) handleWelcomeSend(message);
+    };
+    window.addEventListener("agentx:new-chat", handler);
+    return () => window.removeEventListener("agentx:new-chat", handler);
+  }, [handleWelcomeSend]);
+
   // Listen to agentx system_error events
   React.useEffect(() => {
     if (!agentx) return;

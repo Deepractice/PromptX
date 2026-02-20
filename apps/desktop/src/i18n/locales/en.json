@@ -458,7 +458,8 @@
       "editName": "Tool Name",
       "editDescription": "Tool Description",
       "namePlaceholder": "Enter tool name",
-      "descriptionPlaceholder": "Enter tool description"
+      "descriptionPlaceholder": "Enter tool description",
+      "createTool": "Create Tool"
     },
     "messages": {
       "loadFailed": "Failed to load tools",

@@ -45,14 +45,14 @@ type ExecLogEntry = {
 }
 
 const AVATAR_COLORS = [
-  "from-orange-400 to-orange-600",
-  "from-teal-400 to-teal-600",
-  "from-pink-400 to-pink-600",
-  "from-blue-400 to-blue-600",
-  "from-purple-400 to-purple-600",
-  "from-green-400 to-green-600",
-  "from-indigo-400 to-indigo-600",
-  "from-rose-400 to-rose-600",
+  "from-gray-600 to-gray-800",
+  "from-slate-500 to-slate-700",
+  "from-zinc-500 to-zinc-700",
+  "from-neutral-500 to-neutral-700",
+  "from-stone-500 to-stone-700",
+  "from-gray-500 to-gray-700",
+  "from-slate-600 to-slate-800",
+  "from-zinc-600 to-zinc-800",
 ]
 
 function getAvatarColor(name: string) {
@@ -455,7 +455,7 @@ export default function ToolsPage() {
                 key={f}
                 className={`flex-1 rounded-md px-1.5 py-1 text-[11px] transition-colors ${
                   sourceFilter === f
-                    ? "bg-orange-500 text-white"
+                    ? "bg-foreground text-background"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
                 onClick={() => setSourceFilter(f)}
@@ -482,7 +482,7 @@ export default function ToolsPage() {
                   key={`${tool.source}-${tool.id}`}
                   className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors overflow-hidden ${
                     selectedTool?.id === tool.id && selectedTool?.source === tool.source
-                      ? "bg-orange-50 border border-orange-200"
+                      ? "bg-accent border border-border"
                       : "hover:bg-muted"
                   }`}
                   onClick={() => selectTool(tool)}
@@ -580,7 +580,7 @@ export default function ToolsPage() {
                       <TabsTrigger
                         key={tab}
                         value={tab}
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-1 pb-2.5 pt-2"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-1 pb-2.5 pt-2"
                       >
                         {t(`tools.detail.${tab}`)}
                       </TabsTrigger>
@@ -774,7 +774,7 @@ export default function ToolsPage() {
                       <Button
                         onClick={handleExecute}
                         disabled={executing}
-                        className="bg-orange-500 hover:bg-orange-600"
+                        className="bg-foreground text-background hover:bg-foreground/90"
                       >
                         {executing ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -802,7 +802,7 @@ export default function ToolsPage() {
                               key={file}
                               className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
                                 selectedFile === file
-                                  ? "bg-orange-50 border border-orange-200"
+                                  ? "bg-accent border border-border"
                                   : "hover:bg-muted"
                               }`}
                               onClick={() => loadFileContent(file)}
@@ -834,7 +834,7 @@ export default function ToolsPage() {
                                   </Button>
                                   <Button
                                     size="sm"
-                                    className="h-7 text-xs bg-orange-500 hover:bg-orange-600"
+                                    className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90"
                                     onClick={handleSaveFile}
                                     disabled={saving}
                                   >
@@ -1023,7 +1023,7 @@ export default function ToolsPage() {
               </Button>
               <Button
                 size="sm"
-                className="bg-orange-500 hover:bg-orange-600"
+                className="bg-foreground text-background hover:bg-foreground/90"
                 onClick={handleUpdateInfo}
                 disabled={savingInfo || !editName.trim()}
               >

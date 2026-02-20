@@ -457,7 +457,8 @@
       "editName": "工具名称",
       "editDescription": "工具描述",
       "namePlaceholder": "请输入工具名称",
-      "descriptionPlaceholder": "请输入工具描述"
+      "descriptionPlaceholder": "请输入工具描述",
+      "createTool": "创建工具"
     },
     "messages": {
       "loadFailed": "加载工具失败",

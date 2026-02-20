@@ -14,7 +14,8 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Store, FileText, Settings,Pickaxe,MessageSquare,UsersRound } from "lucide-react"
+import { Store, FileText, Settings, Pickaxe, MessageSquare, UsersRound, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import ResourcesPage from "../resources-window"
 import LogsPage from "../logs-window"
 import SettingsPage from "../settings-window"
@@ -61,6 +62,26 @@ function MainContent() {
       icon: Settings,
     },
   ]
+
+  const handleCreateTool = () => {
+    // Store pending message for Studio to pick up when ready
+    ;(window as any).__agentx_pending_message = t("agentxUI.welcome.presets.lubanPrompt")
+    setCurrentPage("agentx")
+  }
+
+  const renderHeaderActions = () => {
+    switch (currentPage) {
+      case "tools":
+        return (
+          <Button size="sm" className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={handleCreateTool}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            {t("tools.detail.createTool")}
+          </Button>
+        )
+      default:
+        return null
+    }
+  }
 
   const renderPage = () => {
     switch (currentPage) {
@@ -114,11 +135,14 @@ function MainContent() {
 
       <main className={`flex-1 overflow-hidden ${open ? 'ml-[12vw] ' : ''}`}>
         <div className="h-full flex flex-col">
-          <div className="flex items-center gap-2 border-b px-4 py-3 bg-background">
-            <SidebarTrigger />
-            <h2 className="text-lg font-semibold">
-              {menuItems.find((item) => item.id === currentPage)?.title}
-            </h2>
+          <div className="flex items-center justify-between border-b px-4 py-3 bg-background">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger />
+              <h2 className="text-lg font-semibold">
+                {menuItems.find((item) => item.id === currentPage)?.title}
+              </h2>
+            </div>
+            {renderHeaderActions()}
           </div>
           <div className="h-[calc(100vh-53px)] overflow-auto ">{renderPage()}</div>
         </div>
