@@ -1,5 +1,5 @@
 /**
- * Tool Creator - PromptX工具资源的专用创作工具
+ * tool-creator
  * 
  * 战略意义：
  * 1. 开发效率提升：将工具创建从技术操作简化为业务操作
@@ -32,8 +32,8 @@ module.exports = {
   getMetadata() {
     return {
       id: 'tool-creator',
-      name: 'Tool Creator',
-      description: 'PromptX工具资源的CRUD和验证工具，简化工具开发流程',
+      name: 'tool-creator',
+      description: '工具资源CRUD和验证工具，简化工具开发流程',
       version: '1.0.0',
       category: 'creation',
       author: '鲁班',

@@ -141,6 +141,153 @@ export class ResourceListWindow {
     })
 
 
+    // 执行工具
+    ipcMain.handle('resources:executeTool', async (_: IpcMainInvokeEvent, toolId: string, parameters?: any) => {
+      try {
+        if (!toolId) {
+          return { success: false, message: 'Tool ID is required' }
+        }
+
+        const core = require('@promptx/core')
+        const cli = core.pouch?.cli || core.cli || core.default?.cli
+        if (!cli || !cli.execute) {
+          return { success: false, message: 'CLI not available in @promptx/core' }
+        }
+
+        // 构建 CLI 参数: toolx @tool://toolId execute [params]
+        const toolRef = toolId.startsWith('@tool://') ? toolId : `@tool://${toolId}`
+        const args: string[] = [toolRef, 'execute']
+        if (parameters) {
+          args.push(typeof parameters === 'string' ? parameters : JSON.stringify(parameters))
+        }
+
+        const startTime = Date.now()
+        const result = await cli.execute('toolx', args)
+        const duration = Date.now() - startTime
+
+        // PouchOutput 包含 toString() 函数和 context 循环引用，无法通过 IPC 序列化
+        // 需要提取纯数据
+        const serializable = typeof result === 'object' && result !== null
+          ? (typeof result.toString === 'function' ? result.toString() : JSON.stringify(result))
+          : String(result ?? '')
+
+        return {
+          success: true,
+          data: serializable,
+          duration,
+        }
+      } catch (error: any) {
+        console.error('Failed to execute tool:', error)
+        return {
+          success: false,
+          message: error.message || 'Tool execution failed',
+          error: String(error),
+        }
+      }
+    })
+
+    // 获取工具手册/文档
+    ipcMain.handle('resources:getToolManual', async (_: IpcMainInvokeEvent, toolId: string) => {
+      try {
+        if (!toolId) {
+          return { success: false, message: 'Tool ID is required' }
+        }
+
+        const core = require('@promptx/core')
+        const cli = core.pouch?.cli || core.cli || core.default?.cli
+        if (!cli || !cli.execute) {
+          return { success: false, message: 'CLI not available in @promptx/core' }
+        }
+
+        const toolRef = toolId.startsWith('@tool://') ? toolId : `@tool://${toolId}`
+        const result = await cli.execute('toolx', [toolRef, 'manual'])
+
+        // PouchOutput → 纯字符串
+        const serializable = typeof result === 'object' && result !== null
+          ? (typeof result.toString === 'function' ? result.toString() : JSON.stringify(result))
+          : String(result ?? '')
+
+        return { success: true, data: serializable }
+      } catch (error: any) {
+        console.error('Failed to get tool manual:', error)
+        return { success: false, message: error.message || 'Failed to get tool manual' }
+      }
+    })
+
+    // 获取工具参数 Schema（通过 VM 安全加载工具文件提取 getSchema()）
+    ipcMain.handle('resources:getToolSchema', async (_: IpcMainInvokeEvent, payload: { id: string; source?: string }) => {
+      try {
+        const { id } = payload || {}
+        const source = payload?.source ?? 'user'
+        if (!id) return { success: false, message: 'Tool ID is required' }
+
+        const fs = require('fs-extra')
+        const pathMod = require('path')
+        const os = require('os')
+        const vm = require('vm')
+
+        // 解析工具目录（复用 listFiles 的路径逻辑）
+        let toolDir: string | null = null
+        if (source === 'user') {
+          toolDir = pathMod.join(os.homedir(), '.promptx', 'resource', 'tool', id)
+        } else if (source === 'project') {
+          try {
+            const { ProjectPathResolver } = require('@promptx/core')
+            const resolver = new ProjectPathResolver()
+            toolDir = pathMod.join(resolver.getResourceDirectory(), 'tool', id)
+          } catch { return { success: false, message: 'Project not initialized' } }
+        } else {
+          try {
+            const resourcePkg = require('@promptx/resource')
+            const res = resourcePkg.findResourceById(id)
+            if (res?.metadata?.path) {
+              toolDir = pathMod.dirname(resourcePkg.getResourcePath(res.metadata.path))
+            }
+          } catch { /* ignore */ }
+        }
+
+        if (!toolDir || !(await fs.pathExists(toolDir))) {
+          return { success: false, message: 'Tool directory not found' }
+        }
+
+        // 找到主 JS 文件
+        const entries = await fs.readdir(toolDir)
+        const jsFile = entries.find((f: string) => f.endsWith('.tool.js') || f.endsWith('.js'))
+        if (!jsFile) return { success: false, message: 'No JS file found in tool directory' }
+
+        const content = await fs.readFile(pathMod.join(toolDir, jsFile), 'utf-8')
+
+        // 在安全的 VM 沙箱中执行，提取 getSchema()
+        const sandbox = {
+          module: { exports: {} as any },
+          exports: {} as any,
+          require: () => ({}),
+          console: { log: () => {}, error: () => {}, warn: () => {} },
+          process: { env: {} },
+        }
+        sandbox.exports = sandbox.module.exports
+
+        const context = vm.createContext(sandbox)
+        try {
+          new vm.Script(content, { timeout: 3000 }).runInContext(context)
+        } catch {
+          return { success: false, message: 'Failed to parse tool file' }
+        }
+
+        const exported = sandbox.module.exports
+        if (typeof exported.getSchema === 'function') {
+          const schema = exported.getSchema()
+          // 确保返回纯 JSON（去掉函数等不可序列化内容）
+          return { success: true, schema: JSON.parse(JSON.stringify(schema)) }
+        }
+
+        return { success: false, message: 'Tool does not export getSchema()' }
+      } catch (error: any) {
+        console.error('Failed to get tool schema:', error)
+        return { success: false, message: error.message || 'Failed to get tool schema' }
+      }
+    })
+
     // 获取资源统计
     ipcMain.handle('resources:getStatistics', async () => {
       try {

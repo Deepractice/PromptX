@@ -511,6 +511,36 @@ class PromptXDesktopApp {
         return { success: false, error: String(error) }
       }
     })
+
+    // 获取可用 Skills 列表
+    ipcMain.handle('agentx:getAvailableSkills', async () => {
+      return await agentXService.getAvailableSkills()
+    })
+
+    // 获取已启用的 Skills
+    ipcMain.handle('agentx:getEnabledSkills', () => {
+      return agentXService.getEnabledSkills()
+    })
+
+    // 更新已启用的 Skills
+    ipcMain.handle('agentx:updateEnabledSkills', async (_event, skills: string[]) => {
+      try {
+        await agentXService.updateEnabledSkills(skills)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 导入 Skill（zip 压缩包）
+    ipcMain.handle('agentx:importSkill', async (_event, zipPath: string) => {
+      return await agentXService.importSkill(zipPath)
+    })
+
+    // 删除 Skill
+    ipcMain.handle('agentx:deleteSkill', async (_event, skillName: string) => {
+      return await agentXService.deleteSkill(skillName)
+    })
   }
 
   private setupUpdateIPC(): void {

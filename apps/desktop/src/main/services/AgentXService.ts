@@ -354,13 +354,36 @@ export class AgentXService {
   }
 
   /**
-   * 获取所有可用的 Skills（从 PromptX 核心获取）
+   * 获取 skills 目录路径
+   */
+  getSkillsDir(): string {
+    return path.join(app.getPath('userData'), 'skills')
+  }
+
+  /**
+   * 从 SKILL.md 中提取描述信息（取第一行非空非标题行，或第一个标题）
+   */
+  private extractDescriptionFromSkillMd(content: string): string {
+    const lines = content.split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      // 如果是标题行，去掉 # 前缀作为描述
+      if (trimmed.startsWith('#')) {
+        return trimmed.replace(/^#+\s*/, '')
+      }
+      return trimmed
+    }
+    return ''
+  }
+
+  /**
+   * 获取所有可用的 Skills（从 skills 目录获取）
+   * 支持 skill.json 和 SKILL.md 两种格式
    */
   async getAvailableSkills(): Promise<{ name: string; description: string; version?: string }[]> {
     try {
-      // 通过 IPC 调用 PromptX 核心获取 skills 列表
-      // 这里使用预设路径读取 skills 目录
-      const skillsDir = path.join(app.getPath('userData'), 'skills')
+      const skillsDir = this.getSkillsDir()
       if (!fs.existsSync(skillsDir)) {
         return []
       }
@@ -371,6 +394,8 @@ export class AgentXService {
       for (const entry of entries) {
         if (entry.isDirectory()) {
           const skillJsonPath = path.join(skillsDir, entry.name, 'skill.json')
+          const skillMdPath = path.join(skillsDir, entry.name, 'SKILL.md')
+
           if (fs.existsSync(skillJsonPath)) {
             try {
               const data = JSON.parse(fs.readFileSync(skillJsonPath, 'utf-8'))
@@ -381,6 +406,16 @@ export class AgentXService {
               })
             } catch {
               // 忽略解析失败的 skill
+            }
+          } else if (fs.existsSync(skillMdPath)) {
+            try {
+              const content = fs.readFileSync(skillMdPath, 'utf-8')
+              skills.push({
+                name: entry.name,
+                description: this.extractDescriptionFromSkillMd(content),
+              })
+            } catch {
+              // 忽略读取失败的 skill
             }
           }
         }
@@ -405,6 +440,130 @@ export class AgentXService {
    */
   async updateEnabledSkills(skills: string[]): Promise<void> {
     await this.updateConfig({ enabledSkills: skills })
+  }
+
+  /**
+   * 导入 Skill（从 zip 压缩包）
+   * zip 内应包含一个文件夹，文件夹内有 SKILL.md 文件
+   */
+  async importSkill(zipPath: string): Promise<{ success: boolean; skillName?: string; error?: string }> {
+    const AdmZip = require('adm-zip')
+    const os = require('os')
+
+    try {
+      if (!fs.existsSync(zipPath)) {
+        return { success: false, error: 'File not found' }
+      }
+
+      // 创建临时目录
+      const tempDir = path.join(os.tmpdir(), `promptx-skill-import-${Date.now()}`)
+      fs.mkdirSync(tempDir, { recursive: true })
+
+      try {
+        // 解压
+        const zip = new AdmZip(zipPath)
+        zip.extractAllTo(tempDir, true)
+
+        // 查找包含 SKILL.md 的目录
+        let skillDir: string | null = null
+        let skillName: string | null = null
+
+        const entries = fs.readdirSync(tempDir)
+
+        // 情况1: 根目录直接有 SKILL.md
+        if (entries.includes('SKILL.md')) {
+          skillDir = tempDir
+          // 用 zip 文件名作为 skill 名称
+          skillName = path.basename(zipPath, '.zip')
+        } else {
+          // 情况2: 一级子目录中有 SKILL.md
+          for (const entry of entries) {
+            const subDir = path.join(tempDir, entry)
+            if (fs.statSync(subDir).isDirectory()) {
+              const subEntries = fs.readdirSync(subDir)
+              if (subEntries.includes('SKILL.md')) {
+                skillDir = subDir
+                skillName = entry
+                break
+              }
+            }
+          }
+        }
+
+        if (!skillDir || !skillName) {
+          return { success: false, error: 'Invalid skill structure: SKILL.md not found' }
+        }
+
+        // 确保 skills 目录存在
+        const skillsDir = this.getSkillsDir()
+        fs.mkdirSync(skillsDir, { recursive: true })
+
+        // 目标目录
+        const targetDir = path.join(skillsDir, skillName)
+
+        // 如果已存在则覆盖
+        if (fs.existsSync(targetDir)) {
+          fs.rmSync(targetDir, { recursive: true, force: true })
+        }
+
+        // 复制文件
+        this.copyDirSync(skillDir, targetDir)
+
+        return { success: true, skillName }
+      } finally {
+        // 清理临时目录
+        try {
+          fs.rmSync(tempDir, { recursive: true, force: true })
+        } catch {
+          // ignore cleanup errors
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to import skill:', String(error))
+      return { success: false, error: String(error) }
+    }
+  }
+
+  /**
+   * 递归复制目录
+   */
+  private copyDirSync(src: string, dest: string): void {
+    fs.mkdirSync(dest, { recursive: true })
+    const entries = fs.readdirSync(src, { withFileTypes: true })
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name)
+      const destPath = path.join(dest, entry.name)
+      if (entry.isDirectory()) {
+        this.copyDirSync(srcPath, destPath)
+      } else {
+        fs.copyFileSync(srcPath, destPath)
+      }
+    }
+  }
+
+  /**
+   * 删除 Skill
+   */
+  async deleteSkill(skillName: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const skillDir = path.join(this.getSkillsDir(), skillName)
+      if (!fs.existsSync(skillDir)) {
+        return { success: false, error: 'Skill not found' }
+      }
+
+      fs.rmSync(skillDir, { recursive: true, force: true })
+
+      // 从已启用列表中移除
+      const enabled = this.getEnabledSkills()
+      if (enabled.includes(skillName)) {
+        await this.updateEnabledSkills(enabled.filter(s => s !== skillName))
+      }
+
+      return { success: true }
+    } catch (error) {
+      logger.error('Failed to delete skill:', String(error))
+      return { success: false, error: String(error) }
+    }
   }
 
   /**

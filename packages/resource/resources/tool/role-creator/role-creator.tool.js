@@ -1,5 +1,5 @@
 /**
- * Role Creator - PromptX角色资源的专用创作工具
+ * role-creator
  * 
  * 战略意义：
  * 1. 降低创作门槛：将复杂的文件操作简化为业务语义操作
@@ -32,8 +32,8 @@ module.exports = {
   getMetadata() {
     return {
       id: 'role-creator',
-      name: 'Role Creator',
-      description: 'PromptX角色资源的CRUD操作工具，简化角色创作流程',
+      name: 'role-creator',
+      description: '角色资源CRUD操作工具，简化角色创作流程',
       version: '1.1.0',
       category: 'creation',
       author: '鲁班',

@@ -42,10 +42,22 @@
         "title": "Skills Configuration",
         "description": "Manage enabled Skills that will be used for all AgentX conversations",
         "empty": "No available Skills",
+        "emptyHint": "Click 'Add Skill' to import your first skill",
         "refresh": "Refresh",
+        "save": "Save",
+        "saving": "Saving...",
+        "addSkill": "Add Skill",
+        "importing": "Importing...",
         "loadError": "Failed to load Skills",
         "saveSuccess": "Skills configuration saved",
-        "saveError": "Failed to save Skills configuration"
+        "saveError": "Failed to save Skills configuration",
+        "importSuccess": "Skill \"{{name}}\" imported successfully",
+        "importError": "Failed to import Skill",
+        "invalidStructure": "Invalid skill package: SKILL.md not found in the zip",
+        "deleteConfirm": "Are you sure you want to delete skill \"{{name}}\"?",
+        "deleteSuccess": "Skill \"{{name}}\" deleted successfully",
+        "deleteError": "Failed to delete Skill",
+        "delete": "Delete"
       }
     },
     "autoStart": {
@@ -109,8 +121,7 @@
     },
     "skills": {
       "title": "Skills Configuration",
-      "description": "Manage and configure AI skills",
-      "comingSoon": "Skills configuration coming soon..."
+      "description": "Manage and configure AI skills"
     }
   },
 
@@ -154,6 +165,12 @@
     }
   },
   "resources": {
+    "banner": {
+      "title": "Share Your Creations",
+      "subtitle": "Discover and share roles & tools with the community",
+      "publishRole": "Publish Role",
+      "publishTool": "Publish Tool"
+    },
     "search": {
       "placeholder": "Search resources / roles / tools"
     },
@@ -221,7 +238,8 @@
     "actions": {
       "edit": "Edit",
       "download": "Download",
-      "delete": "Delete"
+      "delete": "Delete",
+      "use": "Use"
     },
     "messages": {
       "loadFailed": "Failed to load resources",
@@ -342,6 +360,121 @@
     "logs": "Logs",
     "settings": "Settings",
     "update": "Check for Updates"
+  },
+  "roles": {
+    "search": {
+      "placeholder": "Search roles..."
+    },
+    "stats": {
+      "total": "Total Roles",
+      "system": "System Roles",
+      "user": "User Roles"
+    },
+    "filters": {
+      "source": "Source:",
+      "all": "All",
+      "system": "System",
+      "user": "User"
+    },
+    "activate": "Activate",
+    "empty": "No roles found",
+    "noDescription": "No description available",
+    "detail": {
+      "description": "Description",
+      "close": "Close",
+      "editRole": "Edit Role",
+      "structure": "Structure",
+      "memory": "Memory",
+      "architecture": "DPML Layer Architecture",
+      "memoryEmpty": "No memory data available",
+      "selectRole": "Select a role to view details"
+    },
+    "messages": {
+      "loadFailed": "Failed to load roles",
+      "activateSuccess": "Role \"{{name}}\" activated successfully",
+      "activateFailed": "Failed to activate role"
+    }
+  },
+  "tools": {
+    "search": {
+      "placeholder": "Search tools..."
+    },
+    "stats": {
+      "total": "Total Tools",
+      "system": "System Tools",
+      "user": "User Tools"
+    },
+    "filters": {
+      "source": "Source:",
+      "all": "All",
+      "system": "System",
+      "plaza": "Plaza",
+      "user": "User"
+    },
+    "execute": "Execute",
+    "empty": "No tools found",
+    "noDescription": "No description available",
+    "detail": {
+      "description": "Description",
+      "parameters": "Parameters",
+      "parametersPlaceholder": "{\"key\": \"value\"}",
+      "parametersHint": "Optional. Enter JSON parameters for tool execution.",
+      "result": "Execution Result",
+      "close": "Close",
+      "overview": "Overview",
+      "test": "Test",
+      "configure": "Configure",
+      "logs": "Logs",
+      "install": "Install Tool",
+      "output": "Output",
+      "outputEmpty": "Run a test to see output here...",
+      "runTest": "Run Test",
+      "envVars": "Environment Variables",
+      "noEnvVars": "No environment variables configured",
+      "noLogs": "No execution logs available",
+      "selectTool": "Select a tool to view details",
+      "deleteTool": "Delete Tool",
+      "tags": "Tags",
+      "manual": "Documentation",
+      "info": "Tool Info",
+      "source": "Source",
+      "execSuccess": "Execution succeeded",
+      "execFailed": "Execution failed",
+      "paramsHint": "Enter JSON parameters for tool execution. Leave {} for no parameters.",
+      "executing": "Executing...",
+      "execNoOutput": "Execution completed with no output",
+      "toolFiles": "Tool Files",
+      "noFiles": "No tool files found",
+      "readOnly": "Read-only",
+      "loadingFile": "Loading file...",
+      "paramSchema": "Parameter Schema",
+      "execHistory": "Execution History",
+      "clearLogs": "Clear Logs",
+      "formMode": "Form",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "editInfo": "Edit Info",
+      "editName": "Tool Name",
+      "editDescription": "Tool Description",
+      "namePlaceholder": "Enter tool name",
+      "descriptionPlaceholder": "Enter tool description"
+    },
+    "messages": {
+      "loadFailed": "Failed to load tools",
+      "executeSuccess": "Tool \"{{name}}\" executed successfully",
+      "executeFailed": "Failed to execute tool",
+      "invalidParams": "Invalid JSON parameters",
+      "deleteOnlyUser": "Only user-created tools can be deleted",
+      "deleteConfirm": "Are you sure you want to delete tool \"{{name}}\"? This cannot be undone.",
+      "deleteSuccess": "Tool \"{{name}}\" deleted successfully",
+      "deleteFailed": "Failed to delete tool",
+      "saveSuccess": "File saved successfully",
+      "saveFailed": "Failed to save file",
+      "updateSuccess": "Tool info updated successfully",
+      "updateFailed": "Failed to update tool info",
+      "updateOnlyUser": "Only user-created tools can be edited"
+    }
   },
   "update": {
     "title": "Software Update",

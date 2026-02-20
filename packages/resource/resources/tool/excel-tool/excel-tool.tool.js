@@ -1,5 +1,5 @@
 /**
- * Excel - Excel文件读写操作工具
+ * excel-tool
  *
  * 战略意义：
  * 1. 数据桥梁价值：打通AI与Excel数据世界的连接
@@ -31,8 +31,8 @@ module.exports = {
   getMetadata() {
     return {
       id: 'excel-tool',
-      name: 'Excel操作工具',
-      description: 'Excel文件的读写和修改操作，基于行列的原子操作',
+      name: 'excel-tool',
+      description: 'Excel文件读写操作工具',
       version: '1.0.0',
       author: '鲁班'
     };

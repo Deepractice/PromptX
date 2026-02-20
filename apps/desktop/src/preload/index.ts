@@ -56,6 +56,8 @@ interface ElectronAPI {
   getStatistics: () => Promise<any>
   activateRole: (roleId: string) => Promise<any>
   executeTool: (toolId: string, parameters?: any) => Promise<any>
+  getToolManual: (toolId: string) => Promise<any>
+  getToolSchema: (payload: { id: string; source?: string }) => Promise<any>
   invoke: (channel: string, ...args: any[]) => Promise<any>
   // Dialog API
   dialog: {
@@ -73,6 +75,12 @@ interface ElectronAPI {
     testConnection: (config: Partial<AgentXConfig>) => Promise<{ success: boolean; error?: string }>
     getMcpServers: () => Promise<MCPServerConfig[]>
     updateMcpServers: (servers: MCPServerConfig[]) => Promise<{ success: boolean; error?: string }>
+    // Skills API
+    getAvailableSkills: () => Promise<{ name: string; description: string; version?: string }[]>
+    getEnabledSkills: () => Promise<string[]>
+    updateEnabledSkills: (skills: string[]) => Promise<{ success: boolean; error?: string }>
+    importSkill: (zipPath: string) => Promise<{ success: boolean; skillName?: string; error?: string }>
+    deleteSkill: (skillName: string) => Promise<{ success: boolean; error?: string }>
   }
 }
 
@@ -82,6 +90,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStatistics: () => ipcRenderer.invoke('resources:getStatistics'),
   activateRole: (roleId: string) => ipcRenderer.invoke('resources:activateRole', roleId),
   executeTool: (toolId: string, parameters?: any) => ipcRenderer.invoke('resources:executeTool', toolId, parameters),
+  getToolManual: (toolId: string) => ipcRenderer.invoke('resources:getToolManual', toolId),
+  getToolSchema: (payload: { id: string; source?: string }) => ipcRenderer.invoke('resources:getToolSchema', payload),
   invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
   // Dialog API
   dialog: {
@@ -99,6 +109,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     testConnection: (config: Partial<AgentXConfig>) => ipcRenderer.invoke('agentx:testConnection', config),
     getMcpServers: () => ipcRenderer.invoke('agentx:getMcpServers'),
     updateMcpServers: (servers: MCPServerConfig[]) => ipcRenderer.invoke('agentx:updateMcpServers', servers),
+    // Skills API
+    getAvailableSkills: () => ipcRenderer.invoke('agentx:getAvailableSkills'),
+    getEnabledSkills: () => ipcRenderer.invoke('agentx:getEnabledSkills'),
+    updateEnabledSkills: (skills: string[]) => ipcRenderer.invoke('agentx:updateEnabledSkills', skills),
+    importSkill: (zipPath: string) => ipcRenderer.invoke('agentx:importSkill', zipPath),
+    deleteSkill: (skillName: string) => ipcRenderer.invoke('agentx:deleteSkill', skillName),
   }
 } as ElectronAPI)
 

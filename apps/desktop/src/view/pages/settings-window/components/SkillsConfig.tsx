@@ -1,15 +1,21 @@
 /**
  * SkillsConfig - Skills 管理配置组件
  *
- * 全局 Skills 管理，启用/禁用 Skills
+ * 全局 Skills 管理，启用/禁用/导入/删除 Skills
  */
 
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, RefreshCw, Wrench } from "lucide-react";
+import { Loader2, RefreshCw, Wrench, Upload, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface Skill {
@@ -24,8 +30,8 @@ export function SkillsConfig() {
   const [enabledSkills, setEnabledSkills] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
 
-  // 加载 Skills 列表
   const loadSkills = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -47,7 +53,6 @@ export function SkillsConfig() {
     loadSkills();
   }, [loadSkills]);
 
-  // 切换 Skill 启用状态
   const toggleSkill = (skillName: string) => {
     setEnabledSkills((prev) =>
       prev.includes(skillName)
@@ -56,21 +61,84 @@ export function SkillsConfig() {
     );
   };
 
-  // 保存配置
   const handleSave = async () => {
     setSaving(true);
     try {
-      const result = await window.electronAPI?.agentx?.updateEnabledSkills?.(enabledSkills);
+      const result =
+        await window.electronAPI?.agentx?.updateEnabledSkills?.(enabledSkills);
       if (result?.success) {
         toast.success(t("settings.agentx.skills.saveSuccess"));
       } else {
-        toast.error(result?.error || t("settings.agentx.skills.saveError"));
+        toast.error(
+          result?.error || t("settings.agentx.skills.saveError")
+        );
       }
     } catch (error) {
       console.error("Failed to save skills:", error);
       toast.error(t("settings.agentx.skills.saveError"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImportSkill = async () => {
+    setImporting(true);
+    try {
+      const result = await window.electronAPI?.dialog?.openFile?.({
+        title: t("settings.agentx.skills.addSkill"),
+        filters: [{ name: "ZIP files", extensions: ["zip"] }],
+        properties: ["openFile"],
+      });
+
+      if (result?.canceled || !result?.filePaths?.length) {
+        return;
+      }
+
+      const zipPath = result.filePaths[0];
+      const importResult =
+        await window.electronAPI?.agentx?.importSkill?.(zipPath);
+
+      if (importResult?.success) {
+        toast.success(
+          t("settings.agentx.skills.importSuccess", {
+            name: importResult.skillName,
+          })
+        );
+        await loadSkills();
+      } else {
+        toast.error(
+          importResult?.error || t("settings.agentx.skills.importError")
+        );
+      }
+    } catch (error) {
+      console.error("Failed to import skill:", error);
+      toast.error(t("settings.agentx.skills.importError"));
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleDeleteSkill = async (skillName: string) => {
+    if (!window.confirm(t("settings.agentx.skills.deleteConfirm", { name: skillName }))) {
+      return;
+    }
+
+    try {
+      const result =
+        await window.electronAPI?.agentx?.deleteSkill?.(skillName);
+      if (result?.success) {
+        toast.success(
+          t("settings.agentx.skills.deleteSuccess", { name: skillName })
+        );
+        await loadSkills();
+      } else {
+        toast.error(
+          result?.error || t("settings.agentx.skills.deleteError")
+        );
+      }
+    } catch (error) {
+      console.error("Failed to delete skill:", error);
+      toast.error(t("settings.agentx.skills.deleteError"));
     }
   };
 
@@ -87,16 +155,38 @@ export function SkillsConfig() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wrench className="h-5 w-5" />
-          {t("settings.agentx.skills.title")}
-        </CardTitle>
-        <CardDescription>{t("settings.agentx.skills.description")}</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5" />
+              {t("settings.agentx.skills.title")}
+            </CardTitle>
+            <CardDescription>
+              {t("settings.agentx.skills.description")}
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleImportSkill}
+            disabled={importing}
+          >
+            {importing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 mr-2" />
+            )}
+            {importing
+              ? t("settings.agentx.skills.importing")
+              : t("settings.agentx.skills.addSkill")}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {skills.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            {t("settings.agentx.skills.empty")}
+          <div className="text-center py-6 text-muted-foreground space-y-1">
+            <p>{t("settings.agentx.skills.empty")}</p>
+            <p className="text-xs">{t("settings.agentx.skills.emptyHint")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -109,36 +199,57 @@ export function SkillsConfig() {
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{skill.name}</span>
                     {skill.version && (
-                      <span className="text-xs text-muted-foreground">v{skill.version}</span>
+                      <span className="text-xs text-muted-foreground">
+                        v{skill.version}
+                      </span>
                     )}
                   </div>
                   {skill.description && (
-                    <p className="text-sm text-muted-foreground truncate">{skill.description}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {skill.description}
+                    </p>
                   )}
                 </div>
-                <Switch
-                  checked={enabledSkills.includes(skill.name)}
-                  onCheckedChange={() => toggleSkill(skill.name)}
-                  className="ml-4"
-                />
+                <div className="flex items-center gap-2 ml-4">
+                  <Switch
+                    checked={enabledSkills.includes(skill.name)}
+                    onCheckedChange={() => toggleSkill(skill.name)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDeleteSkill(skill.name)}
+                    title={t("settings.agentx.skills.delete")}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         )}
 
         <div className="flex items-center justify-between pt-4 border-t">
-          <Button variant="outline" size="sm" onClick={loadSkills} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadSkills}
+            disabled={loading}
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
             {t("settings.agentx.skills.refresh")}
           </Button>
           <Button onClick={handleSave} disabled={saving || skills.length === 0}>
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t("common.saving")}
+                {t("settings.agentx.skills.saving")}
               </>
             ) : (
-              t("common.save")
+              t("settings.agentx.skills.save")
             )}
           </Button>
         </div>

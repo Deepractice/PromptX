@@ -1,5 +1,5 @@
 /**
- * Filesystem Tool - PromptX 体系的文件系统基础设施
+ * filesystem
  * 
  * 战略意义：
  * 
@@ -45,7 +45,7 @@ module.exports = {
     return {
       id: 'filesystem',
       name: 'filesystem',
-      description: '基于MCP标准的文件系统操作工具，提供读写、搜索、编辑等功能',
+      description: '文件系统操作工具，提供读写、搜索、编辑等功能',
       version: '2.0.0',
       category: 'system',
       author: '鲁班',

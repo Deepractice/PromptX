@@ -159,10 +159,20 @@ async function processFile(filePath, relativePath, registry, stat) {
           description = descMatch[1].trim().substring(0, 100); // 限制长度
         }
       } else if (fileName.endsWith('.js')) {
-        // 从 JavaScript 提取 JSDoc 注释
-        const jsdocMatch = content.match(/\/\*\*\s*\n\s*\*\s*(.+?)\n/);
-        if (jsdocMatch) {
-          title = jsdocMatch[1];
+        // 从 JavaScript 提取元数据：优先从 getMetadata() 提取 name/description
+        const nameMatch = content.match(/getMetadata\s*\(\s*\)\s*\{[\s\S]*?name\s*:\s*['"](.+?)['"]/);
+        const descMatch2 = content.match(/getMetadata\s*\(\s*\)\s*\{[\s\S]*?description\s*:\s*['"](.+?)['"]/);
+        if (nameMatch) {
+          title = nameMatch[1];
+        } else {
+          // 回退：从 JSDoc 注释提取
+          const jsdocMatch = content.match(/\/\*\*\s*\n\s*\*\s*(.+?)\n/);
+          if (jsdocMatch) {
+            title = jsdocMatch[1];
+          }
+        }
+        if (descMatch2) {
+          description = descMatch2[1];
         }
       }
     } catch (e) {

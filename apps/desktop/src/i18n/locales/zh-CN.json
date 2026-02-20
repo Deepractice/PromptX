@@ -42,10 +42,22 @@
         "title": "Skills 配置",
         "description": "管理启用的 Skills，这些 Skills 将被用于所有 AgentX 对话",
         "empty": "暂无可用 Skills",
+        "emptyHint": "点击「添加 Skill」导入您的第一个技能包",
         "refresh": "刷新",
+        "save": "保存",
+        "saving": "保存中...",
+        "addSkill": "添加 Skill",
+        "importing": "导入中...",
         "loadError": "加载 Skills 失败",
         "saveSuccess": "Skills 配置已保存",
-        "saveError": "保存 Skills 配置失败"
+        "saveError": "保存 Skills 配置失败",
+        "importSuccess": "Skill \"{{name}}\" 导入成功",
+        "importError": "导入 Skill 失败",
+        "invalidStructure": "无效的技能包：zip 中未找到 SKILL.md",
+        "deleteConfirm": "确定要删除 Skill \"{{name}}\" 吗？",
+        "deleteSuccess": "Skill \"{{name}}\" 已删除",
+        "deleteError": "删除 Skill 失败",
+        "delete": "删除"
       }
     },
     "autoStart": {
@@ -109,12 +121,7 @@
     },
     "skills": {
       "title": "Skills 配置",
-      "description": "管理启用的 Skills，这些 Skills 将被用于所有 AgentX 对话",
-      "empty": "暂无可用 Skills",
-      "refresh": "刷新",
-      "loadError": "加载 Skills 失败",
-      "saveSuccess": "Skills 配置已保存",
-      "saveError": "保存 Skills 配置失败"
+      "description": "管理和配置 AI 技能"
     }
   },
   "logs": {
@@ -157,6 +164,12 @@
     }
   },
   "resources": {
+    "banner": {
+      "title": "分享你的创作",
+      "subtitle": "发现并分享角色和工具",
+      "publishRole": "发布角色",
+      "publishTool": "发布工具"
+    },
     "search": {
       "placeholder": "搜索资源 / 角色 / 工具"
     },
@@ -224,7 +237,8 @@
     "actions": {
       "edit": "编辑",
       "download": "下载",
-      "delete": "删除"
+      "delete": "删除",
+      "use": "使用"
     },
     "messages": {
       "loadFailed": "加载资源失败",
@@ -345,6 +359,121 @@
     "logs": "日志",
     "settings": "设置",
     "update": "检查更新"
+  },
+  "roles": {
+    "search": {
+      "placeholder": "搜索角色..."
+    },
+    "stats": {
+      "total": "角色总数",
+      "system": "系统角色",
+      "user": "用户角色"
+    },
+    "filters": {
+      "source": "来源:",
+      "all": "全部",
+      "system": "系统",
+      "user": "用户"
+    },
+    "activate": "激活",
+    "empty": "暂无角色",
+    "noDescription": "暂无描述",
+    "detail": {
+      "description": "描述",
+      "close": "关闭",
+      "editRole": "编辑角色",
+      "structure": "结构",
+      "memory": "记忆",
+      "architecture": "DPML 层级架构",
+      "memoryEmpty": "暂无记忆数据",
+      "selectRole": "选择一个角色查看详情"
+    },
+    "messages": {
+      "loadFailed": "加载角色失败",
+      "activateSuccess": "角色 \"{{name}}\" 激活成功",
+      "activateFailed": "激活角色失败"
+    }
+  },
+  "tools": {
+    "search": {
+      "placeholder": "搜索工具..."
+    },
+    "stats": {
+      "total": "工具总数",
+      "system": "系统工具",
+      "user": "用户工具"
+    },
+    "filters": {
+      "source": "来源:",
+      "all": "全部",
+      "system": "系统",
+      "plaza": "广场",
+      "user": "用户"
+    },
+    "execute": "执行",
+    "empty": "暂无工具",
+    "noDescription": "暂无描述",
+    "detail": {
+      "description": "描述",
+      "parameters": "参数",
+      "parametersPlaceholder": "{\"key\": \"value\"}",
+      "parametersHint": "可选。输入 JSON 格式的工具执行参数。",
+      "result": "执行结果",
+      "close": "关闭",
+      "overview": "概览",
+      "test": "测试",
+      "configure": "配置",
+      "logs": "日志",
+      "install": "安装工具",
+      "output": "输出",
+      "outputEmpty": "运行测试以查看输出...",
+      "runTest": "运行测试",
+      "envVars": "环境变量",
+      "noEnvVars": "暂无环境变量配置",
+      "noLogs": "暂无执行日志",
+      "selectTool": "选择一个工具查看详情",
+      "deleteTool": "删除工具",
+      "tags": "标签",
+      "manual": "使用文档",
+      "info": "工具信息",
+      "source": "来源",
+      "execSuccess": "执行成功",
+      "execFailed": "执行失败",
+      "paramsHint": "输入 JSON 格式的执行参数，无参数时保留 {} 即可。",
+      "executing": "执行中...",
+      "execNoOutput": "执行完成，无输出内容",
+      "toolFiles": "工具文件",
+      "noFiles": "暂无工具文件",
+      "readOnly": "只读",
+      "loadingFile": "加载文件中...",
+      "paramSchema": "参数结构",
+      "execHistory": "执行历史",
+      "clearLogs": "清除日志",
+      "formMode": "表单",
+      "edit": "编辑",
+      "save": "保存",
+      "cancel": "取消",
+      "editInfo": "修改信息",
+      "editName": "工具名称",
+      "editDescription": "工具描述",
+      "namePlaceholder": "请输入工具名称",
+      "descriptionPlaceholder": "请输入工具描述"
+    },
+    "messages": {
+      "loadFailed": "加载工具失败",
+      "executeSuccess": "工具 \"{{name}}\" 执行成功",
+      "executeFailed": "执行工具失败",
+      "invalidParams": "无效的 JSON 参数",
+      "deleteOnlyUser": "仅支持删除用户自建的工具",
+      "deleteConfirm": "确定要删除工具 \"{{name}}\" 吗？此操作不可恢复。",
+      "deleteSuccess": "工具 \"{{name}}\" 删除成功",
+      "deleteFailed": "删除工具失败",
+      "saveSuccess": "文件保存成功",
+      "saveFailed": "保存文件失败",
+      "updateSuccess": "工具信息更新成功",
+      "updateFailed": "更新工具信息失败",
+      "updateOnlyUser": "仅支持修改用户自建的工具"
+    }
   },
   "update": {
     "title": "软件更新",
