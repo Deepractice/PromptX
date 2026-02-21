@@ -75,7 +75,10 @@ export default function RolesPage() {
           )
         })
         setRoles(flat)
-        if (flat.length > 0 && !selectedRole) setSelectedRole(flat[0] ?? null)
+        if (flat.length > 0 && !selectedRole) {
+          const firstV2 = flat.find((r) => r.version === "v2")
+          setSelectedRole(firstV2 ?? flat[0] ?? null)
+        }
       } else {
         toast.error(t("roles.messages.loadFailed"))
       }
@@ -87,7 +90,7 @@ export default function RolesPage() {
   }
 
   const handleActivate = (role: RoleItem) => {
-    goToSendMessage(t("roles.messages.activatePrompt", { name: role.name }))
+    goToSendMessage(t("roles.messages.activatePrompt", { name: role.name }), { roleResources: "all" })
   }
 
   useEffect(() => {

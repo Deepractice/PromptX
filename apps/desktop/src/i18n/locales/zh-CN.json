@@ -388,7 +388,11 @@
       "memory": "记忆",
       "architecture": "DPML 层级架构（三层架构，按需加载）",
       "memoryEmpty": "暂无记忆数据",
-      "selectRole": "选择一个角色查看详情"
+      "selectRole": "选择一个角色查看详情",
+      "overview": "概述",
+      "prompt": "角色提示词",
+      "promptLoading": "加载中...",
+      "promptError": "加载失败"
     },
     "memory": {
       "overview": "概览",

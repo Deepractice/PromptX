@@ -389,7 +389,12 @@
       "memory": "Memory",
       "architecture": "DPML Layer Architecture (Three-Layer Architecture, On-Demand Loading)",
       "memoryEmpty": "No memory data available",
-      "selectRole": "Select a role to view details"
+      "selectRole": "Select a role to view details",
+      "overview": "Overview",
+      "structure": "Structure",
+      "prompt": "Role Prompt",
+      "promptLoading": "Loading prompt...",
+      "promptError": "Failed to load prompt"
     },
     "memory": {
       "overview": "Overview",

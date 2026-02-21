@@ -58,6 +58,7 @@ interface ElectronAPI {
   executeTool: (toolId: string, parameters?: any) => Promise<any>
   getToolManual: (toolId: string) => Promise<any>
   getToolSchema: (payload: { id: string; source?: string }) => Promise<any>
+  getRolePrompt: (roleId: string, source: string) => Promise<any>
   invoke: (channel: string, ...args: any[]) => Promise<any>
   // Dialog API
   dialog: {
@@ -102,6 +103,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   executeTool: (toolId: string, parameters?: any) => ipcRenderer.invoke('resources:executeTool', toolId, parameters),
   getToolManual: (toolId: string) => ipcRenderer.invoke('resources:getToolManual', toolId),
   getToolSchema: (payload: { id: string; source?: string }) => ipcRenderer.invoke('resources:getToolSchema', payload),
+  getRolePrompt: (roleId: string, source: string) => ipcRenderer.invoke('resources:previewPrompt', { id: roleId, type: 'role', source }),
   invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
   // Dialog API
   dialog: {
