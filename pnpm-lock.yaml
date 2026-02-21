@@ -92,6 +92,9 @@ importers:
       '@promptx/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@promptx/mcp-office':
+        specifier: workspace:*
+        version: link:../../packages/mcp-office
       '@promptx/mcp-server':
         specifier: workspace:*
         version: link:../../packages/mcp-server

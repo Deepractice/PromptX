@@ -24,6 +24,14 @@ files:
   - "!**/{example,examples,docs,doc}"
   - "!**/*.{md,MD,markdown,txt}"
   - "node_modules/@promptx/resource/dist/resources/**/*"
+  # Re-include .md files for system roles (overrides the above exclusion)
+  - "node_modules/@promptx/resource/dist/resources/**/*.md"
+
+extraResources:
+  - from: "node_modules/@promptx/mcp-office/dist"
+    to: "mcp-office"
+    filter:
+      - "**/*"
 
 mac:
   category: public.app-category.developer-tools
@@ -43,6 +51,11 @@ win:
   icon: assets/icons/icon.png
   artifactName: promptx-desktop-${version}-win32-${arch}.${ext}
   requestedExecutionLevel: asInvoker
+  extraResources:
+    - from: "resources/win/git-bash"
+      to: "git-bash"
+      filter:
+        - "**/*"
   target:
     - nsis
 

@@ -4,6 +4,37 @@ const os = require('os')
 const logger = require('@promptx/logger')
 
 /**
+ * 从 Gherkin Feature 文件内容中提取 Feature 名称
+ */
+function extractFeatureName (content) {
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('Feature:')) {
+      return trimmed.replace(/^Feature:\s*/, '').trim()
+    }
+  }
+  return ''
+}
+
+/**
+ * 从 Gherkin Feature 文件内容中提取描述（Feature 名称后、第一个 Scenario 前的文本）
+ */
+function extractFeatureDescription (content) {
+  const lines = content.split('\n')
+  let inFeature = false
+  const descLines = []
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('Feature:')) { inFeature = true; continue }
+    if (inFeature) {
+      if (/^(Scenario|Background|Given|When|Then|And|But|@|\|)/.test(trimmed)) break
+      if (trimmed && !trimmed.startsWith('#')) descLines.push(trimmed)
+    }
+  }
+  return descLines.join(' ').trim()
+}
+
+/**
  * RolexBridge - 核心桥接模块
  *
  * 单例模式，懒初始化。负责管理 RoleX V2 角色系统的生命周期。
@@ -11,7 +42,7 @@ const logger = require('@promptx/logger')
  * 所有 RoleX 导入必须使用 await import() 动态导入。
  */
 class RolexBridge {
-  static SEED_ROLES = ['nuwa', 'waiter']
+  static SEED_ROLES = ['nuwa', 'waiter', 'jiangziya']
 
   constructor () {
     this.platform = null
@@ -331,9 +362,17 @@ class RolexBridge {
         )
         if (await fs.pathExists(featurePath)) {
           const isSeed = RolexBridge.SEED_ROLES.includes(entry.name)
+          let description = ''
+          let featureName = ''
+          try {
+            const content = await fs.readFile(featurePath, 'utf-8')
+            featureName = extractFeatureName(content)
+            description = extractFeatureDescription(content)
+          } catch { /* ignore */ }
           roles.push({
             id: entry.name,
-            name: entry.name,
+            name: featureName || entry.name,
+            description,
             source: isSeed ? 'system' : 'rolex',
             version: 'v2',
             protocol: 'role'

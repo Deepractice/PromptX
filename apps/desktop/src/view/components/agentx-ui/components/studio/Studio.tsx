@@ -104,7 +104,8 @@ export function Studio({
   const { t } = useTranslation();
   // State - only track imageId now (agentId is managed by useAgent)
   const [currentImageId, setCurrentImageId] = React.useState<string | null>(null);
-  const [currentImageName, setCurrentImageName] = React.useState<string | undefined>(undefined);
+  // Track all visited conversations (imageId -> name) to keep them mounted in background
+  const [visitedImages, setVisitedImages] = React.useState<Map<string, string>>(new Map());
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
 
@@ -128,9 +129,15 @@ export function Studio({
     (imageId: string, _agentId: string | null) => {
       setCurrentImageId(imageId);
 
-      // Set name from image
+      // Add to visited images map (keeps Chat mounted in background)
       const image = images.find((img) => img.imageId === imageId);
-      setCurrentImageName(image?.name || t("agentxUI.conversations.untitled"));
+      const name = image?.name || t("agentxUI.conversations.untitled");
+      setVisitedImages((prev) => {
+        if (prev.has(imageId)) return prev;
+        const next = new Map(prev);
+        next.set(imageId, name);
+        return next;
+      });
     },
     [images, t]
   );
@@ -138,20 +145,22 @@ export function Studio({
   // Handle creating a new conversation
   const handleNew = React.useCallback((imageId: string) => {
     setCurrentImageId(imageId);
-    setCurrentImageName(t("agentxUI.conversations.new"));
+    const name = t("agentxUI.conversations.new");
+    setVisitedImages((prev) => {
+      const next = new Map(prev);
+      next.set(imageId, name);
+      return next;
+    });
   }, [t]);
 
-  // Pending message to send after creating conversation
-  const pendingMessageRef = React.useRef<string | null>(null);
+  // Pending messages to send after creating conversation (per imageId)
+  const pendingMessagesRef = React.useRef<Map<string, string>>(new Map());
 
   // Handle welcome page send - create new conversation and send message
   const handleWelcomeSend = React.useCallback(async (message: string) => {
     if (!agentx) return;
 
     try {
-      // Store the message to send after conversation is created
-      pendingMessageRef.current = message;
-
       // Create a new image
       const image = await createImage({ name: message.slice(0, 30) });
 
@@ -161,12 +170,20 @@ export function Studio({
       // Trigger refresh in AgentList
       setRefreshTrigger(prev => prev + 1);
 
-      // Set current image
+      const name = message.slice(0, 30);
+
+      // Store the pending message for this imageId
+      pendingMessagesRef.current.set(image.imageId, message);
+
+      // Add to visited images and set as current
+      setVisitedImages((prev) => {
+        const next = new Map(prev);
+        next.set(image.imageId, name);
+        return next;
+      });
       setCurrentImageId(image.imageId);
-      setCurrentImageName(message.slice(0, 30));
     } catch (error) {
       console.error("Failed to create conversation from welcome:", error);
-      pendingMessageRef.current = null;
     }
   }, [agentx, createImage, runImage]);
 
@@ -247,20 +264,20 @@ export function Studio({
 
       {/* Main area - WelcomePage or Chat */}
       <div className="flex-1 min-w-0">
-        {currentImageId ? (
-          <Chat
-            key={currentImageId}
-            agentx={agentx}
-            imageId={currentImageId}
-            agentName={currentImageName}
-            showSaveButton={showSaveButton}
-            inputHeightRatio={inputHeightRatio}
-            initialMessage={pendingMessageRef.current}
-            onInitialMessageSent={() => { pendingMessageRef.current = null; }}
-          />
-        ) : (
-          <WelcomePage onSend={handleWelcomeSend} />
-        )}
+        {!currentImageId && <WelcomePage onSend={handleWelcomeSend} />}
+        {Array.from(visitedImages.entries()).map(([imageId, imageName]) => (
+          <div key={imageId} className={imageId === currentImageId ? "h-full" : "hidden"}>
+            <Chat
+              agentx={agentx}
+              imageId={imageId}
+              agentName={imageName}
+              showSaveButton={showSaveButton}
+              inputHeightRatio={inputHeightRatio}
+              initialMessage={pendingMessagesRef.current.get(imageId) ?? null}
+              onInitialMessageSent={() => { pendingMessagesRef.current.delete(imageId); }}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Toast notifications */}

@@ -175,6 +175,95 @@ class PromptXDesktopApp {
       process.env.PATH = electronDir + path.delimiter + currentPath
       logger.debug(`Updated PATH with Electron directory: ${electronDir}`)
     }
+
+    // On Windows: ensure node and bash (git-bash) are in PATH for Claude Code subprocess
+    // In packaged Electron apps, system PATH may not include these
+    if (process.platform === 'win32') {
+      this.ensureWindowsToolsInPath()
+    }
+  }
+
+  private ensureWindowsToolsInPath(): void {
+    const { execSync } = require('child_process')
+    const { app } = require('electron')
+
+    // --- Ensure bash.exe is in PATH (Claude Code CLI requires bash on Windows) ---
+    const hasBash = (process.env.PATH || '').split(path.delimiter).some(dir => {
+      try { return fs.existsSync(path.join(dir, 'bash.exe')) } catch { return false }
+    })
+
+    if (!hasBash) {
+      // 1. Prefer bundled git-bash (packaged app: resources/git-bash)
+      const bundledBashBin = path.join(process.resourcesPath || '', 'git-bash', 'bin')
+      const bundledBashUsrBin = path.join(process.resourcesPath || '', 'git-bash', 'usr', 'bin')
+
+      if (fs.existsSync(path.join(bundledBashBin, 'bash.exe'))) {
+        // Add both bin and usr/bin so all git utilities are available
+        let newPath = bundledBashBin + path.delimiter + (process.env.PATH || '')
+        if (fs.existsSync(bundledBashUsrBin)) {
+          newPath = bundledBashUsrBin + path.delimiter + newPath
+        }
+        process.env.PATH = newPath
+        logger.info(`Using bundled git-bash: ${bundledBashBin}`)
+      } else {
+        // 2. Fall back to system git-bash
+        const bashCandidates = [
+          'C:\\Program Files\\Git\\bin',
+          'C:\\Program Files\\Git\\usr\\bin',
+          'C:\\Program Files (x86)\\Git\\bin',
+          'C:\\Program Files (x86)\\Git\\usr\\bin',
+        ]
+        const bashDir = bashCandidates.find(p => { try { return fs.existsSync(path.join(p, 'bash.exe')) } catch { return false } }) ?? null
+
+        if (bashDir) {
+          process.env.PATH = bashDir + path.delimiter + (process.env.PATH || '')
+          logger.info(`Added system git-bash to PATH: ${bashDir}`)
+        } else {
+          logger.warn('bash.exe not found — Claude Code subprocess may fail on Windows without git-bash')
+        }
+      }
+    }
+
+    // --- Ensure node.exe is in PATH ---
+    const hasNode = (process.env.PATH || '').split(path.delimiter).some(dir => {
+      try { return fs.existsSync(path.join(dir, 'node.exe')) } catch { return false }
+    })
+
+    if (!hasNode) {
+      let nodeDir: string | null = null
+      try {
+        const out = execSync('where node 2>nul', { encoding: 'utf8', timeout: 3000 }).trim()
+        const first = out.split('\n')[0]?.trim()
+        if (first && fs.existsSync(first)) nodeDir = path.dirname(first)
+      } catch { /* ignore */ }
+
+      if (!nodeDir) {
+        const candidates = [
+          'C:\\Program Files\\nodejs',
+          'C:\\Program Files (x86)\\nodejs',
+          path.join(process.env.LOCALAPPDATA || '', 'Programs\\nodejs'),
+          path.join(process.env.APPDATA || '', 'nvm\\current'),
+        ]
+        nodeDir = candidates.find(p => { try { return fs.existsSync(path.join(p, 'node.exe')) } catch { return false } }) ?? null
+      }
+
+      if (nodeDir) {
+        process.env.PATH = nodeDir + path.delimiter + (process.env.PATH || '')
+        logger.info(`Added node to PATH: ${nodeDir}`)
+      } else {
+        // Last resort: create a node.cmd wrapper using Electron's built-in Node.js
+        try {
+          const binDir = path.join(app.getPath('userData'), 'bin')
+          if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true })
+          const nodeCmdPath = path.join(binDir, 'node.cmd')
+          fs.writeFileSync(nodeCmdPath, `@echo off\nset ELECTRON_RUN_AS_NODE=1\n"${process.execPath}" %*\n`)
+          process.env.PATH = binDir + path.delimiter + (process.env.PATH || '')
+          logger.info(`Created node.cmd wrapper (Electron as Node): ${nodeCmdPath}`)
+        } catch (e) {
+          logger.warn(`node.exe not found and fallback failed: ${e}`)
+        }
+      }
+    }
   }
 
   private setupServerConfigIPC(): void {

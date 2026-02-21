@@ -774,9 +774,10 @@ export class ResourceListWindow {
       id: string
       type: 'role' | 'tool'
       source: string
+      roleResources?: string
     }) => {
       try {
-        const { id, type, source } = payload || {}
+        const { id, type, source, roleResources } = payload || {}
 
         if (!id || !type) {
           return { success: false, message: t('resources.missingParams') }
@@ -796,8 +797,14 @@ export class ResourceListWindow {
           return { success: false, message: 'CLI not available in @promptx/core' }
         }
 
+        // 构建参数（与 MCP action tool 一致，roleResources 作为第二个位置参数）
+        const args: string[] = [id]
+        if (roleResources) {
+          args.push(roleResources)
+        }
+
         // 执行 action 命令获取渲染后的提示词
-        const result = await cli.execute('action', [id])
+        const result = await cli.execute('action', args)
 
         // result 包含渲染后的完整提示词
         if (result && typeof result === 'string') {
@@ -814,6 +821,82 @@ export class ResourceListWindow {
       } catch (error: any) {
         console.error('Failed to preview prompt:', error)
         return { success: false, message: error?.message || t('resources.preview.failed') }
+      }
+    })
+
+    // V2 角色数据（身份、目标、组织）
+    ipcMain.handle('resources:getV2RoleData', async (_evt, payload: { roleId: string }) => {
+      try {
+        const core = await import('@promptx/core')
+        const coreExports = (core as any).default || core
+        const { RolexActionDispatcher } = (coreExports as any).rolex
+        const dispatcher = new RolexActionDispatcher()
+
+        // 激活角色获取身份文本（同时设置 currentRoleName）
+        const identity = await dispatcher.dispatch('activate', { role: payload.roleId })
+
+        // 获取当前目标
+        let focus = null
+        try {
+          focus = await dispatcher.dispatch('focus', { role: payload.roleId })
+        } catch { /* no active goals */ }
+
+        // 获取组织目录
+        let directory = null
+        try {
+          const dirResult = await dispatcher.dispatch('directory', { role: payload.roleId })
+          directory = typeof dirResult === 'string' ? JSON.parse(dirResult) : dirResult
+        } catch { /* no organizations */ }
+
+        return { success: true, identity, focus, directory }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色文件列表（~/.rolex/roles/<id>/identity/）
+    ipcMain.handle('resources:listV2RoleFiles', async (_evt, payload: { roleId: string }) => {
+      try {
+        const fs = require('fs-extra')
+        const os = require('os')
+        const identityDir = path.join(os.homedir(), '.rolex', 'roles', payload.roleId, 'identity')
+        if (!await fs.pathExists(identityDir)) {
+          return { success: false, message: 'Identity directory not found' }
+        }
+        const entries: string[] = await fs.readdir(identityDir)
+        const files = entries.filter((f: string) => f.endsWith('.feature'))
+        return { success: true, files, baseDir: identityDir }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色文件读取
+    ipcMain.handle('resources:readV2RoleFile', async (_evt, payload: { roleId: string; fileName: string }) => {
+      try {
+        const fs = require('fs-extra')
+        const os = require('os')
+        const filePath = path.join(os.homedir(), '.rolex', 'roles', payload.roleId, 'identity', payload.fileName)
+        if (!await fs.pathExists(filePath)) {
+          return { success: false, message: 'File not found' }
+        }
+        const content = await fs.readFile(filePath, 'utf-8')
+        return { success: true, content }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色文件保存（仅用户角色）
+    ipcMain.handle('resources:saveV2RoleFile', async (_evt, payload: { roleId: string; fileName: string; content: string }) => {
+      try {
+        const fs = require('fs-extra')
+        const os = require('os')
+        const filePath = path.join(os.homedir(), '.rolex', 'roles', payload.roleId, 'identity', payload.fileName)
+        await fs.writeFile(filePath, payload.content, 'utf-8')
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
       }
     })
   }

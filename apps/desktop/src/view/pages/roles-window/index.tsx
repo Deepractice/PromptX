@@ -117,6 +117,7 @@ export default function RolesPage() {
       <RoleDetailPanel
         selectedRole={selectedRole}
         onActivate={handleActivate}
+        onUpdate={loadRoles}
       />
     </div>
   )
