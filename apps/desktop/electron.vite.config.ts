@@ -3,6 +3,7 @@ import path, { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from "@tailwindcss/vite"
 import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { execSync } from 'child_process'
 
 // 复制i18n文件的插件
 const copyI18nPlugin = () => ({
@@ -13,11 +14,11 @@ const copyI18nPlugin = () => ({
     if (!existsSync(outputDir)) {
       mkdirSync(outputDir, { recursive: true })
     }
-    
+
     // 复制翻译文件
     const sourceDir = resolve(__dirname, 'src/main/i18n')
     const files = ['en.json', 'zh-CN.json']
-    
+
     files.forEach(file => {
       const sourcePath = resolve(sourceDir, file)
       const targetPath = resolve(outputDir, file)
@@ -26,6 +27,39 @@ const copyI18nPlugin = () => ({
         console.log(`Copied ${file} to main output`)
       }
     })
+  }
+})
+
+// 复制 web-ui 静态文件的插件（含 agentxjs browser bundle）
+const copyWebUiPlugin = () => ({
+  name: 'copy-web-ui',
+  generateBundle() {
+    const outputDir = resolve(__dirname, 'out/main/web-ui')
+    if (!existsSync(outputDir)) {
+      mkdirSync(outputDir, { recursive: true })
+    }
+
+    // Copy index.html
+    const sourcePath = resolve(__dirname, 'src/main/web-ui/index.html')
+    if (existsSync(sourcePath)) {
+      copyFileSync(sourcePath, resolve(outputDir, 'index.html'))
+      console.log('Copied web-ui/index.html to main output')
+    }
+
+    // Bundle agentxjs browser entry with all deps into a single ESM file
+    try {
+      const esbuildBin = resolve(__dirname, '../../node_modules/.bin/esbuild')
+      const entryPoint = resolve(__dirname, 'node_modules/agentxjs/dist/browser.js')
+      const outFile = resolve(outputDir, 'agentxjs.js')
+      // Use workspace root as node_modules resolution base so @agentxjs/* deps are found
+      execSync(
+        `"${esbuildBin}" "${entryPoint}" --bundle --format=esm --platform=browser --outfile="${outFile}"`,
+        { cwd: resolve(__dirname, '../..') }
+      )
+      console.log('Bundled agentxjs browser bundle to web-ui output')
+    } catch (e) {
+      console.warn('Could not bundle agentxjs browser bundle:', e)
+    }
   }
 })
 
@@ -38,7 +72,8 @@ export default defineConfig({
           '~/**'
         ]
       }),
-      copyI18nPlugin()
+      copyI18nPlugin(),
+      copyWebUiPlugin()
     ],
     build: {
       rollupOptions: {

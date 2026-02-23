@@ -15,6 +15,7 @@ import { ElectronAutoStartAdapter } from '~/main/infrastructure/adapters/Electro
 import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
 import { CognitionWindow } from '~/main/windows/CognitionWindow'
 import { agentXService } from '~/main/services/AgentXService'
+import { webAccessService } from '~/main/services/WebAccessService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
@@ -68,6 +69,7 @@ class PromptXDesktopApp {
     this.setupLogsIPC()
     this.setupDialogIPC()
     this.setupAgentXIPC()
+    this.setupWebAccessIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -666,6 +668,36 @@ class PromptXDesktopApp {
     // 删除 Skill
     ipcMain.handle('agentx:deleteSkill', async (_event, skillName: string) => {
       return await agentXService.deleteSkill(skillName)
+    })
+  }
+
+  private setupWebAccessIPC(): void {
+    ipcMain.handle('webAccess:getStatus', () => {
+      return {
+        enabled: webAccessService.isEnabled(),
+        externalAccess: agentXService.getExternalAccess(),
+      }
+    })
+
+    ipcMain.handle('webAccess:enable', async (_event, port?: number) => {
+      try {
+        if (port) webAccessService.setPort(port)
+        await agentXService.setExternalAccess(true)
+        const status = await webAccessService.enable(agentXService.getPort(), 'promptx-desktop')
+        return { success: true, ...status }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    ipcMain.handle('webAccess:disable', async () => {
+      try {
+        await webAccessService.disable()
+        await agentXService.setExternalAccess(false)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
     })
   }
 

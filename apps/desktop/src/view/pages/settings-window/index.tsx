@@ -20,7 +20,8 @@ import { toast, Toaster } from "sonner"
 import { LanguageSelector } from "./components/LanguageSelector"
 import { MCPConfig } from "./components/MCPConfig"
 import { SkillsConfig } from "./components/SkillsConfig"
-import { Loader2, CheckCircle2, XCircle, Settings, Bot, RefreshCw } from "lucide-react"
+import { WebAccessConfig } from "./components/WebAccessConfig"
+import { Loader2, CheckCircle2, XCircle, Settings, Bot, RefreshCw, Wifi } from "lucide-react"
 
 interface ServerConfig {
   host: string
@@ -226,7 +227,7 @@ function SettingsWindow() {
       <Toaster />
       <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col">
         <Tabs defaultValue="system" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="system" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               {t("settings.tabs.system")}
@@ -234,6 +235,10 @@ function SettingsWindow() {
             <TabsTrigger value="agentx" className="flex items-center gap-2">
               <Bot className="w-4 h-4" />
               {t("settings.tabs.agentx")}
+            </TabsTrigger>
+            <TabsTrigger value="remote" className="flex items-center gap-2">
+              <Wifi className="w-4 h-4" />
+              远程访问
             </TabsTrigger>
           </TabsList>
 
@@ -421,6 +426,11 @@ function SettingsWindow() {
 
             {/* Skills 配置 */}
             <SkillsConfig />
+          </TabsContent>
+
+          {/* 远程访问 */}
+          <TabsContent value="remote" className="flex-1 overflow-y-auto space-y-6">
+            <WebAccessConfig />
           </TabsContent>
         </Tabs>
       </div>

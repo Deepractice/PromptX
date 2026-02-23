@@ -43,6 +43,7 @@ export class AgentXService {
   private configPath: string
   private agentxDir: string
   private imageCreateUnsubscribe: Unsubscribe | null = null
+  private externalAccess: boolean = false
 
   constructor() {
     this.configPath = path.join(app.getPath('userData'), 'agentx-config.json')
@@ -199,10 +200,10 @@ export class AgentXService {
         }
       })
 
-      await this.agentx.listen(this.port)
+      await this.agentx.listen(this.port, this.externalAccess ? '0.0.0.0' : '127.0.0.1')
       this.isRunning = true
 
-      logger.info(`AgentX service started on ws://localhost:${this.port}`)
+      logger.info(`AgentX service started on ws://${this.externalAccess ? '0.0.0.0' : 'localhost'}:${this.port}`)
     } catch (error) {
       logger.error('Failed to start AgentX service:', String(error))
       throw error
@@ -323,6 +324,18 @@ export class AgentXService {
 
   getPort(): number {
     return this.port
+  }
+
+  async setExternalAccess(enabled: boolean): Promise<void> {
+    this.externalAccess = enabled
+    if (this.isRunning) {
+      await this.stop()
+      await this.start()
+    }
+  }
+
+  getExternalAccess(): boolean {
+    return this.externalAccess
   }
 
   getStatus(): boolean {

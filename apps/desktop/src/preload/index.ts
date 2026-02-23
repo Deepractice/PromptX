@@ -83,6 +83,12 @@ interface ElectronAPI {
     importSkill: (zipPath: string) => Promise<{ success: boolean; skillName?: string; error?: string }>
     deleteSkill: (skillName: string) => Promise<{ success: boolean; error?: string }>
   }
+  // Web Access API
+  webAccess: {
+    getStatus: () => Promise<{ enabled: boolean; externalAccess: boolean }>
+    enable: (port?: number) => Promise<{ success: boolean; enabled?: boolean; url?: string; qrCodeDataUrl?: string; port?: number; token?: string; error?: string }>
+    disable: () => Promise<{ success: boolean; error?: string }>
+  }
   // Cognition API
   cognition: {
     getOverview: (roleId: string) => Promise<any>
@@ -127,6 +133,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateEnabledSkills: (skills: string[]) => ipcRenderer.invoke('agentx:updateEnabledSkills', skills),
     importSkill: (zipPath: string) => ipcRenderer.invoke('agentx:importSkill', zipPath),
     deleteSkill: (skillName: string) => ipcRenderer.invoke('agentx:deleteSkill', skillName),
+  },
+  // Web Access API
+  webAccess: {
+    getStatus: () => ipcRenderer.invoke('webAccess:getStatus'),
+    enable: (port?: number) => ipcRenderer.invoke('webAccess:enable', port),
+    disable: () => ipcRenderer.invoke('webAccess:disable'),
   },
   // Cognition API
   cognition: {
