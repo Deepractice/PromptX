@@ -14,6 +14,7 @@ export default function RolesPage() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all")
   const [loading, setLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null)
+  const [enableV2, setEnableV2] = useState(true)
 
   const filteredRoles = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -54,7 +55,8 @@ export default function RolesPage() {
     return stats
   }, [roles, versionFilter])
 
-  const loadRoles = async () => {
+  const loadRoles = async (v2Enabled?: boolean) => {
+    const useV2 = v2Enabled !== undefined ? v2Enabled : enableV2
     setLoading(true)
     try {
       const result = await window.electronAPI?.getGroupedResources()
@@ -76,8 +78,13 @@ export default function RolesPage() {
         })
         setRoles(flat)
         if (flat.length > 0 && !selectedRole) {
-          const firstV2 = flat.find((r) => r.version === "v2")
-          setSelectedRole(firstV2 ?? flat[0] ?? null)
+          if (useV2) {
+            const firstV2 = flat.find((r) => r.version === "v2")
+            setSelectedRole(firstV2 ?? flat[0] ?? null)
+          } else {
+            const firstV1 = flat.find((r) => r.version !== "v2")
+            setSelectedRole(firstV1 ?? flat[0] ?? null)
+          }
         }
       } else {
         toast.error(t("roles.messages.loadFailed"))
@@ -94,7 +101,14 @@ export default function RolesPage() {
   }
 
   useEffect(() => {
-    loadRoles()
+    const init = async () => {
+      const config = await window.electronAPI?.invoke("server-config:get")
+      const v2Enabled = config?.enableV2 !== false
+      setEnableV2(v2Enabled)
+      if (!v2Enabled) setVersionFilter("v1")
+      await loadRoles(v2Enabled)
+    }
+    init()
   }, [])
 
   return (
@@ -113,6 +127,7 @@ export default function RolesPage() {
         setQuery={setQuery}
         selectedRole={selectedRole}
         setSelectedRole={setSelectedRole}
+        enableV2={enableV2}
       />
       <RoleDetailPanel
         selectedRole={selectedRole}

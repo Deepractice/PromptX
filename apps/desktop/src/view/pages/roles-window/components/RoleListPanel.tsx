@@ -49,35 +49,38 @@ type Props = {
   setQuery: (q: string) => void
   selectedRole: RoleItem | null
   setSelectedRole: (r: RoleItem) => void
+  enableV2?: boolean
 }
 
 export default function RoleListPanel({
   loading, filteredRoles, versionFilter, setVersionFilter, versionStats,
   sourceFilter, setSourceFilter, sourceStats, query, setQuery,
-  selectedRole, setSelectedRole,
+  selectedRole, setSelectedRole, enableV2 = true,
 }: Props) {
   const { t } = useTranslation()
 
   return (
     <div className="w-[280px] border-r flex flex-col bg-muted/30 overflow-hidden">
       <div className="p-3 space-y-2">
-        {/* Version toggle */}
-        <div className="flex gap-1">
-          {(["v1", "v2"] as const).map((v) => (
-            <button
-              key={v}
-              className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
-                versionFilter === v
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-              onClick={() => { setVersionFilter(v); setSourceFilter("all") }}
-            >
-              {v === "v1" ? "V1 DPML" : "V2 Rolex"}
-              <span className="ml-1 opacity-70">({versionStats[v]})</span>
-            </button>
-          ))}
-        </div>
+        {/* Version toggle — hidden when V2 is disabled */}
+        {enableV2 && (
+          <div className="flex gap-1">
+            {(["v1", "v2"] as const).map((v) => (
+              <button
+                key={v}
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                  versionFilter === v
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+                onClick={() => { setVersionFilter(v); setSourceFilter("all") }}
+              >
+                {v === "v1" ? "V1 DPML" : "V2 Rolex"}
+                <span className="ml-1 opacity-70">({versionStats[v]})</span>
+              </button>
+            ))}
+          </div>
+        )}
         {/* Source sub-filter */}
         <div className="flex gap-1">
           {(["all", "system", "plaza", "user"] as const).map((f) => (
