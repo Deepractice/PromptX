@@ -124,7 +124,8 @@ export function buildOptions(
   }
 
   // Enable local settings file (.claude/settings.local.json) in workdir
-  options.settingSources = ["local"];
+  // Also enable user settings to allow loading ~/.claude/skills/ and user-level config
+  options.settingSources = ["local", "user"];
 
   // Log final options (excluding functions and sensitive data)
   logger.info("SDK Options built", {
