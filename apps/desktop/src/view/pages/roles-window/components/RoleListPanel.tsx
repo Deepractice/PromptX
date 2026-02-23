@@ -62,51 +62,81 @@ export default function RoleListPanel({
   return (
     <div className="w-[280px] border-r flex flex-col bg-muted/30 overflow-hidden">
       <div className="p-3 space-y-2">
-        {/* Version toggle — hidden when V2 is disabled */}
-        {enableV2 && (
-          <div className="flex gap-1">
-            {(["v1", "v2"] as const).map((v) => (
-              <button
-                key={v}
-                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
-                  versionFilter === v
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-                onClick={() => { setVersionFilter(v); setSourceFilter("all") }}
-              >
-                {v === "v1" ? "V1 DPML" : "V2 Rolex"}
-                <span className="ml-1 opacity-70">({versionStats[v]})</span>
-              </button>
-            ))}
-          </div>
+        {enableV2 ? (
+          <>
+            {/* V2 enabled: V1/V2 toggle → source filter → search */}
+            <div className="flex gap-1">
+              {(["v1", "v2"] as const).map((v) => (
+                <button
+                  key={v}
+                  className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                    versionFilter === v
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                  onClick={() => { setVersionFilter(v); setSourceFilter("all") }}
+                >
+                  {v === "v1" ? "V1 DPML" : "V2 Rolex"}
+                  <span className="ml-1 opacity-70">({versionStats[v]})</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1">
+              {(["all", "system", "plaza", "user"] as const).map((f) => (
+                <button
+                  key={f}
+                  className={`flex-1 rounded-md px-1 py-0.5 text-[10px] transition-colors ${
+                    sourceFilter === f
+                      ? "bg-foreground/80 text-background"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted/80"
+                  }`}
+                  onClick={() => setSourceFilter(f)}
+                >
+                  {t(`roles.filters.${f}`)}
+                  {f !== "all" && <span className="ml-0.5 opacity-70">({sourceStats[f]})</span>}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("roles.search.placeholder")}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* V2 disabled: search → source filter (matches tools page layout) */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("roles.search.placeholder")}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="flex gap-1">
+              {(["all", "system", "plaza", "user"] as const).map((f) => (
+                <button
+                  key={f}
+                  className={`flex-1 rounded-md px-1.5 py-1 text-[11px] transition-colors ${
+                    sourceFilter === f
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                  onClick={() => setSourceFilter(f)}
+                >
+                  {t(`roles.filters.${f}`)}
+                  {f !== "all" && <span className="ml-0.5 opacity-70">({sourceStats[f]})</span>}
+                </button>
+              ))}
+            </div>
+          </>
         )}
-        {/* Source sub-filter */}
-        <div className="flex gap-1">
-          {(["all", "system", "plaza", "user"] as const).map((f) => (
-            <button
-              key={f}
-              className={`flex-1 rounded-md px-1 py-0.5 text-[10px] transition-colors ${
-                sourceFilter === f
-                  ? "bg-foreground/80 text-background"
-                  : "bg-muted/60 text-muted-foreground hover:bg-muted/80"
-              }`}
-              onClick={() => setSourceFilter(f)}
-            >
-              {t(`roles.filters.${f}`)}
-              {f !== "all" && <span className="ml-0.5 opacity-70">({sourceStats[f]})</span>}
-            </button>
-          ))}
-        </div>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t("roles.search.placeholder")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-8 h-9 text-sm"
-          />
-        </div>
       </div>
       <ScrollArea className="flex-1">
         <div className="px-2 pb-2 space-y-1">
