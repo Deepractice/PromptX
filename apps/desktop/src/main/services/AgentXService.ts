@@ -203,6 +203,12 @@ export class AgentXService {
       await this.agentx.listen(this.port, this.externalAccess ? '0.0.0.0' : '127.0.0.1')
       this.isRunning = true
 
+      // Sync enabled skills to ~/.claude/skills/ on startup
+      const enabledSkills = this.getEnabledSkills()
+      if (enabledSkills.length > 0) {
+        this.syncSkillsToClaudeDir(enabledSkills)
+      }
+
       logger.info(`AgentX service started on ws://${this.externalAccess ? '0.0.0.0' : 'localhost'}:${this.port}`)
     } catch (error) {
       logger.error('Failed to start AgentX service:', String(error))
@@ -487,10 +493,63 @@ export class AgentXService {
   }
 
   /**
-   * 更新启用的 Skills 列表
+   * 更新启用的 Skills 列表，并同步到 ~/.claude/skills/
    */
   async updateEnabledSkills(skills: string[]): Promise<void> {
     await this.updateConfig({ enabledSkills: skills })
+    this.syncSkillsToClaudeDir(skills)
+  }
+
+  /**
+   * 同步已启用的 skills 到 ~/.claude/skills/（Claude Code 原生目录）
+   * 用 .promptx-manifest.json 追踪哪些是 PromptX 管理的，避免误删用户手动放的 skill
+   */
+  private syncSkillsToClaudeDir(enabledSkills: string[]): void {
+    try {
+      const os = require('os')
+      const claudeSkillsDir = path.join(os.homedir(), '.claude', 'skills')
+      const skillsSourceDir = this.getSkillsDir()
+      const manifestPath = path.join(claudeSkillsDir, '.promptx-manifest.json')
+
+      fs.mkdirSync(claudeSkillsDir, { recursive: true })
+
+      // 读取上次 PromptX 管理的 skills 列表
+      let previouslyManaged: string[] = []
+      try {
+        if (fs.existsSync(manifestPath)) {
+          previouslyManaged = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+        }
+      } catch { /* ignore */ }
+
+      // 移除已禁用的（只移除 PromptX 管理的，不动用户手动放的）
+      for (const skillName of previouslyManaged) {
+        if (!enabledSkills.includes(skillName)) {
+          const dest = path.join(claudeSkillsDir, skillName)
+          if (fs.existsSync(dest)) {
+            fs.rmSync(dest, { recursive: true, force: true })
+            logger.info(`Removed skill '${skillName}' from ~/.claude/skills/`)
+          }
+        }
+      }
+
+      // 复制已启用的 skills
+      for (const skillName of enabledSkills) {
+        const src = path.join(skillsSourceDir, skillName)
+        const dest = path.join(claudeSkillsDir, skillName)
+        if (fs.existsSync(src)) {
+          if (fs.existsSync(dest)) {
+            fs.rmSync(dest, { recursive: true, force: true })
+          }
+          this.copyDirSync(src, dest)
+          logger.info(`Synced skill '${skillName}' to ~/.claude/skills/`)
+        }
+      }
+
+      // 更新 manifest
+      fs.writeFileSync(manifestPath, JSON.stringify(enabledSkills, null, 2))
+    } catch (error) {
+      logger.error('Failed to sync skills to ~/.claude/skills/:', String(error))
+    }
   }
 
   /**
