@@ -126,7 +126,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   transition:background .12s;
 }
 #hamburger:hover{background:var(--surface)}
-#mobile-title{font-size:14px;font-weight:600;color:var(--text);flex:1;text-align:center}
+#mobile-title{flex:1}
 #mobile-new-btn{
   width:32px;height:32px;border:1px solid var(--border2);background:transparent;
   color:var(--text-muted);cursor:pointer;border-radius:7px;
@@ -381,7 +381,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
         <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
       </svg>
     </button>
-    <span id="mobile-title">PromptX</span>
+    <span id="mobile-title"></span>
     <button id="mobile-theme-btn" title="切换主题" style="width:32px;height:32px;border:1px solid var(--border2);background:transparent;color:var(--text-muted);cursor:pointer;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:all .12s;">
       <svg id="mobile-theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -402,7 +402,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div id="empty-state">
       <div class="empty-icon">✦</div>
       <h2>开始新对话</h2>
-      <p>点击左侧 + 或下方输入框开始与 PromptX 对话</p>
+      <p>点击下方输入框开始与 PromptX 对话</p>
     </div>
   </div>
 
@@ -427,7 +427,7 @@ import { createAgentX } from '/agentxjs.js'
   const wsUrl = params.get('ws')
   const containerId = params.get('containerId') || 'promptx-desktop'
 
-  if (!wsUrl) { showError('缺少 WebSocket 地址参数'); return }
+  if (!wsUrl) { showError(t('missingWs')); return }
 
   // ── State ──────────────────────────────────────────────────────────────────
   let agentx = null
@@ -471,12 +471,60 @@ import { createAgentX } from '/agentxjs.js'
   document.getElementById('mobile-theme-btn').onclick = toggleTheme
   applyTheme()
 
+  // ── i18n ───────────────────────────────────────────────────────────────────
+  const LANGS = {
+    zh: {
+      connecting: '正在连接...', connectionFailed: '连接失败',
+      toggleTheme: '切换主题', menu: '菜单', newConv: '新建对话',
+      searchPlaceholder: '搜索对话...', conversations: '对话',
+      noMatch: '无匹配对话', noConversations: '暂无对话', unnamed: '未命名对话',
+      emptyTitle: '开始新对话', emptyHint: '点击下方输入框开始与 PromptX 对话',
+      inputPlaceholder: '发送消息...',
+      sending: '发送中...', thinking: '思考中...', responding: '回复中...',
+      newConvPrefix: '新对话 ', sendFailed: '发送失败: ', createFailed: '创建对话失败: ',
+      error: '错误: ', missingWs: '缺少 WebSocket 地址参数',
+      connectFailed: '无法连接到 AgentX 服务: ',
+      toolPlanning: '规划中', toolExecuting: '执行中', toolSuccess: '完成 ✓', toolError: '失败 ✗',
+      toolInput: '输入', toolOutput: '输出',
+    },
+    en: {
+      connecting: 'Connecting...', connectionFailed: 'Connection Failed',
+      toggleTheme: 'Toggle theme', menu: 'Menu', newConv: 'New Chat',
+      searchPlaceholder: 'Search chats...', conversations: 'Conversations',
+      noMatch: 'No matching chats', noConversations: 'No conversations', unnamed: 'Untitled',
+      emptyTitle: 'Start a new chat', emptyHint: 'Type a message below to start chatting with PromptX',
+      inputPlaceholder: 'Send a message...',
+      sending: 'Sending...', thinking: 'Thinking...', responding: 'Responding...',
+      newConvPrefix: 'New Chat ', sendFailed: 'Send failed: ', createFailed: 'Failed to create chat: ',
+      error: 'Error: ', missingWs: 'Missing WebSocket URL parameter',
+      connectFailed: 'Cannot connect to AgentX service: ',
+      toolPlanning: 'Planning', toolExecuting: 'Executing', toolSuccess: 'Done ✓', toolError: 'Failed ✗',
+      toolInput: 'Input', toolOutput: 'Output',
+    }
+  }
+  const lang = navigator.language?.startsWith('zh') ? 'zh' : 'en'
+  const L = LANGS[lang]
+  const t = k => L[k] ?? k
+  // Apply to static DOM
+  document.querySelector('#connecting p').textContent = t('connecting')
+  document.querySelector('#error-screen h2').textContent = t('connectionFailed')
+  document.getElementById('theme-btn').title = t('toggleTheme')
+  document.getElementById('theme-btn').setAttribute('aria-label', t('toggleTheme'))
+  document.getElementById('mobile-theme-btn').title = t('toggleTheme')
+  document.getElementById('new-btn').title = t('newConv')
+  document.getElementById('mobile-new-btn').title = t('newConv')
+  document.getElementById('hamburger').setAttribute('aria-label', t('menu'))
+  document.getElementById('search-input').placeholder = t('searchPlaceholder')
+  document.getElementById('input').placeholder = t('inputPlaceholder')
+  document.querySelector('#empty-state h2').textContent = t('emptyTitle')
+  document.querySelector('#empty-state p').textContent = t('emptyHint')
+
   // ── Connect ────────────────────────────────────────────────────────────────
   try {
     agentx = await createAgentX({ serverUrl: wsUrl })
     connectingEl.style.display = 'none'
   } catch (e) {
-    showError('无法连接到 AgentX 服务: ' + e.message)
+    showError(t('connectFailed') + e.message)
     return
   }
 
@@ -486,12 +534,12 @@ import { createAgentX } from '/agentxjs.js'
   agentx.on('conversation_start', (ev) => {
     const id = ev.context?.imageId; if (!id) return
     ensureState(id); conversationState[id].agentStatus = 'thinking'
-    if (id === currentImageId) setStatus('思考中...')
+    if (id === currentImageId) setStatus(t('thinking'))
   })
   agentx.on('conversation_responding', (ev) => {
     const id = ev.context?.imageId; if (!id) return
     ensureState(id); conversationState[id].agentStatus = 'responding'
-    if (id === currentImageId) setStatus('回复中...')
+    if (id === currentImageId) setStatus(t('responding'))
   })
   agentx.on('message_start', (ev) => {
     const id = ev.context?.imageId; if (!id) return
@@ -596,7 +644,7 @@ import { createAgentX } from '/agentxjs.js'
     const id = ev.context?.imageId; if (!id) return
     ensureState(id); conversationState[id].agentStatus = 'idle'
     isLoading = false
-    if (id === currentImageId) { setStatus('错误: ' + (ev.data?.message || '未知错误')); updateSendBtn() }
+    if (id === currentImageId) { setStatus(t('error') + (ev.data?.message || '')); updateSendBtn() }
   })
   // ── UI handlers ────────────────────────────────────────────────────────────
   document.getElementById('new-btn').onclick = createNewConversation
@@ -623,7 +671,7 @@ import { createAgentX } from '/agentxjs.js'
   async function createNewConversation() {
     try {
       const res = await agentx.request('image_create_request', {
-        containerId, config: { name: '新对话 ' + new Date().toLocaleTimeString() }
+        containerId, config: { name: t('newConvPrefix') + new Date().toLocaleTimeString() }
       })
       const record = res.data?.record
       if (!record) return
@@ -650,7 +698,7 @@ import { createAgentX } from '/agentxjs.js'
             : (firstUser.content || []).filter(p => p.type === 'text').map(p => p.text).join('')
           if (text) {
             const img = images.find(i => i.imageId === imageId)
-            if (img && /^新对话/.test(img.name || '')) {
+            if (img && (img.name || '').startsWith(t('newConvPrefix').trim())) {
               img.name = text.slice(0, 28) + (text.length > 28 ? '…' : '')
               renderConvList()
             }
@@ -662,7 +710,23 @@ import { createAgentX } from '/agentxjs.js'
   }
   async function sendMessage() {
     const content = inputEl.value.trim()
-    if (!content || !currentImageId || isLoading) return
+    if (!content || isLoading) return
+    // Auto-create a conversation if none is selected
+    if (!currentImageId) {
+      try {
+        const res = await agentx.request('image_create_request', {
+          containerId, config: { name: '新对话 ' + new Date().toLocaleTimeString() }
+        })
+        const record = res.data?.record
+        if (!record) return
+        await agentx.request('image_run_request', { imageId: record.imageId })
+        images.unshift(record)
+        currentImageId = record.imageId
+        ensureState(currentImageId)
+        conversationState[currentImageId].loaded = true
+        renderConvList()
+      } catch (e) { setStatus(t('createFailed') + e.message); return }
+    }
     isLoading = true
     ensureState(currentImageId)
     const st = conversationState[currentImageId]
@@ -672,7 +736,7 @@ import { createAgentX } from '/agentxjs.js'
     const convId = 'asst_' + Date.now()
     st.conversations.push({ type: 'assistant', id: convId, blocks: [], status: 'queued' })
     st.streamingId = convId
-    renderMessages(); updateSendBtn(); setStatus('发送中...')
+    renderMessages(); updateSendBtn(); setStatus(t('sending'))
     try {
       await agentx.request('message_send_request', { imageId: currentImageId, content })
       const last = st.conversations.filter(c => c.type === 'user').pop()
@@ -689,7 +753,7 @@ import { createAgentX } from '/agentxjs.js'
         }
       }
       renderMessages()
-    } catch (e) { isLoading = false; setStatus('发送失败: ' + e.message); updateSendBtn() }
+    } catch (e) { isLoading = false; setStatus(t('sendFailed') + e.message); updateSendBtn() }
   }
   function ensureState(imageId) {
     if (!conversationState[imageId]) conversationState[imageId] = {
@@ -698,7 +762,7 @@ import { createAgentX } from '/agentxjs.js'
     }
   }
   function updateSendBtn() {
-    sendBtn.disabled = !inputEl.value.trim() || !currentImageId || isLoading
+    sendBtn.disabled = !inputEl.value.trim() || isLoading
   }
   function setStatus(text) { statusBar.textContent = text }
 
@@ -767,12 +831,12 @@ import { createAgentX } from '/agentxjs.js'
     if (filtered.length === 0) {
       const empty = document.createElement('div')
       empty.style.cssText = 'padding:16px 10px;font-size:13px;color:var(--text-dim);text-align:center'
-      empty.textContent = q ? '无匹配对话' : '暂无对话'
+      empty.textContent = q ? t('noMatch') : t('noConversations')
       convList.appendChild(empty); return
     }
     if (!q) {
       const label = document.createElement('div')
-      label.className = 'conv-section-label'; label.textContent = '对话'
+      label.className = 'conv-section-label'; label.textContent = t('conversations')
       convList.appendChild(label)
     }
     for (const img of filtered) {
@@ -781,7 +845,7 @@ import { createAgentX } from '/agentxjs.js'
       const icon = document.createElement('span')
       icon.className = 'conv-item-icon'; icon.textContent = '💬'
       const text = document.createElement('span')
-      text.className = 'conv-item-text'; text.textContent = img.name || '未命名对话'
+      text.className = 'conv-item-text'; text.textContent = img.name || t('unnamed')
       el.appendChild(icon); el.appendChild(text)
       el.onclick = () => { selectConversation(img.imageId); closeSidebar() }
       convList.appendChild(el)
@@ -834,21 +898,21 @@ import { createAgentX } from '/agentxjs.js'
     const name = document.createElement('div'); name.className = 'tool-name'
     name.textContent = block.name || 'Tool'
     const statusEl = document.createElement('div'); statusEl.className = 'tool-status'
-    const labels = { planning: '规划中', executing: '执行中', success: '完成 ✓', error: '失败 ✗' }
+    const labels = { planning: t('toolPlanning'), executing: t('toolExecuting'), success: t('toolSuccess'), error: t('toolError') }
     statusEl.textContent = labels[block.status] || block.status
     const chevron = document.createElement('div'); chevron.className = 'tool-chevron'; chevron.textContent = '▾'
     header.append(dot, name, statusEl, chevron)
     const body = document.createElement('div'); body.className = 'tool-body'
     if (block.input && Object.keys(block.input).length > 0) {
       const sec = document.createElement('div'); sec.className = 'tool-section'
-      const lbl = document.createElement('div'); lbl.className = 'tool-section-label'; lbl.textContent = '输入'
+      const lbl = document.createElement('div'); lbl.className = 'tool-section-label'; lbl.textContent = t('toolInput')
       const code = document.createElement('div'); code.className = 'tool-code'
       code.textContent = JSON.stringify(block.input, null, 2)
       sec.append(lbl, code); body.appendChild(sec)
     }
     if (block.output !== undefined) {
       const sec = document.createElement('div'); sec.className = 'tool-section'
-      const lbl = document.createElement('div'); lbl.className = 'tool-section-label'; lbl.textContent = '输出'
+      const lbl = document.createElement('div'); lbl.className = 'tool-section-label'; lbl.textContent = t('toolOutput')
       const code = document.createElement('div'); code.className = 'tool-code'
       const out = block.output
       code.textContent = typeof out === 'string' ? out : (out?.text || out?.content || JSON.stringify(out, null, 2))

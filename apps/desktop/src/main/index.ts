@@ -721,6 +721,8 @@ class PromptXDesktopApp {
     // 重启应用
     ipcMain.handle('app:relaunch', () => {
       app.relaunch()
+      // 先隐藏所有窗口，避免白屏闪烁
+      BrowserWindow.getAllWindows().forEach(w => w.hide())
       app.exit(0)
     })
   }

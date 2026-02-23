@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -15,6 +16,7 @@ interface WebAccessStatus {
 }
 
 export function WebAccessConfig() {
+  const { t } = useTranslation()
   const [enabled, setEnabled] = useState(false)
   const [port, setPort] = useState(5201)
   const [status, setStatus] = useState<WebAccessStatus>({ enabled: false })
@@ -28,6 +30,9 @@ export function WebAccessConfig() {
     try {
       const s = await window.electronAPI?.webAccess.getStatus()
       setEnabled(s?.enabled ?? false)
+      if (s?.enabled && s?.url) {
+        setStatus({ enabled: true, url: s.url, qrCodeDataUrl: s.qrCodeDataUrl, port: s.port })
+      }
     } catch (e) {
       console.error("Failed to load web access status:", e)
     }
@@ -41,18 +46,18 @@ export function WebAccessConfig() {
         if (result?.success) {
           setEnabled(true)
           setStatus({ enabled: true, url: result.url, qrCodeDataUrl: result.qrCodeDataUrl, port: result.port })
-          toast.success("远程访问已开启")
+          toast.success(t("settings.webAccess.enabled"))
         } else {
-          toast.error(result?.error || "开启失败")
+          toast.error(result?.error || t("settings.webAccess.enableFailed"))
         }
       } else {
         const result = await window.electronAPI?.webAccess.disable()
         if (result?.success) {
           setEnabled(false)
           setStatus({ enabled: false })
-          toast.success("远程访问已关闭")
+          toast.success(t("settings.webAccess.disabled"))
         } else {
-          toast.error(result?.error || "关闭失败")
+          toast.error(result?.error || t("settings.webAccess.disableFailed"))
         }
       }
     } catch (e) {
@@ -65,19 +70,19 @@ export function WebAccessConfig() {
   const copyUrl = () => {
     if (status.url) {
       navigator.clipboard.writeText(status.url)
-      toast.success("链接已复制")
+      toast.success(t("settings.webAccess.copyUrl"))
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>远程访问</CardTitle>
-        <CardDescription>开启后可通过局域网扫码访问网页版 PromptX，支持多会话对话</CardDescription>
+        <CardTitle>{t("settings.webAccess.title")}</CardTitle>
+        <CardDescription>{t("settings.webAccess.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="web-port">HTTP 端口</Label>
+          <Label htmlFor="web-port">{t("settings.webAccess.port.label")}</Label>
           <Input
             id="web-port"
             type="number"
@@ -88,7 +93,7 @@ export function WebAccessConfig() {
             disabled={enabled}
             className="w-40"
           />
-          <p className="text-sm text-muted-foreground">网页服务端口，默认 5201</p>
+          <p className="text-sm text-muted-foreground">{t("settings.webAccess.port.description")}</p>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -97,7 +102,7 @@ export function WebAccessConfig() {
           ) : (
             <Switch id="web-access" checked={enabled} onCheckedChange={handleToggle} />
           )}
-          <Label htmlFor="web-access">开启远程访问</Label>
+          <Label htmlFor="web-access">{t("settings.webAccess.toggle")}</Label>
         </div>
 
         {enabled && status.url && (
@@ -119,7 +124,7 @@ export function WebAccessConfig() {
                   alt="QR Code"
                   className="w-48 h-48 rounded-lg border border-border"
                 />
-                <p className="text-sm text-muted-foreground">扫码在手机或其他设备上访问</p>
+                <p className="text-sm text-muted-foreground">{t("settings.webAccess.qrHint")}</p>
               </div>
             )}
           </div>

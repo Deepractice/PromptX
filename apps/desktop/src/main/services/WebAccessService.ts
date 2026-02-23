@@ -20,6 +20,7 @@ export class WebAccessService {
   private token: string = ''
   private agentxPort: number = 5200
   private containerId: string = 'promptx-desktop'
+  private lastStatus: WebAccessStatus | null = null
 
   setPort(port: number): void {
     this.port = port
@@ -50,7 +51,9 @@ export class WebAccessService {
     logger.info(`Web access enabled: ${url}`)
 
     const qrCodeDataUrl = await this.generateQRCode(url)
-    return { enabled: true, url, qrCodeDataUrl, port: this.port, token: this.token }
+    const status: WebAccessStatus = { enabled: true, url, qrCodeDataUrl, port: this.port, token: this.token }
+    this.lastStatus = status
+    return status
   }
 
   async disable(): Promise<void> {
@@ -59,12 +62,17 @@ export class WebAccessService {
         this.server!.close(() => resolve())
       })
       this.server = null
+      this.lastStatus = null
       logger.info('Web access disabled')
     }
   }
 
   isEnabled(): boolean {
     return this.server !== null
+  }
+
+  getLastStatus(): WebAccessStatus | null {
+    return this.lastStatus
   }
 
   private handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
