@@ -32,6 +32,9 @@ class PromptXDesktopApp {
   private autoStartWindow: AutoStartWindow | null = null
 
   async initialize(): Promise<void> {
+    // Capture console output to log file (covers @agentxjs/common runtime logs)
+    this.setupConsoleCapture()
+
     logger.info('Initializing PromptX Desktop...')
 
     // Setup Node.js environment for ToolSandbox
@@ -135,6 +138,36 @@ class PromptXDesktopApp {
     setTimeout(() => {
       this.updateManager?.autoCheckAndDownload()
     }, 5000) // Delay 5 seconds to let app fully initialize
+  }
+
+  private setupConsoleCapture(): void {
+    // Forward console output to @promptx/logger so runtime logs are persisted to file.
+    // @agentxjs/common uses console.* internally, so this captures SDK/runtime logs.
+    let _capturing = false
+
+    const capture = (level: 'info' | 'error' | 'warn' | 'debug', args: unknown[]) => {
+      if (_capturing) return
+      _capturing = true
+      try {
+        const msg = args
+          .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
+          .join(' ')
+        logger[level]('[runtime] ' + msg)
+      } catch { /* ignore */ }
+      finally { _capturing = false }
+    }
+
+    const _log = console.log.bind(console)
+    const _error = console.error.bind(console)
+    const _warn = console.warn.bind(console)
+    const _info = console.info.bind(console)
+    const _debug = console.debug.bind(console)
+
+    console.log = (...args) => { _log(...args); capture('info', args) }
+    console.error = (...args) => { _error(...args); capture('error', args) }
+    console.warn = (...args) => { _warn(...args); capture('warn', args) }
+    console.info = (...args) => { _info(...args); capture('info', args) }
+    console.debug = (...args) => { _debug(...args); capture('debug', args) }
   }
 
   private setupNodeEnvironment(): void {

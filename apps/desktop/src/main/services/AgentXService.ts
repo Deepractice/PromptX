@@ -150,10 +150,16 @@ export class AgentXService {
       logger.info(`PromptX MCP URL: ${promptxUrl}`)
 
       // Add built-in mcp-office server
+      // Use Electron's built-in Node.js (ELECTRON_RUN_AS_NODE=1) so it works
+      // even if the user doesn't have Node.js installed on their system.
       if (mcpOfficePath) {
         mcpServers['mcp-office'] = {
-          command: 'node',
+          command: process.execPath,
           args: [mcpOfficePath],
+          env: {
+            ...process.env,
+            ELECTRON_RUN_AS_NODE: '1',
+          },
         }
       }
 
@@ -177,6 +183,9 @@ export class AgentXService {
           model: this.config.model,
         },
         agentxDir: this.agentxDir,
+        environment: {
+          claudeCodePath: this.getClaudeAgentSdkCliPath(),
+        },
         defaultAgent: {
           name: 'PromptX Agent',
           mcpServers: Object.keys(mcpServers).length > 0 ? mcpServers : undefined,
@@ -249,6 +258,35 @@ export class AgentXService {
       logger.info(`Created .claude/settings.local.json for image: ${imageId}`)
     } catch (error) {
       logger.error(`Failed to setup .claude settings for image ${imageId}:`, String(error))
+    }
+  }
+
+  /**
+   * Get the path to @anthropic-ai/claude-agent-sdk cli.js
+   * In packaged app, it lives in app.asar.unpacked (not inside app.asar)
+   */
+  private getClaudeAgentSdkCliPath(): string | undefined {
+    // Packaged: app.asar.unpacked takes priority
+    const unpackedPath = path.join(
+      process.resourcesPath || '',
+      'app.asar.unpacked',
+      'node_modules',
+      '@anthropic-ai',
+      'claude-agent-sdk',
+      'cli.js'
+    )
+    if (fs.existsSync(unpackedPath)) {
+      logger.info(`Claude Agent SDK cli.js found at: ${unpackedPath}`)
+      return unpackedPath
+    }
+    // Development: resolve from node_modules
+    try {
+      const resolved = require.resolve('@anthropic-ai/claude-agent-sdk/cli.js')
+      logger.info(`Claude Agent SDK cli.js resolved: ${resolved}`)
+      return resolved
+    } catch {
+      logger.warn('Claude Agent SDK cli.js not found, using SDK default')
+      return undefined
     }
   }
 

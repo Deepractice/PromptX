@@ -28,7 +28,7 @@ files:
   - "node_modules/@promptx/resource/dist/resources/**/*.md"
 
 extraResources:
-  - from: "node_modules/@promptx/mcp-office/dist"
+  - from: "../../packages/mcp-office/dist"
     to: "mcp-office"
     filter:
       - "**/*"
