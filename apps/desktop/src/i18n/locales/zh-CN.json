@@ -4,7 +4,8 @@
     "subtitle": "自定义您的 PromptX 体验",
     "tabs": {
       "system": "系统设置",
-      "agentx": "AgentX 设置"
+      "agentx": "AgentX 设置",
+      "remote": "远程访问"
     },
     "language": {
       "title": "语言",
@@ -65,6 +66,21 @@
       "description": "计算机启动时自动启动 PromptX",
       "enable": "启用开机自启"
     },
+    "webAccess": {
+      "title": "远程访问",
+      "description": "开启后可通过局域网扫码访问网页版 PromptX，支持多会话对话",
+      "port": {
+        "label": "HTTP 端口",
+        "description": "网页服务端口，默认 5201"
+      },
+      "toggle": "开启远程访问",
+      "enabled": "远程访问已开启",
+      "disabled": "远程访问已关闭",
+      "enableFailed": "开启失败",
+      "disableFailed": "关闭失败",
+      "copyUrl": "链接已复制",
+      "qrHint": "扫码在手机或其他设备上访问"
+    },
     "server": {
       "title": "服务器配置",
       "description": "配置服务器主机、端口和调试设置",
@@ -81,6 +97,10 @@
       "debug": {
         "label": "调试模式",
         "description": "输出更多日志信息用于故障排除"
+      },
+      "enableV2": {
+        "label": "启用 V2 功能 (RoleX)",
+        "description": "启用 RoleX 角色生命周期管理，支持角色创建、目标管理和组织功能"
       },
       "save": "保存配置",
       "saving": "保存中...",

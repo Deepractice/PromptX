@@ -27,6 +27,7 @@ interface ServerConfig {
   host: string
   port: number
   debug: boolean
+  enableV2: boolean
 }
 
 interface AgentXConfig {
@@ -46,7 +47,8 @@ function SettingsWindow() {
   const [serverConfig, setServerConfig] = useState<ServerConfig>({
     host: "127.0.0.1",
     port: 5203,
-    debug: false
+    debug: false,
+    enableV2: true
   })
   const [agentXConfig, setAgentXConfig] = useState<AgentXConfig>({
     apiKey: "",
@@ -238,7 +240,7 @@ function SettingsWindow() {
             </TabsTrigger>
             <TabsTrigger value="remote" className="flex items-center gap-2">
               <Wifi className="w-4 h-4" />
-              远程访问
+              {t("settings.tabs.remote")}
             </TabsTrigger>
           </TabsList>
 
@@ -304,6 +306,18 @@ function SettingsWindow() {
                     <Label htmlFor="debug-mode">{t("settings.server.debug.label")}</Label>
                   </div>
                   <p className="text-sm text-muted-foreground">{t("settings.server.debug.description")}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="enable-v2"
+                      checked={serverConfig.enableV2}
+                      onCheckedChange={checked => handleServerConfigChange("enableV2", checked)}
+                    />
+                    <Label htmlFor="enable-v2">{t("settings.server.enableV2.label")}</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("settings.server.enableV2.description")}</p>
                 </div>
 
                 <div className="flex space-x-3 pt-4">

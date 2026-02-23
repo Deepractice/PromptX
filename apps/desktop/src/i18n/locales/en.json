@@ -4,7 +4,8 @@
     "subtitle": "Customize your PromptX experience",
     "tabs": {
       "system": "System",
-      "agentx": "AgentX"
+      "agentx": "AgentX",
+      "remote": "Remote Access"
     },
     "language": {
       "title": "Language",
@@ -65,8 +66,22 @@
       "description": "Launch PromptX automatically when computer starts",
       "enable": "Enable auto start"
     },
+    "webAccess": {
+      "title": "Remote Access",
+      "description": "Enable LAN access to PromptX via browser, supports multiple sessions",
+      "port": {
+        "label": "HTTP Port",
+        "description": "Web service port, default 5201"
+      },
+      "toggle": "Enable Remote Access",
+      "enabled": "Remote access enabled",
+      "disabled": "Remote access disabled",
+      "enableFailed": "Failed to enable",
+      "disableFailed": "Failed to disable",
+      "copyUrl": "URL copied",
+      "qrHint": "Scan to access on phone or other devices"
+    },
     "server": {
-      "title": "Server Configuration",
       "description": "Configure server host, port and debug settings",
       "host": {
         "label": "Server Host",
@@ -81,6 +96,10 @@
       "debug": {
         "label": "Debug Mode",
         "description": "Output more log information for troubleshooting"
+      },
+      "enableV2": {
+        "label": "Enable V2 Features (RoleX)",
+        "description": "Enable RoleX role lifecycle management: role creation, goal management, and organization features"
       },
       "save": "Save Configuration",
       "saving": "Saving...",

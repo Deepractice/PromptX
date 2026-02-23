@@ -158,6 +158,7 @@ class RolexBridge {
    * 通过检查 ~/.promptx/rolex/roles/<roleId>/identity/persona.identity.feature 是否存在
    */
   async isV2Role (roleId) {
+    if (process.env.PROMPTX_ENABLE_V2 === '0') return false
     await this.ensureInitialized()
     const featurePath = path.join(
       this.rolexRoot, 'roles', roleId, 'identity', 'persona.identity.feature'
@@ -348,6 +349,7 @@ class RolexBridge {
    * 列出所有 V2 角色（供 discover 使用）
    */
   async listV2Roles () {
+    if (process.env.PROMPTX_ENABLE_V2 === '0') return []
     try {
       await this.ensureInitialized()
       const rolesDir = path.join(this.rolexRoot, 'roles')

@@ -34,14 +34,16 @@ export class PromptXServerAdapter implements IServerPort {
       const port = config.port ?? cfg.getPort()
       const debug = config.debug ?? cfg.getDebug()
       const corsEnabled = cfg.getCorsEnabled()
-  
+      const enableV2 = cfg.getEnableV2()
+
       // Create and start the PromptX MCP server
       this.server = new PromptXMCPServer({
         transport: 'http',
         host,
         port,
         debug,
-        corsEnabled
+        corsEnabled,
+        enableV2
       })
       
       await this.server.start()

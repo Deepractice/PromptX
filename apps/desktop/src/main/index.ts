@@ -21,6 +21,7 @@ import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { mainI18n, t } from '~/main/i18n'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
+import { ServerConfigManager } from '@promptx/config'
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
@@ -314,13 +315,14 @@ class PromptXDesktopApp {
       return ServerConfig.default().toJSON()
     })
 
-    ipcMain.handle('server-config:update', async (_event, payload: { host: string; port: number; debug?: boolean }) => {
+    ipcMain.handle('server-config:update', async (_event, payload: { host: string; port: number; debug?: boolean; enableV2?: boolean }) => {
       const base = ServerConfig.default().toJSON()
       const created = ServerConfig.create({
         ...base,
         host: payload.host,
         port: payload.port,
-        debug: payload.debug ?? base.debug
+        debug: payload.debug ?? base.debug,
+        enableV2: payload.enableV2 ?? base.enableV2
       })
       if (!created.ok) {
         throw new Error(created.error.message)
@@ -333,6 +335,9 @@ class PromptXDesktopApp {
           throw new Error(saveRes.error.message)
         }
       }
+      // 同步 enableV2 到 ServerConfigManager（供 MCP server 读取）
+      const scm = new ServerConfigManager()
+      scm.setEnableV2(cfg.enableV2)
       // 应用配置（重启服务）
       if (this.serverPort) {
         const restartRes = await this.serverPort.restart(cfg)
@@ -673,9 +678,11 @@ class PromptXDesktopApp {
 
   private setupWebAccessIPC(): void {
     ipcMain.handle('webAccess:getStatus', () => {
+      const last = webAccessService.getLastStatus()
       return {
         enabled: webAccessService.isEnabled(),
         externalAccess: agentXService.getExternalAccess(),
+        ...(last ?? {}),
       }
     })
 
