@@ -52,7 +52,7 @@ program
   .option('--host <address>', 'Host address (http transport only)', defaultHost)
   .option('--cors', 'Enable CORS (http transport only)', defaultCors)
   .option('--debug', 'Enable debug mode', defaultDebug)
-  .option('--no-v2', 'Disable V2 (RoleX) lifecycle management features', false)
+  .option('--no-v2', 'Disable V2 (RoleX) lifecycle management features')
   .option('--save-config', 'Save current options to config file', false)
   .action(async (options) => {
     try {
