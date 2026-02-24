@@ -243,7 +243,7 @@ export class AgentXService {
       // The workdir path pattern: {agentxDir}/containers/promptx-desktop/workdirs/{imageId}
       const workdirPath = path.join(this.agentxDir, 'containers', 'promptx-desktop', 'workdirs', imageId)
       const claudeDir = path.join(workdirPath, '.claude')
-      const settingsPath = path.join(claudeDir, 'settings.local.json')
+      const settingsPath = path.join(claudeDir, 'settings.json')
 
       // Create .claude directory if it doesn't exist
       if (!fs.existsSync(claudeDir)) {
@@ -261,7 +261,7 @@ export class AgentXService {
       // the full user settings (which may contain conflicting permissions/config).
       this.linkSkillsToWorkdir(claudeDir)
 
-      logger.info(`Created .claude/settings.local.json for image: ${imageId}`)
+      logger.info(`Created .claude/settings.json for image: ${imageId}`)
     } catch (error) {
       logger.error(`Failed to setup .claude settings for image ${imageId}:`, String(error))
     }

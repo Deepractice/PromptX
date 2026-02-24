@@ -123,9 +123,11 @@ export function buildOptions(
     options.allowDangerouslySkipPermissions = true;
   }
 
-  // Enable local settings file (.claude/settings.local.json) in workdir
-  // Also enable user settings to allow loading ~/.claude/skills/ and user-level config
-  options.settingSources = ["local", "user"];
+  // Enable project settings file (.claude/settings.json) in workdir.
+  // 'project' reads {workdir}/.claude/settings.json and scans {workdir}/.claude/skills/.
+  // 'user' is intentionally excluded to avoid loading ~/.claude/settings.json
+  // which may contain user-specific permissions/config that conflicts with PromptX.
+  options.settingSources = ["project"];
 
   // Log final options (excluding functions and sensitive data)
   logger.info("SDK Options built", {
