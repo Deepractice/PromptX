@@ -9,31 +9,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Pencil, BookOpen, Layers, Brain, FileText, ChevronRight, ChevronDown, Save, Loader2, Target, Building2 } from "lucide-react"
+import { Pencil, BookOpen, Layers, Brain, FileText, ChevronRight, ChevronDown, Save, Loader2, Target, Building2, Upload } from "lucide-react"
 import { useEffect, useState, useCallback } from "react"
 import type { RoleItem } from "./RoleListPanel"
 import MemoryTab from "./MemoryTab"
-
-const AVATAR_COLORS = [
-  "from-gray-600 to-gray-800",
-  "from-slate-500 to-slate-700",
-  "from-zinc-500 to-zinc-700",
-  "from-neutral-500 to-neutral-700",
-  "from-stone-500 to-stone-700",
-  "from-gray-500 to-gray-700",
-  "from-slate-600 to-slate-800",
-  "from-zinc-600 to-zinc-800",
-]
-
-function getAvatarColor(name: string) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function getInitial(name: string) {
-  return name.charAt(0).toUpperCase()
-}
+import RoleAvatar from "./RoleAvatar"
 
 type Props = {
   selectedRole: RoleItem | null
@@ -883,6 +863,29 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onUpdate }: 
   const [editName, setEditName] = useState("")
   const [editDescription, setEditDescription] = useState("")
   const [editSaving, setEditSaving] = useState(false)
+  const [avatarVersion, setAvatarVersion] = useState(0)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+
+  const handleAvatarUpload = async () => {
+    if (!selectedRole) return
+    const result = await window.electronAPI?.dialog.openFile({
+      title: "Select Avatar Image",
+      filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp"] }],
+      properties: ["openFile"],
+    })
+    if (result?.canceled || !result?.filePaths[0]) return
+    setAvatarUploading(true)
+    try {
+      const res = await window.electronAPI?.uploadRoleAvatar({
+        id: selectedRole.id,
+        source: selectedRole.source,
+        imagePath: result.filePaths[0],
+      })
+      if (res?.success) setAvatarVersion(v => v + 1)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   const openEdit = () => {
     if (!selectedRole) return
@@ -941,8 +944,27 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onUpdate }: 
       <div className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${getAvatarColor(selectedRole.name)} text-white text-lg font-bold`}>
-              {getInitial(selectedRole.name)}
+            <div className="relative group">
+              <RoleAvatar
+                id={selectedRole.id}
+                name={selectedRole.name}
+                source={selectedRole.source}
+                className="h-12 w-12 rounded-xl text-lg"
+                refreshKey={avatarVersion}
+              />
+              {selectedRole.source === "user" && (
+                <button
+                  className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={handleAvatarUpload}
+                  disabled={avatarUploading}
+                  title="Upload avatar"
+                >
+                  {avatarUploading
+                    ? <Loader2 className="h-4 w-4 text-white animate-spin" />
+                    : <Upload className="h-4 w-4 text-white" />
+                  }
+                </button>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -1035,6 +1057,30 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onUpdate }: 
             <DialogDescription>{selectedRole.id}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {/* Avatar upload */}
+            <div className="flex items-center gap-4">
+              <RoleAvatar
+                id={selectedRole.id}
+                name={selectedRole.name}
+                source={selectedRole.source}
+                className="h-16 w-16 rounded-xl text-2xl"
+                refreshKey={avatarVersion}
+              />
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAvatarUpload}
+                  disabled={avatarUploading}
+                >
+                  {avatarUploading
+                    ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t("common.loading")}</>
+                    : <><Upload className="h-3.5 w-3.5 mr-1.5" />{t("roles.detail.uploadAvatar") || "Upload Avatar"}</>
+                  }
+                </Button>
+                <p className="text-xs text-muted-foreground">PNG, JPG, WEBP</p>
+              </div>
+            </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">{t("roles.detail.editRoleName")}</label>
               <input

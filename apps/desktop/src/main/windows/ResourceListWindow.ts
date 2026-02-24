@@ -899,6 +899,88 @@ export class ResourceListWindow {
         return { success: false, message: error?.message }
       }
     })
+
+    // 获取角色头像（profile.png/jpg/jpeg/webp）→ base64 data URL
+    ipcMain.handle('resources:getRoleAvatar', async (_evt, payload: { id: string; source?: string }) => {
+      try {
+        const { id } = payload || {}
+        const source = payload?.source ?? 'user'
+        if (!id) return { success: true, data: null }
+
+        const pathMod = require('path')
+        const fs = require('fs-extra')
+        const os = require('os')
+        const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'webp']
+
+        const findProfile = async (dir: string): Promise<string | null> => {
+          for (const ext of IMAGE_EXTS) {
+            const p = pathMod.join(dir, `profile.${ext}`)
+            if (await fs.pathExists(p)) return p
+          }
+          return null
+        }
+
+        let avatarPath: string | null = null
+
+        if (source === 'user') {
+          avatarPath = await findProfile(pathMod.join(os.homedir(), '.promptx', 'resource', 'role', id))
+        } else if (source === 'project') {
+          try {
+            const { ProjectPathResolver } = require('@promptx/core')
+            const resolver = new ProjectPathResolver()
+            avatarPath = await findProfile(pathMod.join(resolver.getResourceDirectory(), 'role', id))
+          } catch { /* ignore */ }
+        } else {
+          // system — resolve via @promptx/resource package directory
+          try {
+            const pkgJsonPath = require.resolve('@promptx/resource/package.json')
+            const pkgDir = pathMod.dirname(pkgJsonPath)
+            avatarPath = await findProfile(pathMod.join(pkgDir, 'resources', 'role', id))
+          } catch { /* ignore */ }
+        }
+
+        if (!avatarPath) return { success: true, data: null }
+
+        const buf = await fs.readFile(avatarPath)
+        const ext = pathMod.extname(avatarPath).toLowerCase().slice(1)
+        const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'webp' ? 'image/webp' : 'image/png'
+        return { success: true, data: `data:${mime};base64,${buf.toString('base64')}` }
+      } catch (error: any) {
+        console.error('Failed to get role avatar:', error)
+        return { success: true, data: null }
+      }
+    })
+
+    // 上传角色头像（仅用户角色）
+    ipcMain.handle('resources:uploadRoleAvatar', async (_evt, payload: { id: string; source?: string; imagePath: string }) => {
+      try {
+        const { id, imagePath } = payload || {}
+        const source = payload?.source ?? 'user'
+        if (!id || !imagePath) return { success: false, message: 'Missing params' }
+
+        const pathMod = require('path')
+        const fs = require('fs-extra')
+        const os = require('os')
+
+        if (source !== 'user') return { success: false, message: 'Only user roles support avatar upload' }
+
+        const roleDir = pathMod.join(os.homedir(), '.promptx', 'resource', 'role', id)
+        if (!(await fs.pathExists(roleDir))) return { success: false, message: 'Role directory not found' }
+
+        // Remove any existing profile.* files
+        for (const ext of ['png', 'jpg', 'jpeg', 'webp']) {
+          const existing = pathMod.join(roleDir, `profile.${ext}`)
+          if (await fs.pathExists(existing)) await fs.remove(existing)
+        }
+
+        const ext = pathMod.extname(imagePath).toLowerCase().slice(1) || 'png'
+        await fs.copy(imagePath, pathMod.join(roleDir, `profile.${ext}`), { overwrite: true })
+        return { success: true }
+      } catch (error: any) {
+        console.error('Failed to upload role avatar:', error)
+        return { success: false, message: error.message || 'Upload failed' }
+      }
+    })
   }
 
   show(): void {

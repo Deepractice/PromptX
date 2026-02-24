@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, Loader2 } from "lucide-react"
+import RoleAvatar from "./RoleAvatar"
 
 type RoleItem = {
   id: string
@@ -14,27 +15,6 @@ type RoleItem = {
 
 type VersionFilter = "v1" | "v2"
 type SourceFilter = "all" | "system" | "plaza" | "user"
-
-const AVATAR_COLORS = [
-  "from-gray-600 to-gray-800",
-  "from-slate-500 to-slate-700",
-  "from-zinc-500 to-zinc-700",
-  "from-neutral-500 to-neutral-700",
-  "from-stone-500 to-stone-700",
-  "from-gray-500 to-gray-700",
-  "from-slate-600 to-slate-800",
-  "from-zinc-600 to-zinc-800",
-]
-
-function getAvatarColor(name: string) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function getInitial(name: string) {
-  return name.charAt(0).toUpperCase()
-}
 
 type Props = {
   loading: boolean
@@ -159,9 +139,12 @@ export default function RoleListPanel({
                 }`}
                 onClick={() => setSelectedRole(role)}
               >
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${getAvatarColor(role.name)} text-white text-sm font-semibold`}>
-                  {getInitial(role.name)}
-                </div>
+                <RoleAvatar
+                  id={role.id}
+                  name={role.name}
+                  source={role.source}
+                  className="h-9 w-9 rounded-lg text-sm"
+                />
                 <div className="w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium truncate">{role.name}</span>
