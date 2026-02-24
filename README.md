@@ -117,6 +117,59 @@ AI:   Provides in-depth product strategy advice as a professional product manage
 
 💡 **Need help?** Join our [Discord Community](https://discord.gg/rdmPr54K) for support and discussions!
 
+---
+
+## 🚀 PromptX Desktop — Next-Generation Features
+
+The PromptX Desktop client is more than an MCP server launcher. It ships a full next-gen agent platform built on top of PromptX.
+
+### 🤖 AgentX — Integrated AI Agent System
+
+AgentX embeds a Claude-powered autonomous agent directly inside the client. No external setup required — configure your API key, and you have a fully capable agent that:
+
+- Runs Claude Code sessions with full tool access
+- Connects to all your configured MCP servers automatically
+- Maintains isolated workspaces per conversation
+- Supports custom skills loaded from the Skills library
+
+### 📦 ResourceX — Next-Gen Resource Management
+
+A completely redesigned resource management paradigm:
+
+- **Visual role browser** with avatar support, version filtering (V1 DPML / V2 RoleX), and source filtering (System / Plaza / User)
+- **One-click role activation** directly from the UI
+- **Role editor** — edit name, description, and avatar; browse and edit role files inline
+- **Import / export** roles and tools as zip packages
+- **Tool sandbox** — execute tools and inspect results without leaving the client
+
+### 🏪 Agent Plaza *(Coming Soon)*
+
+A curated marketplace for community-built roles and tools. Browse, install, and share agents with one click.
+
+### 🧠 Memory Editor & Visualization
+
+Inspect and edit your agent's long-term memory directly in the client:
+
+- **Memory network graph** — visualize how memories connect
+- **Engram editor** — view, edit, or delete individual memory entries
+- **Cue word browser** — explore memory retrieval pathways
+
+### 🔒 Remote Access
+
+Expose your local PromptX server to the internet securely:
+
+- Toggle remote access on/off with a single switch
+- Auto-generates a shareable URL and QR code
+- Token-based authentication keeps your server private
+
+### 🛠️ Sandbox Debugging
+
+Test MCP tools interactively before deploying them to your AI workflow:
+
+- Execute any tool with custom parameters
+- Inspect raw input/output
+- View tool schema and documentation inline
+
 ### 🔧 Method 2: Direct Run (Developers)
 **Developers with Node.js environment can use directly:**
 
@@ -142,69 +195,133 @@ docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:la
 
 ---
 
-## 🎨 **Nuwa & Luban - PromptX's Creation Twins**
+## 🎨 **Built-in Roles — Meet Your Expert Team**
+
+PromptX ships 8 carefully crafted built-in roles, each a specialist in their domain. Activate any role with a single message.
+
+### 🏛️ V1 Roles (DPML) — Battle-tested Experts
+
+| Avatar | ID | Name | Specialty |
+|--------|-----|------|-----------|
+| ![nuwa](packages/resource/resources/role/nuwa/profile.png) | `nuwa` | **女娲 · Nuwa** | AI role creation — one sentence, one expert |
+| ![luban](packages/resource/resources/role/luban/profile.png) | `luban` | **鲁班 · Luban** | Tool integration master — any API in 3 minutes |
+| ![sean](packages/resource/resources/role/sean/profile.png) | `sean` | **姜山 · Sean** | Product decisions & startup strategy |
+| ![writer](packages/resource/resources/role/writer/profile.png) | `writer` | **文章写手 · Writer** | Professional content that doesn't sound like AI |
+| ![jiangziya](packages/resource/resources/role/jiangziya/profile.png) | `jiangziya` | **姜子牙 · Jiangziya** | AI-era industry transformation & role design consultant |
+| ![shaqing](packages/resource/resources/role/shaqing/profile.png) | `shaqing` | **傻青 · Shaqing** | Philosophy guide — helps you understand yourself |
+| ![teacheryo](packages/resource/resources/role/teacheryo/profile.png) | `teacheryo` | **YoYo老师 · TeacherYo** | Education transformation consultant for the AI era |
+| ![dayu](packages/resource/resources/role/dayu/profile.png) | `dayu` | **大禹 · Dayu** | V1→V2 role migration & organization management |
 
 ### 🎭 **Nuwa - AI Role Designer**
 <div align="center">
-  <img src="assets/logo/nuwa-logo-backgroud.jpg" alt="Nuwa" width="120" style="border-radius: 50%; margin: 15px 0 25px 0;">
+  <img src="packages/resource/resources/role/nuwa/profile.png" alt="Nuwa" width="100" style="border-radius: 50%; margin: 15px 0 25px 0;">
 </div>
 
 **One sentence, one expert. Natural language creates professional AI roles.**
 
-💡 **Want to try Nuwa?** Say: "Activate Nuwa, I want to create an AI that understands both code and product"
+💡 Say: *"Activate Nuwa, I want to create an AI that understands both code and product"*
 
-<div align="center">
-
-| 💭 **You Say** | 🎭 **Nuwa Creates** | ✨ **Result** |
+| 💭 You Say | 🎭 Nuwa Creates | ✨ Result |
 |---|---|---|
-| "I need someone who understands both code and product" | Technical Product Manager role with dual expertise | AI instantly becomes TPM with engineering + product skills |
-| "Create a Python expert who teaches like a patient mentor" | Python Mentor role with teaching methodology | AI transforms into educational programming guide |
+| "I need someone who understands both code and product" | Technical Product Manager with dual expertise | AI instantly becomes TPM with engineering + product skills |
+| "Create a Python expert who teaches like a patient mentor" | Python Mentor with teaching methodology | AI transforms into educational programming guide |
 | "I want an AI that writes like Hemingway" | Literary Writing Expert with style analysis | AI adopts concise, powerful writing style |
-
-</div>
 
 ### 🔧 **Luban - Tool Integration Master**
 <div align="center">
-  <img src="assets/logo/luban-enchance.png" alt="Luban" width="120" style="border-radius: 50%; margin: 15px 0 25px 0;">
+  <img src="packages/resource/resources/role/luban/profile.png" alt="Luban" width="100" style="border-radius: 50%; margin: 15px 0 25px 0;">
 </div>
 
 **Any API, any platform. 3 minutes from credential to working tool.**
 
-💡 **Want to try Luban?** Say: "Activate Luban, I want AI to query our PostgreSQL database"
+💡 Say: *"Activate Luban, I want AI to query our PostgreSQL database"*
 
-<div align="center">
-
-| 💭 **You Say** | 🔧 **Luban Builds** | ✨ **Result** |
+| 💭 You Say | 🔧 Luban Builds | ✨ Result |
 |---|---|---|
 | "Connect to our Slack workspace" + webhook URL | Slack notification tool with channel targeting | AI can post to any Slack channel |
 | "Let AI query our PostgreSQL" + connection string | Database tool with safe read-only queries | AI executes SQL and analyzes data |
 | "Integrate with OpenAI API" + API key | AI platform tool with model selection | AI chains multiple AI services |
 
-</div>
-
 ### ✍️ **Writer - Professional Content Creator**
+<div align="center">
+  <img src="packages/resource/resources/role/writer/profile.png" alt="Writer" width="100" style="border-radius: 50%; margin: 15px 0 25px 0;">
+</div>
 
 **From concept to compelling content. Master of authentic, engaging writing.**
 
-💡 **Want to try Writer?** Say: "Activate Writer, I need to write a tech blog that doesn't sound like AI"
+💡 Say: *"Activate Writer, I need to write a tech blog that doesn't sound like AI"*
 
-<div align="center">
+### 🔮 **Jiangziya - AI-Era Transformation Advisor**
 
-| 💭 **You Say** | ✍️ **Writer Creates** | ✨ **Result** |
+Like the legendary strategist who assigned roles to the gods, Jiangziya helps you find the true value of any role in the AI era. Not replacing humans — creating AI-empowered new species.
+
+💡 Say: *"Activate Jiangziya, help me redesign my team's workflow with AI"*
+
+### 🌊 **Dayu - Migration & Organization Expert**
+
+Like the ancient hero who tamed floods by channeling rather than blocking, Dayu specializes in migrating V1 (DPML) roles to the structured V2 (RoleX) system, and building organizational hierarchies.
+
+💡 Say: *"Activate Dayu, migrate my existing role to V2 format"*
+
+### 💭 **Shaqing - Philosophy Guide**
+
+A companion for self-understanding. Shaqing helps you see the parts of yourself you can't see — through philosophical dialogue, creative direction, and honest reflection.
+
+💡 Say: *"Activate Shaqing, I feel lost about my creative direction"*
+
+### 📚 **TeacherYo - Education Transformation Consultant**
+
+An AI-era education awakener. Not a know-it-all expert, not a motivational speaker — a genuine companion who guides through questions rather than lectures.
+
+💡 Say: *"Activate TeacherYo, how should I redesign my course for the AI era?"*
+
+---
+
+## 🎭 V2 RoleX — Next-Generation Role Lifecycle Management
+
+V2 introduces **RoleX**, a structured role lifecycle system built on Gherkin `.feature` files. Unlike V1 roles (static DPML files), V2 roles are **living entities** with goals, plans, tasks, memory, and organizational structure.
+
+### V1 vs V2 at a Glance
+
+| | V1 (DPML) | V2 (RoleX) |
 |---|---|---|
-| "Write a technical blog about our new feature" | Deep technical content with user stories | Engaging post that developers actually want to read |
-| "I need marketing copy that doesn't sound like AI" | Human-like copy with personality and persuasion | Content that converts because it feels authentic |
-| "Help me write a product launch announcement" | ISSUE methodology: conversational detail gathering | Rich product story, not cold corporate speak |
+| **Format** | Markdown `.role.md` | Gherkin `.feature` files |
+| **Identity** | Static persona | Dynamic, evolving identity |
+| **Memory** | Cognitive memory network | Identity + synthesized experience |
+| **Goals** | None | Goal tracking with success criteria |
+| **Organization** | None | Roles, positions, organizations |
+| **Best for** | Domain experts, tools | Autonomous agents, long-running projects |
 
-</div>
+### Creating a V2 Role
 
-### 🚀 **Why This Changes Everything**
+V2 roles live in `~/.rolex/roles/{roleId}/identity/`. The core file is `persona.identity.feature`:
 
-**Traditional AI Writing:** Templates → Generic content → Readers spot AI instantly → Trust collapse
+```gherkin
+Feature: I am Alex, the Product Manager
 
-**Writer Role:** Real conversation → Unique details → Anti-AI processing → Genuinely human content
+  As a product manager with 10 years of experience,
+  I help teams build products that users love.
 
-**The magic: Nuwa gives AI knowledge, Luban gives AI power, Writer gives AI soul.**
+  Scenario: My personality
+    Given I am analytical and data-driven
+    And I communicate clearly and concisely
+    Then I always focus on user value
+```
+
+### Enabling / Disabling V2
+
+V2 is **enabled by default**. To disable:
+
+```json
+{
+  "mcpServers": {
+    "promptx": {
+      "command": "npx",
+      "args": ["-y", "@promptx/mcp-server", "--no-v2"]
+    }
+  }
+}
+```
 
 ---
 
