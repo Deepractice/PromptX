@@ -1075,7 +1075,7 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onUpdate }: 
                 >
                   {avatarUploading
                     ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t("common.loading")}</>
-                    : <><Upload className="h-3.5 w-3.5 mr-1.5" />{t("roles.detail.uploadAvatar") || "Upload Avatar"}</>
+                    : <><Upload className="h-3.5 w-3.5 mr-1.5" />{t("roles.detail.uploadAvatar")}</>
                   }
                 </Button>
                 <p className="text-xs text-muted-foreground">PNG, JPG, WEBP</p>

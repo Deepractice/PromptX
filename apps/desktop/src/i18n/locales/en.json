@@ -405,6 +405,7 @@
       "close": "Close",
       "editRole": "Edit Role",
       "editRoleName": "Name",
+      "uploadAvatar": "Upload Avatar",
       "structure": "Structure",
       "memory": "Memory",
       "architecture": "DPML Layer Architecture (Three-Layer Architecture, On-Demand Loading)",

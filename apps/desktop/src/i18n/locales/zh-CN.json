@@ -405,6 +405,7 @@
       "close": "关闭",
       "editRole": "编辑角色",
       "editRoleName": "名称",
+      "uploadAvatar": "上传头像",
       "structure": "结构",
       "memory": "记忆",
       "architecture": "DPML 层级架构（三层架构，按需加载）",
