@@ -52,17 +52,19 @@ program
   .option('--host <address>', 'Host address (http transport only)', defaultHost)
   .option('--cors', 'Enable CORS (http transport only)', defaultCors)
   .option('--debug', 'Enable debug mode', defaultDebug)
+  .option('--no-v2', 'Disable V2 (RoleX) lifecycle management features', false)
   .option('--save-config', 'Save current options to config file', false)
   .action(async (options) => {
     try {
       logger.info(chalk.cyan(`PromptX MCP Server v${packageJson.version}`))
-      
+
         // 解析配置值
       const transport = options.transport as 'stdio' | 'http';
       const port = parseInt(options.port);
       const host = options.host;
       const corsEnabled = options.cors;
       const debug = options.debug;
+      const enableV2 = options.v2 !== false;
        // 如果指定了 --save-config，保存当前配置
       if (options.saveConfig) {
         try {
@@ -86,7 +88,8 @@ program
         port,
         host,
         corsEnabled,
-        debug
+        debug,
+        enableV2
       })
       
     } catch (error) {
