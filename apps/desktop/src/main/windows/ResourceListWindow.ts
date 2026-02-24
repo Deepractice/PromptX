@@ -931,11 +931,12 @@ export class ResourceListWindow {
             avatarPath = await findProfile(pathMod.join(resolver.getResourceDirectory(), 'role', id))
           } catch { /* ignore */ }
         } else {
-          // system — resolve via @promptx/resource package directory
+          // system — resolve via @promptx/resource main entry → dist/resources/
+          // Works in both dev (workspace) and production (inside app.asar, Electron patches fs)
           try {
-            const pkgJsonPath = require.resolve('@promptx/resource/package.json')
-            const pkgDir = pathMod.dirname(pkgJsonPath)
-            avatarPath = await findProfile(pathMod.join(pkgDir, 'resources', 'role', id))
+            const mainPath = require.resolve('@promptx/resource')
+            const distDir = pathMod.dirname(mainPath)
+            avatarPath = await findProfile(pathMod.join(distDir, 'resources', 'role', id))
           } catch { /* ignore */ }
         }
 
