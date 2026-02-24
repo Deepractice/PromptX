@@ -19,7 +19,7 @@
       "apiKey": {
         "label": "API Key",
         "placeholder": "sk-ant-...",
-        "description": "您的 Anthropic API Key"
+        "description": "您的 AgentX API Key"
       },
       "baseUrl": {
         "label": "API Base URL",
@@ -28,8 +28,8 @@
       },
       "model": {
         "label": "模型",
-        "placeholder": "claude-sonnet-4-20250514",
-        "description": "使用的 Claude 模型名称"
+        "placeholder": "claude-opus-4-5-20251101",
+        "description": "使用的模型名称"
       },
       "testConnection": "测试连接",
       "testing": "测试中...",
@@ -711,7 +711,7 @@
     "page": {
       "notConfigured": {
         "title": "AgentX 未配置",
-        "description": "请先在设置页面配置 Anthropic API Key 以使用 AgentX 功能。",
+        "description": "请先在设置页面配置 AgentX API Key 以使用 AgentX 功能。",
         "hint": "设置 → AgentX 配置 → 填写 API Key → 保存"
       },
       "connectionError": "连接错误",

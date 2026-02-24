@@ -19,7 +19,7 @@
       "apiKey": {
         "label": "API Key",
         "placeholder": "sk-ant-...",
-        "description": "Your Anthropic API Key"
+        "description": "Your AgentX API Key"
       },
       "baseUrl": {
         "label": "API Base URL",
@@ -28,8 +28,8 @@
       },
       "model": {
         "label": "Model",
-        "placeholder": "claude-sonnet-4-20250514",
-        "description": "Claude model name to use"
+        "placeholder": "claude-opus-4-5-20251101",
+        "description": "Model name to use"
       },
       "testConnection": "Test Connection",
       "testing": "Testing...",
@@ -713,7 +713,7 @@
     "page": {
       "notConfigured": {
         "title": "AgentX Not Configured",
-        "description": "Please configure your Anthropic API Key in Settings to use AgentX.",
+        "description": "Please configure your AgentX API Key in Settings to use AgentX.",
         "hint": "Settings → AgentX Configuration → Enter API Key → Save"
       },
       "connectionError": "Connection Error",
