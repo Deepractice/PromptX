@@ -236,7 +236,7 @@ export class AgentXService {
   }
 
   /**
-   * Setup .claude/settings.local.json in the workdir for a conversation
+   * Setup .claude/settings.json in the workdir for a conversation
    */
   private setupClaudeSettings(imageId: string): void {
     try {
@@ -250,7 +250,7 @@ export class AgentXService {
         fs.mkdirSync(claudeDir, { recursive: true })
       }
 
-      // Write settings.local.json
+      // Write settings.json
       const settings = {
         skipWebFetchPreflight: true
       }
