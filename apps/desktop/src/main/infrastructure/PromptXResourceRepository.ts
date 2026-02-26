@@ -45,7 +45,7 @@ export class PromptXResourceRepository implements ResourceRepository {
 
   async getGroupedBySource(): Promise<GroupedResources> {
     const resources = await this.getResourcesWithCache()
-    
+
     const grouped: GroupedResources = {
       system: { roles: [], tools: [] },
       project: { roles: [], tools: [] },
@@ -54,6 +54,7 @@ export class PromptXResourceRepository implements ResourceRepository {
 
     resources.forEach(resource => {
       const sourceGroup = grouped[resource.source]
+      if (!sourceGroup) return
       if (resource.type === 'role') {
         sourceGroup.roles.push(resource)
       } else {
@@ -77,6 +78,11 @@ export class PromptXResourceRepository implements ResourceRepository {
       userRoles: grouped.user.roles.length,
       userTools: grouped.user.tools.length
     }
+  }
+
+  invalidateCache(): void {
+    this.resourcesCache = null
+    this.cacheTimestamp = 0
   }
 
   private async getResourcesWithCache(): Promise<Resource[]> {
@@ -117,10 +123,11 @@ export class PromptXResourceRepository implements ResourceRepository {
       const roleCategories = discoverCommand.categorizeBySource(roleRegistry)
       const toolCategories = discoverCommand.categorizeBySource(toolRegistry)
       
-      console.log('roleCategories structure:', Object.keys(roleCategories), 
-        'system:', Array.isArray(roleCategories.system), 
-        'project:', Array.isArray(roleCategories.project),
-        'user:', Array.isArray(roleCategories.user))
+      console.log('roleCategories structure:', Object.keys(roleCategories),
+        'system:', roleCategories.system?.length,
+        'project:', roleCategories.project?.length,
+        'user:', roleCategories.user?.length,
+        'rolex:', roleCategories.rolex?.length)
       
       // 转换为统一的 Resource 格式
       const resources: Resource[] = []
@@ -131,7 +138,7 @@ export class PromptXResourceRepository implements ResourceRepository {
       // 处理工具
       await this.processTools(toolCategories, resources)
       
-      console.log(`Loaded ${resources.length} resources from PromptX (roles: ${roleCategories.system?.length + roleCategories.project?.length + roleCategories.user?.length || 0}, tools: ${toolCategories.system?.length + toolCategories.project?.length + toolCategories.user?.length || 0})`)
+      console.log(`Loaded ${resources.length} resources (v1 roles: ${(roleCategories.system?.length || 0) + (roleCategories.project?.length || 0) + (roleCategories.user?.length || 0)}, v2 roles: ${roleCategories.rolex?.length || 0}, tools: ${(toolCategories.system?.length || 0) + (toolCategories.project?.length || 0) + (toolCategories.user?.length || 0)})`)
       
       return resources
       
@@ -146,6 +153,7 @@ export class PromptXResourceRepository implements ResourceRepository {
     if (categories.system) {
       for (const role of categories.system) {
         const resource = await this.convertToResource(role, 'role', 'system')
+        if (role.version === 'v2') resource.version = 'v2'
         resources.push(resource)
       }
     }
@@ -162,6 +170,16 @@ export class PromptXResourceRepository implements ResourceRepository {
     if (categories.user) {
       for (const role of categories.user) {
         const resource = await this.convertToResource(role, 'role', 'user')
+        resources.push(resource)
+      }
+    }
+
+    // 处理 Rolex V2 用户角色 (非 SEED 的 v2 角色)
+    if (categories.rolex) {
+      console.log(`[processRoles] Processing ${categories.rolex.length} V2 user roles`)
+      for (const role of categories.rolex) {
+        const resource = await this.convertToResource(role, 'role', 'user')
+        resource.version = 'v2'
         resources.push(resource)
       }
     }
@@ -203,15 +221,19 @@ export class PromptXResourceRepository implements ResourceRepository {
         const path = require('path')
         const fs = require('fs-extra')
         const os = require('os')
-        
-        const resourceDir = path.join(os.homedir(), '.promptx', 'resource', type, resourceId)
+
+        // V2 角色 metadata 存在 ~/.rolex/roles/<id>/metadata.json
+        // V1 角色和工具存在 ~/.promptx/resource/<type>/<id>/metadata.json
+        const isV2Role = type === 'role' && promptxResource.version === 'v2'
+        const resourceDir = isV2Role
+          ? path.join(os.homedir(), '.rolex', 'roles', resourceId)
+          : path.join(os.homedir(), '.promptx', 'resource', type, resourceId)
         const metadataFile = path.join(resourceDir, 'metadata.json')
-        
+
         if (await fs.pathExists(metadataFile)) {
           customMetadata = await fs.readJson(metadataFile)
         }
       } catch (error) {
-        // 如果读取失败，使用默认值
         console.warn(`Failed to read custom metadata for ${resourceId}:`, error)
       }
     }

@@ -32,6 +32,8 @@ export interface ServerConfig {
   corsEnabled: boolean;
   /** 是否启用调试模式 */
   debug: boolean;
+  /** 是否启用 V2 (RoleX) 功能 */
+  enableV2: boolean;
 }
 
 /**
@@ -42,7 +44,8 @@ const DEFAULT_CONFIG: ServerConfig = {
   host: 'localhost',
   transport: 'stdio',
   corsEnabled: false,
-  debug: false
+  debug: false,
+  enableV2: true
 };
 
 /**
@@ -247,6 +250,27 @@ export class ServerConfigManager {
    */
   setDebug(enabled: boolean): void {
     this.config.debug = Boolean(enabled);
+    this.saveConfig();
+  }
+
+  /**
+   * 获取 V2 功能启用状态（每次从文件读取，支持动态切换）
+   */
+  getEnableV2(): boolean {
+    try {
+      if (existsSync(this.configPath)) {
+        const data = JSON.parse(readFileSync(this.configPath, 'utf-8'));
+        return data.enableV2 !== undefined ? Boolean(data.enableV2) : true;
+      }
+    } catch { }
+    return true;
+  }
+
+  /**
+   * 设置 V2 功能启用状态
+   */
+  setEnableV2(enabled: boolean): void {
+    this.config.enableV2 = Boolean(enabled);
     this.saveConfig();
   }
 

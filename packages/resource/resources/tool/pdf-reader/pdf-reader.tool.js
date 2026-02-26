@@ -1,5 +1,5 @@
 /**
- * PDF Reader - 纯 Node.js 实现的 PDF 分页阅读工具（带智能缓存）
+ * pdf-reader
  * 
  * 战略意义：
  * 1. 按需阅读：像人类读书一样，指定页码按需读取
@@ -21,15 +21,15 @@
 module.exports = {
   getDependencies() {
     return {
-      'pdf-parse': '^2.1.10'
+      'pdf-parse': '^1.1.1'
     };
   },
 
   getMetadata() {
     return {
       id: 'pdf-reader',
-      name: 'PDF Reader',
-      description: 'PDF 分页阅读工具，支持按页码提取文本和图片，智能缓存避免重复解析',
+      name: 'pdf-reader',
+      description: 'PDF分页阅读工具，支持按页码提取文本和图片',
       version: '2.1.0',
       author: '鲁班'
     };
@@ -73,9 +73,27 @@ module.exports = {
       'pdf:parse': {
         real: async (args, api) => {
           api.logger.info('[Bridge] Parsing PDF with pdf-parse');
-          const { PDFParse } = await api.importx('pdf-parse');
-          const parser = new PDFParse({ data: args.buffer });
-          return parser;
+          const pdfParse = await api.importx('pdf-parse');
+          // pdf-parse 导出的是函数，不是类
+          // 需要包装成 getText()/getImage() 接口供 execute() 使用
+          const pdfFn = pdfParse.default || pdfParse;
+          const parsed = await pdfFn(args.buffer);
+          return {
+            getText: async () => ({
+              text: parsed.text || '',
+              total: parsed.numpages || 0,
+              info: parsed.info || {},
+              metadata: parsed.metadata || null,
+              version: parsed.version || ''
+            }),
+            getImage: async () => ({
+              // pdf-parse 不支持图片提取，返回空页面
+              pages: Array.from({ length: parsed.numpages || 0 }, (_, i) => ({
+                pageNumber: i + 1,
+                images: []
+              }))
+            })
+          };
         },
         mock: async (args, api) => {
           api.logger.debug('[Mock] Creating mock PDF parser');

@@ -9,6 +9,7 @@ export interface ServerConfigData {
   updateStrategy?: 'silent' | 'notify' | 'forced'
   debug?: boolean
   stateless?: boolean
+  enableV2?: boolean
 }
 
 export class ServerConfig {
@@ -40,7 +41,8 @@ export class ServerConfig {
       autoStart: data.autoStart ?? false,
       updateStrategy: data.updateStrategy ?? 'notify',
       debug: data.debug ?? false,
-      stateless: data.stateless ?? false
+      stateless: data.stateless ?? false,
+      enableV2: data.enableV2 ?? true
     })
 
     return ResultUtil.ok(config)
@@ -54,7 +56,8 @@ export class ServerConfig {
       autoStart: false,
       updateStrategy: 'notify',
       debug: false,
-      stateless: true  // Changed to stateless mode for Claude Desktop compatibility
+      stateless: true,  // Changed to stateless mode for Claude Desktop compatibility
+      enableV2: true
     })
   }
 
@@ -84,6 +87,10 @@ export class ServerConfig {
 
   get stateless(): boolean {
     return this.data.stateless
+  }
+
+  get enableV2(): boolean {
+    return this.data.enableV2
   }
 
   getAddress(): string {

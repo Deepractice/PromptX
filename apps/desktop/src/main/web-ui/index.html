@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PromptX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --sidebar-bg: #111111;
+  --surface: #1c1c1c;
+  --surface2: #242424;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #ececec;
+  --text-muted: #8e8ea0;
+  --text-dim: #555;
+  --accent: #10a37f;
+  --accent-hover: #0d8f6f;
+  --user-bg: #2a2a2a;
+  --error: #ef4444;
+  --warn: #f59e0b;
+  --sidebar-w: 260px;
+  --radius: 12px;
+  --font: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+[data-theme="light"] {
+  --bg: #ffffff;
+  --sidebar-bg: #f7f7f8;
+  --surface: #efefef;
+  --surface2: #e3e3e3;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #0d0d0d;
+  --text-muted: #6e6e80;
+  --text-dim: #aaa;
+  --user-bg: #f0f0f0;
+}
+[data-theme="light"] .msg-text code{color:#2d6a4f;background:#e8f5e9}
+[data-theme="light"] .msg-text pre{background:#f5f5f5;border-color:rgba(0,0,0,0.1)}
+[data-theme="light"] .msg-text pre code{color:#2c3e50;background:none}
+[data-theme="light"] .tool-code{color:#2c3e50;background:#f5f5f5;border-color:rgba(0,0,0,0.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;height:100vh}
+
+/* ── Overlay (mobile) ─────────────────────────────────────────────────── */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;backdrop-filter:blur(2px)}
+#overlay.show{display:block}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+#sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:var(--sidebar-bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;
+  transition:transform .25s cubic-bezier(.4,0,.2,1);
+  position:relative;z-index:50;flex-shrink:0;
+}
+#sidebar-header{
+  padding:16px 12px 12px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border);
+}
+#sidebar-logo{
+  width:28px;height:28px;border-radius:8px;
+  background:var(--accent);display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-.5px;
+}
+#sidebar-title{font-size:14px;font-weight:600;color:var(--text);flex:1;letter-spacing:-.2px}
+#new-btn,#theme-btn{
+  width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);
+  background:transparent;color:var(--text-muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .15s;font-size:16px;line-height:1;
+}
+#new-btn:hover,#theme-btn:hover{background:var(--surface);color:var(--text);border-color:var(--border2)}
+
+/* ── Conv list ────────────────────────────────────────────────────────── */
+#conv-list{flex:1;overflow-y:auto;padding:8px 8px;scrollbar-width:thin;scrollbar-color:var(--surface2) transparent}
+#conv-list::-webkit-scrollbar{width:4px}
+#conv-list::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:4px}
+#search-wrap{padding:8px 10px;border-bottom:1px solid var(--border)}
+#search-input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:6px 10px 6px 30px;font-size:13px;
+  color:var(--text);outline:none;font-family:var(--font);
+  transition:border-color .15s;
+}
+#search-input::placeholder{color:var(--text-dim)}
+#search-input:focus{border-color:var(--border2)}
+#search-wrap{position:relative}
+#search-icon{
+  position:absolute;left:18px;top:50%;transform:translateY(-50%);
+  color:var(--text-dim);pointer-events:none;font-size:13px;
+}
+.conv-section-label{
+  font-size:11px;font-weight:600;color:var(--text-dim);
+  padding:8px 8px 4px;letter-spacing:.6px;text-transform:uppercase;
+}
+.conv-item{
+  padding:8px 10px;border-radius:8px;cursor:pointer;
+  font-size:13px;color:var(--text-muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:1px;transition:background .12s,color .12s;
+  display:flex;align-items:center;gap:8px;
+}
+.conv-item:hover{background:var(--surface);color:var(--text)}
+.conv-item.active{background:var(--surface);color:var(--text)}
+.conv-item-icon{font-size:13px;flex-shrink:0;opacity:.6}
+.conv-item-text{flex:1;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Mobile header ────────────────────────────────────────────────────── */
+#mobile-header{
+  display:none;height:52px;padding:0 16px;
+  align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
+}
+#hamburger{
+  width:32px;height:32px;border:none;background:transparent;
+  color:var(--text-muted);cursor:pointer;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .12s;
+}
+#hamburger:hover{background:var(--surface)}
+#mobile-title{flex:1}
+#mobile-new-btn{
+  width:32px;height:32px;border:1px solid var(--border2);background:transparent;
+  color:var(--text-muted);cursor:pointer;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  transition:all .12s;
+}
+#mobile-new-btn:hover{background:var(--surface);color:var(--text)}
+
+/* ── Main ─────────────────────────────────────────────────────────────── */
+#main{flex:1;display:flex;flex-direction:column;height:100vh;min-width:0;overflow:hidden}
+#messages{
+  flex:1;overflow-y:auto;padding:24px 0;
+  display:flex;flex-direction:column;gap:0;
+  scrollbar-width:thin;scrollbar-color:var(--surface2) transparent;
+}
+#messages::-webkit-scrollbar{width:4px}
+#messages::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:4px}
+.msg-row{padding:8px 0;width:100%;max-width:720px;margin:0 auto;padding-left:24px;padding-right:24px}
+
+/* ── User message ─────────────────────────────────────────────────────── */
+.msg-user-row{display:flex;justify-content:flex-end}
+.msg-user{
+  max-width:75%;background:var(--user-bg);color:var(--text);
+  padding:10px 14px;border-radius:18px 18px 4px 18px;
+  font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+  border:1px solid var(--border2);
+}
+
+/* ── Assistant message ────────────────────────────────────────────────── */
+.msg-asst-row{display:flex;gap:12px;align-items:flex-start}
+.msg-avatar{
+  width:28px;height:28px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;margin-top:2px;
+}
+.msg-asst-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.msg-text{
+  font-size:14px;line-height:1.75;color:var(--text);
+  word-break:break-word;
+}
+.msg-text.streaming::after{content:'▋';animation:blink .6s infinite;color:var(--accent)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── Markdown styles ──────────────────────────────────────────────────── */
+.msg-text p{margin:0 0 10px}
+.msg-text p:last-child{margin-bottom:0}
+.msg-text h1,.msg-text h2,.msg-text h3,.msg-text h4{
+  font-weight:600;margin:16px 0 8px;color:var(--text);line-height:1.3;
+}
+.msg-text h1{font-size:18px}.msg-text h2{font-size:16px}
+.msg-text h3{font-size:15px}.msg-text h4{font-size:14px}
+.msg-text ul,.msg-text ol{padding-left:20px;margin:6px 0 10px}
+.msg-text li{margin:3px 0;line-height:1.65}
+.msg-text li p{margin:0}
+.msg-text strong{font-weight:600;color:var(--text)}
+.msg-text em{font-style:italic;color:var(--text-muted)}
+.msg-text code{
+  font-family:var(--mono);font-size:12.5px;
+  background:var(--surface2);color:#a8d8a8;
+  padding:1px 5px;border-radius:4px;
+}
+.msg-text pre{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:12px 14px;margin:8px 0;overflow-x:auto;
+}
+.msg-text pre code{
+  background:none;padding:0;color:#a8b5c8;font-size:12.5px;line-height:1.6;
+}
+.msg-text blockquote{
+  border-left:3px solid var(--accent);padding:4px 12px;
+  margin:8px 0;color:var(--text-muted);font-style:italic;
+}
+.msg-text hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.msg-text a{color:var(--accent);text-decoration:none}
+.msg-text a:hover{text-decoration:underline}
+/* ── Markdown table ───────────────────────────────────────────────────── */
+.msg-text table{
+  border-collapse:collapse;width:100%;margin:10px 0;font-size:13.5px;
+}
+.msg-text th,.msg-text td{
+  border:1px solid var(--border2);padding:7px 12px;text-align:left;
+  line-height:1.5;
+}
+.msg-text th{
+  background:var(--surface2);font-weight:600;color:var(--text);
+}
+.msg-text tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.msg-text tr:hover td{background:rgba(255,255,255,.04)}
+
+
+/* ── Tool card ────────────────────────────────────────────────────────── */
+.tool-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;font-size:13px;
+}
+.tool-header{
+  padding:9px 12px;display:flex;align-items:center;gap:9px;
+  cursor:pointer;user-select:none;transition:background .12s;
+}
+.tool-header:hover{background:var(--surface2)}
+.tool-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tool-dot.planning{background:var(--warn)}
+.tool-dot.executing{background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.tool-dot.success{background:var(--accent)}
+.tool-dot.error{background:var(--error)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.tool-name{font-weight:500;color:var(--text);flex:1;font-size:13px}
+.tool-status{font-size:11px;color:var(--text-muted);font-weight:500}
+.tool-chevron{color:var(--text-dim);font-size:10px;transition:transform .2s}
+.tool-chevron.open{transform:rotate(180deg)}
+.tool-body{padding:0 12px 10px;display:none;border-top:1px solid var(--border)}
+.tool-body.open{display:block}
+.tool-section{margin-top:10px}
+.tool-section-label{
+  font-size:10px;font-weight:600;color:var(--text-dim);
+  margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px;
+}
+.tool-code{
+  background:var(--bg);border-radius:6px;padding:10px;
+  font-family:var(--mono);font-size:11.5px;color:#a8b5c8;
+  overflow-x:auto;white-space:pre-wrap;word-break:break-all;
+  max-height:180px;overflow-y:auto;line-height:1.5;
+  border:1px solid var(--border);
+}
+
+/* ── Input area ───────────────────────────────────────────────────────── */
+#input-wrap{padding:12px 24px 20px;flex-shrink:0}
+#input-box{
+  max-width:720px;margin:0 auto;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;display:flex;align-items:flex-end;gap:8px;
+  padding:10px 10px 10px 16px;
+  transition:border-color .15s,box-shadow .15s;
+}
+#input-box:focus-within{border-color:rgba(16,163,127,.5);box-shadow:0 0 0 3px rgba(16,163,127,.08)}
+#input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-size:14px;resize:none;
+  min-height:24px;max-height:160px;font-family:var(--font);
+  line-height:1.6;padding:0;
+}
+#input::placeholder{color:var(--text-dim)}
+#send-btn{
+  width:34px;height:34px;border-radius:9px;border:none;
+  background:var(--accent);color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s;
+}
+#send-btn:hover:not(:disabled){background:var(--accent-hover);transform:scale(1.05)}
+#send-btn:disabled{background:var(--surface2);color:var(--text-dim);cursor:not-allowed;transform:none}
+#status-bar{
+  text-align:center;font-size:12px;color:var(--text-muted);
+  padding:0 24px 6px;min-height:20px;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
+#empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+  padding:40px 24px;
+}
+.empty-icon{
+  width:52px;height:52px;border-radius:14px;background:var(--surface);
+  border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;font-size:22px;margin-bottom:4px;
+}
+#empty-state h2{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.3px}
+#empty-state p{font-size:13px;color:var(--text-muted);text-align:center;max-width:260px;line-height:1.6}
+
+/* ── Overlays ─────────────────────────────────────────────────────────── */
+#connecting,#error-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;z-index:100;
+}
+#error-screen{display:none}
+.spinner{
+  width:36px;height:36px;border:2.5px solid var(--surface2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .75s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+#connecting p{font-size:14px;color:var(--text-muted)}
+#error-screen h2{font-size:16px;font-weight:600;color:var(--error)}
+#error-screen p{font-size:13px;color:var(--text-muted);text-align:center;max-width:320px;line-height:1.6}
+
+/* ── Mobile responsive ────────────────────────────────────────────────── */
+@media(max-width:768px){
+  #sidebar{
+    position:fixed;left:0;top:0;bottom:0;z-index:50;
+    transform:translateX(-100%);
+  }
+  #sidebar.open{transform:translateX(0)}
+  #mobile-header{display:flex}
+  #main{height:100vh}
+  .msg-row{padding-left:16px;padding-right:16px}
+  #input-wrap{padding:10px 16px 16px}
+  #input-box{border-radius:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- Connecting overlay -->
+<div id="connecting">
+  <div class="spinner"></div>
+  <p>正在连接...</p>
+</div>
+
+<!-- Error screen -->
+<div id="error-screen">
+  <h2>连接失败</h2>
+  <p id="error-msg"></p>
+</div>
+
+<!-- Mobile overlay backdrop -->
+<div id="overlay"></div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <div id="sidebar-logo">P</div>
+    <span id="sidebar-title">PromptX</span>
+    <button id="theme-btn" title="切换主题" aria-label="切换主题">
+      <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg id="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:none">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button id="new-btn" title="新建对话">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+  <div id="search-wrap">
+    <span id="search-icon">🔍</span>
+    <input id="search-input" type="text" placeholder="搜索对话...">
+  </div>
+  <div id="conv-list"></div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <!-- Mobile header -->
+  <div id="mobile-header">
+    <button id="hamburger" aria-label="菜单">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <span id="mobile-title"></span>
+    <button id="mobile-theme-btn" title="切换主题" style="width:32px;height:32px;border:1px solid var(--border2);background:transparent;color:var(--text-muted);cursor:pointer;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:all .12s;">
+      <svg id="mobile-theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg id="mobile-theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:none">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button id="mobile-new-btn" title="新建对话">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="messages">
+    <div id="empty-state">
+      <div class="empty-icon">✦</div>
+      <h2>开始新对话</h2>
+      <p>点击下方输入框开始与 PromptX 对话</p>
+    </div>
+  </div>
+
+  <div id="status-bar"></div>
+
+  <div id="input-wrap">
+    <div id="input-box">
+      <textarea id="input" placeholder="发送消息..." rows="1"></textarea>
+      <button id="send-btn" disabled aria-label="发送">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createAgentX } from '/agentxjs.js'
+;(async () => {
+  const params = new URLSearchParams(location.search)
+  const wsUrl = params.get('ws')
+  const containerId = params.get('containerId') || 'promptx-desktop'
+
+  if (!wsUrl) { showError(t('missingWs')); return }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let agentx = null
+  let images = []
+  let currentImageId = null
+  let conversationState = {}
+  let isLoading = false
+
+  // ── DOM refs ───────────────────────────────────────────────────────────────
+  const connectingEl = document.getElementById('connecting')
+  const errorScreen = document.getElementById('error-screen')
+  const convList = document.getElementById('conv-list')
+  const messagesEl = document.getElementById('messages')
+  const inputEl = document.getElementById('input')
+  const sendBtn = document.getElementById('send-btn')
+  const statusBar = document.getElementById('status-bar')
+  const emptyState = document.getElementById('empty-state')
+  const sidebar = document.getElementById('sidebar')
+  const overlay = document.getElementById('overlay')
+
+  // ── Mobile sidebar ─────────────────────────────────────────────────────────
+  document.getElementById('hamburger').onclick = () => {
+    sidebar.classList.toggle('open')
+    overlay.classList.toggle('show')
+  }
+  overlay.onclick = closeSidebar
+  document.getElementById('mobile-new-btn').onclick = () => { closeSidebar(); createNewConversation() }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show') }
+
+  // ── Theme toggle ───────────────────────────────────────────────────────────
+  let isDark = localStorage.getItem('theme') !== 'light'
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+    const moonEls = [document.getElementById('theme-icon-moon'), document.getElementById('mobile-theme-icon-moon')]
+    const sunEls = [document.getElementById('theme-icon-sun'), document.getElementById('mobile-theme-icon-sun')]
+    moonEls.forEach(el => el && (el.style.display = isDark ? 'block' : 'none'))
+    sunEls.forEach(el => el && (el.style.display = isDark ? 'none' : 'block'))
+  }
+  function toggleTheme() { isDark = !isDark; localStorage.setItem('theme', isDark ? 'dark' : 'light'); applyTheme() }
+  document.getElementById('theme-btn').onclick = toggleTheme
+  document.getElementById('mobile-theme-btn').onclick = toggleTheme
+  applyTheme()
+
+  // ── i18n ───────────────────────────────────────────────────────────────────
+  const LANGS = {
+    zh: {
+      connecting: '正在连接...', connectionFailed: '连接失败',
+      toggleTheme: '切换主题', menu: '菜单', newConv: '新建对话',
+      searchPlaceholder: '搜索对话...', conversations: '对话',
+      noMatch: '无匹配对话', noConversations: '暂无对话', unnamed: '未命名对话',
+      emptyTitle: '开始新对话', emptyHint: '点击下方输入框开始与 PromptX 对话',
+      inputPlaceholder: '发送消息...',
+      sending: '发送中...', thinking: '思考中...', responding: '回复中...',
+      newConvPrefix: '新对话 ', sendFailed: '发送失败: ', createFailed: '创建对话失败: ',
+      error: '错误: ', missingWs: '缺少 WebSocket 地址参数',
+      connectFailed: '无法连接到 AgentX 服务: ',
+      toolPlanning: '规划中', toolExecuting: '执行中', toolSuccess: '完成 ✓', toolError: '失败 ✗',
+      toolInput: '输入', toolOutput: '输出',
+    },
+    en: {
+      connecting: 'Connecting...', connectionFailed: 'Connection Failed',
+      toggleTheme: 'Toggle theme', menu: 'Menu', newConv: 'New Chat',
+      searchPlaceholder: 'Search chats...', conversations: 'Conversations',
+      noMatch: 'No matching chats', noConversations: 'No conversations', unnamed: 'Untitled',
+      emptyTitle: 'Start a new chat', emptyHint: 'Type a message below to start chatting with PromptX',
+      inputPlaceholder: 'Send a message...',
+      sending: 'Sending...', thinking: 'Thinking...', responding: 'Responding...',
+      newConvPrefix: 'New Chat ', sendFailed: 'Send failed: ', createFailed: 'Failed to create chat: ',
+      error: 'Error: ', missingWs: 'Missing WebSocket URL parameter',
+      connectFailed: 'Cannot connect to AgentX service: ',
+      toolPlanning: 'Planning', toolExecuting: 'Executing', toolSuccess: 'Done ✓', toolError: 'Failed ✗',
+      toolInput: 'Input', toolOutput: 'Output',
+    }
+  }
+  const lang = navigator.language?.startsWith('zh') ? 'zh' : 'en'
+  const L = LANGS[lang]
+  const t = k => L[k] ?? k
+  // Apply to static DOM
+  document.querySelector('#connecting p').textContent = t('connecting')
+  document.querySelector('#error-screen h2').textContent = t('connectionFailed')
+  document.getElementById('theme-btn').title = t('toggleTheme')
+  document.getElementById('theme-btn').setAttribute('aria-label', t('toggleTheme'))
+  document.getElementById('mobile-theme-btn').title = t('toggleTheme')
+  document.getElementById('new-btn').title = t('newConv')
+  document.getElementById('mobile-new-btn').title = t('newConv')
+  document.getElementById('hamburger').setAttribute('aria-label', t('menu'))
+  document.getElementById('search-input').placeholder = t('searchPlaceholder')
+  document.getElementById('input').placeholder = t('inputPlaceholder')
+  document.querySelector('#empty-state h2').textContent = t('emptyTitle')
+  document.querySelector('#empty-state p').textContent = t('emptyHint')
+
+  // ── Connect ────────────────────────────────────────────────────────────────
+  try {
+    agentx = await createAgentX({ serverUrl: wsUrl })
+    connectingEl.style.display = 'none'
+  } catch (e) {
+    showError(t('connectFailed') + e.message)
+    return
+  }
+
+  await loadImages()
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  agentx.on('conversation_start', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id); conversationState[id].agentStatus = 'thinking'
+    if (id === currentImageId) setStatus(t('thinking'))
+  })
+  agentx.on('conversation_responding', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id); conversationState[id].agentStatus = 'responding'
+    if (id === currentImageId) setStatus(t('responding'))
+  })
+  agentx.on('message_start', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]
+    // Reuse the queued placeholder created by sendMessage, don't create a duplicate
+    if (st.streamingId) {
+      const existing = st.conversations.find(c => c.id === st.streamingId)
+      if (existing) {
+        existing.status = 'streaming'; existing.blocks = []
+        st.streamingText = ''; st.blockId = null
+        if (id === currentImageId) renderMessages()
+        return
+      }
+    }
+    const convId = 'asst_' + Date.now()
+    st.conversations.push({ type: 'assistant', id: convId, blocks: [], status: 'streaming' })
+    st.streamingId = convId; st.streamingText = ''; st.blockId = null
+    if (id === currentImageId) renderMessages()
+  })
+  agentx.on('text_delta', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]
+    if (!st.streamingId) return
+    const conv = st.conversations.find(c => c.id === st.streamingId)
+    if (!conv) return
+    if (!st.blockId) {
+      st.blockId = 'tb_' + Date.now()
+      conv.blocks.push({ type: 'text', id: st.blockId, content: '', status: 'streaming' })
+    }
+    st.streamingText += ev.data?.text || ''
+    const block = conv.blocks.find(b => b.id === st.blockId)
+    if (block) block.content = st.streamingText
+    if (id === currentImageId) renderMessages()
+  })
+  agentx.on('assistant_message', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]
+    if (st.blockId) {
+      const conv = st.conversations.find(c => c.id === st.streamingId)
+      const block = conv?.blocks.find(b => b.id === st.blockId)
+      if (block) { block.content = st.streamingText; block.status = 'completed' }
+      st.blockId = null; st.streamingText = ''
+    }
+    if (id === currentImageId) renderMessages()
+  })
+  agentx.on('tool_use_start', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]
+    if (!st.streamingId) {
+      const convId = 'asst_' + Date.now()
+      st.conversations.push({ type: 'assistant', id: convId, blocks: [], status: 'streaming' })
+      st.streamingId = convId
+    }
+    const conv = st.conversations.find(c => c.id === st.streamingId)
+    if (conv) conv.blocks.push({
+      type: 'tool', id: 'tool_' + Date.now(),
+      toolCallId: ev.data?.toolCallId, name: ev.data?.toolName, input: {}, status: 'planning'
+    })
+    if (id === currentImageId) renderMessages()
+  })
+  agentx.on('tool_call_message', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]; const msg = ev.data
+    for (const conv of st.conversations) {
+      const block = conv.blocks.find(b => b.type === 'tool' && b.toolCallId === msg?.toolCall?.id)
+      if (block) { block.input = msg.toolCall?.input || {}; block.status = 'executing'; break }
+    }
+    if (id === currentImageId) renderMessages()
+  })
+  agentx.on('tool_result_message', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]; const msg = ev.data
+    for (const conv of st.conversations) {
+      const block = conv.blocks.find(b => b.type === 'tool' && b.toolCallId === msg?.toolCallId)
+      if (block) {
+        block.output = msg.toolResult?.output
+        block.status = block.output?.type === 'error-text' ? 'error' : 'success'; break
+      }
+    }
+    if (id === currentImageId) renderMessages()
+  })
+  agentx.on('conversation_end', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id)
+    const st = conversationState[id]
+    if (st.streamingId) {
+      const conv = st.conversations.find(c => c.id === st.streamingId)
+      if (conv) conv.status = 'completed'
+      st.streamingId = null
+    }
+    st.agentStatus = 'idle'
+    if (id === currentImageId) { renderMessages(); setStatus('') }
+    isLoading = false; updateSendBtn()
+  })
+  agentx.on('error_occurred', (ev) => {
+    const id = ev.context?.imageId; if (!id) return
+    ensureState(id); conversationState[id].agentStatus = 'idle'
+    isLoading = false
+    if (id === currentImageId) { setStatus(t('error') + (ev.data?.message || '')); updateSendBtn() }
+  })
+  // ── UI handlers ────────────────────────────────────────────────────────────
+  document.getElementById('new-btn').onclick = createNewConversation
+  sendBtn.onclick = sendMessage
+  // Search
+  document.getElementById('search-input').addEventListener('input', (e) => renderConvList(e.target.value))
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+  })
+  inputEl.addEventListener('input', () => {
+    inputEl.style.height = 'auto'
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px'
+    updateSendBtn()
+  })
+
+  // ── Functions ──────────────────────────────────────────────────────────────
+  async function loadImages() {
+    try {
+      const res = await agentx.request('image_list_request', { containerId })
+      images = res.data?.records || []
+      renderConvList()
+    } catch (e) { console.error('Failed to load images', e) }
+  }
+  async function createNewConversation() {
+    try {
+      const res = await agentx.request('image_create_request', {
+        containerId, config: { name: t('newConvPrefix') + new Date().toLocaleTimeString() }
+      })
+      const record = res.data?.record
+      if (!record) return
+      await agentx.request('image_run_request', { imageId: record.imageId })
+      images.unshift(record)
+      renderConvList()
+      selectConversation(record.imageId)
+    } catch (e) { console.error('Failed to create conversation', e) }
+  }
+  async function selectConversation(imageId) {
+    currentImageId = imageId
+    renderConvList()
+    ensureState(imageId)
+    if (!conversationState[imageId].loaded) {
+      conversationState[imageId].loaded = true
+      try {
+        const res = await agentx.request('image_messages_request', { imageId })
+        const msgs = res.data?.messages || []
+        conversationState[imageId].conversations = buildHistoryConversations(msgs)
+        // Derive title from first user message (fallback if server name is default)
+        const firstUser = msgs.find(m => m.subtype === 'user')
+        if (firstUser) {
+          const text = typeof firstUser.content === 'string' ? firstUser.content
+            : (firstUser.content || []).filter(p => p.type === 'text').map(p => p.text).join('')
+          if (text) {
+            const img = images.find(i => i.imageId === imageId)
+            if (img && (img.name || '').startsWith(t('newConvPrefix').trim())) {
+              img.name = text.slice(0, 28) + (text.length > 28 ? '…' : '')
+              renderConvList()
+            }
+          }
+        }
+      } catch (e) { console.error('Failed to load history', e) }
+    }
+    renderMessages(); updateSendBtn(); inputEl.focus()
+  }
+  async function sendMessage() {
+    const content = inputEl.value.trim()
+    if (!content || isLoading) return
+    // Auto-create a conversation if none is selected
+    if (!currentImageId) {
+      try {
+        const res = await agentx.request('image_create_request', {
+          containerId, config: { name: '新对话 ' + new Date().toLocaleTimeString() }
+        })
+        const record = res.data?.record
+        if (!record) return
+        await agentx.request('image_run_request', { imageId: record.imageId })
+        images.unshift(record)
+        currentImageId = record.imageId
+        ensureState(currentImageId)
+        conversationState[currentImageId].loaded = true
+        renderConvList()
+      } catch (e) { setStatus(t('createFailed') + e.message); return }
+    }
+    isLoading = true
+    ensureState(currentImageId)
+    const st = conversationState[currentImageId]
+    st.conversations.push({ type: 'user', id: 'user_' + Date.now(), content, status: 'pending' })
+    inputEl.value = ''; inputEl.style.height = 'auto'
+    // Create queued entry BEFORE sending so message_start can reuse it (avoids race condition)
+    const convId = 'asst_' + Date.now()
+    st.conversations.push({ type: 'assistant', id: convId, blocks: [], status: 'queued' })
+    st.streamingId = convId
+    renderMessages(); updateSendBtn(); setStatus(t('sending'))
+    try {
+      await agentx.request('message_send_request', { imageId: currentImageId, content })
+      const last = st.conversations.filter(c => c.type === 'user').pop()
+      if (last) last.status = 'success'
+      // Update conversation title from first user message
+      const userMsgs = st.conversations.filter(c => c.type === 'user')
+      if (userMsgs.length === 1) {
+        const title = content.slice(0, 28) + (content.length > 28 ? '…' : '')
+        const img = images.find(i => i.imageId === currentImageId)
+        if (img) {
+          img.name = title
+          renderConvList()
+          agentx.request('image_update_request', { imageId: currentImageId, updates: { name: title } }).catch(() => {})
+        }
+      }
+      renderMessages()
+    } catch (e) { isLoading = false; setStatus(t('sendFailed') + e.message); updateSendBtn() }
+  }
+  function ensureState(imageId) {
+    if (!conversationState[imageId]) conversationState[imageId] = {
+      conversations: [], streamingId: null, streamingText: '', blockId: null,
+      agentStatus: 'idle', loaded: false
+    }
+  }
+  function updateSendBtn() {
+    sendBtn.disabled = !inputEl.value.trim() || isLoading
+  }
+  function setStatus(text) { statusBar.textContent = text }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Markdown renderer ──────────────────────────────────────────────────────
+  function renderMarkdown(raw) {
+    if (!raw) return ''
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Extract code blocks
+    const blocks = []
+    let text = raw.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      blocks.push(`<pre><code>${esc(code.trim())}</code></pre>`)
+      return `\x00B${blocks.length-1}\x00`
+    })
+    // Inline processing
+    const inline = s => s
+      .replace(/`([^`]+)`/g, (_, c) => `<code>${esc(c)}</code>`)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.+?)__/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    const isTableRow = l => /^\|.+\|/.test(l.trim())
+    const isSepRow = l => /^\|[\s|:-]+\|/.test(l.trim())
+    const parseTableRow = l => l.trim().replace(/^\||\|$/g,'').split('|').map(c => c.trim())
+    // Line-by-line
+    const lines = text.split('\n')
+    const out = []; let listType = null; let tableLines = []
+    const closeList = () => { if (listType) { out.push(listType==='ul'?'</ul>':'</ol>'); listType=null } }
+    const flushTable = () => {
+      if (tableLines.length < 2) { tableLines.forEach(l => out.push(`<p>${inline(l)}</p>`)); tableLines=[]; return }
+      const headers = parseTableRow(tableLines[0])
+      const dataRows = tableLines.slice(2) // skip separator
+      let html = '<table><thead><tr>' + headers.map(h=>`<th>${inline(h)}</th>`).join('') + '</tr></thead><tbody>'
+      for (const row of dataRows) {
+        if (!isTableRow(row)) continue
+        html += '<tr>' + parseTableRow(row).map(c=>`<td>${inline(c)}</td>`).join('') + '</tr>'
+      }
+      html += '</tbody></table>'
+      out.push(html); tableLines = []
+    }
+    for (const line of lines) {
+      if (isTableRow(line) || (tableLines.length > 0 && isSepRow(line))) {
+        closeList(); tableLines.push(line); continue
+      }
+      if (tableLines.length > 0) flushTable()
+      if (/^\x00B\d+\x00$/.test(line.trim())) { closeList(); out.push(line.trim()); continue }
+      const hm = line.match(/^(#{1,6})\s+(.+)/); if (hm) { closeList(); out.push(`<h${hm[1].length}>${inline(hm[2])}</h${hm[1].length}>`); continue }
+      const ul = line.match(/^[-*+]\s+(.*)/); if (ul) { if (listType!=='ul') { closeList(); out.push('<ul>'); listType='ul' } out.push(`<li>${inline(ul[1])}</li>`); continue }
+      const ol = line.match(/^\d+\.\s+(.*)/); if (ol) { if (listType!=='ol') { closeList(); out.push('<ol>'); listType='ol' } out.push(`<li>${inline(ol[1])}</li>`); continue }
+      if (/^>[ \t](.*)/.test(line)) { closeList(); out.push(`<blockquote>${inline(line.slice(2))}</blockquote>`); continue }
+      if (/^[-*_]{3,}$/.test(line.trim())) { closeList(); out.push('<hr>'); continue }
+      if (line.trim()==='') { closeList(); out.push(''); continue }
+      closeList(); out.push(`<p>${inline(line)}</p>`)
+    }
+    if (tableLines.length > 0) flushTable()
+    closeList()
+    let html = out.join('\n')
+    blocks.forEach((b,i) => { html = html.replace(`\x00B${i}\x00`, b) })
+    return html
+  }
+
+  function renderConvList(query = '') {
+    convList.innerHTML = ''
+    const q = query.trim().toLowerCase()
+    const filtered = q ? images.filter(i => (i.name || '').toLowerCase().includes(q)) : images
+    if (filtered.length === 0) {
+      const empty = document.createElement('div')
+      empty.style.cssText = 'padding:16px 10px;font-size:13px;color:var(--text-dim);text-align:center'
+      empty.textContent = q ? t('noMatch') : t('noConversations')
+      convList.appendChild(empty); return
+    }
+    if (!q) {
+      const label = document.createElement('div')
+      label.className = 'conv-section-label'; label.textContent = t('conversations')
+      convList.appendChild(label)
+    }
+    for (const img of filtered) {
+      const el = document.createElement('div')
+      el.className = 'conv-item' + (img.imageId === currentImageId ? ' active' : '')
+      const icon = document.createElement('span')
+      icon.className = 'conv-item-icon'; icon.textContent = '💬'
+      const text = document.createElement('span')
+      text.className = 'conv-item-text'; text.textContent = img.name || t('unnamed')
+      el.appendChild(icon); el.appendChild(text)
+      el.onclick = () => { selectConversation(img.imageId); closeSidebar() }
+      convList.appendChild(el)
+    }
+  }
+  function renderMessages() {
+    if (!currentImageId) return
+    const st = conversationState[currentImageId]
+    const convs = st?.conversations || []
+    if (convs.length === 0) {
+      messagesEl.innerHTML = ''; messagesEl.appendChild(emptyState)
+      emptyState.style.display = 'flex'; return
+    }
+    emptyState.style.display = 'none'; messagesEl.innerHTML = ''
+    for (const conv of convs) {
+      if (conv.type === 'user') {
+        const row = document.createElement('div'); row.className = 'msg-row'
+        const inner = document.createElement('div'); inner.className = 'msg-user-row'
+        const bubble = document.createElement('div'); bubble.className = 'msg-user'
+        bubble.textContent = typeof conv.content === 'string' ? conv.content : JSON.stringify(conv.content)
+        inner.appendChild(bubble); row.appendChild(inner); messagesEl.appendChild(row)
+      } else if (conv.type === 'assistant') {
+        const row = document.createElement('div'); row.className = 'msg-row'
+        const inner = document.createElement('div'); inner.className = 'msg-asst-row'
+        const avatar = document.createElement('div'); avatar.className = 'msg-avatar'; avatar.textContent = 'P'
+        const body = document.createElement('div'); body.className = 'msg-asst-body'
+        for (const block of conv.blocks) {
+          if (block.type === 'text') {
+            const el = document.createElement('div')
+            el.className = 'msg-text' + (block.status === 'streaming' ? ' streaming' : '')
+            el.innerHTML = renderMarkdown(block.content || '')
+            body.appendChild(el)
+          } else if (block.type === 'tool') {
+            body.appendChild(renderToolCard(block))
+          }
+        }
+        if (conv.status === 'queued' && conv.blocks.length === 0) {
+          const el = document.createElement('div')
+          el.className = 'msg-text streaming'; el.textContent = ''; body.appendChild(el)
+        }
+        inner.appendChild(avatar); inner.appendChild(body); row.appendChild(inner); messagesEl.appendChild(row)
+      }
+    }
+    messagesEl.scrollTop = messagesEl.scrollHeight
+  }
+  function renderToolCard(block) {
+    const card = document.createElement('div'); card.className = 'tool-card'
+    const header = document.createElement('div'); header.className = 'tool-header'
+    const dot = document.createElement('div'); dot.className = 'tool-dot ' + block.status
+    const name = document.createElement('div'); name.className = 'tool-name'
+    name.textContent = block.name || 'Tool'
+    const statusEl = document.createElement('div'); statusEl.className = 'tool-status'
+    const labels = { planning: t('toolPlanning'), executing: t('toolExecuting'), success: t('toolSuccess'), error: t('toolError') }
+    statusEl.textContent = labels[block.status] || block.status
+    const chevron = document.createElement('div'); chevron.className = 'tool-chevron'; chevron.textContent = '▾'
+    header.append(dot, name, statusEl, chevron)
+    const body = document.createElement('div'); body.className = 'tool-body'
+    if (block.input && Object.keys(block.input).length > 0) {
+      const sec = document.createElement('div'); sec.className = 'tool-section'
+      const lbl = document.createElement('div'); lbl.className = 'tool-section-label'; lbl.textContent = t('toolInput')
+      const code = document.createElement('div'); code.className = 'tool-code'
+      code.textContent = JSON.stringify(block.input, null, 2)
+      sec.append(lbl, code); body.appendChild(sec)
+    }
+    if (block.output !== undefined) {
+      const sec = document.createElement('div'); sec.className = 'tool-section'
+      const lbl = document.createElement('div'); lbl.className = 'tool-section-label'; lbl.textContent = t('toolOutput')
+      const code = document.createElement('div'); code.className = 'tool-code'
+      const out = block.output
+      code.textContent = typeof out === 'string' ? out : (out?.text || out?.content || JSON.stringify(out, null, 2))
+      sec.append(lbl, code); body.appendChild(sec)
+    }
+    header.onclick = () => { body.classList.toggle('open'); chevron.classList.toggle('open') }
+    card.append(header, body); return card
+  }
+  // ── History builder ────────────────────────────────────────────────────────
+  function buildHistoryConversations(messages) {
+    const convs = [], toolResults = new Map(), toolCallsByParent = new Map()
+    for (const msg of messages) {
+      if (msg.subtype === 'tool-result') toolResults.set(msg.toolCallId, msg)
+      if (msg.subtype === 'tool-call') {
+        const pid = msg.parentId || 'orphan'
+        if (!toolCallsByParent.has(pid)) toolCallsByParent.set(pid, [])
+        toolCallsByParent.get(pid).push(msg)
+      }
+    }
+    let currentAsst = null
+    for (const msg of messages) {
+      if (msg.subtype === 'tool-call' || msg.subtype === 'tool-result') continue
+      if (msg.subtype === 'user') {
+        if (currentAsst) { convs.push(currentAsst); currentAsst = null }
+        const text = typeof msg.content === 'string' ? msg.content
+          : (msg.content || []).filter(p => p.type === 'text').map(p => p.text).join('')
+        convs.push({ type: 'user', id: msg.id, content: text, status: 'success' })
+      } else if (msg.subtype === 'assistant') {
+        const text = typeof msg.content === 'string' ? msg.content
+          : (msg.content || []).filter(p => p.type === 'text').map(p => p.text).join('')
+        const toolCalls = toolCallsByParent.get(msg.id) || []
+        const blocks = []
+        if (text) blocks.push({ type: 'text', id: 'tb_' + msg.id, content: text, status: 'completed' })
+        for (const tc of toolCalls) {
+          const result = toolResults.get(tc.toolCall?.id)
+          const isErr = result?.toolResult?.output?.type === 'error-text'
+          blocks.push({ type: 'tool', id: tc.id, toolCallId: tc.toolCall?.id,
+            name: tc.toolCall?.name, input: tc.toolCall?.input || {},
+            output: result?.toolResult?.output, status: result ? (isErr ? 'error' : 'success') : 'executing' })
+        }
+        if (currentAsst) currentAsst.blocks.push(...blocks)
+        else currentAsst = { type: 'assistant', id: 'asst_' + msg.id, blocks, status: 'completed' }
+      }
+    }
+    if (currentAsst) convs.push(currentAsst)
+    return convs
+  }
+  function showError(msg) {
+    connectingEl.style.display = 'none'; errorScreen.style.display = 'flex'
+    document.getElementById('error-msg').textContent = msg
+  }
+})()
+</script>
+</body>
+</html>

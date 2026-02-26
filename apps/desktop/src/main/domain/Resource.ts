@@ -4,6 +4,7 @@
 
 export type ResourceType = 'role' | 'tool'
 export type ResourceSource = 'system' | 'project' | 'user'
+export type ResourceVersion = 'v1' | 'v2'
 
 /**
  * Resource 实体 - 代表一个角色或工具
@@ -14,6 +15,7 @@ export interface Resource {
   description: string
   type: ResourceType
   source: ResourceSource
+  version?: ResourceVersion
   category?: string
   tags: string[]
   // 角色特有字段
@@ -43,6 +45,9 @@ export interface ResourceRepository {
   
   // 更新操作
   updateMetadata(id: string, updates: { name?: string; description?: string }): Promise<{ success: boolean; message?: string }>
+
+  // 缓存控制
+  invalidateCache(): void
 }
 
 /**
@@ -58,6 +63,10 @@ export interface GroupedResources {
     tools: Resource[]
   }
   user: {
+    roles: Resource[]
+    tools: Resource[]
+  }
+  [key: string]: {
     roles: Resource[]
     tools: Resource[]
   }

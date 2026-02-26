@@ -2,16 +2,84 @@
   "settings": {
     "title": "设置",
     "subtitle": "自定义您的 PromptX 体验",
+    "tabs": {
+      "system": "系统设置",
+      "agentx": "AgentX 设置",
+      "remote": "远程访问"
+    },
     "language": {
       "title": "语言",
       "description": "选择您的首选语言",
       "english": "English",
       "chinese": "简体中文"
     },
+    "agentx": {
+      "title": "AgentX 配置",
+      "description": "配置 AgentX AI 助手的 API 连接",
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "sk-ant-...",
+        "description": "您的 AgentX API Key"
+      },
+      "baseUrl": {
+        "label": "API Base URL",
+        "placeholder": "https://api.anthropic.com",
+        "description": "API 服务器地址，默认为 Anthropic 官方地址"
+      },
+      "model": {
+        "label": "模型",
+        "placeholder": "claude-opus-4-5-20251101",
+        "description": "使用的模型名称"
+      },
+      "testConnection": "测试连接",
+      "testing": "测试中...",
+      "testSuccess": "连接成功！",
+      "testFailed": "连接失败",
+      "save": "保存配置",
+      "saving": "保存中...",
+      "saveSuccess": "AgentX 配置保存成功",
+      "saveFailed": "保存 AgentX 配置失败",
+      "skills": {
+        "title": "Skills 配置",
+        "description": "管理启用的 Skills，这些 Skills 将被用于所有 AgentX 对话",
+        "empty": "暂无可用 Skills",
+        "emptyHint": "点击「添加 Skill」导入您的第一个技能包",
+        "refresh": "刷新",
+        "save": "保存",
+        "saving": "保存中...",
+        "addSkill": "添加 Skill",
+        "importing": "导入中...",
+        "loadError": "加载 Skills 失败",
+        "saveSuccess": "Skills 配置已保存",
+        "saveError": "保存 Skills 配置失败",
+        "importSuccess": "Skill \"{{name}}\" 导入成功",
+        "importError": "导入 Skill 失败",
+        "invalidStructure": "无效的技能包：zip 中未找到 SKILL.md",
+        "deleteConfirm": "确定要删除 Skill \"{{name}}\" 吗？",
+        "deleteSuccess": "Skill \"{{name}}\" 已删除",
+        "deleteError": "删除 Skill 失败",
+        "delete": "删除"
+      }
+    },
     "autoStart": {
       "title": "开机自启",
       "description": "计算机启动时自动启动 PromptX",
       "enable": "启用开机自启"
+    },
+    "webAccess": {
+      "title": "远程访问",
+      "description": "开启后可通过局域网扫码访问网页版 PromptX，支持多会话对话",
+      "port": {
+        "label": "HTTP 端口",
+        "description": "网页服务端口，默认 5201"
+      },
+      "toggle": "开启远程访问",
+      "enabled": "远程访问已开启",
+      "disabled": "远程访问已关闭",
+      "enableFailed": "开启失败",
+      "disableFailed": "关闭失败",
+      "copyUrl": "链接已复制",
+      "qrHint": "扫码在手机或其他设备上访问"
     },
     "server": {
       "title": "服务器配置",
@@ -30,9 +98,50 @@
         "label": "调试模式",
         "description": "输出更多日志信息用于故障排除"
       },
+      "enableV2": {
+        "label": "启用 V2 功能 (RoleX)",
+        "description": "启用 RoleX 角色生命周期管理，支持角色创建、目标管理和组织功能"
+      },
       "save": "保存配置",
       "saving": "保存中...",
       "reset": "重置为默认"
+    },
+    "mcp": {
+      "title": "MCP 配置",
+      "description": "配置 Model Context Protocol 服务器",
+      "add": "添加服务器",
+      "edit": "编辑服务器",
+      "empty": "暂无 MCP 服务器配置",
+      "emptyHint": "点击「添加服务器」添加您的第一个 MCP 服务器",
+      "dialogDescription": "使用 JSON 格式配置 MCP 服务器",
+      "fields": {
+        "name": "服务器名称",
+        "namePlaceholder": "例如：my-mcp-server",
+        "config": "配置 (JSON)",
+        "configHint": "Stdio: {command, args, env} | HTTP/SSE: {type, url}",
+        "enabled": "启用此服务器"
+      },
+      "save": "保存",
+      "saving": "保存中...",
+      "cancel": "取消",
+      "saveSuccess": "MCP 配置保存成功",
+      "saveFailed": "保存 MCP 配置失败",
+      "loadError": "加载 MCP 服务器失败",
+      "validation": {
+        "nameRequired": "服务器名称为必填项",
+        "commandOrUrlRequired": "必须提供 'command'（stdio）或 'url'（http/sse）",
+        "typeRequired": "使用 'url' 时必须指定 'type'（http 或 sse）",
+        "invalidJson": "JSON 格式无效",
+        "invalidConfig": "配置无效",
+        "duplicate": "已存在同名服务器"
+      },
+      "builtin": "内置",
+      "cannotDeleteBuiltin": "无法删除内置服务器",
+      "cannotDisableBuiltin": "无法禁用内置服务器"
+    },
+    "skills": {
+      "title": "Skills 配置",
+      "description": "管理和配置 AI 技能"
     }
   },
   "logs": {
@@ -75,12 +184,23 @@
     }
   },
   "resources": {
+    "comingSoon": {
+      "title": "即将上线",
+      "description": "智能体广场正在建设中，敬请期待",
+      "badge": "即将推出"
+    },
+    "banner": {
+      "title": "分享你的创作",
+      "subtitle": "发现并分享角色和工具",
+      "publishRole": "发布角色",
+      "publishTool": "发布工具"
+    },
     "search": {
       "placeholder": "搜索资源 / 角色 / 工具"
     },
     "import": {
       "title": "导入资源",
-      "description": "从文件或 URL 导入角色或工具",
+      "description": "从文件导入角色或工具",
       "button": "导入资源",
       "methods": {
         "file": "文件导入",
@@ -142,7 +262,8 @@
     "actions": {
       "edit": "编辑",
       "download": "下载",
-      "delete": "删除"
+      "delete": "删除",
+      "use": "使用"
     },
     "messages": {
       "loadFailed": "加载资源失败",
@@ -248,13 +369,226 @@
     "configReset": "已重置为默认配置",
     "configResetError": "重置配置失败",
     "loadError": "加载设置失败，请重试",
-    "languageChanged": "语言切换成功"
+    "languageChanged": "语言切换成功",
+    "restartRequired": "需要重启",
+    "restartDescription": "服务器配置已保存。应用需要重启才能使更改生效。",
+    "restartNow": "立即重启",
+    "restartLater": "稍后",
+    "restartError": "重启应用失败"
   },
   "sidebar": {
-    "resources": "资源管理",
+    "agentx": "AgentX 对话",
+    "resources": "智能体广场",
+    "roles":"角色",
+    "tools":"工具",
     "logs": "日志",
     "settings": "设置",
     "update": "检查更新"
+  },
+  "roles": {
+    "search": {
+      "placeholder": "搜索角色..."
+    },
+    "stats": {
+      "total": "角色总数",
+      "system": "系统角色",
+      "user": "用户角色"
+    },
+    "filters": {
+      "source": "来源:",
+      "all": "全部",
+      "system": "系统",
+      "plaza": "广场",
+      "user": "用户"
+    },
+    "activate": "激活",
+    "empty": "暂无角色",
+    "noDescription": "暂无描述",
+    "detail": {
+      "description": "描述",
+      "createRole":"创建角色",
+      "close": "关闭",
+      "editRole": "编辑角色",
+      "editRoleName": "名称",
+      "uploadAvatar": "上传头像",
+      "structure": "结构",
+      "memory": "记忆",
+      "architecture": "DPML 层级架构（三层架构，按需加载）",
+      "memoryEmpty": "暂无记忆数据",
+      "selectRole": "选择一个角色查看详情",
+      "overview": "概述",
+      "prompt": "角色提示词",
+      "rolePrompt": "角色提示词",
+      "promptLoading": "加载中...",
+      "promptError": "加载失败",
+      "promptLoadError": "加载失败",
+      "roleFile": "角色定义",
+      "personalityLayer": "人格特征层",
+      "personalityDesc": "定义角色的思维模式和认知特征",
+      "principleLayer": "行为原则层",
+      "principleDesc": "定义角色的工作流和执行标准",
+      "knowledgeLayer": "专业知识层",
+      "knowledgeDesc": "定义角色的领域专业知识",
+      "noFiles": "暂无文件",
+      "loadingFiles": "加载文件中...",
+      "loadFilesFailed": "加载文件列表失败",
+      "systemRoleReadOnly": "系统内置角色不允许查看",
+      "fileContent": "文件内容",
+      "loadingContent": "加载内容中...",
+      "loadContentFailed": "加载内容失败",
+      "readOnly": "只读",
+      "save": "保存",
+      "saving": "保存中...",
+      "saveSuccess": "保存成功",
+      "saveFailed": "保存失败",
+      "close": "关闭",
+      "goals": "目标",
+      "organization": "组织",
+      "identity": "身份",
+      "currentGoal": "当前目标",
+      "noGoals": "暂无活跃目标",
+      "goalPlan": "执行计划",
+      "goalTasks": "任务列表",
+      "noTasks": "暂无任务",
+      "noOrganization": "未加入任何组织",
+      "orgPosition": "职位",
+      "orgMembers": "成员",
+      "taskPending": "待处理",
+      "taskInProgress": "进行中",
+      "taskCompleted": "已完成",
+      "loadingData": "加载中...",
+      "v2PersonaLayer": "人格定义",
+      "v2PersonaDesc": "角色的核心人格与行为特征",
+      "v2KnowledgeLayer": "专业知识",
+      "v2KnowledgeDesc": "角色的领域知识与专业能力",
+      "v2VoiceLayer": "表达风格",
+      "v2VoiceDesc": "角色的语言风格与沟通方式",
+      "v2ExperienceLayer": "成长经验",
+      "v2ExperienceDesc": "角色通过实践积累的经验"
+    },
+    "memory": {
+      "overview": "概览",
+      "engrams": "记忆印记",
+      "network": "知识网络",
+      "cues": "线索",
+      "engramCount": "记忆印记",
+      "cueCount": "线索",
+      "connections": "连接",
+      "lastActive": "最后活跃",
+      "topCues": "热门线索",
+      "noMemoryData": "暂无记忆数据",
+      "loading": "加载中...",
+      "type": "类型",
+      "strength": "强度",
+      "schema": "模式",
+      "search": "搜索...",
+      "page": "页",
+      "clickToExplore": "点击探索",
+      "recallFrequency": "回忆频率",
+      "weight": "权重",
+      "edit": "编辑",
+      "delete": "删除",
+      "save": "保存",
+      "cancel": "取消",
+      "confirmDelete": "确定删除？",
+      "deleteCue": "删除线索",
+      "typeAtomic": "原子",
+      "typeLink": "关联",
+      "typePattern": "模式",
+      "allTypes": "全部"
+    },
+    "messages": {
+      "loadFailed": "加载角色失败",
+      "activateSuccess": "角色 \"{{name}}\" 激活成功",
+      "activateFailed": "激活角色失败",
+      "activatePrompt": "激活{{name}}角色",
+      "deleteConfirm": "确定要删除角色 \"{{name}}\" 吗？此操作不可恢复。",
+      "deleteSuccess": "角色 \"{{name}}\" 删除成功",
+      "deleteFailed": "删除角色失败",
+      "deleteOnlyUser": "仅支持删除用户自建的角色"
+    }
+  },
+  "tools": {
+    "search": {
+      "placeholder": "搜索工具..."
+    },
+    "stats": {
+      "total": "工具总数",
+      "system": "系统工具",
+      "user": "用户工具"
+    },
+    "filters": {
+      "source": "来源:",
+      "all": "全部",
+      "system": "系统",
+      "plaza": "广场",
+      "user": "用户"
+    },
+    "execute": "执行",
+    "empty": "暂无工具",
+    "noDescription": "暂无描述",
+    "detail": {
+      "description": "描述",
+      "parameters": "参数",
+      "parametersPlaceholder": "{\"key\": \"value\"}",
+      "parametersHint": "可选。输入 JSON 格式的工具执行参数。",
+      "result": "执行结果",
+      "close": "关闭",
+      "overview": "概览",
+      "test": "测试",
+      "configure": "配置",
+      "logs": "日志",
+      "install": "安装工具",
+      "output": "输出",
+      "outputEmpty": "运行测试以查看输出...",
+      "runTest": "运行测试",
+      "envVars": "环境变量",
+      "noEnvVars": "暂无环境变量配置",
+      "noLogs": "暂无执行日志",
+      "selectTool": "选择一个工具查看详情",
+      "deleteTool": "删除工具",
+      "tags": "标签",
+      "manual": "使用文档",
+      "info": "工具信息",
+      "source": "来源",
+      "execSuccess": "执行成功",
+      "execFailed": "执行失败",
+      "paramsHint": "输入 JSON 格式的执行参数，无参数时保留 {} 即可。",
+      "executing": "执行中...",
+      "execNoOutput": "执行完成，无输出内容",
+      "toolFiles": "工具文件",
+      "noFiles": "暂无工具文件",
+      "readOnly": "只读",
+      "loadingFile": "加载文件中...",
+      "paramSchema": "参数结构",
+      "execHistory": "执行历史",
+      "clearLogs": "清除日志",
+      "formMode": "表单",
+      "edit": "编辑",
+      "save": "保存",
+      "cancel": "取消",
+      "editInfo": "修改信息",
+      "editName": "工具名称",
+      "editDescription": "工具描述",
+      "namePlaceholder": "请输入工具名称",
+      "descriptionPlaceholder": "请输入工具描述",
+      "createTool": "创建工具"
+    },
+    "messages": {
+      "loadFailed": "加载工具失败",
+      "executeSuccess": "工具 \"{{name}}\" 执行成功",
+      "executeFailed": "执行工具失败",
+      "invalidParams": "无效的 JSON 参数",
+      "deleteOnlyUser": "仅支持删除用户自建的工具",
+      "deleteConfirm": "确定要删除工具 \"{{name}}\" 吗？此操作不可恢复。",
+      "deleteSuccess": "工具 \"{{name}}\" 删除成功",
+      "deleteFailed": "删除工具失败",
+      "saveSuccess": "文件保存成功",
+      "saveFailed": "保存文件失败",
+      "updateSuccess": "工具信息更新成功",
+      "updateFailed": "更新工具信息失败",
+      "updateOnlyUser": "仅支持修改用户自建的工具"
+    }
   },
   "update": {
     "title": "软件更新",
@@ -280,5 +614,132 @@
     "placeholder": "选择日期",
     "selectDate": "选择日期",
     "clear": "清除"
+  },
+  "agentxUI": {
+    "chat": {
+      "placeholder": "输入消息...",
+      "toolbar": {
+        "emoji": "表情",
+        "file": "文件",
+        "save": "保存对话"
+      },
+      "status": {
+        "thinking": "思考中",
+        "responding": "回复中",
+        "planning": "规划中",
+        "executing": "执行中",
+        "error": "错误",
+        "idle": "空闲",
+        "queued": "排队中",
+        "processing": "处理中"
+      },
+      "messageCount": "{{count}} 条消息",
+      "actions": {
+        "stop": "停止",
+        "send": "发送 (Enter)",
+        "remove": "移除",
+        "download": "下载",
+        "removeImage": "移除图片",
+        "escToStop": "按 ESC 停止",
+        "copy": "复制",
+        "regenerate": "重新生成",
+        "like": "赞",
+        "dislike": "踩"
+      },
+      "empty": {
+        "title": "未选择对话",
+        "description": "选择一个对话或开始新对话"
+      },
+      "dropToSend": "拖放以发送"
+    },
+    "conversations": {
+      "title": "对话列表",
+      "new": "新建对话",
+      "search": "搜索对话...",
+      "empty": {
+        "title": "暂无对话",
+        "description": "开始一个新对话",
+        "action": "新建对话"
+      },
+      "rename": {
+        "placeholder": "输入对话名称",
+        "saving": "保存中...",
+        "save": "保存"
+      },
+      "delete": {
+        "confirm": "确定要删除 \"{{name}}\" 吗？",
+        "cancel": "取消",
+        "confirm_button": "删除",
+        "deleting": "删除中..."
+      },
+      "actions": {
+        "rename": "重命名",
+        "delete": "删除"
+      },
+      "status": {
+        "online": "在线",
+        "offline": "离线"
+      },
+      "untitled": "未命名"
+    },
+    "messages": {
+      "empty": {
+        "title": "暂无消息",
+        "description": "发送消息开始对话"
+      }
+    },
+    "tool": {
+      "status": {
+        "planning": "规划中...",
+        "executing": "执行中...",
+        "completed": "已完成",
+        "error": "错误"
+      }
+    },
+    "sidebar": {
+      "expand": "展开侧边栏",
+      "collapse": "收起侧边栏"
+    },
+    "list": {
+      "empty": {
+        "description": "创建新项目开始使用"
+      }
+    },
+    "time": {
+      "justNow": "刚刚",
+      "unknown": "未知",
+      "minAgo": "1 分钟前",
+      "minsAgo": "{{count}} 分钟前",
+      "hourAgo": "1 小时前",
+      "hoursAgo": "{{count}} 小时前",
+      "dayAgo": "1 天前",
+      "daysAgo": "{{count}} 天前"
+    },
+    "mobile": {
+      "search": "搜索..."
+    },
+    "page": {
+      "notConfigured": {
+        "title": "AgentX 未配置",
+        "description": "请先在设置页面配置 AgentX API Key 以使用 AgentX 功能。",
+        "hint": "设置 → AgentX 配置 → 填写 API Key → 保存"
+      },
+      "connectionError": "连接错误",
+      "connecting": "正在连接 AgentX..."
+    },
+    "welcome": {
+      "tagline": "PromptX，让AI触手可及",
+      "inputPlaceholder": "问我任何问题...",
+      "presets": {
+        "luban": "激活鲁班，打造工具",
+        "lubanPrompt": "激活鲁班，我要打造一个工具",
+        "nuwa": "激活女娲，创建角色",
+        "nuwaPrompt": "激活女娲，我要创建一个角色",
+        "role": "探索可用角色",
+        "rolePrompt": "有哪些可用的角色？",
+        "tool": "探索可用工具",
+        "toolPrompt": "有哪些可用的工具？"
+      }
+    }
   }
 }

@@ -61,6 +61,10 @@ if (typeof globalThis.File === 'undefined') {
 // Check BEFORE importing main app to avoid logger file lock conflicts
 import { app, BrowserWindow } from 'electron'
 
+// Fix for Electron 38+ Network Service crash on Windows
+// See: https://github.com/electron/electron/issues/XXX
+app.commandLine.appendSwitch('disable-features', 'NetworkServiceSandbox')
+
 // Global callback for opening main window (set by main app after initialization)
 ;(global as any).__promptxOpenMainWindow = null
 

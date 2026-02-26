@@ -4,6 +4,37 @@ const os = require('os')
 const logger = require('@promptx/logger')
 
 /**
+ * 从 Gherkin Feature 文件内容中提取 Feature 名称
+ */
+function extractFeatureName (content) {
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('Feature:')) {
+      return trimmed.replace(/^Feature:\s*/, '').trim()
+    }
+  }
+  return ''
+}
+
+/**
+ * 从 Gherkin Feature 文件内容中提取描述（Feature 名称后、第一个 Scenario 前的文本）
+ */
+function extractFeatureDescription (content) {
+  const lines = content.split('\n')
+  let inFeature = false
+  const descLines = []
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('Feature:')) { inFeature = true; continue }
+    if (inFeature) {
+      if (/^(Scenario|Background|Given|When|Then|And|But|@|\|)/.test(trimmed)) break
+      if (trimmed && !trimmed.startsWith('#')) descLines.push(trimmed)
+    }
+  }
+  return descLines.join(' ').trim()
+}
+
+/**
  * RolexBridge - 核心桥接模块
  *
  * 单例模式，懒初始化。负责管理 RoleX V2 角色系统的生命周期。
@@ -11,6 +42,8 @@ const logger = require('@promptx/logger')
  * 所有 RoleX 导入必须使用 await import() 动态导入。
  */
 class RolexBridge {
+  static SEED_ROLES = ['nuwa', 'waiter', 'jiangziya']
+
   constructor () {
     this.platform = null
     this.rolex = null
@@ -42,12 +75,17 @@ class RolexBridge {
       const { LocalPlatform } = await import('@rolexjs/local-platform')
       const { Rolex, bootstrap, renderFeature, renderFeatures } = await import('rolexjs')
 
-      this.platform = new LocalPlatform(this.rolexRoot)
-      this.rolex = new Rolex(this.platform)
       this._renderFeature = renderFeature
       this._renderFeatures = renderFeatures
 
-      // Bootstrap: 确保种子角色（Nuwa）存在
+      // 版本检测：rolexjs 更新时强制重建 SEED 角色（在创建 platform 之前）
+      await this._syncSeedRoles()
+
+      // 创建 platform（在 SEED 同步之后，确保读到最新的文件状态）
+      this.platform = new LocalPlatform(this.rolexRoot)
+      this.rolex = new Rolex(this.platform)
+
+      // Bootstrap: 确保种子角色存在
       bootstrap(this.platform)
 
       this.initialized = true
@@ -59,10 +97,68 @@ class RolexBridge {
   }
 
   /**
+   * 同步 SEED 角色 - 当 rolexjs 版本变化时删除旧的 SEED 角色
+   * bootstrap 会在之后重建它们
+   */
+  async _syncSeedRoles () {
+    const SEED_ROLES = RolexBridge.SEED_ROLES
+    const versionFile = path.join(this.rolexRoot, '.seed-version')
+
+    // 读取 rolexjs 当前版本（通过文件路径，避免 ESM exports 限制）
+    let currentVersion = 'unknown'
+    try {
+      const rolexjsDir = path.dirname(require.resolve('rolexjs'))
+      const pkg = await fs.readJson(path.join(rolexjsDir, '..', 'package.json'))
+      currentVersion = pkg.version
+    } catch {
+      // fallback: 无法读取版本，每次都重建
+      currentVersion = Date.now().toString()
+    }
+
+    // 对比已记录的版本
+    let savedVersion = ''
+    try {
+      savedVersion = (await fs.readFile(versionFile, 'utf-8')).trim()
+    } catch {
+      // 无版本文件 = 首次运行或旧安装
+    }
+
+    if (savedVersion !== currentVersion) {
+      logger.info(`[RolexBridge] SEED version changed (${savedVersion || 'none'} → ${currentVersion}), resyncing built-in roles...`)
+      for (const name of SEED_ROLES) {
+        const roleDir = path.join(this.rolexRoot, 'roles', name)
+        if (await fs.pathExists(roleDir)) {
+          await fs.remove(roleDir)
+          logger.info(`[RolexBridge] Removed outdated SEED role: ${name}`)
+        }
+      }
+
+      // 同时从 rolex.json 注册表中移除 SEED 角色，否则 bootstrap 会跳过重建
+      const registryFile = path.join(this.rolexRoot, 'rolex.json')
+      try {
+        if (await fs.pathExists(registryFile)) {
+          const registry = await fs.readJson(registryFile)
+          if (Array.isArray(registry.roles)) {
+            registry.roles = registry.roles.filter(r => !SEED_ROLES.includes(r))
+            await fs.writeJson(registryFile, registry, { spaces: 2 })
+            logger.info('[RolexBridge] Removed SEED roles from rolex.json registry')
+          }
+        }
+      } catch (e) {
+        logger.warn('[RolexBridge] Failed to clean rolex.json registry:', e.message)
+      }
+
+      await fs.writeFile(versionFile, currentVersion)
+      logger.info('[RolexBridge] SEED roles cleared, bootstrap will recreate them')
+    }
+  }
+
+  /**
    * 检查指定角色是否为 V2 角色
    * 通过检查 ~/.promptx/rolex/roles/<roleId>/identity/persona.identity.feature 是否存在
    */
   async isV2Role (roleId) {
+    if (process.env.PROMPTX_ENABLE_V2 === '0') return false
     await this.ensureInitialized()
     const featurePath = path.join(
       this.rolexRoot, 'roles', roleId, 'identity', 'persona.identity.feature'
@@ -166,10 +262,14 @@ class RolexBridge {
 
   /**
    * 成长 (growup) - 映射到 rolex.teach()
+   * @param {string} name - 知识名称
+   * @param {string} source - Gherkin 源码
+   * @param {string} type - 类型 (knowledge/experience/voice)
+   * @param {string} [targetRole] - 目标角色，如果不指定则使用当前激活角色
    */
-  async growup (name, source, type) {
+  async growup (name, source, type, targetRole) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
+    const role = targetRole || this._requireActiveRole()
     const feature = this.rolex.teach(role, type, name, source)
     return this._renderFeature(feature)
   }
@@ -249,6 +349,7 @@ class RolexBridge {
    * 列出所有 V2 角色（供 discover 使用）
    */
   async listV2Roles () {
+    if (process.env.PROMPTX_ENABLE_V2 === '0') return []
     try {
       await this.ensureInitialized()
       const rolesDir = path.join(this.rolexRoot, 'roles')
@@ -262,10 +363,19 @@ class RolexBridge {
           rolesDir, entry.name, 'identity', 'persona.identity.feature'
         )
         if (await fs.pathExists(featurePath)) {
+          const isSeed = RolexBridge.SEED_ROLES.includes(entry.name)
+          let description = ''
+          let featureName = ''
+          try {
+            const content = await fs.readFile(featurePath, 'utf-8')
+            featureName = extractFeatureName(content)
+            description = extractFeatureDescription(content)
+          } catch { /* ignore */ }
           roles.push({
             id: entry.name,
-            name: entry.name,
-            source: 'rolex',
+            name: featureName || entry.name,
+            description,
+            source: isSeed ? 'system' : 'rolex',
             version: 'v2',
             protocol: 'role'
           })

@@ -7,7 +7,7 @@
 
 import { StdioMCPServer } from './StdioMCPServer.js';
 import { StreamableHttpMCPServer } from './StreamableHttpMCPServer.js';
-import { allTools } from '../tools/index.js';
+import { createAllTools } from '../tools/index.js';
 import type { MCPServer } from '../interfaces/MCPServer.js';
 import logger from '@promptx/logger';
 
@@ -16,17 +16,18 @@ export interface PromptXServerOptions {
   transport: 'stdio' | 'http';
   name?: string;
   version?: string;
-  
+
   // HTTP 特定选项
   port?: number;
   host?: string;
   corsEnabled?: boolean;
   cors?: boolean; // 别名兼容
-  
+
   // PromptX 特定选项
   workingDirectory?: string;  // 工作目录
   ideType?: string;           // IDE 类型（cursor, vscode, claude 等）
   debug?: boolean;            // 调试模式
+  enableV2?: boolean;         // 是否启用 V2 (RoleX) 功能，默认 true
 }
 
 export class PromptXMCPServer {
@@ -65,18 +66,17 @@ export class PromptXMCPServer {
    * 注册所有 PromptX 工具
    */
   private registerTools(): void {
-    // 注册标准工具集
-    allTools.forEach(tool => {
+    const enableV2 = this.options.enableV2 !== false; // 默认 true
+    // 设置环境变量，供 @promptx/core 的 RolexBridge 读取
+    process.env.PROMPTX_ENABLE_V2 = enableV2 ? '1' : '0';
+
+    const tools = createAllTools(enableV2);
+    tools.forEach(tool => {
       this.server.registerTool(tool);
       logger.debug(`Registered tool: ${tool.name}`);
     });
-    
-    logger.info(`Registered ${allTools.length} PromptX tools`);
-    
-    // 未来可以在这里加载：
-    // 1. 项目特定工具（基于 workingDirectory）
-    // 2. IDE 特定工具（基于 ideType）
-    // 3. 用户自定义工具
+
+    logger.info(`Registered ${tools.length} PromptX tools (V2: ${enableV2})`);
   }
   
   /**

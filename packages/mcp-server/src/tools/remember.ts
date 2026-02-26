@@ -7,15 +7,29 @@ export const rememberTool: ToolWithHandler = {
   name: 'remember',
   description: `Save knowledge to a role's memory network
 
+## MANDATORY: Remember Before Conversation Ends
+
+**CRITICAL RULE**: Before a conversation ends, you MUST call remember to save key insights. Every conversation without remember = knowledge lost forever.
+
+**Trigger signals for remember:**
+- User says "thanks" / "bye" / conversation naturally wrapping up
+- You just solved a problem or answered a complex question
+- You learned something new about the user's project/preferences
+- Recall returned empty — you MUST fill the gap after answering
+- Every 5-7 rounds of deep discussion — save intermediate insights
+
+> Think of remember as "saving your game". No save = start over next time.
+
 ## When to Use
 
+- **Conversation ending** (MANDATORY) — save all key insights before goodbye
 - After answering a question — save key insights
 - After multi-round recall — summarize findings
 - Learned something new — persist it
 - Solved a problem — record the solution
 - Recall returned empty — fill the gap
-
-> Every remember is an investment for future recall. No remember = start from zero next time.
+- User corrected you — save the correction
+- Discovered user preferences — save them
 
 ## Engram Types
 
@@ -24,6 +38,15 @@ export const rememberTool: ToolWithHandler = {
 | ATOMIC | Facts, entities, concrete info | "Redis default port is 6379" |
 | LINK | Relationships, connections | "Database uses connection pool for management" |
 | PATTERN | Processes, methodologies | "Login → select item → checkout" |
+
+## What to Save (Checklist)
+
+- Key facts and decisions made during conversation
+- User preferences and project context
+- Problems solved and solutions found
+- Corrections and clarifications
+- Patterns and workflows discovered
+- Important relationships between concepts
 
 ## Occam's Razor Principle
 

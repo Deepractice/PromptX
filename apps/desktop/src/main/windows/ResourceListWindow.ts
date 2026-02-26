@@ -141,6 +141,153 @@ export class ResourceListWindow {
     })
 
 
+    // 执行工具
+    ipcMain.handle('resources:executeTool', async (_: IpcMainInvokeEvent, toolId: string, parameters?: any) => {
+      try {
+        if (!toolId) {
+          return { success: false, message: 'Tool ID is required' }
+        }
+
+        const core = require('@promptx/core')
+        const cli = core.pouch?.cli || core.cli || core.default?.cli
+        if (!cli || !cli.execute) {
+          return { success: false, message: 'CLI not available in @promptx/core' }
+        }
+
+        // 构建 CLI 参数: toolx @tool://toolId execute [params]
+        const toolRef = toolId.startsWith('@tool://') ? toolId : `@tool://${toolId}`
+        const args: string[] = [toolRef, 'execute']
+        if (parameters) {
+          args.push(typeof parameters === 'string' ? parameters : JSON.stringify(parameters))
+        }
+
+        const startTime = Date.now()
+        const result = await cli.execute('toolx', args)
+        const duration = Date.now() - startTime
+
+        // PouchOutput 包含 toString() 函数和 context 循环引用，无法通过 IPC 序列化
+        // 需要提取纯数据
+        const serializable = typeof result === 'object' && result !== null
+          ? (typeof result.toString === 'function' ? result.toString() : JSON.stringify(result))
+          : String(result ?? '')
+
+        return {
+          success: true,
+          data: serializable,
+          duration,
+        }
+      } catch (error: any) {
+        console.error('Failed to execute tool:', error)
+        return {
+          success: false,
+          message: error.message || 'Tool execution failed',
+          error: String(error),
+        }
+      }
+    })
+
+    // 获取工具手册/文档
+    ipcMain.handle('resources:getToolManual', async (_: IpcMainInvokeEvent, toolId: string) => {
+      try {
+        if (!toolId) {
+          return { success: false, message: 'Tool ID is required' }
+        }
+
+        const core = require('@promptx/core')
+        const cli = core.pouch?.cli || core.cli || core.default?.cli
+        if (!cli || !cli.execute) {
+          return { success: false, message: 'CLI not available in @promptx/core' }
+        }
+
+        const toolRef = toolId.startsWith('@tool://') ? toolId : `@tool://${toolId}`
+        const result = await cli.execute('toolx', [toolRef, 'manual'])
+
+        // PouchOutput → 纯字符串
+        const serializable = typeof result === 'object' && result !== null
+          ? (typeof result.toString === 'function' ? result.toString() : JSON.stringify(result))
+          : String(result ?? '')
+
+        return { success: true, data: serializable }
+      } catch (error: any) {
+        console.error('Failed to get tool manual:', error)
+        return { success: false, message: error.message || 'Failed to get tool manual' }
+      }
+    })
+
+    // 获取工具参数 Schema（通过 VM 安全加载工具文件提取 getSchema()）
+    ipcMain.handle('resources:getToolSchema', async (_: IpcMainInvokeEvent, payload: { id: string; source?: string }) => {
+      try {
+        const { id } = payload || {}
+        const source = payload?.source ?? 'user'
+        if (!id) return { success: false, message: 'Tool ID is required' }
+
+        const fs = require('fs-extra')
+        const pathMod = require('path')
+        const os = require('os')
+        const vm = require('vm')
+
+        // 解析工具目录（复用 listFiles 的路径逻辑）
+        let toolDir: string | null = null
+        if (source === 'user') {
+          toolDir = pathMod.join(os.homedir(), '.promptx', 'resource', 'tool', id)
+        } else if (source === 'project') {
+          try {
+            const { ProjectPathResolver } = require('@promptx/core')
+            const resolver = new ProjectPathResolver()
+            toolDir = pathMod.join(resolver.getResourceDirectory(), 'tool', id)
+          } catch { return { success: false, message: 'Project not initialized' } }
+        } else {
+          try {
+            const resourcePkg = require('@promptx/resource')
+            const res = resourcePkg.findResourceById(id)
+            if (res?.metadata?.path) {
+              toolDir = pathMod.dirname(resourcePkg.getResourcePath(res.metadata.path))
+            }
+          } catch { /* ignore */ }
+        }
+
+        if (!toolDir || !(await fs.pathExists(toolDir))) {
+          return { success: false, message: 'Tool directory not found' }
+        }
+
+        // 找到主 JS 文件
+        const entries = await fs.readdir(toolDir)
+        const jsFile = entries.find((f: string) => f.endsWith('.tool.js') || f.endsWith('.js'))
+        if (!jsFile) return { success: false, message: 'No JS file found in tool directory' }
+
+        const content = await fs.readFile(pathMod.join(toolDir, jsFile), 'utf-8')
+
+        // 在安全的 VM 沙箱中执行，提取 getSchema()
+        const sandbox = {
+          module: { exports: {} as any },
+          exports: {} as any,
+          require: () => ({}),
+          console: { log: () => {}, error: () => {}, warn: () => {} },
+          process: { env: {} },
+        }
+        sandbox.exports = sandbox.module.exports
+
+        const context = vm.createContext(sandbox)
+        try {
+          new vm.Script(content, { timeout: 3000 }).runInContext(context)
+        } catch {
+          return { success: false, message: 'Failed to parse tool file' }
+        }
+
+        const exported = sandbox.module.exports
+        if (typeof exported.getSchema === 'function') {
+          const schema = exported.getSchema()
+          // 确保返回纯 JSON（去掉函数等不可序列化内容）
+          return { success: true, schema: JSON.parse(JSON.stringify(schema)) }
+        }
+
+        return { success: false, message: 'Tool does not export getSchema()' }
+      } catch (error: any) {
+        console.error('Failed to get tool schema:', error)
+        return { success: false, message: error.message || 'Failed to get tool schema' }
+      }
+    })
+
     // 获取资源统计
     ipcMain.handle('resources:getStatistics', async () => {
       try {
@@ -252,11 +399,12 @@ export class ResourceListWindow {
     })
 
     // 新增：删除资源（仅支持删除用户资源）
-    ipcMain.handle('resources:delete', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string }) => {
+    ipcMain.handle('resources:delete', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string; version?: string }) => {
       try {
         const id = payload?.id
         const type = payload?.type
         const source = payload?.source ?? 'user'
+        const version = payload?.version ?? 'v1'
 
         if (!id || !type) {
           return { success: false, message: t('resources.missingParams') }
@@ -269,13 +417,39 @@ export class ResourceListWindow {
         const path = require('path')
         const os = require('os')
 
-        const targetDir = path.join(os.homedir(), '.promptx', 'resource', type, id)
+        // V2 角色存储在 ~/.rolex/roles/<id>/，V1 及工具存储在 ~/.promptx/resource/<type>/<id>/
+        const targetDir = (type === 'role' && version === 'v2')
+          ? path.join(os.homedir(), '.rolex', 'roles', id)
+          : path.join(os.homedir(), '.promptx', 'resource', type, id)
+
         const exists = await fs.pathExists(targetDir)
         if (!exists) {
           return { success: false, message: t('resources.directoryNotExists') + `: ${targetDir}` }
         }
 
         await fs.remove(targetDir)
+
+        // V2 角色：从 ~/.rolex/rolex.json 中移除注册信息
+        if (type === 'role' && version === 'v2') {
+          const rolexJsonPath = path.join(os.homedir(), '.rolex', 'rolex.json')
+          try {
+            if (await fs.pathExists(rolexJsonPath)) {
+              const rolexData = await fs.readJson(rolexJsonPath)
+              if (Array.isArray(rolexData.roles)) {
+                rolexData.roles = rolexData.roles.filter((r: string) => r !== id)
+              }
+              if (rolexData.assignments?.[id]) {
+                delete rolexData.assignments[id]
+              }
+              await fs.writeJson(rolexJsonPath, rolexData, { spaces: 2 })
+            }
+          } catch (regErr) {
+            console.warn('Failed to update rolex.json after delete:', regErr)
+          }
+        }
+
+        // 清除 Repository 内存缓存，确保下次查询立即反映删除结果
+        this.resourceService.invalidateCache()
 
         // 刷新资源发现，确保UI能看到最新列表
         try {
@@ -573,25 +747,26 @@ export class ResourceListWindow {
           // 复制到用户目录
           await fs.copy(resourceDir, userResourceDir)
 
-          // 如果提供了自定义名称或描述，更新主文件
+          // 如果提供了自定义名称或描述，写入 metadata.json（优先级最高）
           if (name || description) {
-            const mainFile = type === 'role'
-              ? path.join(userResourceDir, `${finalId}.role.md`)
-              : path.join(userResourceDir, `${finalId}.tool.js`)
-
-            if (await fs.pathExists(mainFile)) {
-              let content = await fs.readFile(mainFile, 'utf-8')
-
-              // 简单的替换（可以根据实际格式调整）
-              if (type === 'role' && (name || description)) {
-                // TODO: 更新role文件的name和description
-                // 这需要根据具体的DPML格式来解析和修改
-              }
+            const metadataFile = path.join(userResourceDir, 'metadata.json')
+            let existing: Record<string, any> = {}
+            if (await fs.pathExists(metadataFile)) {
+              try { existing = await fs.readJson(metadataFile) } catch { /* ignore */ }
             }
+            await fs.writeJson(metadataFile, {
+              ...existing,
+              ...(name ? { name } : {}),
+              ...(description ? { description } : {}),
+              updatedAt: new Date().toISOString(),
+            }, { spaces: 2 })
           }
 
           // 清理临时目录
           await fs.remove(tempDir)
+
+          // 清除 Repository 内存缓存，确保下次查询立即反映导入结果
+          this.resourceService.invalidateCache()
 
           // 刷新资源发现
           try {
@@ -622,14 +797,137 @@ export class ResourceListWindow {
       }
     })
 
+    // 导入 V2 角色（~/.rolex/roles/<id>/identity/）
+    ipcMain.handle('resources:importV2Role', async (_evt, payload: {
+      filePath: string
+      customId?: string
+      name?: string
+      description?: string
+    }) => {
+      try {
+        const { filePath, customId, name, description } = payload || {}
+        if (!filePath) return { success: false, message: t('resources.missingParams') }
+
+        const fs = require('fs-extra')
+        const pathMod = require('path')
+        const os = require('os')
+        const AdmZip = require('adm-zip')
+
+        if (!(await fs.pathExists(filePath))) {
+          return { success: false, message: t('resources.fileNotFound') }
+        }
+
+        const tempDir = pathMod.join(os.tmpdir(), `promptx-v2-import-${Date.now()}`)
+        await fs.ensureDir(tempDir)
+
+        try {
+          const zip = new AdmZip(filePath)
+          zip.extractAllTo(tempDir, true)
+
+          // 找到 identity 目录（支持根目录或一级子目录）
+          let identityDir: string | null = null
+          let roleId: string | null = null
+
+          const tryFindIdentity = async (dir: string): Promise<{ identityDir: string; roleId: string } | null> => {
+            const entries: string[] = await fs.readdir(dir)
+            if (entries.includes('identity')) {
+              const sub = pathMod.join(dir, 'identity')
+              const stat = await fs.stat(sub)
+              if (stat.isDirectory()) {
+                return { identityDir: sub, roleId: pathMod.basename(dir) }
+              }
+            }
+            return null
+          }
+
+          const rootResult = await tryFindIdentity(tempDir)
+          if (rootResult) {
+            identityDir = rootResult.identityDir
+            roleId = rootResult.roleId
+          } else {
+            const entries: string[] = await fs.readdir(tempDir)
+            for (const entry of entries) {
+              const sub = pathMod.join(tempDir, entry)
+              const stat = await fs.stat(sub)
+              if (stat.isDirectory()) {
+                const result = await tryFindIdentity(sub)
+                if (result) { identityDir = result.identityDir; roleId = result.roleId; break }
+              }
+            }
+          }
+
+          if (!identityDir || !roleId) {
+            await fs.remove(tempDir)
+            return { success: false, message: t('resources.invalidResourceStructure') }
+          }
+
+          const finalId = customId || roleId
+          const targetDir = pathMod.join(os.homedir(), '.rolex', 'roles', finalId, 'identity')
+
+          if (await fs.pathExists(targetDir)) {
+            const overwrite = await dialog.showMessageBox({
+              type: 'question',
+              buttons: ['Cancel', 'Overwrite'],
+              defaultId: 0,
+              title: t('resources.resourceExists'),
+              message: t('resources.resourceExistsMessage', { id: finalId })
+            })
+            if (overwrite.response === 0) {
+              await fs.remove(tempDir)
+              return { success: false, message: t('resources.cancelled') }
+            }
+            await fs.remove(targetDir)
+          }
+
+          await fs.ensureDir(pathMod.dirname(targetDir))
+          await fs.copy(identityDir, targetDir)
+
+          // 写入自定义 metadata（name/description）
+          if (name || description) {
+            const metadataFile = pathMod.join(pathMod.dirname(targetDir), 'metadata.json')
+            await fs.writeJson(metadataFile, {
+              ...(name ? { name } : {}),
+              ...(description ? { description } : {}),
+              updatedAt: new Date().toISOString(),
+            }, { spaces: 2 })
+          }
+
+          // 注册到 ~/.rolex/rolex.json
+          const rolexJsonPath = pathMod.join(os.homedir(), '.rolex', 'rolex.json')
+          try {
+            let rolexData: any = { roles: [], organizations: {}, assignments: {} }
+            if (await fs.pathExists(rolexJsonPath)) {
+              rolexData = await fs.readJson(rolexJsonPath)
+            }
+            if (!Array.isArray(rolexData.roles)) rolexData.roles = []
+            if (!rolexData.roles.includes(finalId)) {
+              rolexData.roles.push(finalId)
+              await fs.writeJson(rolexJsonPath, rolexData, { spaces: 2 })
+            }
+          } catch (regErr) {
+            console.warn('Failed to register V2 role in rolex.json:', regErr)
+          }
+
+          await fs.remove(tempDir)
+          return { success: true, id: finalId, message: t('resources.importSuccess', { id: finalId }) }
+        } finally {
+          if (await fs.pathExists(tempDir)) await fs.remove(tempDir)
+        }
+      } catch (error: any) {
+        console.error('Failed to import V2 role:', error)
+        return { success: false, message: error?.message || t('resources.importFailed') }
+      }
+    })
+
     // 预览完整提示词（DPML -> Prompt）
     ipcMain.handle('resources:previewPrompt', async (_evt, payload: {
       id: string
       type: 'role' | 'tool'
       source: string
+      roleResources?: string
     }) => {
       try {
-        const { id, type, source } = payload || {}
+        const { id, type, source, roleResources } = payload || {}
 
         if (!id || !type) {
           return { success: false, message: t('resources.missingParams') }
@@ -649,8 +947,14 @@ export class ResourceListWindow {
           return { success: false, message: 'CLI not available in @promptx/core' }
         }
 
+        // 构建参数（与 MCP action tool 一致，roleResources 作为第二个位置参数）
+        const args: string[] = [id]
+        if (roleResources) {
+          args.push(roleResources)
+        }
+
         // 执行 action 命令获取渲染后的提示词
-        const result = await cli.execute('action', [id])
+        const result = await cli.execute('action', args)
 
         // result 包含渲染后的完整提示词
         if (result && typeof result === 'string') {
@@ -667,6 +971,165 @@ export class ResourceListWindow {
       } catch (error: any) {
         console.error('Failed to preview prompt:', error)
         return { success: false, message: error?.message || t('resources.preview.failed') }
+      }
+    })
+
+    // V2 角色数据（身份、目标、组织）
+    ipcMain.handle('resources:getV2RoleData', async (_evt, payload: { roleId: string }) => {
+      try {
+        const core = await import('@promptx/core')
+        const coreExports = (core as any).default || core
+        const { RolexActionDispatcher } = (coreExports as any).rolex
+        const dispatcher = new RolexActionDispatcher()
+
+        // 激活角色获取身份文本（同时设置 currentRoleName）
+        const identity = await dispatcher.dispatch('activate', { role: payload.roleId })
+
+        // 获取当前目标
+        let focus = null
+        try {
+          focus = await dispatcher.dispatch('focus', { role: payload.roleId })
+        } catch { /* no active goals */ }
+
+        // 获取组织目录
+        let directory = null
+        try {
+          const dirResult = await dispatcher.dispatch('directory', { role: payload.roleId })
+          directory = typeof dirResult === 'string' ? JSON.parse(dirResult) : dirResult
+        } catch { /* no organizations */ }
+
+        return { success: true, identity, focus, directory }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色文件列表（~/.rolex/roles/<id>/identity/）
+    ipcMain.handle('resources:listV2RoleFiles', async (_evt, payload: { roleId: string }) => {
+      try {
+        const fs = require('fs-extra')
+        const os = require('os')
+        const identityDir = path.join(os.homedir(), '.rolex', 'roles', payload.roleId, 'identity')
+        if (!await fs.pathExists(identityDir)) {
+          return { success: false, message: 'Identity directory not found' }
+        }
+        const entries: string[] = await fs.readdir(identityDir)
+        const files = entries.filter((f: string) => f.endsWith('.feature'))
+        return { success: true, files, baseDir: identityDir }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色文件读取
+    ipcMain.handle('resources:readV2RoleFile', async (_evt, payload: { roleId: string; fileName: string }) => {
+      try {
+        const fs = require('fs-extra')
+        const os = require('os')
+        const filePath = path.join(os.homedir(), '.rolex', 'roles', payload.roleId, 'identity', payload.fileName)
+        if (!await fs.pathExists(filePath)) {
+          return { success: false, message: 'File not found' }
+        }
+        const content = await fs.readFile(filePath, 'utf-8')
+        return { success: true, content }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色文件保存（仅用户角色）
+    ipcMain.handle('resources:saveV2RoleFile', async (_evt, payload: { roleId: string; fileName: string; content: string }) => {
+      try {
+        const fs = require('fs-extra')
+        const os = require('os')
+        const filePath = path.join(os.homedir(), '.rolex', 'roles', payload.roleId, 'identity', payload.fileName)
+        await fs.writeFile(filePath, payload.content, 'utf-8')
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // 获取角色头像（profile.png/jpg/jpeg/webp）→ base64 data URL
+    ipcMain.handle('resources:getRoleAvatar', async (_evt, payload: { id: string; source?: string }) => {
+      try {
+        const { id } = payload || {}
+        const source = payload?.source ?? 'user'
+        if (!id) return { success: true, data: null }
+
+        const pathMod = require('path')
+        const fs = require('fs-extra')
+        const os = require('os')
+        const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'webp']
+
+        const findProfile = async (dir: string): Promise<string | null> => {
+          for (const ext of IMAGE_EXTS) {
+            const p = pathMod.join(dir, `profile.${ext}`)
+            if (await fs.pathExists(p)) return p
+          }
+          return null
+        }
+
+        let avatarPath: string | null = null
+
+        if (source === 'user') {
+          avatarPath = await findProfile(pathMod.join(os.homedir(), '.promptx', 'resource', 'role', id))
+        } else if (source === 'project') {
+          try {
+            const { ProjectPathResolver } = require('@promptx/core')
+            const resolver = new ProjectPathResolver()
+            avatarPath = await findProfile(pathMod.join(resolver.getResourceDirectory(), 'role', id))
+          } catch { /* ignore */ }
+        } else {
+          // system — resolve via @promptx/resource main entry → dist/resources/
+          // Works in both dev (workspace) and production (inside app.asar, Electron patches fs)
+          try {
+            const mainPath = require.resolve('@promptx/resource')
+            const distDir = pathMod.dirname(mainPath)
+            avatarPath = await findProfile(pathMod.join(distDir, 'resources', 'role', id))
+          } catch { /* ignore */ }
+        }
+
+        if (!avatarPath) return { success: true, data: null }
+
+        const buf = await fs.readFile(avatarPath)
+        const ext = pathMod.extname(avatarPath).toLowerCase().slice(1)
+        const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'webp' ? 'image/webp' : 'image/png'
+        return { success: true, data: `data:${mime};base64,${buf.toString('base64')}` }
+      } catch (error: any) {
+        console.error('Failed to get role avatar:', error)
+        return { success: true, data: null }
+      }
+    })
+
+    // 上传角色头像（仅用户角色）
+    ipcMain.handle('resources:uploadRoleAvatar', async (_evt, payload: { id: string; source?: string; imagePath: string }) => {
+      try {
+        const { id, imagePath } = payload || {}
+        const source = payload?.source ?? 'user'
+        if (!id || !imagePath) return { success: false, message: 'Missing params' }
+
+        const pathMod = require('path')
+        const fs = require('fs-extra')
+        const os = require('os')
+
+        if (source !== 'user') return { success: false, message: 'Only user roles support avatar upload' }
+
+        const roleDir = pathMod.join(os.homedir(), '.promptx', 'resource', 'role', id)
+        if (!(await fs.pathExists(roleDir))) return { success: false, message: 'Role directory not found' }
+
+        // Remove any existing profile.* files
+        for (const ext of ['png', 'jpg', 'jpeg', 'webp']) {
+          const existing = pathMod.join(roleDir, `profile.${ext}`)
+          if (await fs.pathExists(existing)) await fs.remove(existing)
+        }
+
+        const ext = pathMod.extname(imagePath).toLowerCase().slice(1) || 'png'
+        await fs.copy(imagePath, pathMod.join(roleDir, `profile.${ext}`), { overwrite: true })
+        return { success: true }
+      } catch (error: any) {
+        console.error('Failed to upload role avatar:', error)
+        return { success: false, message: error.message || 'Upload failed' }
       }
     })
   }
@@ -713,8 +1176,8 @@ export class ResourceListWindow {
     })
 
     // 加载资源管理页面
-    if (process.env.NODE_ENV === 'development') {
-      this.window.loadURL('http://localhost:5173/#/resources')
+    if (process.env.ELECTRON_RENDERER_URL) {
+      this.window.loadURL(`${process.env.ELECTRON_RENDERER_URL}#/resources`)
     } else {
       const indexHtmlPath = path.join(__dirname, '../renderer/index.html')
       this.window.loadFile(indexHtmlPath, { hash: '/resources' })
@@ -722,6 +1185,10 @@ export class ResourceListWindow {
 
     this.window.once('ready-to-show', () => {
       this.window?.show()
+      // 开发模式下自动打开 DevTools
+      if (process.env.ELECTRON_RENDERER_URL) {
+        this.window?.webContents.openDevTools()
+      }
     })
 
     this.window.on('closed', () => {

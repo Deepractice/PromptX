@@ -1,5 +1,5 @@
 /**
- * Word Tool - Word 文档读写工具
+ * word-tool
  * 
  * 战略意义：
  * 1. AI 文档理解：让 AI 能够读取和理解 Word 文档内容
@@ -29,8 +29,8 @@ module.exports = {
   getMetadata() {
     return {
       id: 'word-tool',
-      name: 'Word Tool',
-      description: 'Word 文档读写修改工具，支持文本提取、图片提取、文档生成和文本替换',
+      name: 'word-tool',
+      description: 'Word文档读写修改工具',
       version: '1.0.0',
       author: '鲁班'
     };

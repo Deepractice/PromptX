@@ -2,16 +2,84 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Customize your PromptX experience",
+    "tabs": {
+      "system": "System",
+      "agentx": "AgentX",
+      "remote": "Remote Access"
+    },
     "language": {
       "title": "Language",
       "description": "Choose your preferred language",
       "english": "English",
       "chinese": "简体中文"
     },
+    "agentx": {
+      "title": "AgentX Configuration",
+      "description": "Configure AgentX AI assistant API connection",
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "sk-ant-...",
+        "description": "Your AgentX API Key"
+      },
+      "baseUrl": {
+        "label": "API Base URL",
+        "placeholder": "https://api.anthropic.com",
+        "description": "API server address, defaults to Anthropic official endpoint"
+      },
+      "model": {
+        "label": "Model",
+        "placeholder": "claude-opus-4-5-20251101",
+        "description": "Model name to use"
+      },
+      "testConnection": "Test Connection",
+      "testing": "Testing...",
+      "testSuccess": "Connection successful!",
+      "testFailed": "Connection failed",
+      "save": "Save Configuration",
+      "saving": "Saving...",
+      "saveSuccess": "AgentX configuration saved successfully",
+      "saveFailed": "Failed to save AgentX configuration",
+      "skills": {
+        "title": "Skills Configuration",
+        "description": "Manage enabled Skills that will be used for all AgentX conversations",
+        "empty": "No available Skills",
+        "emptyHint": "Click 'Add Skill' to import your first skill",
+        "refresh": "Refresh",
+        "save": "Save",
+        "saving": "Saving...",
+        "addSkill": "Add Skill",
+        "importing": "Importing...",
+        "loadError": "Failed to load Skills",
+        "saveSuccess": "Skills configuration saved",
+        "saveError": "Failed to save Skills configuration",
+        "importSuccess": "Skill \"{{name}}\" imported successfully",
+        "importError": "Failed to import Skill",
+        "invalidStructure": "Invalid skill package: SKILL.md not found in the zip",
+        "deleteConfirm": "Are you sure you want to delete skill \"{{name}}\"?",
+        "deleteSuccess": "Skill \"{{name}}\" deleted successfully",
+        "deleteError": "Failed to delete Skill",
+        "delete": "Delete"
+      }
+    },
     "autoStart": {
       "title": "Auto Start",
       "description": "Launch PromptX automatically when computer starts",
       "enable": "Enable auto start"
+    },
+    "webAccess": {
+      "title": "Remote Access",
+      "description": "Enable LAN access to PromptX via browser, supports multiple sessions",
+      "port": {
+        "label": "HTTP Port",
+        "description": "Web service port, default 5201"
+      },
+      "toggle": "Enable Remote Access",
+      "enabled": "Remote access enabled",
+      "disabled": "Remote access disabled",
+      "enableFailed": "Failed to enable",
+      "disableFailed": "Failed to disable",
+      "copyUrl": "URL copied",
+      "qrHint": "Scan to access on phone or other devices"
     },
     "server": {
       "title": "Server Configuration",
@@ -30,11 +98,53 @@
         "label": "Debug Mode",
         "description": "Output more log information for troubleshooting"
       },
+      "enableV2": {
+        "label": "Enable V2 Features (RoleX)",
+        "description": "Enable RoleX role lifecycle management: role creation, goal management, and organization features"
+      },
       "save": "Save Configuration",
       "saving": "Saving...",
       "reset": "Reset to Default"
+    },
+    "mcp": {
+      "title": "MCP Configuration",
+      "description": "Configure Model Context Protocol servers",
+      "add": "Add Server",
+      "edit": "Edit Server",
+      "empty": "No MCP servers configured",
+      "emptyHint": "Click 'Add Server' to add your first MCP server",
+      "dialogDescription": "Configure the MCP server with JSON format",
+      "fields": {
+        "name": "Server Name",
+        "namePlaceholder": "e.g., my-mcp-server",
+        "config": "Configuration (JSON)",
+        "configHint": "Stdio: {command, args, env} | HTTP/SSE: {type, url}",
+        "enabled": "Enable this server"
+      },
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saveSuccess": "MCP configuration saved successfully",
+      "saveFailed": "Failed to save MCP configuration",
+      "loadError": "Failed to load MCP servers",
+      "validation": {
+        "nameRequired": "Server name is required",
+        "commandOrUrlRequired": "Either 'command' (stdio) or 'url' (http/sse) is required",
+        "typeRequired": "The 'type' field is required when using 'url' (http or sse)",
+        "invalidJson": "Invalid JSON format",
+        "invalidConfig": "Invalid configuration",
+        "duplicate": "A server with this name already exists"
+      },
+      "builtin": "Built-in",
+      "cannotDeleteBuiltin": "Cannot delete built-in server",
+      "cannotDisableBuiltin": "Cannot disable built-in server"
+    },
+    "skills": {
+      "title": "Skills Configuration",
+      "description": "Manage and configure AI skills"
     }
   },
+
   "logs": {
     "title": "Application Logs",
     "subtitle": "View and manage application logs",
@@ -75,12 +185,23 @@
     }
   },
   "resources": {
+    "comingSoon": {
+      "title": "Coming Soon",
+      "description": "Agent Shop is under construction, stay tuned",
+      "badge": "Coming Soon"
+    },
+    "banner": {
+      "title": "Share Your Creations",
+      "subtitle": "Discover and share roles & tools with the community",
+      "publishRole": "Publish Role",
+      "publishTool": "Publish Tool"
+    },
     "search": {
       "placeholder": "Search resources / roles / tools"
     },
     "import": {
       "title": "Import Resource",
-      "description": "Import a role or tool from a file or URL",
+      "description": "Import a role or tool from a file ",
       "button": "Import Resource",
       "methods": {
         "file": "File Import",
@@ -142,7 +263,8 @@
     "actions": {
       "edit": "Edit",
       "download": "Download",
-      "delete": "Delete"
+      "delete": "Delete",
+      "use": "Use"
     },
     "messages": {
       "loadFailed": "Failed to load resources",
@@ -248,13 +370,227 @@
     "configReset": "Configuration reset to default",
     "configResetError": "Failed to reset configuration",
     "loadError": "Failed to load settings, please try again",
-    "languageChanged": "Language changed successfully"
+    "languageChanged": "Language changed successfully",
+    "restartRequired": "Restart Required",
+    "restartDescription": "Server configuration has been saved. The application needs to restart for changes to take effect.",
+    "restartNow": "Restart Now",
+    "restartLater": "Later",
+    "restartError": "Failed to restart application"
   },
   "sidebar": {
-    "resources": "Resources",
+    "agentx": "AgentX Chat",
+    "resources": "Agent Shop",
+    "roles":"Roles",
+    "tools":"Tools",
     "logs": "Logs",
     "settings": "Settings",
     "update": "Check for Updates"
+  },
+  "roles": {
+    "search": {
+      "placeholder": "Search roles..."
+    },
+    "stats": {
+      "total": "Total Roles",
+      "system": "System Roles",
+      "user": "User Roles"
+    },
+    "filters": {
+      "source": "Source:",
+      "all": "All",
+      "system": "System",
+      "plaza": "Plaza",
+      "user": "User"
+    },
+    "activate": "Activate",
+    "empty": "No roles found",
+    "noDescription": "No description available",
+    "detail": {
+      "description": "Description",
+      "createRole":"Create Role",
+      "close": "Close",
+      "editRole": "Edit Role",
+      "editRoleName": "Name",
+      "uploadAvatar": "Upload Avatar",
+      "structure": "Structure",
+      "memory": "Memory",
+      "architecture": "DPML Layer Architecture (Three-Layer Architecture, On-Demand Loading)",
+      "memoryEmpty": "No memory data available",
+      "selectRole": "Select a role to view details",
+      "overview": "Overview",
+      "structure": "Structure",
+      "prompt": "Role Prompt",
+      "rolePrompt": "Role Prompt",
+      "promptLoading": "Loading prompt...",
+      "promptError": "Failed to load prompt",
+      "promptLoadError": "Failed to load prompt",
+      "roleFile": "Role Definition",
+      "personalityLayer": "Personality Layer",
+      "personalityDesc": "Defines thinking patterns and cognitive traits",
+      "principleLayer": "Principle Layer",
+      "principleDesc": "Defines workflows and execution standards",
+      "knowledgeLayer": "Knowledge Layer",
+      "knowledgeDesc": "Defines domain expertise and professional knowledge",
+      "noFiles": "No files",
+      "loadingFiles": "Loading files...",
+      "loadFilesFailed": "Failed to load file list",
+      "systemRoleReadOnly": "Built-in system roles cannot be viewed",
+      "fileContent": "File Content",
+      "loadingContent": "Loading content...",
+      "loadContentFailed": "Failed to load content",
+      "readOnly": "Read-only",
+      "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Saved successfully",
+      "saveFailed": "Failed to save",
+      "close": "Close",
+      "goals": "Goals",
+      "organization": "Organization",
+      "identity": "Identity",
+      "currentGoal": "Current Goal",
+      "noGoals": "No active goals",
+      "goalPlan": "Execution Plan",
+      "goalTasks": "Tasks",
+      "noTasks": "No tasks",
+      "noOrganization": "Not in any organization",
+      "orgPosition": "Position",
+      "orgMembers": "Members",
+      "taskPending": "Pending",
+      "taskInProgress": "In Progress",
+      "taskCompleted": "Completed",
+      "loadingData": "Loading...",
+      "v2PersonaLayer": "Persona",
+      "v2PersonaDesc": "Core personality and behavioral traits",
+      "v2KnowledgeLayer": "Knowledge",
+      "v2KnowledgeDesc": "Domain knowledge and professional expertise",
+      "v2VoiceLayer": "Voice",
+      "v2VoiceDesc": "Language style and communication patterns",
+      "v2ExperienceLayer": "Experience",
+      "v2ExperienceDesc": "Accumulated experience from practice"
+    },
+    "memory": {
+      "overview": "Overview",
+      "engrams": "Engrams",
+      "network": "Network",
+      "cues": "Cues",
+      "engramCount": "Engrams",
+      "cueCount": "Cues",
+      "connections": "Connections",
+      "lastActive": "Last Active",
+      "topCues": "Top Cues",
+      "noMemoryData": "No memory data available",
+      "loading": "Loading...",
+      "type": "Type",
+      "strength": "Strength",
+      "schema": "Schema",
+      "search": "Search...",
+      "page": "Page",
+      "clickToExplore": "Click to explore",
+      "recallFrequency": "Recall Frequency",
+      "weight": "Weight",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirmDelete": "Are you sure?",
+      "deleteCue": "Delete Cue",
+      "typeAtomic": "Atomic",
+      "typeLink": "Link",
+      "typePattern": "Pattern",
+      "allTypes": "All"
+    },
+    "messages": {
+      "loadFailed": "Failed to load roles",
+      "activateSuccess": "Role \"{{name}}\" activated successfully",
+      "activateFailed": "Failed to activate role",
+      "activatePrompt": "Activate role {{name}}",
+      "deleteConfirm": "Delete role \"{{name}}\"? This cannot be undone.",
+      "deleteSuccess": "Role \"{{name}}\" deleted successfully",
+      "deleteFailed": "Failed to delete role",
+      "deleteOnlyUser": "Only user-created roles can be deleted"
+    }
+  },
+  "tools": {
+    "search": {
+      "placeholder": "Search tools..."
+    },
+    "stats": {
+      "total": "Total Tools",
+      "system": "System Tools",
+      "user": "User Tools"
+    },
+    "filters": {
+      "source": "Source:",
+      "all": "All",
+      "system": "System",
+      "plaza": "Plaza",
+      "user": "User"
+    },
+    "execute": "Execute",
+    "empty": "No tools found",
+    "noDescription": "No description available",
+    "detail": {
+      "description": "Description",
+      "parameters": "Parameters",
+      "parametersPlaceholder": "{\"key\": \"value\"}",
+      "parametersHint": "Optional. Enter JSON parameters for tool execution.",
+      "result": "Execution Result",
+      "close": "Close",
+      "overview": "Overview",
+      "test": "Test",
+      "configure": "Configure",
+      "logs": "Logs",
+      "install": "Install Tool",
+      "output": "Output",
+      "outputEmpty": "Run a test to see output here...",
+      "runTest": "Run Test",
+      "envVars": "Environment Variables",
+      "noEnvVars": "No environment variables configured",
+      "noLogs": "No execution logs available",
+      "selectTool": "Select a tool to view details",
+      "deleteTool": "Delete Tool",
+      "tags": "Tags",
+      "manual": "Documentation",
+      "info": "Tool Info",
+      "source": "Source",
+      "execSuccess": "Execution succeeded",
+      "execFailed": "Execution failed",
+      "paramsHint": "Enter JSON parameters for tool execution. Leave {} for no parameters.",
+      "executing": "Executing...",
+      "execNoOutput": "Execution completed with no output",
+      "toolFiles": "Tool Files",
+      "noFiles": "No tool files found",
+      "readOnly": "Read-only",
+      "loadingFile": "Loading file...",
+      "paramSchema": "Parameter Schema",
+      "execHistory": "Execution History",
+      "clearLogs": "Clear Logs",
+      "formMode": "Form",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "editInfo": "Edit Info",
+      "editName": "Tool Name",
+      "editDescription": "Tool Description",
+      "namePlaceholder": "Enter tool name",
+      "descriptionPlaceholder": "Enter tool description",
+      "createTool": "Create Tool"
+    },
+    "messages": {
+      "loadFailed": "Failed to load tools",
+      "executeSuccess": "Tool \"{{name}}\" executed successfully",
+      "executeFailed": "Failed to execute tool",
+      "invalidParams": "Invalid JSON parameters",
+      "deleteOnlyUser": "Only user-created tools can be deleted",
+      "deleteConfirm": "Are you sure you want to delete tool \"{{name}}\"? This cannot be undone.",
+      "deleteSuccess": "Tool \"{{name}}\" deleted successfully",
+      "deleteFailed": "Failed to delete tool",
+      "saveSuccess": "File saved successfully",
+      "saveFailed": "Failed to save file",
+      "updateSuccess": "Tool info updated successfully",
+      "updateFailed": "Failed to update tool info",
+      "updateOnlyUser": "Only user-created tools can be edited"
+    }
   },
   "update": {
     "title": "Software Update",
@@ -280,5 +616,133 @@
     "placeholder": "Select date",
     "selectDate": "Select Date",
     "clear": "Clear"
+  },
+  "agentxUI": {
+    "chat": {
+      "placeholder": "Type a message...",
+      "toolbar": {
+        "emoji": "Emoji",
+        "file": "File",
+        "save": "Save conversation"
+      },
+      "status": {
+        "thinking": "Thinking",
+        "responding": "Responding",
+        "planning": "Planning",
+        "executing": "Executing",
+        "error": "Error",
+        "idle": "Idle",
+        "queued": "Queued",
+        "processing": "Processing"
+      },
+      "messageCount": "{{count}} message",
+      "messageCount_other": "{{count}} messages",
+      "actions": {
+        "stop": "Stop",
+        "send": "Send (Enter)",
+        "remove": "Remove",
+        "download": "Download",
+        "removeImage": "Remove image",
+        "escToStop": "esc to stop",
+        "copy": "Copy",
+        "regenerate": "Regenerate",
+        "like": "Like",
+        "dislike": "Dislike"
+      },
+      "empty": {
+        "title": "No conversation selected",
+        "description": "Select a conversation or start a new one"
+      },
+      "dropToSend": "Drop to send"
+    },
+    "conversations": {
+      "title": "Conversations",
+      "new": "New conversation",
+      "search": "Search conversations...",
+      "empty": {
+        "title": "No conversations yet",
+        "description": "Start a new conversation to begin",
+        "action": "New conversation"
+      },
+      "rename": {
+        "placeholder": "Enter conversation name",
+        "saving": "Saving...",
+        "save": "Save"
+      },
+      "delete": {
+        "confirm": "Are you sure you want to delete \"{{name}}\"?",
+        "cancel": "Cancel",
+        "confirm_button": "Delete",
+        "deleting": "Deleting..."
+      },
+      "actions": {
+        "rename": "Rename",
+        "delete": "Delete"
+      },
+      "status": {
+        "online": "Online",
+        "offline": "Offline"
+      },
+      "untitled": "Untitled"
+    },
+    "messages": {
+      "empty": {
+        "title": "No messages",
+        "description": "Start the conversation by sending a message"
+      }
+    },
+    "tool": {
+      "status": {
+        "planning": "Planning...",
+        "executing": "Executing...",
+        "completed": "Completed",
+        "error": "Error"
+      }
+    },
+    "sidebar": {
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar"
+    },
+    "list": {
+      "empty": {
+        "description": "Get started by creating a new item"
+      }
+    },
+    "time": {
+      "justNow": "Just now",
+      "unknown": "Unknown",
+      "minAgo": "1 min ago",
+      "minsAgo": "{{count}} mins ago",
+      "hourAgo": "1 hour ago",
+      "hoursAgo": "{{count}} hours ago",
+      "dayAgo": "1 day ago",
+      "daysAgo": "{{count}} days ago"
+    },
+    "mobile": {
+      "search": "Search..."
+    },
+    "page": {
+      "notConfigured": {
+        "title": "AgentX Not Configured",
+        "description": "Please configure your AgentX API Key in Settings to use AgentX.",
+        "hint": "Settings → AgentX Configuration → Enter API Key → Save"
+      },
+      "connectionError": "Connection Error",
+      "connecting": "Connecting to AgentX..."
+    },
+    "welcome": {
+      "tagline": "PromptX, Making AI Accessible",
+      "inputPlaceholder": "Ask me anything...",
+      "presets": {
+        "luban": "Activate Luban to build tools",
+        "lubanPrompt": "Activate Luban, I want to build a tool",
+        "nuwa": "Activate Nuwa to create roles",
+        "nuwaPrompt": "Activate Nuwa, I want to create a role",
+        "role": "Explore available roles",
+        "rolePrompt": "What roles are available?",
+        "tool": "Explore available tools",
+        "toolPrompt": "What tools are available?"
+      }
+    }
   }
 }

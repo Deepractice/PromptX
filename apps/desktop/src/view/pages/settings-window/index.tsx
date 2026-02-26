@@ -5,12 +5,35 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { toast, Toaster } from "sonner"
 import { LanguageSelector } from "./components/LanguageSelector"
+import { MCPConfig } from "./components/MCPConfig"
+import { SkillsConfig } from "./components/SkillsConfig"
+import { WebAccessConfig } from "./components/WebAccessConfig"
+import { Loader2, CheckCircle2, XCircle, Settings, Bot, RefreshCw, Wifi } from "lucide-react"
+
 interface ServerConfig {
   host: string
   port: number
   debug: boolean
+  enableV2: boolean
+}
+
+interface AgentXConfig {
+  apiKey: string
+  baseUrl: string
+  model: string
 }
 
 interface StatusMessage {
@@ -24,15 +47,27 @@ function SettingsWindow() {
   const [serverConfig, setServerConfig] = useState<ServerConfig>({
     host: "127.0.0.1",
     port: 5203,
-    debug: false
+    debug: false,
+    enableV2: true
+  })
+  const [agentXConfig, setAgentXConfig] = useState<AgentXConfig>({
+    apiKey: "",
+    baseUrl: "https://api.anthropic.com",
+    model: "claude-sonnet-4-20250514"
   })
   const [statusMessage, setStatusMessage] = useState<StatusMessage>({ type: null, message: "" })
   const [isLoading, setIsLoading] = useState(false)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle")
+  const [isSavingAgentX, setIsSavingAgentX] = useState(false)
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
+  const [showRestartDialog, setShowRestartDialog] = useState(false)
 
   // 加载当前设置状态
   useEffect(() => {
     loadSettings()
   }, [])
+
   useEffect(() => {
     if (!statusMessage?.type) return
     if (statusMessage.type === "success") {
@@ -43,16 +78,20 @@ function SettingsWindow() {
       toast(statusMessage.message)
     }
   }, [statusMessage])
+
   const loadSettings = async () => {
     try {
-      // 加载自启动状态
       const autoStartEnabled = await window.electronAPI?.invoke("auto-start:status")
       setAutoStart(autoStartEnabled || false)
 
-      // 加载服务器配置
       const config = await window.electronAPI?.invoke("server-config:get")
       if (config) {
         setServerConfig(config)
+      }
+
+      const agentxConfig = await window.electronAPI?.agentx.getConfig()
+      if (agentxConfig) {
+        setAgentXConfig(agentxConfig)
       }
     } catch (error) {
       console.error("Failed to load settings:", error)
@@ -95,6 +134,8 @@ function SettingsWindow() {
     try {
       await window.electronAPI?.invoke("server-config:update", serverConfig)
       showMessage("success", t("messages.configSaved"))
+      // 显示重启确认弹窗
+      setShowRestartDialog(true)
     } catch (error) {
       console.error("Failed to save config:", error)
       showMessage("error", t("messages.configSaveError"))
@@ -113,78 +154,318 @@ function SettingsWindow() {
       setServerConfig(defaultConfig)
       await window.electronAPI?.invoke("server-config:reset", defaultConfig)
       showMessage("success", t("messages.configReset"))
+      // 显示重启确认弹窗
+      setShowRestartDialog(true)
     } catch (error) {
       console.error("Failed to reset config:", error)
       showMessage("error", t("messages.configResetError"))
     }
   }
 
+  const handleRestart = async () => {
+    try {
+      await window.electronAPI?.invoke("app:relaunch")
+    } catch (error) {
+      console.error("Failed to restart app:", error)
+      showMessage("error", t("messages.restartError"))
+    }
+  }
+
+  const handleAgentXConfigChange = (field: keyof AgentXConfig, value: string) => {
+    setAgentXConfig(prev => ({ ...prev, [field]: value }))
+    setConnectionStatus("idle")
+  }
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true)
+    setConnectionStatus("idle")
+    try {
+      const result = await window.electronAPI?.agentx.testConnection(agentXConfig)
+      if (result?.success) {
+        setConnectionStatus("success")
+        showMessage("success", t("settings.agentx.testSuccess"))
+      } else {
+        setConnectionStatus("error")
+        showMessage("error", result?.error || t("settings.agentx.testFailed"))
+      }
+    } catch (error) {
+      setConnectionStatus("error")
+      showMessage("error", String(error))
+    } finally {
+      setIsTestingConnection(false)
+    }
+  }
+
+  const handleSaveAgentXConfig = async () => {
+    setIsSavingAgentX(true)
+    try {
+      const result = await window.electronAPI?.agentx.updateConfig(agentXConfig)
+      if (result?.success) {
+        showMessage("success", t("settings.agentx.saveSuccess"))
+      } else {
+        showMessage("error", result?.error || t("settings.agentx.saveFailed"))
+      }
+    } catch (error) {
+      showMessage("error", String(error))
+    } finally {
+      setIsSavingAgentX(false)
+    }
+  }
+
+  const handleCheckUpdate = async () => {
+    setIsCheckingUpdate(true)
+    try {
+      await window.electronAPI?.invoke("check-for-updates")
+      showMessage("success", t("update.checking"))
+    } catch (error) {
+      showMessage("error", t("update.checkFailed"))
+    } finally {
+      setIsCheckingUpdate(false)
+    }
+  }
+
   return (
-    <div className="min-h-[calc(100vh-53px)]  p-8 flex flex-col">
+    <div className="min-h-[calc(100vh-53px)] p-6 flex flex-col">
       <Toaster />
       <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col">
-        {/* 页面标题 */}
-        <div className="space-y-6 flex-1 overflow-y-auto">
-          {/* 语言设置 */}
-          <LanguageSelector />
+        <Tabs defaultValue="system" className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="system" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              {t("settings.tabs.system")}
+            </TabsTrigger>
+            <TabsTrigger value="agentx" className="flex items-center gap-2">
+              <Bot className="w-4 h-4" />
+              {t("settings.tabs.agentx")}
+            </TabsTrigger>
+            <TabsTrigger value="remote" className="flex items-center gap-2">
+              <Wifi className="w-4 h-4" />
+              {t("settings.tabs.remote")}
+            </TabsTrigger>
+          </TabsList>
 
-          {/* 自启动设置 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("settings.autoStart.title")}</CardTitle>
-              <CardDescription>{t("settings.autoStart.description")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 ">
-                <Switch id="auto-start" checked={autoStart} onCheckedChange={handleAutoStartToggle} />
-                <Label htmlFor="auto-start">{t("settings.autoStart.enable")}</Label>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 系统设置 */}
+          <TabsContent value="system" className="flex-1 overflow-y-auto space-y-6">
+            {/* 语言设置 */}
+            <LanguageSelector />
 
-          {/* 服务器配置 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("settings.server.title")}</CardTitle>
-              <CardDescription>{t("settings.server.description")}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 服务器主机 */}
-              <div className="space-y-2">
-                <Label htmlFor="server-host">{t("settings.server.host.label")}</Label>
-                <Input id="server-host" type="text" placeholder={t("settings.server.host.placeholder")} value={serverConfig.host} onChange={e => handleServerConfigChange("host", e.target.value)} />
-                <p className="text-sm text-gray-500">{t("settings.server.host.description")}</p>
-              </div>
-
-              {/* 服务器端口 */}
-              <div className="space-y-2">
-                <Label htmlFor="server-port">{t("settings.server.port.label")}</Label>
-                <Input id="server-port" type="number" min="1" max="65535" placeholder={t("settings.server.port.placeholder")} value={serverConfig.port} onChange={e => handleServerConfigChange("port", parseInt(e.target.value) || 5203)} />
-                <p className="text-sm text-gray-500">{t("settings.server.port.description")}</p>
-              </div>
-
-              {/* 调试模式 */}
-              <div className="space-y-2">
+            {/* 自启动设置 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("settings.autoStart.title")}</CardTitle>
+                <CardDescription>{t("settings.autoStart.description")}</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="flex items-center space-x-2">
-                  <Switch id="debug-mode" checked={serverConfig.debug} onCheckedChange={checked => handleServerConfigChange("debug", checked)} />
-                  <Label htmlFor="debug-mode">{t("settings.server.debug.label")}</Label>
+                  <Switch id="auto-start" checked={autoStart} onCheckedChange={handleAutoStartToggle} />
+                  <Label htmlFor="auto-start">{t("settings.autoStart.enable")}</Label>
                 </div>
-                <p className="text-sm text-gray-500">{t("settings.server.debug.description")}</p>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* 操作按钮 */}
-              <div className="flex space-x-3 pt-4">
-                <Button onClick={handleSaveConfig} disabled={isLoading} variant="outline" className="bg-black text-white">
-                  {isLoading ? t("settings.server.saving") : t("settings.server.save")}
+            {/* 服务器配置 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("settings.server.title")}</CardTitle>
+                <CardDescription>{t("settings.server.description")}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="server-host">{t("settings.server.host.label")}</Label>
+                  <Input
+                    id="server-host"
+                    type="text"
+                    placeholder={t("settings.server.host.placeholder")}
+                    value={serverConfig.host}
+                    onChange={e => handleServerConfigChange("host", e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">{t("settings.server.host.description")}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="server-port">{t("settings.server.port.label")}</Label>
+                  <Input
+                    id="server-port"
+                    type="number"
+                    min="1"
+                    max="65535"
+                    placeholder={t("settings.server.port.placeholder")}
+                    value={serverConfig.port}
+                    onChange={e => handleServerConfigChange("port", parseInt(e.target.value) || 5203)}
+                  />
+                  <p className="text-sm text-muted-foreground">{t("settings.server.port.description")}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="debug-mode"
+                      checked={serverConfig.debug}
+                      onCheckedChange={checked => handleServerConfigChange("debug", checked)}
+                    />
+                    <Label htmlFor="debug-mode">{t("settings.server.debug.label")}</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("settings.server.debug.description")}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="enable-v2"
+                      checked={serverConfig.enableV2}
+                      onCheckedChange={checked => handleServerConfigChange("enableV2", checked)}
+                    />
+                    <Label htmlFor="enable-v2">{t("settings.server.enableV2.label")}</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("settings.server.enableV2.description")}</p>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <Button onClick={handleSaveConfig} disabled={isLoading}>
+                    {isLoading ? t("settings.server.saving") : t("settings.server.save")}
+                  </Button>
+                  <Button variant="outline" onClick={handleResetConfig} disabled={isLoading}>
+                    {t("settings.server.reset")}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 检查更新 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("update.title")}</CardTitle>
+                <CardDescription>{t("update.description")}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={handleCheckUpdate}
+                  disabled={isCheckingUpdate}
+                  variant="outline"
+                >
+                  {isCheckingUpdate ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t("update.checking")}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      {t("update.checkNow")}
+                    </>
+                  )}
                 </Button>
-                <Button variant="outline" onClick={handleResetConfig} disabled={isLoading}>
-                  {t("settings.server.reset")}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* AgentX 设置 */}
+          <TabsContent value="agentx" className="flex-1 overflow-y-auto space-y-6">
+            {/* API 配置 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("settings.agentx.title")}</CardTitle>
+                <CardDescription>{t("settings.agentx.description")}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="agentx-apikey">{t("settings.agentx.apiKey.label")}</Label>
+                  <Input
+                    id="agentx-apikey"
+                    type="password"
+                    placeholder={t("settings.agentx.apiKey.placeholder")}
+                    value={agentXConfig.apiKey}
+                    onChange={e => handleAgentXConfigChange("apiKey", e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">{t("settings.agentx.apiKey.description")}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="agentx-baseurl">{t("settings.agentx.baseUrl.label")}</Label>
+                  <Input
+                    id="agentx-baseurl"
+                    type="text"
+                    placeholder={t("settings.agentx.baseUrl.placeholder")}
+                    value={agentXConfig.baseUrl}
+                    onChange={e => handleAgentXConfigChange("baseUrl", e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">{t("settings.agentx.baseUrl.description")}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="agentx-model">{t("settings.agentx.model.label")}</Label>
+                  <Input
+                    id="agentx-model"
+                    type="text"
+                    placeholder={t("settings.agentx.model.placeholder")}
+                    value={agentXConfig.model}
+                    onChange={e => handleAgentXConfigChange("model", e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">{t("settings.agentx.model.description")}</p>
+                </div>
+
+                <div className="flex items-center space-x-3 pt-4">
+                  <Button
+                    onClick={handleTestConnection}
+                    disabled={isTestingConnection || !agentXConfig.apiKey}
+                    variant="outline"
+                  >
+                    {isTestingConnection ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("settings.agentx.testing")}
+                      </>
+                    ) : (
+                      t("settings.agentx.testConnection")
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleSaveAgentXConfig}
+                    disabled={isSavingAgentX}
+                  >
+                    {isSavingAgentX ? t("settings.agentx.saving") : t("settings.agentx.save")}
+                  </Button>
+                  {connectionStatus === "success" && (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  )}
+                  {connectionStatus === "error" && (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* MCP 配置 */}
+            <MCPConfig />
+
+            {/* Skills 配置 */}
+            <SkillsConfig />
+          </TabsContent>
+
+          {/* 远程访问 */}
+          <TabsContent value="remote" className="flex-1 overflow-y-auto space-y-6">
+            <WebAccessConfig />
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* 重启确认弹窗 */}
+      <AlertDialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("messages.restartRequired")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("messages.restartDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("messages.restartLater")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestart}>
+              {t("messages.restartNow")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -13,11 +13,15 @@ import { UpdateManager } from '~/main/application/UpdateManager'
 import { AutoStartService } from '~/main/application/AutoStartService'
 import { ElectronAutoStartAdapter } from '~/main/infrastructure/adapters/ElectronAutoStartAdapter'
 import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
+import { CognitionWindow } from '~/main/windows/CognitionWindow'
+import { agentXService } from '~/main/services/AgentXService'
+import { webAccessService } from '~/main/services/WebAccessService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { mainI18n, t } from '~/main/i18n'
 import { ServerConfig } from '~/main/domain/entities/ServerConfig'
+import { ServerConfigManager } from '@promptx/config'
 
 class PromptXDesktopApp {
   private trayPresenter: TrayPresenter | null = null
@@ -30,6 +34,9 @@ class PromptXDesktopApp {
   private autoStartWindow: AutoStartWindow | null = null
 
   async initialize(): Promise<void> {
+    // Capture console output to log file (covers @agentxjs/common runtime logs)
+    this.setupConsoleCapture()
+
     logger.info('Initializing PromptX Desktop...')
 
     // Setup Node.js environment for ToolSandbox
@@ -62,6 +69,8 @@ class PromptXDesktopApp {
     this.setupLanguageIPC()
     this.setupLogsIPC()
     this.setupDialogIPC()
+    this.setupAgentXIPC()
+    this.setupWebAccessIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -76,6 +85,9 @@ class PromptXDesktopApp {
     this.updateManager = new UpdateManager()
     logger.info('Update manager initialized')
 
+    // Setup update IPC handlers
+    this.setupUpdateIPC()
+
     // Setup presentation layer
     logger.info('Setting up presentation layer...')
     this.setupPresentation(startUseCase, stopUseCase)
@@ -84,6 +96,9 @@ class PromptXDesktopApp {
     logger.info('Setting up resource manager...')
     this.resourceManager = new ResourceManager()
     logger.info('Resource manager initialized')
+
+    // Setup CognitionWindow for memory/cognition IPC
+    new CognitionWindow()
 
     // Handle app events
     logger.info('Setting up app events...')
@@ -101,6 +116,16 @@ class PromptXDesktopApp {
       logger.error('Failed to auto-start server:', err)
     }
 
+    // Auto-start AgentX service
+    logger.info('Auto-starting AgentX service...')
+    try {
+      await agentXService.start()
+      logger.info('AgentX service started automatically')
+    } catch (error) {
+      const err = String(error);
+      logger.error('Failed to auto-start AgentX service:', err)
+    }
+
     // Register global callback for second-instance to open main window
     // This is used by bootstrap.ts when user clicks shortcut while app is running
     ;(global as any).__promptxOpenMainWindow = () => {
@@ -116,6 +141,36 @@ class PromptXDesktopApp {
     setTimeout(() => {
       this.updateManager?.autoCheckAndDownload()
     }, 5000) // Delay 5 seconds to let app fully initialize
+  }
+
+  private setupConsoleCapture(): void {
+    // Forward console output to @promptx/logger so runtime logs are persisted to file.
+    // @agentxjs/common uses console.* internally, so this captures SDK/runtime logs.
+    let _capturing = false
+
+    const capture = (level: 'info' | 'error' | 'warn' | 'debug', args: unknown[]) => {
+      if (_capturing) return
+      _capturing = true
+      try {
+        const msg = args
+          .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
+          .join(' ')
+        logger[level]('[runtime] ' + msg)
+      } catch { /* ignore */ }
+      finally { _capturing = false }
+    }
+
+    const _log = console.log.bind(console)
+    const _error = console.error.bind(console)
+    const _warn = console.warn.bind(console)
+    const _info = console.info.bind(console)
+    const _debug = console.debug.bind(console)
+
+    console.log = (...args) => { _log(...args); capture('info', args) }
+    console.error = (...args) => { _error(...args); capture('error', args) }
+    console.warn = (...args) => { _warn(...args); capture('warn', args) }
+    console.info = (...args) => { _info(...args); capture('info', args) }
+    console.debug = (...args) => { _debug(...args); capture('debug', args) }
   }
 
   private setupNodeEnvironment(): void {
@@ -156,6 +211,95 @@ class PromptXDesktopApp {
       process.env.PATH = electronDir + path.delimiter + currentPath
       logger.debug(`Updated PATH with Electron directory: ${electronDir}`)
     }
+
+    // On Windows: ensure node and bash (git-bash) are in PATH for Claude Code subprocess
+    // In packaged Electron apps, system PATH may not include these
+    if (process.platform === 'win32') {
+      this.ensureWindowsToolsInPath()
+    }
+  }
+
+  private ensureWindowsToolsInPath(): void {
+    const { execSync } = require('child_process')
+    const { app } = require('electron')
+
+    // --- Ensure bash.exe is in PATH (Claude Code CLI requires bash on Windows) ---
+    const hasBash = (process.env.PATH || '').split(path.delimiter).some(dir => {
+      try { return fs.existsSync(path.join(dir, 'bash.exe')) } catch { return false }
+    })
+
+    if (!hasBash) {
+      // 1. Prefer bundled git-bash (packaged app: resources/git-bash)
+      const bundledBashBin = path.join(process.resourcesPath || '', 'git-bash', 'bin')
+      const bundledBashUsrBin = path.join(process.resourcesPath || '', 'git-bash', 'usr', 'bin')
+
+      if (fs.existsSync(path.join(bundledBashBin, 'bash.exe'))) {
+        // Add both bin and usr/bin so all git utilities are available
+        let newPath = bundledBashBin + path.delimiter + (process.env.PATH || '')
+        if (fs.existsSync(bundledBashUsrBin)) {
+          newPath = bundledBashUsrBin + path.delimiter + newPath
+        }
+        process.env.PATH = newPath
+        logger.info(`Using bundled git-bash: ${bundledBashBin}`)
+      } else {
+        // 2. Fall back to system git-bash
+        const bashCandidates = [
+          'C:\\Program Files\\Git\\bin',
+          'C:\\Program Files\\Git\\usr\\bin',
+          'C:\\Program Files (x86)\\Git\\bin',
+          'C:\\Program Files (x86)\\Git\\usr\\bin',
+        ]
+        const bashDir = bashCandidates.find(p => { try { return fs.existsSync(path.join(p, 'bash.exe')) } catch { return false } }) ?? null
+
+        if (bashDir) {
+          process.env.PATH = bashDir + path.delimiter + (process.env.PATH || '')
+          logger.info(`Added system git-bash to PATH: ${bashDir}`)
+        } else {
+          logger.warn('bash.exe not found — Claude Code subprocess may fail on Windows without git-bash')
+        }
+      }
+    }
+
+    // --- Ensure node.exe is in PATH ---
+    const hasNode = (process.env.PATH || '').split(path.delimiter).some(dir => {
+      try { return fs.existsSync(path.join(dir, 'node.exe')) } catch { return false }
+    })
+
+    if (!hasNode) {
+      let nodeDir: string | null = null
+      try {
+        const out = execSync('where node 2>nul', { encoding: 'utf8', timeout: 3000 }).trim()
+        const first = out.split('\n')[0]?.trim()
+        if (first && fs.existsSync(first)) nodeDir = path.dirname(first)
+      } catch { /* ignore */ }
+
+      if (!nodeDir) {
+        const candidates = [
+          'C:\\Program Files\\nodejs',
+          'C:\\Program Files (x86)\\nodejs',
+          path.join(process.env.LOCALAPPDATA || '', 'Programs\\nodejs'),
+          path.join(process.env.APPDATA || '', 'nvm\\current'),
+        ]
+        nodeDir = candidates.find(p => { try { return fs.existsSync(path.join(p, 'node.exe')) } catch { return false } }) ?? null
+      }
+
+      if (nodeDir) {
+        process.env.PATH = nodeDir + path.delimiter + (process.env.PATH || '')
+        logger.info(`Added node to PATH: ${nodeDir}`)
+      } else {
+        // Last resort: create a node.cmd wrapper using Electron's built-in Node.js
+        try {
+          const binDir = path.join(app.getPath('userData'), 'bin')
+          if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true })
+          const nodeCmdPath = path.join(binDir, 'node.cmd')
+          fs.writeFileSync(nodeCmdPath, `@echo off\nset ELECTRON_RUN_AS_NODE=1\n"${process.execPath}" %*\n`)
+          process.env.PATH = binDir + path.delimiter + (process.env.PATH || '')
+          logger.info(`Created node.cmd wrapper (Electron as Node): ${nodeCmdPath}`)
+        } catch (e) {
+          logger.warn(`node.exe not found and fallback failed: ${e}`)
+        }
+      }
+    }
   }
 
   private setupServerConfigIPC(): void {
@@ -171,13 +315,14 @@ class PromptXDesktopApp {
       return ServerConfig.default().toJSON()
     })
 
-    ipcMain.handle('server-config:update', async (_event, payload: { host: string; port: number; debug?: boolean }) => {
+    ipcMain.handle('server-config:update', async (_event, payload: { host: string; port: number; debug?: boolean; enableV2?: boolean }) => {
       const base = ServerConfig.default().toJSON()
       const created = ServerConfig.create({
         ...base,
         host: payload.host,
         port: payload.port,
-        debug: payload.debug ?? base.debug
+        debug: payload.debug ?? base.debug,
+        enableV2: payload.enableV2 ?? base.enableV2
       })
       if (!created.ok) {
         throw new Error(created.error.message)
@@ -190,6 +335,9 @@ class PromptXDesktopApp {
           throw new Error(saveRes.error.message)
         }
       }
+      // 同步 enableV2 到 ServerConfigManager（供 MCP server 读取）
+      const scm = new ServerConfigManager()
+      scm.setEnableV2(cfg.enableV2)
       // 应用配置（重启服务）
       if (this.serverPort) {
         const restartRes = await this.serverPort.restart(cfg)
@@ -387,6 +535,195 @@ class PromptXDesktopApp {
         logger.error('Failed to open file dialog:', String(error))
         return { canceled: true, filePaths: [] }
       }
+    })
+
+    // 读取文件内容（返回 base64）
+    ipcMain.handle('dialog:readFile', async (_event, filePath: string) => {
+      try {
+        const fs = await import('fs/promises')
+        const path = await import('path')
+        const buffer = await fs.readFile(filePath)
+        const fileName = path.basename(filePath)
+        // 简单的 MIME 类型检测
+        const ext = path.extname(filePath).toLowerCase()
+        const mimeTypes: Record<string, string> = {
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.gif': 'image/gif',
+          '.webp': 'image/webp',
+          '.pdf': 'application/pdf',
+          '.doc': 'application/msword',
+          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.xls': 'application/vnd.ms-excel',
+          '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          '.ppt': 'application/vnd.ms-powerpoint',
+          '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          '.txt': 'text/plain',
+          '.json': 'application/json',
+          '.xml': 'application/xml',
+          '.zip': 'application/zip',
+        }
+        const mimeType = mimeTypes[ext] || 'application/octet-stream'
+        return {
+          success: true,
+          data: buffer.toString('base64'),
+          fileName,
+          mimeType,
+          size: buffer.length,
+        }
+      } catch (error) {
+        logger.error('Failed to read file:', String(error))
+        return { success: false, error: String(error) }
+      }
+    })
+  }
+
+  private setupAgentXIPC(): void {
+    // 获取 AgentX 服务器 URL
+    ipcMain.handle('agentx:getServerUrl', () => {
+      return agentXService.getServerUrl()
+    })
+
+    // 获取 AgentX 服务状态
+    ipcMain.handle('agentx:getStatus', () => {
+      return agentXService.getStatus()
+    })
+
+    // 启动 AgentX 服务
+    ipcMain.handle('agentx:start', async () => {
+      try {
+        await agentXService.start()
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 停止 AgentX 服务
+    ipcMain.handle('agentx:stop', async () => {
+      try {
+        await agentXService.stop()
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 获取 AgentX 配置
+    ipcMain.handle('agentx:getConfig', () => {
+      return agentXService.getConfig()
+    })
+
+    // 更新 AgentX 配置
+    ipcMain.handle('agentx:updateConfig', async (_event, config) => {
+      try {
+        await agentXService.updateConfig(config)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 测试 AgentX 连接
+    ipcMain.handle('agentx:testConnection', async (_event, config) => {
+      return await agentXService.testConnection(config)
+    })
+
+    // 获取 MCP 服务器配置
+    ipcMain.handle('agentx:getMcpServers', () => {
+      return agentXService.getMcpServers()
+    })
+
+    // 更新 MCP 服务器配置
+    ipcMain.handle('agentx:updateMcpServers', async (_event, mcpServers) => {
+      try {
+        await agentXService.updateMcpServers(mcpServers)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 获取可用 Skills 列表
+    ipcMain.handle('agentx:getAvailableSkills', async () => {
+      return await agentXService.getAvailableSkills()
+    })
+
+    // 获取已启用的 Skills
+    ipcMain.handle('agentx:getEnabledSkills', () => {
+      return agentXService.getEnabledSkills()
+    })
+
+    // 更新已启用的 Skills
+    ipcMain.handle('agentx:updateEnabledSkills', async (_event, skills: string[]) => {
+      try {
+        await agentXService.updateEnabledSkills(skills)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    // 导入 Skill（zip 压缩包）
+    ipcMain.handle('agentx:importSkill', async (_event, zipPath: string) => {
+      return await agentXService.importSkill(zipPath)
+    })
+
+    // 删除 Skill
+    ipcMain.handle('agentx:deleteSkill', async (_event, skillName: string) => {
+      return await agentXService.deleteSkill(skillName)
+    })
+  }
+
+  private setupWebAccessIPC(): void {
+    ipcMain.handle('webAccess:getStatus', () => {
+      const last = webAccessService.getLastStatus()
+      return {
+        enabled: webAccessService.isEnabled(),
+        externalAccess: agentXService.getExternalAccess(),
+        ...(last ?? {}),
+      }
+    })
+
+    ipcMain.handle('webAccess:enable', async (_event, port?: number) => {
+      try {
+        if (port) webAccessService.setPort(port)
+        await agentXService.setExternalAccess(true)
+        const status = await webAccessService.enable(agentXService.getPort(), 'promptx-desktop')
+        return { success: true, ...status }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+
+    ipcMain.handle('webAccess:disable', async () => {
+      try {
+        await webAccessService.disable()
+        await agentXService.setExternalAccess(false)
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    })
+  }
+
+  private setupUpdateIPC(): void {
+    // 检查更新
+    ipcMain.handle('check-for-updates', async () => {
+      if (!this.updateManager) {
+        throw new Error('Update manager not initialized')
+      }
+      await this.updateManager.checkForUpdatesManual()
+      return { success: true }
+    })
+
+    // 重启应用
+    ipcMain.handle('app:relaunch', () => {
+      app.relaunch()
+      // 先隐藏所有窗口，避免白屏闪烁
+      BrowserWindow.getAllWindows().forEach(w => w.hide())
+      app.exit(0)
     })
   }
 
