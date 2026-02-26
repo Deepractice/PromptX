@@ -260,6 +260,36 @@ class PromptXDesktopApp {
       }
     }
 
+    // --- Ensure git.exe is in PATH (Claude Code CLI requires git on Windows) ---
+    const hasGit = (process.env.PATH || '').split(path.delimiter).some(dir => {
+      try { return fs.existsSync(path.join(dir, 'git.exe')) } catch { return false }
+    })
+
+    if (!hasGit) {
+      // 1. Prefer bundled git (resources/git-bash/mingw64/bin/git.exe)
+      const bundledGitBin = path.join(process.resourcesPath || '', 'git-bash', 'mingw64', 'bin')
+      if (fs.existsSync(path.join(bundledGitBin, 'git.exe'))) {
+        process.env.PATH = bundledGitBin + path.delimiter + (process.env.PATH || '')
+        logger.info(`Using bundled git: ${bundledGitBin}`)
+      } else {
+        // 2. Fall back to system Git for Windows
+        const gitCandidates = [
+          'C:\\Program Files\\Git\\cmd',
+          'C:\\Program Files\\Git\\mingw64\\bin',
+          'C:\\Program Files (x86)\\Git\\cmd',
+          'C:\\Program Files (x86)\\Git\\mingw64\\bin',
+        ]
+        const gitDir = gitCandidates.find(p => { try { return fs.existsSync(path.join(p, 'git.exe')) } catch { return false } }) ?? null
+
+        if (gitDir) {
+          process.env.PATH = gitDir + path.delimiter + (process.env.PATH || '')
+          logger.info(`Added system git to PATH: ${gitDir}`)
+        } else {
+          logger.warn('git.exe not found — Claude Code subprocess may fail on Windows without git')
+        }
+      }
+    }
+
     // --- Ensure node.exe is in PATH ---
     const hasNode = (process.env.PATH || '').split(path.delimiter).some(dir => {
       try { return fs.existsSync(path.join(dir, 'node.exe')) } catch { return false }
