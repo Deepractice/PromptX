@@ -1,3 +1,36 @@
+# @promptx/$(basename $pkg)
+
+## 1.28.3
+
+### Patch Changes
+
+- [`1f700f7`](https://github.com/Deepractice/PromptX/commit/1f700f7d6807bfe1e8b5341347ca1372893ba8d8) Thanks [@deepracticexc](https://github.com/deepracticexc)! - fix(desktop): 修复 macOS 应用图标尺寸和显示问题
+
+  - 为图标添加 15% 边距，解决 Launchpad 中图标过大的问题
+  - 重新生成 icns 文件，修复 Dock 栏中图标显示为正方形的问题
+  - 更新所有尺寸变体（16x16 到 1024x1024）
+  - macOS 现在会正确应用圆角效果
+
+- Updated dependencies []:
+  - @promptx/config@1.28.3
+  - @promptx/core@1.28.3
+  - @promptx/mcp-server@1.28.3
+
+## 1.28.2
+
+### Patch Changes
+
+- Updated dependencies [[`373e824`](https://github.com/Deepractice/PromptX/commit/373e82494033f44a0f4ab77fb4f7f0183ae80ad8)]:
+  - @promptx/mcp-server@1.28.2
+  - @promptx/config@1.28.2
+  - @promptx/core@1.28.2
+
+## 1.28.1
+
+### Patch Changes
+
+- Security patch release - fix all 14 security vulnerabilities. Removed unused electron-icon-builder (deprecated phantomjs dependency), updated electron-builder to 26.7.0, and force-updated indirect dependencies via pnpm overrides to resolve tar, qs, brace-expansion, form-data, lodash, and tough-cookie vulnerabilities.
+
 # @promptx/desktop
 
 ## 1.28.0

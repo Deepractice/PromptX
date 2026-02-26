@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo/Creative PromptX Duck Logo 4.svg" alt="PromptX Logo" width="120" height="120"/>
+  <img src="assets/logo/PromptX-transparent.png" alt="PromptX Logo" width="120" height="120"/>
   <h1>PromptX · 領先的AI上下文工程平台</h1>
   <h2>✨ Chat is all you need - 革命性互動設計，讓AI Agent秒變行業專家</h2>
   <p><strong>核心能力：</strong>AI角色創造平台 | 智慧工具開發平台 | 認知記憶系統</p>

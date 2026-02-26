@@ -1,17 +1,31 @@
 FROM node:20-alpine
 
-# Install latest npm
-RUN npm install -g npm@latest
+# 元数据标签
+LABEL maintainer="Deepractice" \
+      description="PromptX MCP Server" \
+      org.opencontainers.image.source="https://github.com/Deepractice/PromptX"
 
-# Install PromptX MCP Server (specific version)
+# 工作目录
+WORKDIR /app
+
+# 版本参数
 ARG VERSION=latest
-RUN npm install -g @promptx/mcp-server@${VERSION}
 
-# Create data directory
-RUN mkdir -p /root/.promptx
+# 安装依赖（单层 RUN 减少镜像层数）
+# 使用 node:20-alpine 自带的 node 用户 (UID 1000, GID 1000)
+RUN npm install -g npm@latest @promptx/mcp-server@${VERSION} && \
+    mkdir -p /data && \
+    chown -R node:node /data /app
 
-# Expose HTTP port
+# 切换到非 root 用户
+USER node
+
+# 暴露端口
 EXPOSE 5203
 
-# Default to HTTP mode for Docker
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5203/health || exit 1
+
+# 启动命令
 CMD ["mcp-server", "--transport", "http", "--host", "0.0.0.0", "--port", "5203", "--cors"]

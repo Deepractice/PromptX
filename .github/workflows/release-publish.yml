@@ -9,8 +9,12 @@ jobs:
   publish-npm:
     name: Publish to npm
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # 添加超时保护
     permissions:
       contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,6 +34,22 @@ jobs:
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git config --global url."https://".insteadOf "ssh://"
+
+      - name: Extract version and check prerelease
+        id: version
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+
+      - name: Check if prerelease
+        id: check_prerelease
+        run: |
+          if [[ "${{ github.ref_name }}" == *"beta"* ]] || [[ "${{ github.ref_name }}" == *"alpha"* ]] || [[ "${{ github.ref_name }}" == *"rc"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install dependencies
         run: pnpm install --ignore-scripts
@@ -106,82 +126,150 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-  publish-docker:
-    name: Publish to Docker Hub
+  # 拆分为并行的 Docker 构建 jobs，减少总时间
+  publish-docker-amd64:
+    name: Build Docker AMD64
     runs-on: ubuntu-latest
-    needs: publish-npm  # 等待 npm 发布完成
-    # 只在正式版本发布时构建 Docker 镜像
-    if: ${{ !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'rc') }}
-    
+    timeout-minutes: 60  # AMD64 构建 60 分钟超时
+    needs: publish-npm
+    if: needs.publish-npm.outputs.is_prerelease == 'false'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Get version from tag
-        id: version
-        run: |
-          # Extract version from tag (remove 'v' prefix)
-          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Building Docker image for version: $VERSION"
-      
+
       - name: Wait for npm package availability
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION="${{ needs.publish-npm.outputs.version }}"
           echo "Waiting for @promptx/mcp-server@$VERSION to be available on npm..."
-          
+
           for i in {1..20}; do
             if npm view @promptx/mcp-server@$VERSION version 2>/dev/null; then
-              echo "✅ Package @promptx/mcp-server@$VERSION is available"
-              break
+              echo "✅ Package is available"
+              exit 0
             fi
-            
-            if [ $i -eq 20 ]; then
-              echo "❌ Timeout waiting for npm package"
-              exit 1
-            fi
-            
-            echo "Attempt $i/20: Package not yet available, waiting 30s..."
+            echo "Attempt $i/20: waiting 30s..."
             sleep 30
           done
-      
+          echo "❌ Timeout"
+          exit 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Build and push Docker image
+
+      - name: Build and push AMD64
         uses: docker/build-push-action@v5
         with:
           context: ./docker
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: |
-            deepracticexs/promptx:${{ steps.version.outputs.version }}
-            deepracticexs/promptx:latest
+            deepracticexs/promptx:${{ needs.publish-npm.outputs.version }}-amd64
+            deepracticexs/promptx:latest-amd64
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-          cache-from: type=registry,ref=deepracticexs/promptx:buildcache
-          cache-to: type=registry,ref=deepracticexs/promptx:buildcache,mode=max
-      
+            VERSION=${{ needs.publish-npm.outputs.version }}
+          cache-from: type=registry,ref=deepracticexs/promptx:buildcache-amd64
+          cache-to: type=registry,ref=deepracticexs/promptx:buildcache-amd64,mode=max
+
+  publish-docker-arm64:
+    name: Build Docker ARM64
+    runs-on: ubuntu-latest
+    timeout-minutes: 180  # ARM64 构建慢，给 3 小时
+    needs: publish-npm
+    if: needs.publish-npm.outputs.is_prerelease == 'false'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for npm package availability
+        run: |
+          VERSION="${{ needs.publish-npm.outputs.version }}"
+          echo "Waiting for @promptx/mcp-server@$VERSION to be available on npm..."
+
+          for i in {1..20}; do
+            if npm view @promptx/mcp-server@$VERSION version 2>/dev/null; then
+              echo "✅ Package is available"
+              exit 0
+            fi
+            echo "Attempt $i/20: waiting 30s..."
+            sleep 30
+          done
+          echo "❌ Timeout"
+          exit 1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push ARM64
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker
+          platforms: linux/arm64
+          push: true
+          tags: |
+            deepracticexs/promptx:${{ needs.publish-npm.outputs.version }}-arm64
+            deepracticexs/promptx:latest-arm64
+          build-args: |
+            VERSION=${{ needs.publish-npm.outputs.version }}
+          cache-from: type=registry,ref=deepracticexs/promptx:buildcache-arm64
+          cache-to: type=registry,ref=deepracticexs/promptx:buildcache-arm64,mode=max
+
+  publish-docker-manifest:
+    name: Create Docker Manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [publish-npm, publish-docker-amd64, publish-docker-arm64]
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Create multi-platform manifest
+        run: |
+          VERSION="${{ needs.publish-npm.outputs.version }}"
+
+          # 创建版本 manifest
+          docker buildx imagetools create -t deepracticexs/promptx:${VERSION} \
+            deepracticexs/promptx:${VERSION}-amd64 \
+            deepracticexs/promptx:${VERSION}-arm64
+
+          # 创建 latest manifest
+          docker buildx imagetools create -t deepracticexs/promptx:latest \
+            deepracticexs/promptx:latest-amd64 \
+            deepracticexs/promptx:latest-arm64
+
+          echo "✅ Multi-platform manifest created"
+
       - name: Summary
         run: |
           echo "## Docker Image Published 🎉" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ needs.publish-npm.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tags**:" >> $GITHUB_STEP_SUMMARY
-          echo "  - \`deepracticexs/promptx:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "  - \`deepracticexs/promptx:${{ needs.publish-npm.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "  - \`deepracticexs/promptx:latest\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Usage" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -d -p 5203:5203 -v ~/.promptx:/root/.promptx deepracticexs/promptx:${{ needs.publish-npm.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

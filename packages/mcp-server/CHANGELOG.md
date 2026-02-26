@@ -1,3 +1,35 @@
+# @promptx/$(basename $pkg)
+
+## 1.28.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/config@1.28.3
+  - @promptx/core@1.28.3
+  - @promptx/logger@1.28.3
+
+## 1.28.2
+
+### Patch Changes
+
+- [`373e824`](https://github.com/Deepractice/PromptX/commit/373e82494033f44a0f4ab77fb4f7f0183ae80ad8) Thanks [@deepracticexc](https://github.com/deepracticexc)! - fix(docker): use built-in node user to fix GID conflict
+
+  - Fixed v1.28.1 Docker build failure caused by GID 1000 conflict
+  - Use node:20-alpine's built-in node user instead of creating new app user
+  - Maintains security (non-root execution) while simplifying Dockerfile
+
+- Updated dependencies []:
+  - @promptx/config@1.28.2
+  - @promptx/core@1.28.2
+  - @promptx/logger@1.28.2
+
+## 1.28.1
+
+### Patch Changes
+
+- Security patch release - fix all 14 security vulnerabilities. Removed unused electron-icon-builder (deprecated phantomjs dependency), updated electron-builder to 26.7.0, and force-updated indirect dependencies via pnpm overrides to resolve tar, qs, brace-expansion, form-data, lodash, and tough-cookie vulnerabilities.
+
 # @promptx/mcp-server
 
 ## 1.28.0
