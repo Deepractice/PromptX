@@ -26,6 +26,3 @@ Thumbs.db
 *.tmp
 temp/
 tmp/
-
-# Bundled MinGit binaries (downloaded at build time, not committed)
-resources/win/git-bash/
