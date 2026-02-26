@@ -4,6 +4,7 @@
  * Converts environment configuration to Claude SDK Options format.
  */
 
+import { spawn } from "child_process";
 import type { Options, McpServerConfig } from "@anthropic-ai/claude-agent-sdk";
 import { createLogger } from "@agentxjs/common";
 import { RuntimeEnvironment } from "../RuntimeEnvironment";
@@ -84,6 +85,22 @@ export function buildOptions(
   // Capture stderr from SDK subprocess for debugging
   options.stderr = (data: string) => {
     logger.info("SDK stderr", { data: data.trim() });
+  };
+
+  // Use process.execPath (Electron's built-in Node.js) to spawn Claude Code.
+  // In packaged Electron apps, 'node' is often not in the system PATH on customer
+  // machines. process.execPath is always available and with ELECTRON_RUN_AS_NODE=1
+  // the Electron binary runs as a standard Node.js runtime.
+  options.spawnClaudeCodeProcess = (spawnOptions) => {
+    const childProcess = spawn(process.execPath, spawnOptions.args, {
+      cwd: spawnOptions.cwd,
+      env: {
+        ...spawnOptions.env,
+        ELECTRON_RUN_AS_NODE: "1",
+      },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    return childProcess as any;
   };
 
   // Set Claude Code executable path from global environment
