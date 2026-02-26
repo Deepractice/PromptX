@@ -212,7 +212,7 @@ class PromptXDesktopApp {
       logger.debug(`Updated PATH with Electron directory: ${electronDir}`)
     }
 
-    // On Windows: ensure node and bash (git-bash) are in PATH for Claude Code subprocess
+    // On Windows: ensure node.exe is in PATH for Claude Code subprocess
     // In packaged Electron apps, system PATH may not include these
     if (process.platform === 'win32') {
       this.ensureWindowsToolsInPath()
@@ -222,43 +222,6 @@ class PromptXDesktopApp {
   private ensureWindowsToolsInPath(): void {
     const { execSync } = require('child_process')
     const { app } = require('electron')
-
-    // --- Ensure bash.exe is in PATH (Claude Code CLI requires bash on Windows) ---
-    const hasBash = (process.env.PATH || '').split(path.delimiter).some(dir => {
-      try { return fs.existsSync(path.join(dir, 'bash.exe')) } catch { return false }
-    })
-
-    if (!hasBash) {
-      // 1. Prefer bundled git-bash (packaged app: resources/git-bash)
-      const bundledBashBin = path.join(process.resourcesPath || '', 'git-bash', 'bin')
-      const bundledBashUsrBin = path.join(process.resourcesPath || '', 'git-bash', 'usr', 'bin')
-
-      if (fs.existsSync(path.join(bundledBashBin, 'bash.exe'))) {
-        // Add both bin and usr/bin so all git utilities are available
-        let newPath = bundledBashBin + path.delimiter + (process.env.PATH || '')
-        if (fs.existsSync(bundledBashUsrBin)) {
-          newPath = bundledBashUsrBin + path.delimiter + newPath
-        }
-        process.env.PATH = newPath
-        logger.info(`Using bundled git-bash: ${bundledBashBin}`)
-      } else {
-        // 2. Fall back to system git-bash
-        const bashCandidates = [
-          'C:\\Program Files\\Git\\bin',
-          'C:\\Program Files\\Git\\usr\\bin',
-          'C:\\Program Files (x86)\\Git\\bin',
-          'C:\\Program Files (x86)\\Git\\usr\\bin',
-        ]
-        const bashDir = bashCandidates.find(p => { try { return fs.existsSync(path.join(p, 'bash.exe')) } catch { return false } }) ?? null
-
-        if (bashDir) {
-          process.env.PATH = bashDir + path.delimiter + (process.env.PATH || '')
-          logger.info(`Added system git-bash to PATH: ${bashDir}`)
-        } else {
-          logger.warn('bash.exe not found — Claude Code subprocess may fail on Windows without git-bash')
-        }
-      }
-    }
 
     // --- Ensure node.exe is in PATH ---
     const hasNode = (process.env.PATH || '').split(path.delimiter).some(dir => {
