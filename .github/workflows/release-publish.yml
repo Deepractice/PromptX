@@ -117,7 +117,7 @@ jobs:
           echo "Publishing with tag: $NPM_TAG"
           
           # Publish workspace packages with appropriate tag
-          pnpm -r publish --access public --no-git-checks --tag $NPM_TAG
+          pnpm -r publish --access public --no-git-checks --tag $NPM_TAG --registry https://registry.npmjs.org
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
