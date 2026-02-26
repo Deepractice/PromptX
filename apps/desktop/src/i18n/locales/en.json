@@ -82,6 +82,7 @@
       "qrHint": "Scan to access on phone or other devices"
     },
     "server": {
+      "title": "Server Configuration",
       "description": "Configure server host, port and debug settings",
       "host": {
         "label": "Server Host",
