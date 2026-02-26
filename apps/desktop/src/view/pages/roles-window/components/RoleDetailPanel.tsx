@@ -9,7 +9,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Pencil, BookOpen, Layers, Brain, FileText, ChevronRight, ChevronDown, Save, Loader2, Target, Building2, Upload } from "lucide-react"
+import { Pencil, BookOpen, Layers, Brain, FileText, ChevronRight, ChevronDown, Save, Loader2, Target, Building2, Upload, Trash2 } from "lucide-react"
 import { useEffect, useState, useCallback } from "react"
 import type { RoleItem } from "./RoleListPanel"
 import MemoryTab from "./MemoryTab"
@@ -18,6 +18,7 @@ import RoleAvatar from "./RoleAvatar"
 type Props = {
   selectedRole: RoleItem | null
   onActivate: (role: RoleItem) => void
+  onDelete: (role: RoleItem) => void
   onUpdate?: () => void
 }
 
@@ -857,7 +858,7 @@ function V2TabsPanel({ role }: { role: RoleItem }) {
   )
 }
 
-export default function RoleDetailPanel({ selectedRole, onActivate, onUpdate }: Props) {
+export default function RoleDetailPanel({ selectedRole, onActivate, onDelete, onUpdate }: Props) {
   const { t } = useTranslation()
   const [editOpen, setEditOpen] = useState(false)
   const [editName, setEditName] = useState("")
@@ -981,6 +982,12 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onUpdate }: 
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {(selectedRole.source ?? "user") !== "system" && (
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => onDelete(selectedRole)}>
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                {t("resources.actions.delete")}
+              </Button>
+            )}
             {(selectedRole.source ?? "user") === "user" && (
               <Button variant="outline" size="sm" onClick={openEdit}>
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />

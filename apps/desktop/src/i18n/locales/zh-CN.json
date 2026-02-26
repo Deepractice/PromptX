@@ -184,6 +184,11 @@
     }
   },
   "resources": {
+    "comingSoon": {
+      "title": "即将上线",
+      "description": "智能体广场正在建设中，敬请期待",
+      "badge": "即将推出"
+    },
     "banner": {
       "title": "分享你的创作",
       "subtitle": "发现并分享角色和工具",
@@ -195,7 +200,7 @@
     },
     "import": {
       "title": "导入资源",
-      "description": "从文件或 URL 导入角色或工具",
+      "description": "从文件导入角色或工具",
       "button": "导入资源",
       "methods": {
         "file": "文件导入",
@@ -496,7 +501,11 @@
       "loadFailed": "加载角色失败",
       "activateSuccess": "角色 \"{{name}}\" 激活成功",
       "activateFailed": "激活角色失败",
-      "activatePrompt": "激活{{name}}角色"
+      "activatePrompt": "激活{{name}}角色",
+      "deleteConfirm": "确定要删除角色 \"{{name}}\" 吗？此操作不可恢复。",
+      "deleteSuccess": "角色 \"{{name}}\" 删除成功",
+      "deleteFailed": "删除角色失败",
+      "deleteOnlyUser": "仅支持删除用户自建的角色"
     }
   },
   "tools": {

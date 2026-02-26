@@ -95,4 +95,11 @@ export class ResourceService {
       return { success: false, message: error.message || '更新失败' }
     }
   }
+
+  /**
+   * 主动清除资源缓存，删除/导入后调用确保下次查询拿到最新数据
+   */
+  invalidateCache(): void {
+    this.repository.invalidateCache()
+  }
 }

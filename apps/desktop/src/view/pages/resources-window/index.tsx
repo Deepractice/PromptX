@@ -13,6 +13,8 @@ import {
   Download,
   RefreshCw,
   Loader2,
+  Store,
+  Clock,
 } from "lucide-react"
 
 type ResourceItem = {
@@ -136,8 +138,24 @@ export default function ResourcesPage() {
   }, [])
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full relative">
       <Toaster />
+      {/* Coming Soon Overlay */}
+      <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/85 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-5 rounded-2xl border bg-card p-12 shadow-xl">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+            <Store className="h-10 w-10 text-blue-500" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">{t("resources.comingSoon.title")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("resources.comingSoon.description")}</p>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-600">
+            <Clock className="h-3.5 w-3.5" />
+            {t("resources.comingSoon.badge")}
+          </span>
+        </div>
+      </div>
       <ScrollArea className="h-[calc(100vh-53px)]">
         <div className="mx-auto max-w-6xl p-6 space-y-6">
           {/* Blue Gradient Banner */}

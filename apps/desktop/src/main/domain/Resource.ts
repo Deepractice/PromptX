@@ -45,6 +45,9 @@ export interface ResourceRepository {
   
   // 更新操作
   updateMetadata(id: string, updates: { name?: string; description?: string }): Promise<{ success: boolean; message?: string }>
+
+  // 缓存控制
+  invalidateCache(): void
 }
 
 /**

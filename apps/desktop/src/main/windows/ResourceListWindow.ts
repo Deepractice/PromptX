@@ -399,11 +399,12 @@ export class ResourceListWindow {
     })
 
     // 新增：删除资源（仅支持删除用户资源）
-    ipcMain.handle('resources:delete', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string }) => {
+    ipcMain.handle('resources:delete', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string; version?: string }) => {
       try {
         const id = payload?.id
         const type = payload?.type
         const source = payload?.source ?? 'user'
+        const version = payload?.version ?? 'v1'
 
         if (!id || !type) {
           return { success: false, message: t('resources.missingParams') }
@@ -416,13 +417,39 @@ export class ResourceListWindow {
         const path = require('path')
         const os = require('os')
 
-        const targetDir = path.join(os.homedir(), '.promptx', 'resource', type, id)
+        // V2 角色存储在 ~/.rolex/roles/<id>/，V1 及工具存储在 ~/.promptx/resource/<type>/<id>/
+        const targetDir = (type === 'role' && version === 'v2')
+          ? path.join(os.homedir(), '.rolex', 'roles', id)
+          : path.join(os.homedir(), '.promptx', 'resource', type, id)
+
         const exists = await fs.pathExists(targetDir)
         if (!exists) {
           return { success: false, message: t('resources.directoryNotExists') + `: ${targetDir}` }
         }
 
         await fs.remove(targetDir)
+
+        // V2 角色：从 ~/.rolex/rolex.json 中移除注册信息
+        if (type === 'role' && version === 'v2') {
+          const rolexJsonPath = path.join(os.homedir(), '.rolex', 'rolex.json')
+          try {
+            if (await fs.pathExists(rolexJsonPath)) {
+              const rolexData = await fs.readJson(rolexJsonPath)
+              if (Array.isArray(rolexData.roles)) {
+                rolexData.roles = rolexData.roles.filter((r: string) => r !== id)
+              }
+              if (rolexData.assignments?.[id]) {
+                delete rolexData.assignments[id]
+              }
+              await fs.writeJson(rolexJsonPath, rolexData, { spaces: 2 })
+            }
+          } catch (regErr) {
+            console.warn('Failed to update rolex.json after delete:', regErr)
+          }
+        }
+
+        // 清除 Repository 内存缓存，确保下次查询立即反映删除结果
+        this.resourceService.invalidateCache()
 
         // 刷新资源发现，确保UI能看到最新列表
         try {
@@ -720,25 +747,26 @@ export class ResourceListWindow {
           // 复制到用户目录
           await fs.copy(resourceDir, userResourceDir)
 
-          // 如果提供了自定义名称或描述，更新主文件
+          // 如果提供了自定义名称或描述，写入 metadata.json（优先级最高）
           if (name || description) {
-            const mainFile = type === 'role'
-              ? path.join(userResourceDir, `${finalId}.role.md`)
-              : path.join(userResourceDir, `${finalId}.tool.js`)
-
-            if (await fs.pathExists(mainFile)) {
-              let content = await fs.readFile(mainFile, 'utf-8')
-
-              // 简单的替换（可以根据实际格式调整）
-              if (type === 'role' && (name || description)) {
-                // TODO: 更新role文件的name和description
-                // 这需要根据具体的DPML格式来解析和修改
-              }
+            const metadataFile = path.join(userResourceDir, 'metadata.json')
+            let existing: Record<string, any> = {}
+            if (await fs.pathExists(metadataFile)) {
+              try { existing = await fs.readJson(metadataFile) } catch { /* ignore */ }
             }
+            await fs.writeJson(metadataFile, {
+              ...existing,
+              ...(name ? { name } : {}),
+              ...(description ? { description } : {}),
+              updatedAt: new Date().toISOString(),
+            }, { spaces: 2 })
           }
 
           // 清理临时目录
           await fs.remove(tempDir)
+
+          // 清除 Repository 内存缓存，确保下次查询立即反映导入结果
+          this.resourceService.invalidateCache()
 
           // 刷新资源发现
           try {
@@ -765,6 +793,128 @@ export class ResourceListWindow {
 
       } catch (error: any) {
         console.error('Failed to import resource:', error)
+        return { success: false, message: error?.message || t('resources.importFailed') }
+      }
+    })
+
+    // 导入 V2 角色（~/.rolex/roles/<id>/identity/）
+    ipcMain.handle('resources:importV2Role', async (_evt, payload: {
+      filePath: string
+      customId?: string
+      name?: string
+      description?: string
+    }) => {
+      try {
+        const { filePath, customId, name, description } = payload || {}
+        if (!filePath) return { success: false, message: t('resources.missingParams') }
+
+        const fs = require('fs-extra')
+        const pathMod = require('path')
+        const os = require('os')
+        const AdmZip = require('adm-zip')
+
+        if (!(await fs.pathExists(filePath))) {
+          return { success: false, message: t('resources.fileNotFound') }
+        }
+
+        const tempDir = pathMod.join(os.tmpdir(), `promptx-v2-import-${Date.now()}`)
+        await fs.ensureDir(tempDir)
+
+        try {
+          const zip = new AdmZip(filePath)
+          zip.extractAllTo(tempDir, true)
+
+          // 找到 identity 目录（支持根目录或一级子目录）
+          let identityDir: string | null = null
+          let roleId: string | null = null
+
+          const tryFindIdentity = async (dir: string): Promise<{ identityDir: string; roleId: string } | null> => {
+            const entries: string[] = await fs.readdir(dir)
+            if (entries.includes('identity')) {
+              const sub = pathMod.join(dir, 'identity')
+              const stat = await fs.stat(sub)
+              if (stat.isDirectory()) {
+                return { identityDir: sub, roleId: pathMod.basename(dir) }
+              }
+            }
+            return null
+          }
+
+          const rootResult = await tryFindIdentity(tempDir)
+          if (rootResult) {
+            identityDir = rootResult.identityDir
+            roleId = rootResult.roleId
+          } else {
+            const entries: string[] = await fs.readdir(tempDir)
+            for (const entry of entries) {
+              const sub = pathMod.join(tempDir, entry)
+              const stat = await fs.stat(sub)
+              if (stat.isDirectory()) {
+                const result = await tryFindIdentity(sub)
+                if (result) { identityDir = result.identityDir; roleId = result.roleId; break }
+              }
+            }
+          }
+
+          if (!identityDir || !roleId) {
+            await fs.remove(tempDir)
+            return { success: false, message: t('resources.invalidResourceStructure') }
+          }
+
+          const finalId = customId || roleId
+          const targetDir = pathMod.join(os.homedir(), '.rolex', 'roles', finalId, 'identity')
+
+          if (await fs.pathExists(targetDir)) {
+            const overwrite = await dialog.showMessageBox({
+              type: 'question',
+              buttons: ['Cancel', 'Overwrite'],
+              defaultId: 0,
+              title: t('resources.resourceExists'),
+              message: t('resources.resourceExistsMessage', { id: finalId })
+            })
+            if (overwrite.response === 0) {
+              await fs.remove(tempDir)
+              return { success: false, message: t('resources.cancelled') }
+            }
+            await fs.remove(targetDir)
+          }
+
+          await fs.ensureDir(pathMod.dirname(targetDir))
+          await fs.copy(identityDir, targetDir)
+
+          // 写入自定义 metadata（name/description）
+          if (name || description) {
+            const metadataFile = pathMod.join(pathMod.dirname(targetDir), 'metadata.json')
+            await fs.writeJson(metadataFile, {
+              ...(name ? { name } : {}),
+              ...(description ? { description } : {}),
+              updatedAt: new Date().toISOString(),
+            }, { spaces: 2 })
+          }
+
+          // 注册到 ~/.rolex/rolex.json
+          const rolexJsonPath = pathMod.join(os.homedir(), '.rolex', 'rolex.json')
+          try {
+            let rolexData: any = { roles: [], organizations: {}, assignments: {} }
+            if (await fs.pathExists(rolexJsonPath)) {
+              rolexData = await fs.readJson(rolexJsonPath)
+            }
+            if (!Array.isArray(rolexData.roles)) rolexData.roles = []
+            if (!rolexData.roles.includes(finalId)) {
+              rolexData.roles.push(finalId)
+              await fs.writeJson(rolexJsonPath, rolexData, { spaces: 2 })
+            }
+          } catch (regErr) {
+            console.warn('Failed to register V2 role in rolex.json:', regErr)
+          }
+
+          await fs.remove(tempDir)
+          return { success: true, id: finalId, message: t('resources.importSuccess', { id: finalId }) }
+        } finally {
+          if (await fs.pathExists(tempDir)) await fs.remove(tempDir)
+        }
+      } catch (error: any) {
+        console.error('Failed to import V2 role:', error)
         return { success: false, message: error?.message || t('resources.importFailed') }
       }
     })

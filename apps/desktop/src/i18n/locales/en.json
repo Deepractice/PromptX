@@ -184,6 +184,11 @@
     }
   },
   "resources": {
+    "comingSoon": {
+      "title": "Coming Soon",
+      "description": "Agent Shop is under construction, stay tuned",
+      "badge": "Coming Soon"
+    },
     "banner": {
       "title": "Share Your Creations",
       "subtitle": "Discover and share roles & tools with the community",
@@ -195,7 +200,7 @@
     },
     "import": {
       "title": "Import Resource",
-      "description": "Import a role or tool from a file or URL",
+      "description": "Import a role or tool from a file ",
       "button": "Import Resource",
       "methods": {
         "file": "File Import",
@@ -497,7 +502,11 @@
       "loadFailed": "Failed to load roles",
       "activateSuccess": "Role \"{{name}}\" activated successfully",
       "activateFailed": "Failed to activate role",
-      "activatePrompt": "Activate role {{name}}"
+      "activatePrompt": "Activate role {{name}}",
+      "deleteConfirm": "Delete role \"{{name}}\"? This cannot be undone.",
+      "deleteSuccess": "Role \"{{name}}\" deleted successfully",
+      "deleteFailed": "Failed to delete role",
+      "deleteOnlyUser": "Only user-created roles can be deleted"
     }
   },
   "tools": {

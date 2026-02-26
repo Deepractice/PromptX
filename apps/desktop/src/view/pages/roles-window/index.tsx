@@ -5,7 +5,6 @@ import { goToSendMessage } from "../../../utils/goToSendMessage"
 import RoleListPanel from "./components/RoleListPanel"
 import RoleDetailPanel from "./components/RoleDetailPanel"
 import type { RoleItem, VersionFilter, SourceFilter } from "./components/RoleListPanel"
-
 export default function RolesPage() {
   const { t } = useTranslation()
   const [roles, setRoles] = useState<RoleItem[]>([])
@@ -100,6 +99,29 @@ export default function RolesPage() {
     goToSendMessage(t("roles.messages.activatePrompt", { name: role.name }), { roleResources: "all" })
   }
 
+  const handleDelete = async (role: RoleItem) => {
+    if ((role.source ?? "user") === "system") {
+      toast.error(t("roles.messages.deleteOnlyUser"))
+      return
+    }
+    const ok = window.confirm(t("roles.messages.deleteConfirm", { name: role.name }))
+    if (!ok) return
+    try {
+      const res = await window.electronAPI?.invoke("resources:delete", {
+        id: role.id, type: "role", source: role.source ?? "user", version: role.version ?? "v1",
+      })
+      if (res?.success) {
+        toast.success(t("roles.messages.deleteSuccess", { name: role.name }))
+        if (selectedRole?.id === role.id) setSelectedRole(null)
+        loadRoles()
+      } else {
+        toast.error(res?.message || t("roles.messages.deleteFailed"))
+      }
+    } catch (e: any) {
+      toast.error(e?.message || t("roles.messages.deleteFailed"))
+    }
+  }
+
   useEffect(() => {
     const init = async () => {
       const config = await window.electronAPI?.invoke("server-config:get")
@@ -132,6 +154,7 @@ export default function RolesPage() {
       <RoleDetailPanel
         selectedRole={selectedRole}
         onActivate={handleActivate}
+        onDelete={handleDelete}
         onUpdate={loadRoles}
       />
     </div>

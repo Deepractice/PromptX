@@ -80,6 +80,11 @@ export class PromptXResourceRepository implements ResourceRepository {
     }
   }
 
+  invalidateCache(): void {
+    this.resourcesCache = null
+    this.cacheTimestamp = 0
+  }
+
   private async getResourcesWithCache(): Promise<Resource[]> {
     const now = Date.now()
     
@@ -216,15 +221,19 @@ export class PromptXResourceRepository implements ResourceRepository {
         const path = require('path')
         const fs = require('fs-extra')
         const os = require('os')
-        
-        const resourceDir = path.join(os.homedir(), '.promptx', 'resource', type, resourceId)
+
+        // V2 角色 metadata 存在 ~/.rolex/roles/<id>/metadata.json
+        // V1 角色和工具存在 ~/.promptx/resource/<type>/<id>/metadata.json
+        const isV2Role = type === 'role' && promptxResource.version === 'v2'
+        const resourceDir = isV2Role
+          ? path.join(os.homedir(), '.rolex', 'roles', resourceId)
+          : path.join(os.homedir(), '.promptx', 'resource', type, resourceId)
         const metadataFile = path.join(resourceDir, 'metadata.json')
-        
+
         if (await fs.pathExists(metadataFile)) {
           customMetadata = await fs.readJson(metadataFile)
         }
       } catch (error) {
-        // 如果读取失败，使用默认值
         console.warn(`Failed to read custom metadata for ${resourceId}:`, error)
       }
     }
