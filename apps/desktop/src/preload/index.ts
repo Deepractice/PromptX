@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, shell } from 'electron'
 
 /**
  * Preload Script - 安全的IPC通信桥接
@@ -22,11 +22,21 @@ interface MCPServerConfig {
   [key: string]: unknown
 }
 
+interface AgentXProfile {
+  id: string
+  name: string
+  apiKey: string
+  baseUrl: string
+  model: string
+}
+
 interface AgentXConfig {
   apiKey: string
   baseUrl: string
   model: string
   mcpServers?: MCPServerConfig[]
+  profiles?: AgentXProfile[]
+  activeProfileId?: string
 }
 
 interface OpenDialogOptions {
@@ -101,6 +111,12 @@ interface ElectronAPI {
     deleteEngram: (roleId: string, engramId: number) => Promise<any>
     deleteCue: (roleId: string, cueWord: string) => Promise<any>
   }
+  // Shell API
+  shell: {
+    openExternal: (url: string) => Promise<void>
+  }
+  // System info
+  platform: string
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -155,7 +171,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('cognition:updateEngram', roleId, engramId, updates),
     deleteEngram: (roleId: string, engramId: number) => ipcRenderer.invoke('cognition:deleteEngram', roleId, engramId),
     deleteCue: (roleId: string, cueWord: string) => ipcRenderer.invoke('cognition:deleteCue', roleId, cueWord),
-  }
+  },
+  // Shell API
+  shell: {
+    openExternal: (url: string) => shell.openExternal(url),
+  },
+  // System info
+  platform: process.platform,
 } as ElectronAPI)
 
 // 为window对象添加类型定义

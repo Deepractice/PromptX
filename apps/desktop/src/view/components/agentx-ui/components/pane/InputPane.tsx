@@ -197,6 +197,14 @@ export const InputPane: React.ForwardRefExoticComponent<
     const [attachments, setAttachments] = React.useState<Attachment[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
     const [isDragging, setIsDragging] = React.useState(false);
+    const [fileError, setFileError] = React.useState<string | null>(null);
+    const fileErrorTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const showFileError = React.useCallback((msg: string) => {
+      setFileError(msg);
+      if (fileErrorTimerRef.current) clearTimeout(fileErrorTimerRef.current);
+      fileErrorTimerRef.current = setTimeout(() => setFileError(null), 3000);
+    }, []);
 
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
     const emojiPickerRef = React.useRef<HTMLDivElement>(null);
@@ -244,19 +252,19 @@ export const InputPane: React.ForwardRefExoticComponent<
         for (const file of fileArray) {
           // Check max attachments
           if (attachments.length >= maxAttachments) {
-            console.warn(`Maximum ${maxAttachments} attachments allowed`);
+            showFileError(t("agentxUI.chat.errors.maxAttachments", { max: maxAttachments }));
             break;
           }
 
           // Check file type (skip if acceptAllFileTypes is true)
           if (!acceptAllFileTypes && !allAcceptedTypes.includes(file.type)) {
-            console.warn(`File type ${file.type} not accepted`);
+            showFileError(t("agentxUI.chat.errors.fileTypeNotAccepted", { name: file.name }));
             continue;
           }
 
           // Check file size
           if (file.size > maxFileSize) {
-            console.warn(`File ${file.name} exceeds maximum size of ${maxFileSize} bytes`);
+            showFileError(t("agentxUI.chat.errors.fileTooLarge", { name: file.name, max: `${Math.round(maxFileSize / 1024 / 1024)}MB` }));
             continue;
           }
 
@@ -295,6 +303,8 @@ export const InputPane: React.ForwardRefExoticComponent<
         allAcceptedTypes,
         acceptedImageTypes,
         acceptAllFileTypes,
+        showFileError,
+        t,
       ]
     );
 
@@ -313,7 +323,7 @@ export const InputPane: React.ForwardRefExoticComponent<
         for (const filePath of filePaths) {
           // Check max attachments
           if (attachments.length >= maxAttachments) {
-            console.warn(`Maximum ${maxAttachments} attachments allowed`);
+            showFileError(t("agentxUI.chat.errors.maxAttachments", { max: maxAttachments }));
             break;
           }
 
@@ -339,7 +349,7 @@ export const InputPane: React.ForwardRefExoticComponent<
 
             // Check file size
             if (file.size > maxFileSize) {
-              console.warn(`File ${result.fileName} exceeds maximum size of ${maxFileSize} bytes`);
+              showFileError(t("agentxUI.chat.errors.fileTooLarge", { name: result.fileName, max: `${Math.round(maxFileSize / 1024 / 1024)}MB` }));
               continue;
             }
 
@@ -370,7 +380,7 @@ export const InputPane: React.ForwardRefExoticComponent<
           }
         }
       },
-      [attachments.length, maxAttachments, maxFileSize, acceptedImageTypes]
+      [attachments.length, maxAttachments, maxFileSize, acceptedImageTypes, showFileError, t]
     );
 
     /**
@@ -626,6 +636,13 @@ export const InputPane: React.ForwardRefExoticComponent<
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* File error toast */}
+        {fileError && (
+          <div className="flex-shrink-0 px-3 py-1.5 bg-destructive/10 border-b border-destructive/20 text-destructive text-xs">
+            {fileError}
           </div>
         )}
 

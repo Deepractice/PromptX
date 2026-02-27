@@ -51,11 +51,6 @@ win:
   icon: assets/icons/icon.png
   artifactName: promptx-desktop-${version}-win32-${arch}.${ext}
   requestedExecutionLevel: asInvoker
-  extraResources:
-    - from: "resources/win/git-bash"
-      to: "git-bash"
-      filter:
-        - "**/*"
   target:
     - nsis
 

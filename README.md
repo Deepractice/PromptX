@@ -101,6 +101,8 @@ AI:   Provides in-depth product strategy advice as a professional product manage
 | 🍎**macOS (Intel)**         | [Download .dmg](https://promptx.deepractice.ai/download/latest/promptx-desktop-mac-x64.dmg)         |
 | 🪟**Windows**               | [Download .exe](https://promptx.deepractice.ai/download/latest/promptx-desktop-win32-x64-setup.exe) |
 
+> **Windows users:** The AgentX feature requires [Git for Windows](https://git-scm.com/download/win) to be installed. Please install it before using AgentX.
+
 [📦 View All Releases &amp; Platforms](https://promptx.deepractice.ai/download/) (Linux, Portable versions, etc.)
 
 #### 🚀 Quick Start

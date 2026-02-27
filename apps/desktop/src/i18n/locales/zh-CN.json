@@ -39,6 +39,22 @@
       "saving": "保存中...",
       "saveSuccess": "AgentX 配置保存成功",
       "saveFailed": "保存 AgentX 配置失败",
+      "windowsGitWarning": {
+        "text": "AgentX 在 Windows 上需要安装 Git。",
+        "link": "下载 Git for Windows"
+      },
+      "profiles": {
+        "empty": "暂无配置，点击下方按钮添加。",
+        "add": "添加配置",
+        "addTitle": "添加配置",
+        "editTitle": "编辑配置",
+        "name": "名称",
+        "active": "当前",
+        "activate": "设为当前",
+        "activated": "已切换配置",
+        "deleted": "配置已删除",
+        "saved": "配置已保存"
+      },
       "skills": {
         "title": "Skills 配置",
         "description": "管理启用的 Skills，这些 Skills 将被用于所有 AgentX 对话",
@@ -650,7 +666,12 @@
         "title": "未选择对话",
         "description": "选择一个对话或开始新对话"
       },
-      "dropToSend": "拖放以发送"
+      "dropToSend": "拖放以发送",
+      "errors": {
+        "maxAttachments": "最多只能添加 {{max}} 个附件",
+        "fileTooLarge": "{{name}} 超过了 {{max}} 的大小限制",
+        "fileTypeNotAccepted": "{{name}} 不是支持的文件类型"
+      }
     },
     "conversations": {
       "title": "对话列表",
