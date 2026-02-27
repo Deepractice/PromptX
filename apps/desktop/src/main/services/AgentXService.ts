@@ -188,9 +188,11 @@ export class AgentXService {
       // Add built-in mcp-office server
       // Use Electron's built-in Node.js (ELECTRON_RUN_AS_NODE=1) so it works
       // even if the user doesn't have Node.js installed on their system.
+      // On macOS, prefer the Helper binary to avoid Dock icon flicker.
       if (mcpOfficePath) {
+        const mcpCommand = process.env.PROMPTX_MAC_HELPER_PATH || process.execPath
         mcpServers['mcp-office'] = {
-          command: process.execPath,
+          command: mcpCommand,
           args: [mcpOfficePath],
           env: {
             ...process.env,

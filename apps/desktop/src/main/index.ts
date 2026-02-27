@@ -217,6 +217,30 @@ class PromptXDesktopApp {
     if (process.platform === 'win32') {
       this.ensureWindowsToolsInPath()
     }
+
+    // On macOS: detect Electron Helper binary to avoid Dock icon flicker
+    // The Helper binary has LSUIElement=true in its Info.plist, so macOS won't
+    // show a Dock icon when it's spawned as a child process.
+    if (process.platform === 'darwin') {
+      this.detectMacHelperBinary()
+    }
+  }
+
+  private detectMacHelperBinary(): void {
+    const appName = path.basename(process.execPath)
+    const helperPath = path.join(
+      path.dirname(process.execPath),
+      '..', 'Frameworks',
+      `${appName} Helper.app`,
+      'Contents', 'MacOS',
+      `${appName} Helper`
+    )
+    if (fs.existsSync(helperPath)) {
+      process.env.PROMPTX_MAC_HELPER_PATH = helperPath
+      logger.info(`macOS Helper binary detected: ${helperPath}`)
+    } else {
+      logger.info('macOS Helper binary not found, using main binary for subprocesses')
+    }
   }
 
   private ensureWindowsToolsInPath(): void {
