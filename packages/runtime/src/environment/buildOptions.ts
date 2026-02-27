@@ -91,14 +91,22 @@ export function buildOptions(
   // In packaged Electron apps, 'node' is often not in the system PATH on customer
   // machines. process.execPath is always available and with ELECTRON_RUN_AS_NODE=1
   // the Electron binary runs as a standard Node.js runtime.
+  // On macOS, prefer the Electron Helper binary (LSUIElement=true) to avoid Dock icon flicker.
   options.spawnClaudeCodeProcess = (spawnOptions) => {
-    const childProcess = spawn(process.execPath, spawnOptions.args, {
+    const macHelperPath = process.env.PROMPTX_MAC_HELPER_PATH;
+    const command =
+      process.platform === "darwin" && macHelperPath
+        ? macHelperPath
+        : process.execPath;
+
+    const childProcess = spawn(command, spawnOptions.args, {
       cwd: spawnOptions.cwd,
       env: {
         ...spawnOptions.env,
         ELECTRON_RUN_AS_NODE: "1",
       },
       stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
     });
     return childProcess as any;
   };

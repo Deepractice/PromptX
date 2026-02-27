@@ -13,7 +13,7 @@ export class PromptXActivationAdapter implements ActivationAdapter {
   async activate(role: Role): Promise<ActivationResult> {
     try {
       // 调用promptx action命令激活角色
-      const { stdout } = await execAsync(`promptx action ${role.id}`)
+      const { stdout } = await execAsync(`promptx action ${role.id}`, { windowsHide: true })
       
       // 检查输出判断是否成功
       const success = stdout.includes('角色已激活') || 
