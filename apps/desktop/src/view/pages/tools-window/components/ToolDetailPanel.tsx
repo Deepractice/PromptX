@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Trash2, Settings2 } from "lucide-react"
+import { Trash2, Settings2, Download } from "lucide-react"
 import EditInfoDialog from "./EditInfoDialog"
 import ToolOverviewTab from "./ToolOverviewTab"
 import ToolTestTab from "./ToolTestTab"
@@ -156,6 +156,21 @@ export default function ToolDetailPanel({ selectedTool, onToolUpdated, onDelete,
           </div>
           {(selectedTool.source ?? "user") === "user" && (
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={async () => {
+                try {
+                  const result = await window.electronAPI?.invoke("resources:download", { id: selectedTool.id, type: "tool", source: selectedTool.source ?? "user" })
+                  if (result?.success) {
+                    toast.success(t("resources.actions.exportSuccess"))
+                  } else if (result?.message) {
+                    toast.error(result.message)
+                  }
+                } catch {
+                  toast.error(t("resources.actions.exportFailed"))
+                }
+              }}>
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                {t("resources.actions.export")}
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowEditInfo(true)}>
                 <Settings2 className="h-3.5 w-3.5 mr-1.5" />
                 {t("tools.detail.editInfo")}

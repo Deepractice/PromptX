@@ -279,7 +279,10 @@
       "edit": "编辑",
       "download": "下载",
       "delete": "删除",
-      "use": "使用"
+      "use": "使用",
+      "export": "导出",
+      "exportSuccess": "导出成功",
+      "exportFailed": "导出失败"
     },
     "messages": {
       "loadFailed": "加载资源失败",

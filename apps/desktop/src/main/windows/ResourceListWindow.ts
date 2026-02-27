@@ -306,11 +306,12 @@ export class ResourceListWindow {
     })
 
     // 新增：下载资源（分享即下载，导出为 ZIP 压缩包）
-    ipcMain.handle('resources:download', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string }) => {
+    ipcMain.handle('resources:download', async (_evt, payload: { id: string; type: 'role' | 'tool'; source?: string; version?: string }) => {
       try {
         const id = payload?.id
         const type = payload?.type
         const source = payload?.source ?? 'user'
+        const version = payload?.version ?? 'v1'
         if (!id || !type) {
           return { success: false, message: t('resources.missingParams') }
         }
@@ -324,7 +325,10 @@ export class ResourceListWindow {
         // 定位资源目录
         let sourceDir: string | null = null
         if (source === 'user') {
-          sourceDir = path.join(os.homedir(), '.promptx', 'resource', type, id)
+          // V2 角色存储在 ~/.rolex/roles/<id>/，V1 及工具存储在 ~/.promptx/resource/<type>/<id>/
+          sourceDir = (type === 'role' && version === 'v2')
+            ? path.join(os.homedir(), '.rolex', 'roles', id)
+            : path.join(os.homedir(), '.promptx', 'resource', type, id)
         } else if (source === 'project') {
           try {
             const { ProjectPathResolver } = require('@promptx/core')
@@ -386,7 +390,9 @@ export class ResourceListWindow {
           }
         }
 
-        await addDirectoryToZip(sourceDir)
+        // V2 角色导出时用 roleId 作为 ZIP 内顶层目录，确保导入时能正确还原 ID
+        const zipRootPrefix = (type === 'role' && version === 'v2') ? id : ''
+        await addDirectoryToZip(sourceDir, zipRootPrefix)
 
         // 写入 ZIP 文件
         zip.writeZip(zipFilePath)

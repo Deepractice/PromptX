@@ -9,7 +9,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Pencil, BookOpen, Layers, Brain, FileText, ChevronRight, ChevronDown, Save, Loader2, Target, Building2, Upload, Trash2 } from "lucide-react"
+import { Pencil, BookOpen, Layers, Brain, FileText, ChevronRight, ChevronDown, Save, Loader2, Target, Building2, Upload, Trash2, Download } from "lucide-react"
+import { toast } from "sonner"
 import { useEffect, useState, useCallback } from "react"
 import type { RoleItem } from "./RoleListPanel"
 import MemoryTab from "./MemoryTab"
@@ -982,6 +983,23 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onDelete, on
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {(selectedRole.source ?? "user") !== "system" && (
+              <Button variant="outline" size="sm" onClick={async () => {
+                try {
+                  const result = await window.electronAPI?.invoke("resources:download", { id: selectedRole.id, type: "role", source: selectedRole.source ?? "user", version: selectedRole.version ?? "v1" })
+                  if (result?.success) {
+                    toast.success(t("resources.actions.exportSuccess"))
+                  } else if (result?.message) {
+                    toast.error(result.message)
+                  }
+                } catch {
+                  toast.error(t("resources.actions.exportFailed"))
+                }
+              }}>
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                {t("resources.actions.export")}
+              </Button>
+            )}
             {(selectedRole.source ?? "user") !== "system" && (
               <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => onDelete(selectedRole)}>
                 <Trash2 className="h-3.5 w-3.5 mr-1.5" />

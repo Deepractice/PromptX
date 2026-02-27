@@ -280,7 +280,10 @@
       "edit": "Edit",
       "download": "Download",
       "delete": "Delete",
-      "use": "Use"
+      "use": "Use",
+      "export": "Export",
+      "exportSuccess": "Exported successfully",
+      "exportFailed": "Export failed"
     },
     "messages": {
       "loadFailed": "Failed to load resources",
