@@ -1,5 +1,13 @@
 # @promptx/$(basename $pkg)
 
+## 2.1.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @promptx/logger@2.1.0
+  - @promptx/resource@2.1.0
+
 ## 1.28.3
 
 ### Patch Changes
