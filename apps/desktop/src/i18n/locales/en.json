@@ -39,6 +39,22 @@
       "saving": "Saving...",
       "saveSuccess": "AgentX configuration saved successfully",
       "saveFailed": "Failed to save AgentX configuration",
+      "windowsGitWarning": {
+        "text": "AgentX requires Git to be installed on Windows.",
+        "link": "Download Git for Windows"
+      },
+      "profiles": {
+        "empty": "No configurations yet. Add one to get started.",
+        "add": "Add Configuration",
+        "addTitle": "Add Configuration",
+        "editTitle": "Edit Configuration",
+        "name": "Name",
+        "active": "Active",
+        "activate": "Set as active",
+        "activated": "Configuration activated",
+        "deleted": "Configuration deleted",
+        "saved": "Configuration saved"
+      },
       "skills": {
         "title": "Skills Configuration",
         "description": "Manage enabled Skills that will be used for all AgentX conversations",
@@ -653,7 +669,12 @@
         "title": "No conversation selected",
         "description": "Select a conversation or start a new one"
       },
-      "dropToSend": "Drop to send"
+      "dropToSend": "Drop to send",
+      "errors": {
+        "maxAttachments": "Maximum {{max}} attachments allowed",
+        "fileTooLarge": "{{name}} exceeds the {{max}} size limit",
+        "fileTypeNotAccepted": "{{name}} is not a supported file type"
+      }
     },
     "conversations": {
       "title": "Conversations",

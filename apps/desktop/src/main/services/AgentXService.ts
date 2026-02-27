@@ -20,12 +20,22 @@ export interface MCPServerConfig {
   [key: string]: unknown  // 支持其他自定义字段
 }
 
+export interface AgentXProfile {
+  id: string
+  name: string
+  apiKey: string
+  baseUrl: string
+  model: string
+}
+
 export interface AgentXConfig {
   apiKey: string
   baseUrl: string
   model: string
   mcpServers?: MCPServerConfig[]
   enabledSkills?: string[]  // 启用的 skills 列表
+  profiles?: AgentXProfile[]
+  activeProfileId?: string
 }
 
 const DEFAULT_CONFIG: AgentXConfig = {
@@ -57,6 +67,20 @@ export class AgentXService {
         const data = fs.readFileSync(this.configPath, 'utf-8')
         const saved = JSON.parse(data)
         this.config = { ...DEFAULT_CONFIG, ...saved }
+
+        // Migrate: if no profiles but has apiKey, create a default profile
+        if (!this.config.profiles?.length && this.config.apiKey) {
+          const defaultProfile: AgentXProfile = {
+            id: crypto.randomUUID(),
+            name: 'Default',
+            apiKey: this.config.apiKey,
+            baseUrl: this.config.baseUrl,
+            model: this.config.model,
+          }
+          this.config.profiles = [defaultProfile]
+          this.config.activeProfileId = defaultProfile.id
+          this.saveConfig()
+        }
       }
     } catch (error) {
       logger.error('Failed to load AgentX config:', String(error))
@@ -77,6 +101,17 @@ export class AgentXService {
 
   async updateConfig(newConfig: Partial<AgentXConfig>): Promise<void> {
     this.config = { ...this.config, ...newConfig }
+
+    // Sync active profile's fields to top-level apiKey/baseUrl/model
+    if (this.config.profiles?.length && this.config.activeProfileId) {
+      const active = this.config.profiles.find(p => p.id === this.config.activeProfileId)
+      if (active) {
+        this.config.apiKey = active.apiKey
+        this.config.baseUrl = active.baseUrl
+        this.config.model = active.model
+      }
+    }
+
     this.saveConfig()
 
     // 如果服务正在运行，重启以应用新配置
