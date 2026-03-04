@@ -4,7 +4,7 @@ import { MCPOutputAdapter } from '~/utils/MCPOutputAdapter.js';
 const outputAdapter = new MCPOutputAdapter();
 
 const V2_DESCRIPTION_SECTION = `
-**V2 Roles (RoleX)**: Full lifecycle management (born → want → plan → todo → growup).
+**V2 Roles (RoleX)**: Full lifecycle management (born → want → plan → todo → synthesize).
 
 On activate, version is auto-detected: V2 takes priority, falls back to V1 if not found.
 Use \`version\` parameter to force a specific version: \`"v1"\` for DPML, \`"v2"\` for RoleX.`;
@@ -36,9 +36,9 @@ const V2_EXAMPLES = `
 { "operation": "achieve", "role": "_", "experience": "learned..." }
 \`\`\`
 
-**V2 growup (teach knowledge to a role):**
+**V2 synthesize (teach knowledge to a role):**
 \`\`\`json
-{ "operation": "growup", "role": "target-role", "name": "domain-knowledge", "source": "Feature: ...", "type": "knowledge" }
+{ "operation": "synthesize", "role": "target-role", "name": "domain-knowledge", "source": "Feature: ...", "type": "knowledge" }
 \`\`\`
 
 **Organization: view directory:**
@@ -114,7 +114,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
 - Act as the activated role, maintain its professional traits
 - Use \`discover\` first when a role is not found`;
 
-  const v2Operations = ['born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'growup', 'found', 'establish', 'hire', 'fire', 'appoint', 'dismiss', 'directory'];
+  const v2Operations = ['born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'synthesize', 'found', 'establish', 'hire', 'fire', 'appoint', 'dismiss', 'directory'];
   const operationEnum = enableV2
     ? ['activate', ...v2Operations]
     : ['activate'];
@@ -129,7 +129,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
           type: 'string',
           enum: operationEnum,
           description: enableV2
-            ? 'Operation type. Default: activate. V2 lifecycle operations: born, identity, want, plan, todo, finish, achieve, abandon, focus, growup. Organization operations: found, establish, hire, fire, appoint, dismiss, directory'
+            ? 'Operation type. Default: activate. V2 lifecycle operations: born, identity, want, plan, todo, finish, achieve, abandon, focus, synthesize. Organization operations: found, establish, hire, fire, appoint, dismiss, directory'
             : 'Operation type. Default: activate.'
         },
         role: {
@@ -144,15 +144,15 @@ Use \`roleResources\` to load additional sections **before** you need them:
         ...(enableV2 ? {
           name: {
             type: 'string',
-            description: 'Name parameter for born(role name), want(goal name), todo(task name), focus(focus item), growup(knowledge name), finish(task name)'
+            description: 'Name parameter for born(role name), want(goal name), todo(task name), focus(focus item), synthesize(knowledge name), finish(task name)'
           },
           source: {
             type: 'string',
-            description: 'Gherkin source text for born/want/todo/growup/plan/establish operations'
+            description: 'Gherkin source text for born/want/todo/synthesize/plan/establish operations'
           },
           type: {
             type: 'string',
-            description: 'Growup type: knowledge, experience, or voice. For growup operation, role parameter specifies the target role to teach.'
+            description: 'Synthesize type: knowledge, experience, or voice. For synthesize operation, role parameter specifies the target role to teach.'
           },
           experience: {
             type: 'string',

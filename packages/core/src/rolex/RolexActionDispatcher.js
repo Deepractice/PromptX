@@ -42,8 +42,11 @@ class RolexActionDispatcher {
         return this._abandon(args)
       case 'focus':
         return this._focus(args)
+      case 'synthesize':
+        return this._synthesize(args)
       case 'growup':
-        return this._growup(args)
+        // 向后兼容：growup 已重命名为 synthesize
+        return this._synthesize(args)
       case 'found':
         return this._found(args)
       case 'establish':
@@ -111,9 +114,14 @@ class RolexActionDispatcher {
     return this.bridge.focus(args.name)
   }
 
+  async _synthesize (args) {
+    if (!args.name) throw new Error('name is required for synthesize operation')
+    return this.bridge.synthesize(args.name, args.source, args.type, args.role)
+  }
+
+  // 向后兼容：保留 _growup 方法
   async _growup (args) {
-    if (!args.name) throw new Error('name is required for growup operation')
-    return this.bridge.growup(args.name, args.source, args.type, args.role)
+    return this._synthesize(args)
   }
 
   async _found (args) {

@@ -16,11 +16,11 @@
 
     ### Step 3: 创建V2角色
     - born：用整合后的 persona 描述创建角色
-    - **activate**：born 后必须立即 activate 该角色（growup 依赖活跃角色）
-    - growup type=voice：迁移有独立价值的 thought
-    - growup type=knowledge：迁移专有知识
-    - growup type=experience：迁移关键执行经验
-    - ⚠️ 严格顺序：born → activate → growup，不可跳过 activate
+    - **activate**：born 后必须立即 activate 该角色（synthesize 依赖活跃角色）
+    - synthesize type=voice：迁移有独立价值的 thought
+    - synthesize type=knowledge：迁移专有知识
+    - synthesize type=experience：迁移关键执行经验
+    - ⚠️ 严格顺序：born → activate → synthesize，不可跳过 activate
 
     ### Step 4: 组织安排（可选）
     - 如果角色属于某个团队 → hire 到组织
@@ -29,11 +29,11 @@
     ### Step 5: 验证
     - identity 查看角色完整身份，确认所有 feature 已写入
     - 与 V1 原始内容对比，确认核心特质保留
-    - 如有缺失，补充 growup
+    - 如有缺失，补充 synthesize
   </process>
 
   <rule>
-    - born 之后必须 activate，然后才能 growup——这是最常见的错误
+    - born 之后必须 activate，然后才能 synthesize——这是最常见的错误
     - IF V1角色有大量thought THEN 整合为精炼的persona，不要逐个迁移
     - IF knowledge是通用知识 THEN 不迁移（AI已具备）
     - IF execution是标准流程 THEN 映射为duty；IF是领域知识 THEN 映射为knowledge

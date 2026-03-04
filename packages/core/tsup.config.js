@@ -36,6 +36,9 @@ export default defineConfig({
     '@rolexjs/core',
     '@rolexjs/local-platform',
     '@rolexjs/parser',
+    '@rolexjs/prototype',
+    '@rolexjs/system',
+    'resourcexjs',
     // ... 其他外部依赖
   ],
   noExternal: [], // 不强制打包任何模块

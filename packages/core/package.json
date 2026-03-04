@@ -36,9 +36,11 @@
     "@npmcli/arborist": "^9.2.0",
     "@promptx/logger": "workspace:*",
     "@promptx/resource": "workspace:*",
-    "@rolexjs/core": "^0.11.0",
-    "@rolexjs/local-platform": "^0.11.0",
-    "@rolexjs/parser": "^0.11.0",
+    "@rolexjs/core": "^1.1.0",
+    "@rolexjs/local-platform": "^1.1.0",
+    "@rolexjs/parser": "^1.1.0",
+    "@rolexjs/prototype": "^1.1.0",
+    "@rolexjs/system": "^1.1.0",
     "ajv": "^8.17.1",
     "better-sqlite3": "^12.4.1",
     "env-paths": "2.2.1",
@@ -50,7 +52,8 @@
     "importx": "^0.5.2",
     "is-electron": "^2.2.2",
     "peggy": "^5.0.5",
-    "rolexjs": "^0.11.0"
+    "resourcexjs": "^2.14.0",
+    "rolexjs": "^1.1.0"
   },
   "files": [
     "dist/**/*",
