@@ -72,7 +72,7 @@ class RolexBridge {
       logger.info('[RolexBridge] Initializing RoleX...')
       await fs.ensureDir(this.rolexRoot)
 
-      const { LocalPlatform } = await import('@rolexjs/local-platform')
+      const { localPlatform } = await import('@rolexjs/local-platform')
       const { Rolex, bootstrap, renderFeature, renderFeatures } = await import('rolexjs')
 
       this._renderFeature = renderFeature
@@ -82,7 +82,8 @@ class RolexBridge {
       await this._syncSeedRoles()
 
       // 创建 platform（在 SEED 同步之后，确保读到最新的文件状态）
-      this.platform = new LocalPlatform(this.rolexRoot)
+      // RoleX 1.1.0: localPlatform 是工厂函数，不是构造函数
+      this.platform = localPlatform(this.rolexRoot)
       this.rolex = new Rolex(this.platform)
 
       // Bootstrap: 确保种子角色存在
