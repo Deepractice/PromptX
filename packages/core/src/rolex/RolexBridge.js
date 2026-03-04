@@ -340,36 +340,48 @@ class RolexBridge {
     if (process.env.PROMPTX_ENABLE_V2 === '0') return []
     try {
       await this.ensureInitialized()
-      const rolesDir = path.join(this.rolexRoot, 'roles')
-      if (!await fs.pathExists(rolesDir)) return []
-      const entries = await fs.readdir(rolesDir, { withFileTypes: true })
+
+      // RoleX 1.1.0: 从数据库查询所有 individuals
+      // 使用 platform 的 runtime 来查询图数据库
+      const runtime = this.platform.runtime
       const roles = []
 
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue
-        const featurePath = path.join(
-          rolesDir, entry.name, 'identity', 'persona.identity.feature'
-        )
-        if (await fs.pathExists(featurePath)) {
-          const isSeed = RolexBridge.SEED_ROLES.includes(entry.name)
+      // 遍历所有节点，查找 type 为 'individual' 的节点
+      runtime.forEachNode((node, attrs) => {
+        if (attrs.type === 'individual') {
+          // 获取 identity 子节点来提取角色信息
+          let name = attrs.id || 'Unknown'
           let description = ''
-          let featureName = ''
+
+          // 尝试从 identity 特征中提取信息
           try {
-            const content = await fs.readFile(featurePath, 'utf-8')
-            featureName = extractFeatureName(content)
-            description = extractFeatureDescription(content)
+            const identityNode = runtime.findNode((n, a) =>
+              a.type === 'identity' && runtime.hasEdge(attrs.id, n)
+            )
+            if (identityNode) {
+              const identityAttrs = runtime.getNodeAttributes(identityNode)
+              if (identityAttrs.source) {
+                name = extractFeatureName(identityAttrs.source) || name
+                description = extractFeatureDescription(identityAttrs.source)
+              }
+            }
           } catch { /* ignore */ }
+
+          // 判断是否为 SEED 角色
+          const isSeed = RolexBridge.SEED_ROLES.includes(attrs.id)
+
           roles.push({
-            id: entry.name,
-            name: featureName || entry.name,
+            id: attrs.id,
+            name,
             description,
             source: isSeed ? 'system' : 'rolex',
             version: 'v2',
             protocol: 'role'
           })
         }
-      }
+      })
 
+      logger.info(`[RolexBridge] Found ${roles.length} V2 roles from database`)
       return roles
     } catch (error) {
       logger.error('[RolexBridge] Failed to list V2 roles:', error)
