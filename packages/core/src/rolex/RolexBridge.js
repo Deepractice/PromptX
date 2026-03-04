@@ -72,47 +72,50 @@ class RolexBridge {
       logger.info('[RolexBridge] Initializing RoleX...')
       await fs.ensureDir(this.rolexRoot)
 
+      logger.info('[RolexBridge] Importing @rolexjs/local-platform...')
       const { localPlatform } = await import('@rolexjs/local-platform')
-      const { Rolex, bootstrap, renderFeature, renderFeatures } = await import('rolexjs')
+      logger.info('[RolexBridge] Importing rolexjs...')
+      const { Rolex, renderState } = await import('rolexjs')
 
-      this._renderFeature = renderFeature
-      this._renderFeatures = renderFeatures
+      // RoleX 1.1.0: 使用 renderState 替代 renderFeature/renderFeatures
+      this._renderFeature = (feature) => renderState({ features: [feature] })
+      this._renderFeatures = (features) => renderState({ features })
 
       // 版本检测：rolexjs 更新时强制重建 SEED 角色（在创建 platform 之前）
+      logger.info('[RolexBridge] Syncing SEED roles...')
       await this._syncSeedRoles()
 
       // 创建 platform（在 SEED 同步之后，确保读到最新的文件状态）
       // RoleX 1.1.0: localPlatform 是工厂函数，不是构造函数
+      logger.info('[RolexBridge] Creating platform...')
       this.platform = localPlatform(this.rolexRoot)
+      logger.info('[RolexBridge] Creating Rolex instance...')
       this.rolex = new Rolex(this.platform)
 
-      // Bootstrap: 确保种子角色存在
-      bootstrap(this.platform)
+      // RoleX 1.1.0: 不再需要 bootstrap，SEED 角色通过 _syncSeedRoles 管理
 
       this.initialized = true
       logger.info('[RolexBridge] RoleX initialized successfully')
     } catch (error) {
-      logger.warn('[RolexBridge] RoleX initialization failed:', error.message)
+      logger.error('[RolexBridge] RoleX initialization failed:', error)
       throw error
     }
   }
 
   /**
-   * 同步 SEED 角色 - 当 rolexjs 版本变化时删除旧的 SEED 角色
-   * bootstrap 会在之后重建它们
+   * 同步 SEED 角色版本标记
+   * RoleX 1.1.0: 不再自动管理 SEED 角色，只记录版本
    */
   async _syncSeedRoles () {
-    const SEED_ROLES = RolexBridge.SEED_ROLES
     const versionFile = path.join(this.rolexRoot, '.seed-version')
 
-    // 读取 rolexjs 当前版本（通过文件路径，避免 ESM exports 限制）
+    // 读取 rolexjs 当前版本
     let currentVersion = 'unknown'
     try {
       const rolexjsDir = path.dirname(require.resolve('rolexjs'))
       const pkg = await fs.readJson(path.join(rolexjsDir, '..', 'package.json'))
       currentVersion = pkg.version
     } catch {
-      // fallback: 无法读取版本，每次都重建
       currentVersion = Date.now().toString()
     }
 
@@ -121,36 +124,12 @@ class RolexBridge {
     try {
       savedVersion = (await fs.readFile(versionFile, 'utf-8')).trim()
     } catch {
-      // 无版本文件 = 首次运行或旧安装
+      // 无版本文件 = 首次运行
     }
 
     if (savedVersion !== currentVersion) {
-      logger.info(`[RolexBridge] SEED version changed (${savedVersion || 'none'} → ${currentVersion}), resyncing built-in roles...`)
-      for (const name of SEED_ROLES) {
-        const roleDir = path.join(this.rolexRoot, 'roles', name)
-        if (await fs.pathExists(roleDir)) {
-          await fs.remove(roleDir)
-          logger.info(`[RolexBridge] Removed outdated SEED role: ${name}`)
-        }
-      }
-
-      // 同时从 rolex.json 注册表中移除 SEED 角色，否则 bootstrap 会跳过重建
-      const registryFile = path.join(this.rolexRoot, 'rolex.json')
-      try {
-        if (await fs.pathExists(registryFile)) {
-          const registry = await fs.readJson(registryFile)
-          if (Array.isArray(registry.roles)) {
-            registry.roles = registry.roles.filter(r => !SEED_ROLES.includes(r))
-            await fs.writeJson(registryFile, registry, { spaces: 2 })
-            logger.info('[RolexBridge] Removed SEED roles from rolex.json registry')
-          }
-        }
-      } catch (e) {
-        logger.warn('[RolexBridge] Failed to clean rolex.json registry:', e.message)
-      }
-
+      logger.info(`[RolexBridge] RoleX version: ${savedVersion || 'none'} → ${currentVersion}`)
       await fs.writeFile(versionFile, currentVersion)
-      logger.info('[RolexBridge] SEED roles cleared, bootstrap will recreate them')
     }
   }
 
@@ -393,7 +372,7 @@ class RolexBridge {
 
       return roles
     } catch (error) {
-      logger.warn('[RolexBridge] Failed to list V2 roles:', error.message)
+      logger.error('[RolexBridge] Failed to list V2 roles:', error)
       return []
     }
   }
