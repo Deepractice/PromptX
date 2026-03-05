@@ -1076,8 +1076,8 @@ export class ResourceListWindow {
     // V2 角色身份结构（从数据库读取）
     ipcMain.handle('rolex:getIdentityNodes', async (_evt, payload: { roleId: string }) => {
       try {
-        const { RolexBridge } = require('@promptx/core')
-        const bridge = RolexBridge.getInstance()
+        const core = require('@promptx/core')
+        const bridge = core.rolex.RolexBridge.getInstance()
         const identityData = await bridge.identity(payload.roleId)
         return { success: true, data: identityData }
       } catch (error: any) {
