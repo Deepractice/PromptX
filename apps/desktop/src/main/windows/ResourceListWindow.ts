@@ -1077,7 +1077,7 @@ export class ResourceListWindow {
     ipcMain.handle('rolex:getIdentityNodes', async (_evt, payload: { roleId: string }) => {
       try {
         const core = require('@promptx/core')
-        const bridge = core.rolex.RolexBridge.getInstance()
+        const bridge = core.rolex.getRolexBridge()
         const identityData = await bridge.identity(payload.roleId)
         return { success: true, data: identityData }
       } catch (error: any) {
