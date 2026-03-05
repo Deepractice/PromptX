@@ -1073,6 +1073,18 @@ export class ResourceListWindow {
       }
     })
 
+    // V2 角色身份结构（从数据库读取）
+    ipcMain.handle('rolex:getIdentityNodes', async (_evt, payload: { roleId: string }) => {
+      try {
+        const { RolexBridge } = require('@promptx/core')
+        const bridge = RolexBridge.getInstance()
+        const identityData = await bridge.identity(payload.roleId)
+        return { success: true, data: identityData }
+      } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
     // 获取角色头像（profile.png/jpg/jpeg/webp）→ base64 data URL
     ipcMain.handle('resources:getRoleAvatar', async (_evt, payload: { id: string; source?: string }) => {
       try {

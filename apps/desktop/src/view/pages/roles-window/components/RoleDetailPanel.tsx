@@ -595,17 +595,13 @@ function V2OrganizationTab({ role, data, loading }: { role: RoleItem; data: any;
 // V2 Structure Tab: identity .feature files with viewer/editor
 function V2StructureTab({ role }: { role: RoleItem }) {
   const { t } = useTranslation()
-  const [files, setFiles] = useState<string[]>([])
+  const [nodes, setNodes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
   const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerFile, setViewerFile] = useState("")
+  const [viewerNode, setViewerNode] = useState<any>(null)
   const [viewerContent, setViewerContent] = useState("")
-  const [viewerLoading, setViewerLoading] = useState(false)
-  const [editedContent, setEditedContent] = useState("")
-  const [saving, setSaving] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     persona: true, knowledge: true, voice: true, experience: true,
@@ -618,53 +614,46 @@ function V2StructureTab({ role }: { role: RoleItem }) {
       setLoading(true)
       setError("")
       try {
-        const res = await window.electronAPI?.invoke("resources:listV2RoleFiles", { roleId: role.id })
-        if (res?.success) setFiles(res.files || [])
-        else setError(res?.message || t("roles.detail.loadFilesFailed"))
-      } catch { setError(t("roles.detail.loadFilesFailed")) }
-      finally { setLoading(false) }
+        const res = await window.electronAPI?.invoke("rolex:getIdentityNodes", { roleId: role.id })
+        if (res?.success && res.data) {
+          // res.data is the identity projection from role.project()
+          // It should contain nodes with their information (Gherkin content)
+          const identityNodes = Array.isArray(res.data) ? res.data : (res.data.nodes || [])
+          setNodes(identityNodes)
+        } else {
+          setError(res?.message || t("roles.detail.loadFilesFailed"))
+        }
+      } catch (err: any) {
+        setError(err?.message || t("roles.detail.loadFilesFailed"))
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [role, t])
 
   const categorize = useCallback(() => {
-    const persona: string[] = [], knowledge: string[] = [], voice: string[] = [], experience: string[] = []
-    for (const f of files) {
-      if (f.includes(".knowledge.")) knowledge.push(f)
-      else if (f.includes(".voice.")) voice.push(f)
-      else if (f.includes(".experience.")) experience.push(f)
-      else persona.push(f)
+    const persona: any[] = [], knowledge: any[] = [], voice: any[] = [], experience: any[] = []
+    for (const node of nodes) {
+      const id = node.id || ""
+      const name = node.name || id
+      if (name.includes("knowledge") || id.includes("knowledge")) knowledge.push(node)
+      else if (name.includes("voice") || id.includes("voice")) voice.push(node)
+      else if (name.includes("experience") || id.includes("experience")) experience.push(node)
+      else persona.push(node)
     }
     return { persona, knowledge, voice, experience }
-  }, [files])
+  }, [nodes])
 
   const { persona, knowledge, voice, experience } = categorize()
 
-  const openFile = async (fileName: string) => {
-    setViewerFile(fileName)
+  const openNode = (node: any) => {
+    setViewerNode(node)
+    setViewerContent(node.information || "")
     setViewerOpen(true)
-    setViewerLoading(true)
-    setIsEditing(false)
-    try {
-      const res = await window.electronAPI?.invoke("resources:readV2RoleFile", { roleId: role.id, fileName })
-      if (res?.success) { setViewerContent(res.content || ""); setEditedContent(res.content || "") }
-      else setViewerContent(t("roles.detail.loadContentFailed"))
-    } catch { setViewerContent(t("roles.detail.loadContentFailed")) }
-    finally { setViewerLoading(false) }
   }
 
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      const res = await window.electronAPI?.invoke("resources:saveV2RoleFile", {
-        roleId: role.id, fileName: viewerFile, content: editedContent,
-      })
-      if (res?.success) { setViewerContent(editedContent); setIsEditing(false) }
-    } catch { /* ignore */ }
-    finally { setSaving(false) }
-  }
-
-  const renderLayer = (key: string, label: string, desc: string, layerFiles: string[], color: string) => (
+  const renderLayer = (key: string, label: string, desc: string, layerNodes: any[], color: string) => (
     <div key={key} className="rounded-lg border bg-card overflow-hidden">
       <button
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
@@ -675,19 +664,19 @@ function V2StructureTab({ role }: { role: RoleItem }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{label}</span>
-            <span className="text-xs text-muted-foreground">({layerFiles.length})</span>
+            <span className="text-xs text-muted-foreground">({layerNodes.length})</span>
           </div>
           <p className="text-xs text-muted-foreground truncate">{desc}</p>
         </div>
       </button>
       {expanded[key] && (
         <div className="px-3 pb-2 pl-10 space-y-0.5">
-          {layerFiles.length === 0
+          {layerNodes.length === 0
             ? <span className="text-xs text-muted-foreground">{t("roles.detail.noFiles")}</span>
-            : layerFiles.map(f => (
-              <button key={f} className="flex items-center gap-2 w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted/80 transition-colors group" onClick={() => openFile(f)}>
+            : layerNodes.map(node => (
+              <button key={node.id} className="flex items-center gap-2 w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted/80 transition-colors group" onClick={() => openNode(node)}>
                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate text-muted-foreground group-hover:text-foreground">{f}</span>
+                <span className="truncate text-muted-foreground group-hover:text-foreground">{node.name || node.id}</span>
               </button>
             ))
           }
@@ -724,40 +713,20 @@ function V2StructureTab({ role }: { role: RoleItem }) {
         <DialogContent className="max-w-4xl w-[85vw] h-[75vh] flex flex-col">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4" />{viewerFile}
+              <FileText className="h-4 w-4" />{viewerNode?.name || viewerNode?.id}
             </DialogTitle>
             <DialogDescription className="flex items-center gap-2">
-              <span className="font-mono text-xs">{role.id}/identity/{viewerFile}</span>
-              {isReadOnly && <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t("roles.detail.readOnly")}</span>}
+              <span className="font-mono text-xs">{role.id} / {viewerNode?.id}</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t("roles.detail.readOnly")}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 min-h-0 rounded-lg border bg-muted/30 overflow-hidden">
-            {viewerLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : isEditing && !isReadOnly ? (
-              <textarea className="w-full h-full resize-none bg-transparent p-4 text-sm font-mono leading-relaxed focus:outline-none" value={editedContent} onChange={e => setEditedContent(e.target.value)} />
-            ) : (
-              <pre className="w-full h-full overflow-auto p-4 text-sm font-mono leading-relaxed whitespace-pre-wrap text-muted-foreground">{viewerContent}</pre>
-            )}
+            <pre className="w-full h-full overflow-auto p-4 text-sm font-mono leading-relaxed whitespace-pre-wrap text-muted-foreground">{viewerContent}</pre>
           </div>
           <DialogFooter className="shrink-0">
-            {!isReadOnly && (
-              isEditing ? (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => { setEditedContent(viewerContent); setIsEditing(false) }}>{t("roles.memory.cancel")}</Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>
-                    <Save className="h-3.5 w-3.5 mr-1.5" />
-                    {saving ? t("roles.detail.saving") : t("roles.detail.save")}
-                  </Button>
-                </>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />{t("roles.detail.editRole")}
-                </Button>
-              )
-            )}
+            <Button variant="outline" size="sm" onClick={() => setViewerOpen(false)}>
+              {t("roles.memory.cancel")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
