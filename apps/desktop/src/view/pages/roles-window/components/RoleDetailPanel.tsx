@@ -615,15 +615,21 @@ function V2StructureTab({ role }: { role: RoleItem }) {
       setError("")
       try {
         const res = await window.electronAPI?.invoke("rolex:getIdentityNodes", { roleId: role.id })
+        console.log('[V2StructureTab] Response:', res)
+        console.log('[V2StructureTab] res.data type:', typeof res?.data)
+        console.log('[V2StructureTab] res.data:', res?.data)
         if (res?.success && res.data) {
           // res.data is the identity projection from role.project()
           // It should contain nodes with their information (Gherkin content)
           const identityNodes = Array.isArray(res.data) ? res.data : (res.data.nodes || [])
+          console.log('[V2StructureTab] identityNodes:', identityNodes)
+          console.log('[V2StructureTab] identityNodes length:', identityNodes.length)
           setNodes(identityNodes)
         } else {
           setError(res?.message || t("roles.detail.loadFilesFailed"))
         }
       } catch (err: any) {
+        console.error('[V2StructureTab] Error:', err)
         setError(err?.message || t("roles.detail.loadFilesFailed"))
       } finally {
         setLoading(false)
@@ -635,12 +641,26 @@ function V2StructureTab({ role }: { role: RoleItem }) {
   const categorize = useCallback(() => {
     const persona: any[] = [], knowledge: any[] = [], voice: any[] = [], experience: any[] = []
     for (const node of nodes) {
+      const nodeType = node.type || ""
       const id = node.id || ""
       const name = node.name || id
-      if (name.includes("knowledge") || id.includes("knowledge")) knowledge.push(node)
-      else if (name.includes("voice") || id.includes("voice")) voice.push(node)
-      else if (name.includes("experience") || id.includes("experience")) experience.push(node)
-      else persona.push(node)
+
+      // Categorize by node type
+      if (nodeType === "identity" || nodeType === "individual") {
+        persona.push(node)
+      } else if (nodeType === "procedure" || nodeType === "principle" || name.includes("knowledge") || id.includes("knowledge")) {
+        knowledge.push(node)
+      } else if (name.includes("voice") || id.includes("voice")) {
+        voice.push(node)
+      } else if (name.includes("experience") || id.includes("experience") || nodeType === "experience") {
+        experience.push(node)
+      } else if (nodeType === "position" || nodeType === "organization" || nodeType === "duty" || nodeType === "requirement" || nodeType === "charter") {
+        // These are structural/organizational nodes, put in persona
+        persona.push(node)
+      } else {
+        // Default to persona
+        persona.push(node)
+      }
     }
     return { persona, knowledge, voice, experience }
   }, [nodes])
@@ -676,7 +696,10 @@ function V2StructureTab({ role }: { role: RoleItem }) {
             : layerNodes.map(node => (
               <button key={node.id} className="flex items-center gap-2 w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted/80 transition-colors group" onClick={() => openNode(node)}>
                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate text-muted-foreground group-hover:text-foreground">{node.name || node.id}</span>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="truncate text-muted-foreground group-hover:text-foreground">{node.name || node.id}</span>
+                  {node.type && <span className="text-xs text-muted-foreground/60 shrink-0">[{node.type}]</span>}
+                </div>
               </button>
             ))
           }

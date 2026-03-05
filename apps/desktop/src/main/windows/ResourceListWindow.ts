@@ -1078,9 +1078,40 @@ export class ResourceListWindow {
       try {
         const core = require('@promptx/core')
         const bridge = core.rolex.getRolexBridge()
-        const identityData = await bridge.identity(payload.roleId)
-        return { success: true, data: identityData }
+        const identityText = await bridge.identity(payload.roleId)
+        console.log('[rolex:getIdentityNodes] roleId:', payload.roleId)
+        console.log('[rolex:getIdentityNodes] identityText type:', typeof identityText)
+
+        // Parse the text into structured nodes
+        const nodes: any[] = []
+        if (typeof identityText === 'string') {
+          // Split by ## markers to find top-level nodes
+          const sections = identityText.split(/\n## \[/)
+          for (let i = 1; i < sections.length; i++) {
+            const section = sections[i]
+            // Extract node type and id from [type] (id)
+            const match = section.match(/^([^\]]+)\]\s*\(([^)]+)\)/)
+            if (match) {
+              const nodeType = match[1].trim()
+              const nodeId = match[2].trim()
+              // Extract the content (everything after the first line until next ## or end)
+              const contentMatch = section.match(/\n([\s\S]*?)(?=\n## \[|$)/)
+              const content = contentMatch ? contentMatch[1].trim() : ''
+
+              nodes.push({
+                id: nodeId,
+                name: nodeId,
+                type: nodeType,
+                information: content
+              })
+            }
+          }
+        }
+
+        console.log('[rolex:getIdentityNodes] Parsed nodes:', nodes.length)
+        return { success: true, data: nodes }
       } catch (error: any) {
+        console.error('[rolex:getIdentityNodes] Error:', error)
         return { success: false, message: error?.message }
       }
     })
