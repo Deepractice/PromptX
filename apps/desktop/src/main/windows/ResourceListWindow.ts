@@ -1000,12 +1000,29 @@ export class ResourceListWindow {
         // 获取组织目录
         let directory = null
         try {
-          const dirResult = await dispatcher.dispatch('directory', { role: payload.roleId })
-          directory = typeof dirResult === 'string' ? JSON.parse(dirResult) : dirResult
+          directory = await dispatcher.dispatch('directory', { role: payload.roleId })
         } catch { /* no organizations */ }
 
         return { success: true, identity, focus, directory }
       } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // 获取 RoleX 组织目录
+    ipcMain.handle('rolex:directory', async (_evt) => {
+      try {
+        const core = await import('@promptx/core')
+        const coreExports = (core as any).default || core
+        const { RolexActionDispatcher } = (coreExports as any).rolex
+        const dispatcher = new RolexActionDispatcher()
+
+        // directory() 现在返回结构化的 JSON 数据
+        const directory = await dispatcher.dispatch('directory', {})
+
+        return { success: true, data: directory }
+      } catch (error: any) {
+        console.error('Failed to get directory:', error)
         return { success: false, message: error?.message }
       }
     })

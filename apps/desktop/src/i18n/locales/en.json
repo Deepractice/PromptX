@@ -419,7 +419,8 @@
       "all": "All",
       "system": "System",
       "plaza": "Plaza",
-      "user": "User"
+      "user": "User",
+      "independent": "Independent Roles"
     },
     "activate": "Activate",
     "empty": "No roles found",

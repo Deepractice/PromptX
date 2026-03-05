@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast, Toaster } from "sonner"
 import { goToSendMessage } from "../../../utils/goToSendMessage"
-import RoleListPanel from "./components/RoleListPanel"
+import RoleTreeListPanel from "./components/RoleTreeListPanel"
 import RoleDetailPanel from "./components/RoleDetailPanel"
-import type { RoleItem, VersionFilter, SourceFilter } from "./components/RoleListPanel"
+import type { RoleItem, VersionFilter, SourceFilter, OrganizationNode } from "./components/RoleTreeListPanel"
 export default function RolesPage() {
   const { t } = useTranslation()
   const [roles, setRoles] = useState<RoleItem[]>([])
+  const [organizations, setOrganizations] = useState<OrganizationNode[]>([])
   const [query, setQuery] = useState("")
   const [versionFilter, setVersionFilter] = useState<VersionFilter>("v2")
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all")
@@ -62,6 +63,8 @@ export default function RolesPage() {
       if (result?.success) {
         const { grouped } = result.data || {}
         const flat: RoleItem[] = []
+
+        // 加载基础角色数据
         Object.keys(grouped || {}).forEach((source) => {
           const group = grouped[source] || {}
           ;(group.roles || []).forEach((role: any) =>
@@ -75,6 +78,41 @@ export default function RolesPage() {
             })
           )
         })
+
+        // 如果启用了 V2，加载组织目录信息
+        if (useV2) {
+          try {
+            const directoryResult = await window.electronAPI?.invoke("rolex:directory", {})
+            if (directoryResult?.success) {
+              const directory = directoryResult.data
+
+              // 更新角色的组织信息
+              if (directory?.roles) {
+                flat.forEach(role => {
+                  if (role.version === "v2") {
+                    const roleEntry = directory.roles.find((r: any) => r.name === role.id)
+                    if (roleEntry) {
+                      role.org = roleEntry.org
+                      role.position = roleEntry.position
+                    }
+                  }
+                })
+              }
+
+              // 设置组织列表
+              if (directory?.organizations) {
+                setOrganizations(directory.organizations.map((org: any) => ({
+                  name: org.name,
+                  charter: org.charter,
+                  roles: flat.filter(r => r.org === org.name)
+                })))
+              }
+            }
+          } catch (e) {
+            console.error('Failed to load directory:', e)
+          }
+        }
+
         setRoles(flat)
         if (flat.length > 0 && !selectedRole) {
           if (useV2) {
@@ -136,9 +174,10 @@ export default function RolesPage() {
   return (
     <div className="flex h-full">
       <Toaster />
-      <RoleListPanel
+      <RoleTreeListPanel
         loading={loading}
         filteredRoles={filteredRoles}
+        organizations={organizations}
         versionFilter={versionFilter}
         setVersionFilter={setVersionFilter}
         versionStats={versionStats}

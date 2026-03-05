@@ -418,7 +418,8 @@
       "all": "全部",
       "system": "系统",
       "plaza": "广场",
-      "user": "用户"
+      "user": "用户",
+      "independent": "独立角色"
     },
     "activate": "激活",
     "empty": "暂无角色",

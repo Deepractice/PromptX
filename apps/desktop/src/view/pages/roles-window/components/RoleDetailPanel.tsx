@@ -495,10 +495,10 @@ function V2GoalsTab({ data, loading }: { data: any; loading: boolean }) {
     )
   }
 
-  const current = data?.focus?.current
-  const otherGoals: any[] = data?.focus?.otherGoals || []
+  // RoleX 1.1.0 focus() 返回的是文本输出，需要解析
+  const focusText = data?.focus
 
-  if (!current && otherGoals.length === 0) {
+  if (!focusText || typeof focusText !== 'string') {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <Target className="h-10 w-10 text-muted-foreground/40" />
@@ -507,62 +507,20 @@ function V2GoalsTab({ data, loading }: { data: any; loading: boolean }) {
     )
   }
 
-  const taskStatusColor = (s: string) =>
-    s === "completed" ? "bg-green-500" : s === "in_progress" ? "bg-blue-500" : "bg-muted-foreground/30"
-  const taskStatusLabel = (s: string) =>
-    s === "completed" ? t("roles.detail.taskCompleted")
-      : s === "in_progress" ? t("roles.detail.taskInProgress")
-      : t("roles.detail.taskPending")
-
+  // 显示原始的 focus 输出
   return (
     <div className="space-y-4 h-full overflow-y-auto">
-      {current && (
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
-            <span className="text-xs font-medium text-muted-foreground">{t("roles.detail.currentGoal")}</span>
-          </div>
-          <p className="text-sm font-semibold mb-1">{current.name}</p>
-          {current.description && (
-            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{current.description}</p>
-          )}
-          {current.plan && (
-            <div className="mt-3 pt-3 border-t">
-              <p className="text-xs font-medium text-muted-foreground mb-1">{t("roles.detail.goalPlan")}</p>
-              <p className="text-sm">{current.plan.name}</p>
-            </div>
-          )}
-          {current.tasks && current.tasks.length > 0 && (
-            <div className="mt-3 pt-3 border-t">
-              <p className="text-xs font-medium text-muted-foreground mb-2">{t("roles.detail.goalTasks")}</p>
-              <div className="space-y-1.5">
-                {current.tasks.map((task: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full shrink-0 ${taskStatusColor(task.status)}`} />
-                    <span className="text-sm flex-1 truncate">{task.name}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">{taskStatusLabel(task.status)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      <div className="rounded-lg border bg-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Target className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">{t("roles.detail.currentGoal")}</h3>
         </div>
-      )}
-      {otherGoals.length > 0 && (
-        <div className="rounded-lg border bg-muted/30 p-4">
-          <p className="text-xs font-medium text-muted-foreground mb-2">
-            {t("roles.detail.goals")} ({otherGoals.length})
-          </p>
-          <div className="space-y-1">
-            {otherGoals.map((goal: any, i: number) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
-                <span className="text-sm text-muted-foreground">{goal.name}</span>
-              </div>
-            ))}
-          </div>
+        <div className="rounded-lg bg-muted/50 p-3">
+          <pre className="text-sm whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground">
+            {focusText}
+          </pre>
         </div>
-      )}
+      </div>
     </div>
   )
 }

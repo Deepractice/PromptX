@@ -358,10 +358,102 @@ class RolexBridge {
   /**
    * 社会目录 (directory)
    * RoleX 1.1.0: 使用 census.list 返回所有实体列表（字符串格式）
+   * 返回结构化的 JSON 数据
    */
   async directory () {
     await this.ensureInitialized()
-    return this.rolex.direct('!census.list')
+    const textOutput = await this.rolex.direct('!census.list')
+
+    // 解析文本输出为结构化数据
+    return this._parseCensusOutput(textOutput)
+  }
+
+  /**
+   * 解析 census.list 的文本输出
+   * @private
+   */
+  _parseCensusOutput (text) {
+    const result = {
+      roles: [],
+      organizations: []
+    }
+
+    if (!text || typeof text !== 'string') {
+      return result
+    }
+
+    const lines = text.split('\n').filter(l => l.trim() && !l.includes('---') && !l.includes('📅') && !l.includes('📊') && !l.includes('Powered by'))
+
+    let currentOrg = null
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      // 跳过空行
+      if (!trimmed) continue
+
+      // 检测组织行（没有缩进，可能包含括号）
+      if (!line.startsWith(' ')) {
+        // 这是一个组织名称
+        currentOrg = trimmed
+        if (!result.organizations.find(o => o.name === currentOrg)) {
+          result.organizations.push({
+            name: currentOrg,
+            members: [],
+            positions: []
+          })
+        }
+      }
+      // 检测缩进行（角色或职位）
+      else if (line.startsWith('  ') && currentOrg) {
+        const match = trimmed.match(/^([^\s—]+)(?:\s*\([^)]+\))?\s*—\s*(.+)$/)
+        if (match) {
+          const name = match[1].trim()
+          const description = match[2].trim()
+
+          // 判断是角色还是职位
+          // 如果描述包含多个逗号分隔的职位，或者包含 "manager" 等关键词，则是角色
+          // 否则是职位定义
+          const isRole = description.includes(',') ||
+                        description.includes('manager') ||
+                        description.includes('individual') ||
+                        description.includes('organization') ||
+                        description.includes('position')
+
+          if (isRole) {
+            // 这是一个角色
+            const positions = description.split(',').map(p => p.trim())
+
+            // 添加到 roles 列表
+            result.roles.push({
+              name: name,
+              org: currentOrg,
+              position: positions[0]
+            })
+
+            // 添加到组织的成员列表
+            const org = result.organizations.find(o => o.name === currentOrg)
+            if (org) {
+              org.members.push({
+                name: name,
+                position: positions[0]
+              })
+            }
+          } else {
+            // 这是一个职位定义
+            const org = result.organizations.find(o => o.name === currentOrg)
+            if (org) {
+              org.positions.push({
+                name: name,
+                description: description
+              })
+            }
+          }
+        }
+      }
+    }
+
+    return result
   }
 
   /**
