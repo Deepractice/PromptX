@@ -83,6 +83,22 @@ Step 3: Answer using recalled context
   handler: async (args: { role: string; query?: string | null; mode?: string }) => {
     const core = await import('@promptx/core');
     const coreExports = core.default || core;
+
+    // 检查是否为 v2 角色
+    try {
+      const { RolexActionDispatcher } = (coreExports as any).rolex;
+      const dispatcher = new RolexActionDispatcher();
+      if (await dispatcher.isV2Role(args.role)) {
+        return outputAdapter.convertToMCPFormat({
+          type: 'error',
+          content: `❌ V2 角色 "${args.role}" 不支持 recall 功能\n\nV2 角色（RoleX）使用数据库存储，记忆管理功能正在开发中。\n当前 recall 工具仅支持 V1 角色（DPML 格式）。\n\n如需使用记忆功能，请使用 V1 角色。`
+        });
+      }
+    } catch (e) {
+      // 如果检查失败，继续执行（可能是 v1 角色）
+      console.warn('[recall] V2 role check failed, continuing:', e);
+    }
+
     const cli = (coreExports as any).cli || (coreExports as any).pouch?.cli;
 
     if (!cli || !cli.execute) {

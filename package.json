@@ -24,6 +24,7 @@
     "@types/node": "^22.19.11",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
+    "electron": "38.0.0",
     "eslint": "^8.57.1",
     "prettier": "^2.8.8",
     "rimraf": "^5.0.10",
@@ -31,8 +32,7 @@
     "tsx": "^4.20.5",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2",
-    "vitest": "^4.0.18",
-    "electron": "38.0.0"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=18.17.0",
@@ -84,5 +84,8 @@
       "lodash": "^4.17.21",
       "tough-cookie": "^5.0.0"
     }
+  },
+  "dependencies": {
+    "@rolexjs/genesis": "1.1.0"
   }
 }

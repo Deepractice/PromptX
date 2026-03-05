@@ -61,6 +61,38 @@ class RolexActionDispatcher {
         return this._dismiss(args)
       case 'directory':
         return this._directory(args)
+      // 新增：学习循环操作
+      case 'reflect':
+        return this._reflect(args)
+      case 'realize':
+        return this._realize(args)
+      case 'master':
+        return this._master(args)
+      case 'forget':
+        return this._forget(args)
+      case 'skill':
+        return this._skill(args)
+      // 新增：个体生命周期
+      case 'retire':
+        return this._retire(args)
+      case 'die':
+        return this._die(args)
+      case 'rehire':
+        return this._rehire(args)
+      case 'train':
+        return this._train(args)
+      // 新增：组织管理
+      case 'charter':
+        return this._charter(args)
+      case 'dissolve':
+        return this._dissolve(args)
+      // 新增：职位管理
+      case 'charge':
+        return this._charge(args)
+      case 'require':
+        return this._require(args)
+      case 'abolish':
+        return this._abolish(args)
       default:
         throw new Error(`Unknown RoleX operation: ${operation}`)
     }
@@ -163,6 +195,88 @@ class RolexActionDispatcher {
 
   async _directory (args) {
     return this.bridge.directory()
+  }
+
+  // ---- 学习循环操作 ----
+
+  async _reflect (args) {
+    if (!args.encounters) throw new Error('encounters is required for reflect')
+    return this.bridge.reflect(args.encounters, args.experience, args.id)
+  }
+
+  async _realize (args) {
+    if (!args.experiences) throw new Error('experiences is required for realize')
+    return this.bridge.realize(args.experiences, args.principle, args.id)
+  }
+
+  async _master (args) {
+    if (!args.procedure) throw new Error('procedure is required for master')
+    return this.bridge.master(args.procedure, args.id, args.experiences)
+  }
+
+  async _forget (args) {
+    if (!args.nodeId) throw new Error('nodeId is required for forget')
+    return this.bridge.forget(args.nodeId)
+  }
+
+  async _skill (args) {
+    if (!args.locator) throw new Error('locator is required for skill')
+    return this.bridge.skill(args.locator)
+  }
+
+  // ---- 个体生命周期 ----
+
+  async _retire (args) {
+    if (!args.individual) throw new Error('individual is required for retire')
+    return this.bridge.retire(args.individual)
+  }
+
+  async _die (args) {
+    if (!args.individual) throw new Error('individual is required for die')
+    return this.bridge.die(args.individual)
+  }
+
+  async _rehire (args) {
+    if (!args.individual) throw new Error('individual is required for rehire')
+    return this.bridge.rehire(args.individual)
+  }
+
+  async _train (args) {
+    if (!args.individual) throw new Error('individual is required for train')
+    if (!args.skillId) throw new Error('skillId is required for train')
+    return this.bridge.train(args.individual, args.skillId, args.content)
+  }
+
+  // ---- 组织管理 ----
+
+  async _charter (args) {
+    if (!args.org) throw new Error('org is required for charter')
+    if (!args.content) throw new Error('content is required for charter')
+    return this.bridge.charter(args.org, args.content)
+  }
+
+  async _dissolve (args) {
+    if (!args.org) throw new Error('org is required for dissolve')
+    return this.bridge.dissolve(args.org)
+  }
+
+  // ---- 职位管理 ----
+
+  async _charge (args) {
+    if (!args.position) throw new Error('position is required for charge')
+    if (!args.content) throw new Error('content is required for charge')
+    return this.bridge.charge(args.position, args.content)
+  }
+
+  async _require (args) {
+    if (!args.position) throw new Error('position is required for require')
+    if (!args.skill) throw new Error('skill is required for require')
+    return this.bridge.require(args.position, args.skill)
+  }
+
+  async _abolish (args) {
+    if (!args.position) throw new Error('position is required for abolish')
+    return this.bridge.abolish(args.position)
   }
 
   /**

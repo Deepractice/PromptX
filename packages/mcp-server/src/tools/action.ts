@@ -32,8 +32,17 @@ const V2_EXAMPLES = `
 
 **V2 finish task / achieve goal:**
 \`\`\`json
-{ "operation": "finish", "role": "_" }
+{ "operation": "finish", "role": "_", "name": "task-id" }
 { "operation": "achieve", "role": "_", "experience": "learned..." }
+\`\`\`
+
+**V2 learning cycle (reflect → realize → master):**
+\`\`\`json
+{ "operation": "reflect", "role": "_", "encounters": ["enc1", "enc2"], "experience": "Feature: ..." }
+{ "operation": "realize", "role": "_", "experiences": ["exp1"], "principle": "Feature: ..." }
+{ "operation": "master", "role": "_", "procedure": "Feature: ...", "id": "skill-id" }
+{ "operation": "forget", "role": "_", "nodeId": "knowledge-id" }
+{ "operation": "skill", "role": "_", "locator": "npm:@scope/package" }
 \`\`\`
 
 **V2 synthesize (teach knowledge to a role):**
@@ -56,6 +65,23 @@ const V2_EXAMPLES = `
 \`\`\`json
 { "operation": "establish", "role": "_", "name": "lead", "source": "Feature: ...", "org": "my-team" }
 { "operation": "appoint", "role": "_", "name": "my-dev", "position": "lead", "org": "my-team" }
+{ "operation": "charge", "role": "_", "position": "lead", "content": "Feature: ..." }
+{ "operation": "require", "role": "_", "position": "lead", "skill": "leadership" }
+{ "operation": "abolish", "role": "_", "position": "lead" }
+\`\`\`
+
+**Individual lifecycle:**
+\`\`\`json
+{ "operation": "retire", "role": "_", "individual": "my-dev" }
+{ "operation": "rehire", "role": "_", "individual": "my-dev" }
+{ "operation": "die", "role": "_", "individual": "my-dev" }
+{ "operation": "train", "role": "_", "individual": "my-dev", "skillId": "coding", "content": "Feature: ..." }
+\`\`\`
+
+**Organization management:**
+\`\`\`json
+{ "operation": "charter", "role": "_", "org": "my-team", "content": "Feature: ..." }
+{ "operation": "dissolve", "role": "_", "org": "my-team" }
 \`\`\`
 `;
 
@@ -114,7 +140,18 @@ Use \`roleResources\` to load additional sections **before** you need them:
 - Act as the activated role, maintain its professional traits
 - Use \`discover\` first when a role is not found`;
 
-  const v2Operations = ['born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'synthesize', 'found', 'establish', 'hire', 'fire', 'appoint', 'dismiss', 'directory'];
+  const v2Operations = [
+    'born', 'identity', 'want', 'plan', 'todo', 'finish', 'achieve', 'abandon', 'focus', 'synthesize',
+    'found', 'establish', 'hire', 'fire', 'appoint', 'dismiss', 'directory',
+    // 学习循环
+    'reflect', 'realize', 'master', 'forget', 'skill',
+    // 个体生命周期
+    'retire', 'die', 'rehire', 'train',
+    // 组织管理
+    'charter', 'dissolve',
+    // 职位管理
+    'charge', 'require', 'abolish'
+  ];
   const operationEnum = enableV2
     ? ['activate', ...v2Operations]
     : ['activate'];
@@ -129,7 +166,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
           type: 'string',
           enum: operationEnum,
           description: enableV2
-            ? 'Operation type. Default: activate. V2 lifecycle operations: born, identity, want, plan, todo, finish, achieve, abandon, focus, synthesize. Organization operations: found, establish, hire, fire, appoint, dismiss, directory'
+            ? 'Operation type. Default: activate. V2 lifecycle: born, identity, want, plan, todo, finish, achieve, abandon, focus, synthesize. Learning: reflect, realize, master, forget, skill. Organization: found, charter, dissolve, hire, fire. Position: establish, charge, require, appoint, dismiss, abolish. Individual: retire, die, rehire, train. Query: directory'
             : 'Operation type. Default: activate.'
         },
         role: {
@@ -172,7 +209,53 @@ Use \`roleResources\` to load additional sections **before** you need them:
           },
           position: {
             type: 'string',
-            description: 'Position name for appoint'
+            description: 'Position name for appoint/charge/require/abolish'
+          },
+          encounters: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Array of encounter IDs for reflect operation'
+          },
+          experiences: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Array of experience IDs for realize operation'
+          },
+          principle: {
+            type: 'string',
+            description: 'Gherkin source for principle in realize operation'
+          },
+          procedure: {
+            type: 'string',
+            description: 'Gherkin source for procedure in master operation'
+          },
+          nodeId: {
+            type: 'string',
+            description: 'Node ID for forget operation'
+          },
+          locator: {
+            type: 'string',
+            description: 'Resource locator for skill operation (e.g., npm:@scope/package)'
+          },
+          individual: {
+            type: 'string',
+            description: 'Individual ID for retire/die/rehire/train operations'
+          },
+          skillId: {
+            type: 'string',
+            description: 'Skill ID for train/require operations'
+          },
+          content: {
+            type: 'string',
+            description: 'Content for train/charter/charge operations'
+          },
+          id: {
+            type: 'string',
+            description: 'Optional ID for reflect/realize/master operations'
+          },
+          skill: {
+            type: 'string',
+            description: 'Skill name for require operation'
           },
           version: {
             type: 'string',

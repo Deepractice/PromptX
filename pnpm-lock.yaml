@@ -15,6 +15,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@rolexjs/genesis':
+        specifier: 1.1.0
+        version: 1.1.0
     devDependencies:
       '@changesets/changelog-github':
         specifier: ^0.5.1
@@ -2588,6 +2592,9 @@ packages:
   '@rolexjs/core@1.1.0':
     resolution: {integrity: sha512-2JItPVWS24cNtAuXm1hG5m+yzFBv8jshlkkv4lWP9bryXLySfFcLSMqFprafShoFDqPV+2w8gkQowxoNcJop8w==}
     engines: {node: '>=22.0.0'}
+
+  '@rolexjs/genesis@1.1.0':
+    resolution: {integrity: sha512-9+q/DIZ12Bj0sn2kQNJOa/tgGoDEqifEdKNRnLz7QaU559cKGHSDO+HdSRWM4e6eVr2NJp7aZJrtjJfiHJitXw==}
 
   '@rolexjs/local-platform@1.1.0':
     resolution: {integrity: sha512-0JwgVNoL53sUVllg9S7N+hsrFkz4haTSeF02bOZ0FBFjvs3YTmUPZ8PJGolKfa4Jo/O3isRBQ124GSBkp7tdIA==}
@@ -10535,6 +10542,8 @@ snapshots:
     dependencies:
       '@resourcexjs/core': 2.18.0
       '@rolexjs/system': 1.1.0
+
+  '@rolexjs/genesis@1.1.0': {}
 
   '@rolexjs/local-platform@1.1.0(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1)':
     dependencies:

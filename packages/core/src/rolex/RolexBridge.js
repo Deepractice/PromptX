@@ -51,8 +51,6 @@ class RolexBridge {
     this.initializing = null
     this.currentRoleName = null
     this.rolexRoot = path.join(os.homedir(), '.rolex')
-    this._renderFeature = null
-    this._renderFeatures = null
   }
 
   /**
@@ -75,11 +73,7 @@ class RolexBridge {
       logger.info('[RolexBridge] Importing @rolexjs/local-platform...')
       const { localPlatform } = await import('@rolexjs/local-platform')
       logger.info('[RolexBridge] Importing rolexjs...')
-      const { Rolex, renderState } = await import('rolexjs')
-
-      // RoleX 1.1.0: 使用 renderState 替代 renderFeature/renderFeatures
-      this._renderFeature = (feature) => renderState({ features: [feature] })
-      this._renderFeatures = (features) => renderState({ features })
+      const { Rolex } = await import('rolexjs')
 
       // 版本检测：rolexjs 更新时强制重建 SEED 角色（在创建 platform 之前）
       logger.info('[RolexBridge] Syncing SEED roles...')
@@ -88,11 +82,17 @@ class RolexBridge {
       // 创建 platform（在 SEED 同步之后，确保读到最新的文件状态）
       // RoleX 1.1.0: localPlatform 是工厂函数，不是构造函数
       logger.info('[RolexBridge] Creating platform...')
-      this.platform = localPlatform(this.rolexRoot)
+      this.platform = localPlatform({
+        dataDir: this.rolexRoot,
+        bootstrap: ['npm:@rolexjs/genesis']  // 注册 Genesis 原型
+      })
       logger.info('[RolexBridge] Creating Rolex instance...')
-      this.rolex = new Rolex(this.platform)
+      // RoleX 1.1.0: 使用 Rolex.create() 而不是 new Rolex()
+      this.rolex = await Rolex.create(this.platform)
 
-      // RoleX 1.1.0: 不再需要 bootstrap，SEED 角色通过 _syncSeedRoles 管理
+      // RoleX 1.1.0: 调用 genesis() 初始化世界（首次运行时创建基础结构）
+      logger.info('[RolexBridge] Running genesis...')
+      await this.rolex.genesis()
 
       this.initialized = true
       logger.info('[RolexBridge] RoleX initialized successfully')
@@ -137,112 +137,145 @@ class RolexBridge {
    * 检查指定角色是否为 V2 角色
    * 通过检查 ~/.promptx/rolex/roles/<roleId>/identity/persona.identity.feature 是否存在
    */
+  /**
+   * 检查角色是否为 V2 角色
+   * RoleX 1.1.0: 查询数据库而不是文件系统
+   */
   async isV2Role (roleId) {
     if (process.env.PROMPTX_ENABLE_V2 === '0') return false
-    await this.ensureInitialized()
-    const featurePath = path.join(
-      this.rolexRoot, 'roles', roleId, 'identity', 'persona.identity.feature'
-    )
-    return fs.pathExists(featurePath)
+    try {
+      await this.ensureInitialized()
+      // 使用 census.list 查询数据库中是否存在该角色
+      const censusResult = await this.rolex.direct('!census.list', { type: 'individual' })
+      if (typeof censusResult === 'string' && censusResult) {
+        const lines = censusResult.split('\n').filter(l => l.trim())
+        for (const line of lines) {
+          const match = line.match(/^([^\s(#]+)/)
+          if (match && match[1] === roleId) {
+            return true
+          }
+        }
+      }
+      return false
+    } catch (error) {
+      logger.warn('[RolexBridge] isV2Role check failed:', error)
+      return false
+    }
   }
 
   /**
-   * 激活 V2 角色 - 返回渲染后的 Gherkin 文本
+   * 激活 V2 角色 - 返回渲染后的状态文本
+   * RoleX 1.1.0: 使用 rolex.activate(roleId) 返回 Role 实例
    */
   async activate (roleId) {
     await this.ensureInitialized()
-    const features = this.rolex.role(roleId).identity()
+    const role = await this.rolex.activate(roleId)
     this.currentRoleName = roleId
-    return this._renderFeatures(features)
+    return role.project()
   }
 
   /**
    * 创建新角色 (born)
+   * RoleX 1.1.0: 使用 rolex.direct('!individual.born', ...)
    */
   async born (name, source) {
     await this.ensureInitialized()
-    const feature = this.rolex.born(name, source)
-    return this._renderFeature(feature)
+    await this.rolex.direct('!individual.born', { id: name, content: source })
+    return `Individual "${name}" born.`
   }
 
   /**
    * 查看角色身份信息
+   * RoleX 1.1.0: 使用 rolex.activate() + role.project()
    */
   async identity (roleId) {
     await this.ensureInitialized()
-    const features = this.rolex.role(roleId || this.currentRoleName).identity()
-    return this._renderFeatures(features)
+    const targetId = roleId || this.currentRoleName
+    if (!targetId) throw new Error('No role specified')
+    const role = await this.rolex.activate(targetId)
+    return role.project()
   }
 
   /**
    * 创建目标 (want)
+   * RoleX 1.1.0: role.want(goal, id)
    */
   async want (name, source, options = {}) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    return this.rolex.role(role).want(name, source, options.testable)
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.want(source, name)
   }
 
   /**
    * 制定计划 (plan)
+   * RoleX 1.1.0: role.plan(plan)
    */
   async plan (source) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    return this.rolex.role(role).plan(source)
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.plan(source)
   }
 
   /**
    * 创建任务 (todo)
+   * RoleX 1.1.0: role.todo(task, id)
    */
   async todo (name, source, options = {}) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    return this.rolex.role(role).todo(name, source, options.testable)
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.todo(source, name)
   }
 
   /**
    * 完成任务 (finish)
+   * RoleX 1.1.0: role.finish(task)
    */
   async finish (name) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    this.rolex.role(role).finish(name)
-    return `Task "${name}" finished.`
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.finish(name)
   }
 
   /**
-   * 达成目标 (achieve)
+   * 达成目标/完成计划 (achieve → complete)
+   * RoleX 1.1.0: role.complete()
    */
   async achieve (experience) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    this.rolex.role(role).achieve(experience)
-    return 'Goal achieved.'
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.complete(undefined, experience)
   }
 
   /**
-   * 放弃目标 (abandon)
+   * 放弃目标/计划 (abandon)
+   * RoleX 1.1.0: role.abandon()
    */
   async abandon (experience) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    this.rolex.role(role).abandon(experience)
-    return 'Goal abandoned.'
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.abandon(undefined, experience)
   }
 
   /**
    * 聚焦查看 (focus)
+   * RoleX 1.1.0: role.focus(goal)
    */
   async focus (name) {
     await this.ensureInitialized()
-    const role = this._requireActiveRole()
-    return this.rolex.role(role).focus(name)
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.focus(name)
   }
 
   /**
-   * 综合 (synthesize) - 从经验中学习 (a posteriori learning)
-   * 映射到 rolex.synthesize()
+   * 综合 (synthesize) - 向角色注入知识
+   * RoleX 1.1.0: 使用 rolex.direct('!individual.teach', ...)
    * @param {string} name - 知识名称
    * @param {string} source - Gherkin 源码
    * @param {string} type - 类型 (knowledge/experience/voice)
@@ -251,8 +284,8 @@ class RolexBridge {
   async synthesize (name, source, type, targetRole) {
     await this.ensureInitialized()
     const role = targetRole || this._requireActiveRole()
-    const feature = this.rolex.teach(role, type, name, source)
-    return this._renderFeature(feature)
+    await this.rolex.direct('!individual.teach', { individual: role, id: name, content: source })
+    return `Knowledge "${name}" synthesized for "${role}".`
   }
 
   /**
@@ -264,73 +297,216 @@ class RolexBridge {
 
   /**
    * 创建组织 (found)
+   * RoleX 1.1.0: rolex.direct('!org.found', ...)
    */
   async found (name, source, parent) {
     await this.ensureInitialized()
-    this.rolex.found(name, source, parent)
+    await this.rolex.direct('!org.found', { id: name, content: source })
     return `Organization "${name}" founded.`
   }
 
   /**
    * 创建职位 (establish)
+   * RoleX 1.1.0: rolex.direct('!position.establish', ...)
    */
   async establish (positionName, source, orgName) {
     await this.ensureInitialized()
-    this.rolex.establish(positionName, source, orgName)
+    await this.rolex.direct('!position.establish', { id: positionName, content: source })
     return `Position "${positionName}" established in "${orgName}".`
   }
 
   /**
    * 雇佣角色到组织 (hire)
+   * RoleX 1.1.0: rolex.direct('!org.hire', ...)
    */
   async hire (roleName, orgName) {
     await this.ensureInitialized()
-    const { Organization } = await import('rolexjs')
-    const org = new Organization(this.platform, orgName)
-    org.hire(roleName)
+    await this.rolex.direct('!org.hire', { org: orgName, individual: roleName })
     return `Role "${roleName}" hired into "${orgName}".`
   }
 
   /**
    * 解雇角色 (fire)
+   * RoleX 1.1.0: rolex.direct('!org.fire', ...)
    */
   async fire (roleName, orgName) {
     await this.ensureInitialized()
-    const { Organization } = await import('rolexjs')
-    const org = new Organization(this.platform, orgName)
-    org.fire(roleName)
+    await this.rolex.direct('!org.fire', { org: orgName, individual: roleName })
     return `Role "${roleName}" fired from "${orgName}".`
   }
 
   /**
    * 任命角色到职位 (appoint)
+   * RoleX 1.1.0: rolex.direct('!position.appoint', ...)
    */
   async appoint (roleName, positionName, orgName) {
     await this.ensureInitialized()
-    const { Organization } = await import('rolexjs')
-    const org = new Organization(this.platform, orgName)
-    org.appoint(roleName, positionName)
+    await this.rolex.direct('!position.appoint', { position: positionName, individual: roleName })
     return `Role "${roleName}" appointed to "${positionName}".`
   }
 
   /**
    * 免职 (dismiss)
+   * RoleX 1.1.0: rolex.direct('!position.dismiss', ...)
    */
   async dismiss (roleName, orgName) {
     await this.ensureInitialized()
-    const { Organization } = await import('rolexjs')
-    const org = new Organization(this.platform, orgName)
-    org.dismiss(roleName)
+    await this.rolex.direct('!position.dismiss', { position: orgName, individual: roleName })
     return `Role "${roleName}" dismissed.`
   }
 
   /**
    * 社会目录 (directory)
+   * RoleX 1.1.0: 使用 census.list 返回所有实体列表（字符串格式）
    */
   async directory () {
     await this.ensureInitialized()
-    const dir = this.rolex.directory()
-    return JSON.stringify(dir, null, 2)
+    return this.rolex.direct('!census.list')
+  }
+
+  /**
+   * 反思经历 (reflect)
+   * RoleX 1.1.0: role.reflect(encounters, experience)
+   */
+  async reflect (encounters, experience, id) {
+    await this.ensureInitialized()
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.reflect(encounters, experience, id)
+  }
+
+  /**
+   * 掌握原则 (realize)
+   * RoleX 1.1.0: role.realize(experiences, principle)
+   */
+  async realize (experiences, principle, id) {
+    await this.ensureInitialized()
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.realize(experiences, principle, id)
+  }
+
+  /**
+   * 掌握程序/技能 (master)
+   * RoleX 1.1.0: role.master(procedure, id, experiences)
+   */
+  async master (procedure, id, experiences) {
+    await this.ensureInitialized()
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.master(procedure, id, experiences)
+  }
+
+  /**
+   * 遗忘知识 (forget)
+   * RoleX 1.1.0: role.forget(nodeId)
+   */
+  async forget (nodeId) {
+    await this.ensureInitialized()
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.forget(nodeId)
+  }
+
+  /**
+   * 加载技能 (skill)
+   * RoleX 1.1.0: role.skill(locator)
+   */
+  async skill (locator) {
+    await this.ensureInitialized()
+    const roleId = this._requireActiveRole()
+    const role = await this.rolex.activate(roleId)
+    return role.skill(locator)
+  }
+
+  /**
+   * 退休个体 (retire)
+   * RoleX 1.1.0: rolex.direct('!individual.retire', ...)
+   */
+  async retire (individualId) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!individual.retire', { individual: individualId })
+    return `Individual "${individualId}" retired.`
+  }
+
+  /**
+   * 删除个体 (die)
+   * RoleX 1.1.0: rolex.direct('!individual.die', ...)
+   */
+  async die (individualId) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!individual.die', { individual: individualId })
+    return `Individual "${individualId}" deleted.`
+  }
+
+  /**
+   * 恢复个体 (rehire)
+   * RoleX 1.1.0: rolex.direct('!individual.rehire', ...)
+   */
+  async rehire (individualId) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!individual.rehire', { individual: individualId })
+    return `Individual "${individualId}" rehired.`
+  }
+
+  /**
+   * 注入技能 (train)
+   * RoleX 1.1.0: rolex.direct('!individual.train', ...)
+   */
+  async train (individualId, skillId, content) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!individual.train', { individual: individualId, id: skillId, content })
+    return `Skill "${skillId}" trained for "${individualId}".`
+  }
+
+  /**
+   * 定义组织章程 (charter)
+   * RoleX 1.1.0: rolex.direct('!org.charter', ...)
+   */
+  async charter (orgName, content) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!org.charter', { org: orgName, content })
+    return `Charter defined for organization "${orgName}".`
+  }
+
+  /**
+   * 解散组织 (dissolve)
+   * RoleX 1.1.0: rolex.direct('!org.dissolve', ...)
+   */
+  async dissolve (orgName) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!org.dissolve', { org: orgName })
+    return `Organization "${orgName}" dissolved.`
+  }
+
+  /**
+   * 赋予职位职责 (charge)
+   * RoleX 1.1.0: rolex.direct('!position.charge', ...)
+   */
+  async charge (positionName, content) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!position.charge', { position: positionName, content })
+    return `Responsibilities charged to position "${positionName}".`
+  }
+
+  /**
+   * 声明职位技能要求 (require)
+   * RoleX 1.1.0: rolex.direct('!position.require', ...)
+   */
+  async require (positionName, skillId) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!position.require', { position: positionName, skill: skillId })
+    return `Skill "${skillId}" required for position "${positionName}".`
+  }
+
+  /**
+   * 废除职位 (abolish)
+   * RoleX 1.1.0: rolex.direct('!position.abolish', ...)
+   */
+  async abolish (positionName) {
+    await this.ensureInitialized()
+    await this.rolex.direct('!position.abolish', { position: positionName })
+    return `Position "${positionName}" abolished.`
   }
 
   /**
@@ -341,45 +517,41 @@ class RolexBridge {
     try {
       await this.ensureInitialized()
 
-      // RoleX 1.1.0: 从数据库查询所有 individuals
-      // 使用 platform 的 runtime 来查询图数据库
-      const runtime = this.platform.runtime
+      // RoleX 1.1.0: census.list 返回渲染后的字符串，不是数组
+      // 使用 type='individual' 参数获取纯文本个体列表
       const roles = []
 
-      // 遍历所有节点，查找 type 为 'individual' 的节点
-      runtime.forEachNode((node, attrs) => {
-        if (attrs.type === 'individual') {
-          // 获取 identity 子节点来提取角色信息
-          let name = attrs.id || 'Unknown'
-          let description = ''
+      try {
+        const censusResult = await this.rolex.direct('!census.list', { type: 'individual' })
+        logger.info('[RolexBridge] Census individual result:', censusResult)
 
-          // 尝试从 identity 特征中提取信息
-          try {
-            const identityNode = runtime.findNode((n, a) =>
-              a.type === 'identity' && runtime.hasEdge(attrs.id, n)
-            )
-            if (identityNode) {
-              const identityAttrs = runtime.getNodeAttributes(identityNode)
-              if (identityAttrs.source) {
-                name = extractFeatureName(identityAttrs.source) || name
-                description = extractFeatureDescription(identityAttrs.source)
+        if (typeof censusResult === 'string' && censusResult && !censusResult.startsWith('No ')) {
+          // 格式: "id (alias1, alias2) #tag" 或仅 "id"，每行一个
+          const lines = censusResult.split('\n').filter(l => l.trim())
+          for (const line of lines) {
+            // 提取 ID：第一个空格、'(' 或 '#' 之前的内容
+            const match = line.match(/^([^\s(#]+)/)
+            if (match) {
+              const id = match[1].trim()
+              if (id) {
+                const isSeed = RolexBridge.SEED_ROLES.includes(id)
+                roles.push({
+                  id,
+                  name: id,
+                  description: '',
+                  source: isSeed ? 'system' : 'rolex',
+                  version: 'v2',
+                  protocol: 'role'
+                })
               }
             }
-          } catch { /* ignore */ }
-
-          // 判断是否为 SEED 角色
-          const isSeed = RolexBridge.SEED_ROLES.includes(attrs.id)
-
-          roles.push({
-            id: attrs.id,
-            name,
-            description,
-            source: isSeed ? 'system' : 'rolex',
-            version: 'v2',
-            protocol: 'role'
-          })
+          }
+        } else {
+          logger.info('[RolexBridge] Census returned empty or no individuals:', censusResult)
         }
-      })
+      } catch (censusError) {
+        logger.warn('[RolexBridge] Census query failed:', censusError)
+      }
 
       logger.info(`[RolexBridge] Found ${roles.length} V2 roles from database`)
       return roles
