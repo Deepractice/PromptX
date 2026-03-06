@@ -41,6 +41,32 @@ class RecallCommand extends BasePouchCommand {
       return
     }
 
+    // 检查是否为 V2 角色
+    try {
+      const { getRolexBridge } = require('../../rolex')
+      const bridge = getRolexBridge()
+      const isV2 = await bridge.isV2Role(role)
+      if (isV2) {
+        const roleLayer = new RoleLayer()
+        roleLayer.addRoleArea(new StateArea(
+          'error: V2 角色不支持 recall 命令',
+          [
+            'V2 角色使用 RoleX 记忆系统，请使用以下命令：',
+            '- focus: 查看当前目标和进展',
+            '- identity: 查看角色身份定义',
+            '- action: 执行角色相关操作',
+            '',
+            '传统的 remember/recall 命令仅适用于 V1 角色'
+          ]
+        ))
+        this.registerLayer(roleLayer)
+        return
+      }
+    } catch (error) {
+      logger.warn('[RecallCommand] Failed to check V2 role:', error)
+      // 如果检查失败，继续执行（向后兼容）
+    }
+
     logger.info('🧠 [RecallCommand] 开始记忆检索流程 (基于认知体系)')
     logger.info(` [RecallCommand] 角色: ${role}, 查询内容: ${query ? `"${query}"` : '全部记忆'}, 模式: ${mode || 'balanced'}`)
 
