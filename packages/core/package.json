@@ -37,6 +37,7 @@
     "@promptx/logger": "workspace:*",
     "@promptx/resource": "workspace:*",
     "@rolexjs/core": "^1.1.0",
+    "@rolexjs/genesis": "^1.3.0",
     "@rolexjs/local-platform": "^1.1.0",
     "@rolexjs/parser": "^1.1.0",
     "@rolexjs/prototype": "^1.1.0",

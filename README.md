@@ -122,6 +122,20 @@ AI:   Provides in-depth product strategy advice as a professional product manage
    ```
 3. **Start Chatting** - Say "Show me available experts" in your AI application
 
+#### 🔌 Trae Configuration
+
+If you're using Trae, you can use the following configuration:
+
+```json
+{
+  "mcpServers": {
+    "promptx": {
+      "url": "http://127.0.0.1:5203/mcp"
+    }
+  }
+}
+```
+
 ✅ No technical background required ✅ Visual management ✅ Auto-updates
 
 💡 **Need help?** Join our [Discord Community](https://discord.gg/rdmPr54K) for support and discussions!
