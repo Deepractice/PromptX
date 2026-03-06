@@ -257,16 +257,19 @@ class DiscoverCommand extends BasePouchCommand {
     try {
       const bridge = getRolexBridge()
       const directoryText = await bridge.directory()
+      logger.info('[DiscoverCommand] Directory raw output:', directoryText)
 
       // 解析 directory 输出
       if (typeof directoryText === 'string') {
         const parsed = this.parseDirectoryOutput(directoryText)
         logger.info(`[DiscoverCommand] Loaded directory data: ${parsed.roles.length} roles, ${parsed.organizations.length} orgs`)
+        logger.info('[DiscoverCommand] Parsed roles:', JSON.stringify(parsed.roles, null, 2))
         return parsed
       }
       return { roles: [], organizations: [] }
     } catch (error) {
-      logger.debug('[DiscoverCommand] Failed to load directory data:', error.message)
+      logger.warn('[DiscoverCommand] Failed to load directory data:', error.message)
+      logger.warn('[DiscoverCommand] Error stack:', error.stack)
       return { roles: [], organizations: [] }
     }
   }
