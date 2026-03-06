@@ -688,6 +688,7 @@
       },
       "rename": {
         "placeholder": "输入对话名称",
+        "cancel": "取消",
         "saving": "保存中...",
         "save": "保存"
       },

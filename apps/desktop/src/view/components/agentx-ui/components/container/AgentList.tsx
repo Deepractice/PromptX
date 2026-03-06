@@ -194,7 +194,7 @@ export function AgentList({
   const items: ListPaneItem[] = React.useMemo(() => {
     return images.map((img) => ({
       id: img.imageId,
-      title: firstMessages[img.imageId] || img.name || t("agentxUI.conversations.untitled"),
+      title: img.name || firstMessages[img.imageId] || t("agentxUI.conversations.untitled"),
       trailing: (
         <span
           className={cn("w-2 h-2 rounded-full", img.online ? "bg-green-500" : "bg-gray-400")}
@@ -377,7 +377,7 @@ export function AgentList({
               onClick={() => handleDialogClose(false)}
               disabled={isRenaming}
             >
-              Cancel
+              {t("agentxUI.conversations.rename.cancel")}
             </Button>
             <Button onClick={handleRename} disabled={isRenaming || !editingName.trim()}>
               {isRenaming ? t("agentxUI.conversations.rename.saving") : t("agentxUI.conversations.rename.save")}

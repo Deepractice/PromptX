@@ -691,6 +691,7 @@
       },
       "rename": {
         "placeholder": "Enter conversation name",
+        "cancel": "Cancel",
         "saving": "Saving...",
         "save": "Save"
       },

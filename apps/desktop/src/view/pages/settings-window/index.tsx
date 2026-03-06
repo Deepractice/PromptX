@@ -323,13 +323,18 @@ function SettingsWindow() {
                       target="_blank"
                       rel="noreferrer"
                       className="font-medium underline underline-offset-2 hover:text-yellow-900 dark:hover:text-yellow-200"
-                      onClick={e => {
+                      onClick={async (e) => {
                         e.preventDefault();
                         const url = "https://git-scm.com/download/win";
-                        if (window.electronAPI?.shell?.openExternal) {
-                          window.electronAPI.shell.openExternal(url);
-                        } else {
-                          window.open(url, "_blank");
+                        try {
+                          if (window.electronAPI?.shell?.openExternal) {
+                            await window.electronAPI.shell.openExternal(url);
+                          } else {
+                            window.open(url, "_blank");
+                          }
+                        } catch (error) {
+                          console.error("Failed to open external URL:", error);
+                          toast.error("无法打开链接，请手动访问: " + url);
                         }
                       }}
                     >
