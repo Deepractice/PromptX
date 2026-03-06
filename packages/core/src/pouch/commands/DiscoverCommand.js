@@ -256,15 +256,14 @@ class DiscoverCommand extends BasePouchCommand {
   async loadDirectoryData() {
     try {
       const bridge = getRolexBridge()
-      const directoryText = await bridge.directory()
-      logger.info('[DiscoverCommand] Directory raw output:', directoryText)
+      const directoryData = await bridge.directory()
+      logger.info('[DiscoverCommand] Directory data type:', typeof directoryData)
+      logger.info('[DiscoverCommand] Directory data:', JSON.stringify(directoryData, null, 2))
 
-      // 解析 directory 输出
-      if (typeof directoryText === 'string') {
-        const parsed = this.parseDirectoryOutput(directoryText)
-        logger.info(`[DiscoverCommand] Loaded directory data: ${parsed.roles.length} roles, ${parsed.organizations.length} orgs`)
-        logger.info('[DiscoverCommand] Parsed roles:', JSON.stringify(parsed.roles, null, 2))
-        return parsed
+      // bridge.directory() 已经返回解析好的对象，不需要再解析
+      if (directoryData && typeof directoryData === 'object') {
+        logger.info(`[DiscoverCommand] Loaded directory data: ${directoryData.roles?.length || 0} roles, ${directoryData.organizations?.length || 0} orgs`)
+        return directoryData
       }
       return { roles: [], organizations: [] }
     } catch (error) {
@@ -278,6 +277,7 @@ class DiscoverCommand extends BasePouchCommand {
    * 解析 directory 命令的输出
    * @param {string} text - directory 命令的文本输出
    * @returns {Object} 解析后的数据 { roles: [], organizations: [] }
+   * @deprecated bridge.directory() 已经返回解析好的对象
    */
   parseDirectoryOutput(text) {
     try {
