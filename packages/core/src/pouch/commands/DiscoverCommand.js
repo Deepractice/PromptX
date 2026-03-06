@@ -33,28 +33,31 @@ class DiscoverCommand extends BasePouchCommand {
   async assembleAreas(args) {
     // 首先刷新所有资源
     await this.refreshAllResources()
-    
+
     // 加载角色和工具
     const roleRegistry = await this.loadRoleRegistry()
     const toolRegistry = await this.loadToolRegistry()
-    
+
+    // 获取 V2 角色的组织信息
+    const directoryData = await this.loadDirectoryData()
+
     // 按来源分组
     const roleCategories = this.categorizeBySource(roleRegistry)
     const toolCategories = this.categorizeBySource(toolRegistry)
-    
+
     // 统计信息
     const stats = this.calculateStats(roleCategories, toolCategories)
-    
+
     // 注册Areas
     const headerArea = new DiscoverHeaderArea(stats)
     this.registerArea(headerArea)
-    
-    const roleArea = new RoleListArea(roleCategories)
+
+    const roleArea = new RoleListArea(roleCategories, directoryData)
     this.registerArea(roleArea)
-    
+
     const toolArea = new ToolListArea(toolCategories)
     this.registerArea(toolArea)
-    
+
     const stateArea = new StateArea('discover_completed')
     this.registerArea(stateArea)
   }
@@ -245,7 +248,48 @@ class DiscoverCommand extends BasePouchCommand {
 
     return registry
   }
-  
+
+  /**
+   * 加载 V2 角色的组织架构信息
+   * @returns {Promise<Object>} 组织架构数据
+   */
+  async loadDirectoryData() {
+    try {
+      const bridge = getRolexBridge()
+      const directoryText = await bridge.directory()
+
+      // 解析 directory 输出
+      if (typeof directoryText === 'string') {
+        const parsed = this.parseDirectoryOutput(directoryText)
+        logger.info(`[DiscoverCommand] Loaded directory data: ${parsed.roles.length} roles, ${parsed.organizations.length} orgs`)
+        return parsed
+      }
+      return { roles: [], organizations: [] }
+    } catch (error) {
+      logger.debug('[DiscoverCommand] Failed to load directory data:', error.message)
+      return { roles: [], organizations: [] }
+    }
+  }
+
+  /**
+   * 解析 directory 命令的输出
+   * @param {string} text - directory 命令的文本输出
+   * @returns {Object} 解析后的数据 { roles: [], organizations: [] }
+   */
+  parseDirectoryOutput(text) {
+    try {
+      // directory 输出是 JSON 格式
+      const data = JSON.parse(text)
+      return {
+        roles: data.roles || [],
+        organizations: data.organizations || []
+      }
+    } catch (error) {
+      logger.warn('[DiscoverCommand] Failed to parse directory output:', error.message)
+      return { roles: [], organizations: [] }
+    }
+  }
+
   /**
    * 加载工具注册表
    * @returns {Promise<Object>} 工具注册信息（按来源分类）
