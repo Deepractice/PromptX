@@ -772,40 +772,5 @@
         "toolPrompt": "What tools are available?"
       }
     }
-  },
-  "notifications": {
-    "button": "Notifications",
-    "title": "Notifications",
-    "unreadCount": "{{count}} unread notification",
-    "unreadCount_other": "{{count}} unread notifications",
-    "allRead": "All notifications read",
-    "markAllRead": "Mark all as read",
-    "markRead": "Mark as read",
-    "empty": "No notifications",
-    "time": {
-      "justNow": "Just now",
-      "minutesAgo": "{{count}} minute ago",
-      "minutesAgo_other": "{{count}} minutes ago",
-      "hoursAgo": "{{count}} hour ago",
-      "hoursAgo_other": "{{count}} hours ago",
-      "daysAgo": "{{count}} day ago",
-      "daysAgo_other": "{{count}} days ago"
-    },
-    "welcome": {
-      "title": "Welcome to PromptX!",
-      "content": "Thank you for using PromptX. Explore roles, tools, and AgentX to enhance your AI experience."
-    },
-    "update": {
-      "title": "New Features Available",
-      "content": "Check out the latest updates: RoleX lifecycle management, improved UI, and more!"
-    },
-    "updateV220": {
-      "title": "v2.2.0 Update Released",
-      "content": "New notification center, AgentX config with preset & OpenAI protocol detection, RoleX core upgraded from v0.11.0 to v1.3.0, fixed conversation rename bug, fixed Windows Git link issue. V2 role import/export/delete features temporarily disabled."
-    },
-    "rolexUpgrade": {
-      "title": "RoleX (V2) Architecture Upgrade",
-      "content": "Existing V2 roles need to be upgraded. Please activate Nuwa and ask her to upgrade and migrate your roles to continue using them."
-    }
   }
 }

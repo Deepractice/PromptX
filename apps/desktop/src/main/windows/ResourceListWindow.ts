@@ -1000,12 +1000,29 @@ export class ResourceListWindow {
         // 获取组织目录
         let directory = null
         try {
-          const dirResult = await dispatcher.dispatch('directory', { role: payload.roleId })
-          directory = typeof dirResult === 'string' ? JSON.parse(dirResult) : dirResult
+          directory = await dispatcher.dispatch('directory', { role: payload.roleId })
         } catch { /* no organizations */ }
 
         return { success: true, identity, focus, directory }
       } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // 获取 RoleX 组织目录
+    ipcMain.handle('rolex:directory', async (_evt) => {
+      try {
+        const core = await import('@promptx/core')
+        const coreExports = (core as any).default || core
+        const { RolexActionDispatcher } = (coreExports as any).rolex
+        const dispatcher = new RolexActionDispatcher()
+
+        // directory() 现在返回结构化的 JSON 数据
+        const directory = await dispatcher.dispatch('directory', {})
+
+        return { success: true, data: directory }
+      } catch (error: any) {
+        console.error('Failed to get directory:', error)
         return { success: false, message: error?.message }
       }
     })
@@ -1052,6 +1069,49 @@ export class ResourceListWindow {
         await fs.writeFile(filePath, payload.content, 'utf-8')
         return { success: true }
       } catch (error: any) {
+        return { success: false, message: error?.message }
+      }
+    })
+
+    // V2 角色身份结构（从数据库读取）
+    ipcMain.handle('rolex:getIdentityNodes', async (_evt, payload: { roleId: string }) => {
+      try {
+        const core = require('@promptx/core')
+        const bridge = core.rolex.getRolexBridge()
+        const identityText = await bridge.identity(payload.roleId)
+        console.log('[rolex:getIdentityNodes] roleId:', payload.roleId)
+        console.log('[rolex:getIdentityNodes] identityText type:', typeof identityText)
+
+        // Parse the text into structured nodes
+        const nodes: any[] = []
+        if (typeof identityText === 'string') {
+          // Split by ## markers to find top-level nodes
+          const sections = identityText.split(/\n## \[/)
+          for (let i = 1; i < sections.length; i++) {
+            const section = sections[i]
+            // Extract node type and id from [type] (id)
+            const match = section.match(/^([^\]]+)\]\s*\(([^)]+)\)/)
+            if (match) {
+              const nodeType = match[1].trim()
+              const nodeId = match[2].trim()
+              // Extract the content (everything after the first line until next ## or end)
+              const contentMatch = section.match(/\n([\s\S]*?)(?=\n## \[|$)/)
+              const content = contentMatch ? contentMatch[1].trim() : ''
+
+              nodes.push({
+                id: nodeId,
+                name: nodeId,
+                type: nodeType,
+                information: content
+              })
+            }
+          }
+        }
+
+        console.log('[rolex:getIdentityNodes] Parsed nodes:', nodes.length)
+        return { success: true, data: nodes }
+      } catch (error: any) {
+        console.error('[rolex:getIdentityNodes] Error:', error)
         return { success: false, message: error?.message }
       }
     })

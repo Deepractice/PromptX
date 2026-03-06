@@ -53,7 +53,9 @@
         "activate": "设为当前",
         "activated": "已切换配置",
         "deleted": "配置已删除",
-        "saved": "配置已保存"
+        "saved": "配置已保存",
+        "anthropicOnly": "仅支持 Anthropic 格式",
+        "openaiNotSupported": "暂不支持 OpenAI 协议的端点"
       },
       "skills": {
         "title": "Skills 配置",
@@ -418,7 +420,8 @@
       "all": "全部",
       "system": "系统",
       "plaza": "广场",
-      "user": "用户"
+      "user": "用户",
+      "independent": "独立角色"
     },
     "activate": "激活",
     "empty": "暂无角色",
@@ -687,6 +690,7 @@
       },
       "rename": {
         "placeholder": "输入对话名称",
+        "cancel": "取消",
         "saving": "保存中...",
         "save": "保存"
       },
@@ -764,6 +768,41 @@
         "tool": "探索可用工具",
         "toolPrompt": "有哪些可用的工具？"
       }
+    }
+  },
+  "notifications": {
+    "button": "通知",
+    "title": "通知中心",
+    "unreadCount": "{{count}} 条未读通知",
+    "unreadCount_other": "{{count}} 条未读通知",
+    "allRead": "所有通知已读",
+    "markAllRead": "全部标为已读",
+    "markRead": "标为已读",
+    "empty": "暂无通知",
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}} 分钟前",
+      "minutesAgo_other": "{{count}} 分钟前",
+      "hoursAgo": "{{count}} 小时前",
+      "hoursAgo_other": "{{count}} 小时前",
+      "daysAgo": "{{count}} 天前",
+      "daysAgo_other": "{{count}} 天前"
+    },
+    "welcome": {
+      "title": "欢迎使用 PromptX！",
+      "content": "感谢使用 PromptX。探索角色、工具和 AgentX，提升您的 AI 体验。"
+    },
+    "update": {
+      "title": "新功能上线",
+      "content": "查看最新更新：RoleX 生命周期管理、界面优化等更多功能！"
+    },
+    "updateV220": {
+      "title": "v2.2.0 版本更新",
+      "content": "新增通知中心、AgentX 配置增加预设与 OpenAI 协议识别功能、V2 RoleX 内核从 v0.11.0 更新到 v1.3.0、修复对话重命名后无效的 bug、修复 Windows 平台点击 Git 链接无响应的 bug。V2 的角色导入导出与删除功能暂时下架。"
+    },
+    "rolexUpgrade": {
+      "title": "RoleX（V2）架构升级",
+      "content": "原有 V2 角色需要升级。请激活女娲，让女娲进行升级与迁移才能继续使用。"
     }
   }
 }

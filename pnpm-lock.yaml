@@ -15,6 +15,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@rolexjs/genesis':
+        specifier: 1.3.0
+        version: 1.3.0
     devDependencies:
       '@changesets/changelog-github':
         specifier: ^0.5.1
@@ -283,14 +287,20 @@ importers:
         specifier: workspace:*
         version: link:../resource
       '@rolexjs/core':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@rolexjs/local-platform':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^1.1.0
+        version: 1.1.0(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1)
       '@rolexjs/parser':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@rolexjs/prototype':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@rolexjs/system':
+        specifier: ^1.1.0
+        version: 1.1.0
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -324,9 +334,12 @@ importers:
       peggy:
         specifier: ^5.0.5
         version: 5.0.6
+      resourcexjs:
+        specifier: ^2.14.0
+        version: 2.18.0
       rolexjs:
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@alicloud/openapi-client':
         specifier: ^0.4.15
@@ -345,7 +358,7 @@ importers:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.26.0
-        version: 1.27.1(zod@3.25.76)
+        version: 1.27.1(zod@4.3.6)
       mammoth:
         specifier: ^1.8.0
         version: 1.11.0
@@ -410,7 +423,7 @@ importers:
     dependencies:
       '@modelcontextprotocol/server-filesystem':
         specifier: ^2026.1.14
-        version: 2026.1.14(zod@3.25.76)
+        version: 2026.1.14(zod@4.3.6)
       '@promptx/logger':
         specifier: workspace:*
         version: link:../logger
@@ -440,7 +453,7 @@ importers:
         version: 1.9.0
       '@anthropic-ai/claude-agent-sdk':
         specifier: ^0.1.76
-        version: 0.1.77(zod@3.25.76)
+        version: 0.1.77(zod@4.3.6)
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -511,6 +524,11 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
+
+  '@anthropic-ai/sandbox-runtime@0.0.32':
+    resolution: {integrity: sha512-+mQDTTxBc72W2xpsRHamruom5Xdo8vswTRlKlEtlhMbYemQgqLdQpULHi33dalTkvbbHmwgugLfQ82IZUzqT4w==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -807,6 +825,14 @@ packages:
 
   '@date-fns/tz@1.4.1':
     resolution: {integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==}
+
+  '@deepracticex/drizzle@0.2.3':
+    resolution: {integrity: sha512-zFyR4VhRjr4kfzhq6YWukUcj/XtJNJmNtnEEvTzeqPVSK1ZGd3Ywtr4GVf9rtVCtRa67j85tBykzN3LUwuy4SQ==}
+    peerDependencies:
+      drizzle-orm: '>=0.38.0'
+
+  '@deepracticex/sqlite@0.2.0':
+    resolution: {integrity: sha512-cBrJbqoN9Oxt2wXQomoxdQT76RL0Hn8yfGAKgyGzxi7vPHZC9UnxoJgfQpidqGGky+067FXRPBB7f0xzNkJ3bg==, tarball: https://registry.npmjs.org/@deepracticex/sqlite/-/sqlite-0.2.0.tgz}
 
   '@develar/schema-utils@2.6.5':
     resolution: {integrity: sha512-0cp4PsWQ/9avqTVMCtZ+GirikIA36ikvjtHweU4/j8yLtgObI0+JUPhYFScgwlteveGB1rt3Cm8UhN04XayDig==}
@@ -2128,6 +2154,9 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
+  '@pondwader/socks5-server@1.0.10':
+    resolution: {integrity: sha512-bQY06wzzR8D2+vVCUoBsr5QS2U6UgPUQRmErNwtsuI6vLcyRKkafjkr3KxbtGFf9aBBIV2mcvlsKD1UYaIV+sg==}
+
   '@radix-ui/number@1.1.1':
     resolution: {integrity: sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g==}
 
@@ -2545,15 +2574,41 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
-  '@rolexjs/core@0.11.0':
-    resolution: {integrity: sha512-P/kBRgsP7tMKJzXVKG0L8ZrVSNpWwSy56Aa+cuxNYoPqe+57C1qzi8rQDOkQFqvTtwObtt9Epr0rvn/qKaWoKw==}
+  '@resourcexjs/arp@2.18.0':
+    resolution: {integrity: sha512-rcpdtBM46bwcjLeSoGp8vip6yfeuv6+4Fl99ltKe99LKSXxTxuDgMuhxfBT//ZJaCagIiVaioyqRwLozX5blAg==}
     engines: {node: '>=22.0.0'}
 
-  '@rolexjs/local-platform@0.11.0':
-    resolution: {integrity: sha512-t2KhkyWkfJVjSesCrwUzi4moN4m33rpjty4CbrReXeZilrfxnE1TSuHtdH4wkNPwYmZHzGlqSvIrg89KpN+D4A==}
+  '@resourcexjs/core@0.5.0':
+    resolution: {integrity: sha512-M3oUkRybg+CU46fx/9r6gnAcOvCRTEOdD7dmxnQ8/S5R0Qy3KgorrOC42SlYRP9lGMVix0xF0U3MdfJBRjpo7Q==}
+    engines: {node: '>=22.0.0'}
 
-  '@rolexjs/parser@0.11.0':
-    resolution: {integrity: sha512-w+S+Hx1HlFlkICXw5uqOC9vQsIjs0OvenoIRvRB8PO70m2Bwhw2WflrW8KB1KHbW0wFkxaNOluUAc/c1IOd0nw==}
+  '@resourcexjs/core@2.18.0':
+    resolution: {integrity: sha512-y/Pnp5+s+lmg3kXbo8h8menJvq511z6PIN8/uH/CQjw35BoEHJQpKPSlHcXQY3Npd6MyOPkKBJ4yGsRMxdOlcA==}
+    engines: {node: '>=22.0.0'}
+
+  '@resourcexjs/node-provider@2.18.0':
+    resolution: {integrity: sha512-8QZNl/YBNQHV7pecvvm6sj54ufgcAQ7U/moO3B6sZIoh3t+54voQtLULDWTLRehlxVITt6eIU6cm4vedVqNPSg==}
+
+  '@rolexjs/core@1.1.0':
+    resolution: {integrity: sha512-2JItPVWS24cNtAuXm1hG5m+yzFBv8jshlkkv4lWP9bryXLySfFcLSMqFprafShoFDqPV+2w8gkQowxoNcJop8w==}
+    engines: {node: '>=22.0.0'}
+
+  '@rolexjs/genesis@1.3.0':
+    resolution: {integrity: sha512-V5Dz6U5+8Z0H6DakBXbpV6OhQZGp2IWsSnwFcb3r7m7RNKJ7YJx0ppQJ9RmVhYtqRA/iHFcykpyEpwD+44Ttuw==}
+
+  '@rolexjs/local-platform@1.1.0':
+    resolution: {integrity: sha512-0JwgVNoL53sUVllg9S7N+hsrFkz4haTSeF02bOZ0FBFjvs3YTmUPZ8PJGolKfa4Jo/O3isRBQ124GSBkp7tdIA==}
+
+  '@rolexjs/parser@1.1.0':
+    resolution: {integrity: sha512-M3Ku6eie4ijZZFikPV4hvXu5wMlsu2eVIPjvMeBdP5LuWxUnibiavngyRbg0GaPK5KOSop6ZekxOs6Hb+28/9g==}
+    engines: {node: '>=22.0.0'}
+
+  '@rolexjs/prototype@1.1.0':
+    resolution: {integrity: sha512-wzv4qVS3MCfbe9R+VzSxDCy6xMyxs9BqET2jxBXi+vCfpX4q+FBYqzYgAIxvoSnDT+Wd9npItRKHatSKeG0+Nw==}
+    engines: {node: '>=22.0.0'}
+
+  '@rolexjs/system@1.1.0':
+    resolution: {integrity: sha512-LVhggnGMep7J8osyp3opUY7NwrABb8VOqXXXThzSIpdJ6nqqfynTByGUyaUsxLttMvo0BKapJKH/i93hI4rt8A==}
     engines: {node: '>=22.0.0'}
 
   '@rolldown/pluginutils@1.0.0-beta.43':
@@ -2679,6 +2734,18 @@ packages:
     resolution: {integrity: sha512-bf9PtUa0u8IXDVxzRToFQKsNCRz9qLYfR/MpECxl4mRoWYjAeFjgxj1XdZr2M/GNVpT05p+LgQOHopYDlUu6/w==}
     cpu: [x64]
     os: [win32]
+
+  '@sandboxxjs/cloudflare-isolator@0.5.1':
+    resolution: {integrity: sha512-0qc3+H77vzVI7wUmJPu9QFXpUsu9uDHXAmZNcPKNFzGvZqBatMN5FI3JaDXbB16sAZUZ6RxyfDjoVw1cdiY86w==}
+    hasBin: true
+
+  '@sandboxxjs/core@0.5.1':
+    resolution: {integrity: sha512-C4gj8OkOivomMUJllFYODvprqFxu3k3rAaZCjKVHR9uSXpKMJItDjH5Dv/2SgZQY3iRUgkFVdeCQde31Go/EQg==}
+    engines: {node: '>=22.0.0'}
+
+  '@sandboxxjs/state@0.5.1':
+    resolution: {integrity: sha512-kY95hh3BQyHZwN/cBV1wg1XN2LskD77yPXPYNaH2IY7M/aWNhf45Kp3c6FjKhN+UVUFteLRlnYihwWd4PO8dZg==}
+    engines: {node: '>=22.0.0'}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -2908,6 +2975,12 @@ packages:
 
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+
+  '@types/lodash-es@4.17.12':
+    resolution: {integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==}
+
+  '@types/lodash@4.17.24':
+    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -4052,6 +4125,98 @@ packages:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
     engines: {node: '>=10'}
 
+  drizzle-orm@0.45.1:
+    resolution: {integrity: sha512-Te0FOdKIistGNPMq2jscdqngBRfBpC8uMFVwqjf6gtTVJHIQ/dosgV/CLBU2N4ZJBsXL5savCba9b0YJskKdcA==}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': '>=3'
+      '@cloudflare/workers-types': '>=4'
+      '@electric-sql/pglite': '>=0.2.0'
+      '@libsql/client': '>=0.10.0'
+      '@libsql/client-wasm': '>=0.10.0'
+      '@neondatabase/serverless': '>=0.10.0'
+      '@op-engineering/op-sqlite': '>=2'
+      '@opentelemetry/api': ^1.4.1
+      '@planetscale/database': '>=1.13'
+      '@prisma/client': '*'
+      '@tidbcloud/serverless': '*'
+      '@types/better-sqlite3': '*'
+      '@types/pg': '*'
+      '@types/sql.js': '*'
+      '@upstash/redis': '>=1.34.7'
+      '@vercel/postgres': '>=0.8.0'
+      '@xata.io/client': '*'
+      better-sqlite3: '>=7'
+      bun-types: '*'
+      expo-sqlite: '>=14.0.0'
+      gel: '>=2'
+      knex: '*'
+      kysely: '*'
+      mysql2: '>=2'
+      pg: '>=8'
+      postgres: '>=3'
+      prisma: '*'
+      sql.js: '>=1'
+      sqlite3: '>=5'
+    peerDependenciesMeta:
+      '@aws-sdk/client-rds-data':
+        optional: true
+      '@cloudflare/workers-types':
+        optional: true
+      '@electric-sql/pglite':
+        optional: true
+      '@libsql/client':
+        optional: true
+      '@libsql/client-wasm':
+        optional: true
+      '@neondatabase/serverless':
+        optional: true
+      '@op-engineering/op-sqlite':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@planetscale/database':
+        optional: true
+      '@prisma/client':
+        optional: true
+      '@tidbcloud/serverless':
+        optional: true
+      '@types/better-sqlite3':
+        optional: true
+      '@types/pg':
+        optional: true
+      '@types/sql.js':
+        optional: true
+      '@upstash/redis':
+        optional: true
+      '@vercel/postgres':
+        optional: true
+      '@xata.io/client':
+        optional: true
+      better-sqlite3:
+        optional: true
+      bun-types:
+        optional: true
+      expo-sqlite:
+        optional: true
+      gel:
+        optional: true
+      knex:
+        optional: true
+      kysely:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+      prisma:
+        optional: true
+      sql.js:
+        optional: true
+      sqlite3:
+        optional: true
+
   duck@0.1.12:
     resolution: {integrity: sha512-wkctla1O6VfP89gQ+J/yDesM0S7B7XLXjKGzXxMDVFg7uEn706niAtyYovKbyq1oT9YwDcly721/iUWoc8MVRg==}
 
@@ -4331,6 +4496,10 @@ packages:
 
   execa@9.6.0:
     resolution: {integrity: sha512-jpWzZ1ZhwUmeWRhS7Qv3mhpOhLfwI+uAX4e5fOcXqwMR7EcJ0pj2kV1CVzHVMX/LphnKWD3LObjZCoJ71lKpHw==}
+    engines: {node: ^18.19.0 || >=20.5.0}
+
+  execa@9.6.1:
+    resolution: {integrity: sha512-9Be3ZoN4LmYR90tUoVu2te2BsbzHfhJyfEiAVfz7N5/zv+jduIfLrV2xdQXOHbaD6KgpGdO9PRPM1Y4Q9QkPkA==}
     engines: {node: ^18.19.0 || >=20.5.0}
 
   exif-parser@0.1.12:
@@ -5401,6 +5570,9 @@ packages:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  lodash-es@4.17.23:
+    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
+
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
 
@@ -5833,6 +6005,10 @@ packages:
   mlly@1.8.0:
     resolution: {integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g==}
 
+  modern-tar@0.7.5:
+    resolution: {integrity: sha512-YTefgdpKKFgoTDbEUqXqgUJct2OG6/4hs4XWLsxcHkDLj/x/V8WmKIRppPnXP5feQ7d1vuYWSp3qKkxfwaFaxA==}
+    engines: {node: '>=18.0.0'}
+
   motion-dom@12.34.1:
     resolution: {integrity: sha512-SC7ZC5dRcGwku2g7EsPvI4q/EzHumUbqsDNumBmZTLFg+goBO5LTJvDu9MAxx+0mtX4IA78B2be/A3aRjY0jnw==}
 
@@ -5863,6 +6039,11 @@ packages:
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
+  nanoid@5.1.6:
+    resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
+    engines: {node: ^18 || >=20}
     hasBin: true
 
   napi-build-utils@2.0.0:
@@ -6752,6 +6933,14 @@ packages:
     engines: {node: '>= 0.4'}
     hasBin: true
 
+  resourcexjs@0.5.0:
+    resolution: {integrity: sha512-OwsGF0nkuwjhDGh6rjYQQYnZT2GlRLNSChJJ/bHoGaqurwBfa0JXl3L9unzGMVn1mhhxVhIyUlqTEhFozt2/2w==}
+    engines: {node: '>=22.0.0'}
+
+  resourcexjs@2.18.0:
+    resolution: {integrity: sha512-UYEyLoDVvxImopuOyIcZFa2obilOsHkS52Ey2fYKvuMHvl2JEa+zTZyJG2psyZ1HtixeDOD1SIXA2oZXMp09TA==}
+    engines: {node: '>=22.0.0'}
+
   responselike@2.0.1:
     resolution: {integrity: sha512-4gl03wn3hj1HP3yzgdI7d3lCkF95F21Pz4BPGvKHinyQzALR5CapwC8yIi0Rh58DEMQ/SguC03wFj2k0M/mHhw==}
 
@@ -6789,8 +6978,8 @@ packages:
     resolution: {integrity: sha512-CHhPh+UNHD2GTXNYhPWLnU8ONHdI+5DI+4EYIAOaiD63rHeYlZvyh8P+in5999TTSFgUYuKUAjzRI4mdh/p+2A==}
     engines: {node: '>=8.0'}
 
-  rolexjs@0.11.0:
-    resolution: {integrity: sha512-VTNshNYOX+fIleCZz6CB1akm+a4EaxYxLMhflvtJSNuOoVTq+WCXo5MKlWIsO8oHsrp39PMo4I7kjGxaMSuv5Q==}
+  rolexjs@1.1.0:
+    resolution: {integrity: sha512-L8UovTJDF8PoVCYpzsbaBCR+Nq2ww9M/oxWBrSP8lhx9tt0cP/clJEuUfDp6so+SbPVFaIVwB8U83x2NF/lXKw==}
     engines: {node: '>=22.0.0'}
 
   rollup@4.52.4:
@@ -6820,6 +7009,10 @@ packages:
 
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
+
+  sandboxxjs@0.5.1:
+    resolution: {integrity: sha512-cbfwBvwyO1GTLkZMY2G1AzeHU7NfUBZww37ENgibkMgfVX6Lqt4qidRsfhTRxDcVjMiXIe5VwmuvLhes99cHOg==}
+    engines: {node: '>=22.0.0'}
 
   sanitize-filename@1.6.3:
     resolution: {integrity: sha512-y/52Mcy7aw3gRm7IrcGDFx/bCk4AhRh2eI9luHOQM86nZsqwiRkkq2GekHXBBD+SmPidc8i2PqtYZl+pWJ8Oeg==}
@@ -6903,6 +7096,10 @@ packages:
   shebang-regex@3.0.0:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
+
+  shell-quote@1.8.3:
+    resolution: {integrity: sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==}
+    engines: {node: '>= 0.4'}
 
   side-channel-list@1.0.0:
     resolution: {integrity: sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==}
@@ -8039,6 +8236,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
   zustand@5.0.11:
     resolution: {integrity: sha512-fdZY+dk7zn/vbWNCYmzZULHRrss0jx5pPFiOuMZ/5HJN6Yv3u+1Wswy/4MpZEkEGhtNH+pwxZB8OKgUBPzYAGg==}
     engines: {node: '>=12.20.0'}
@@ -8213,9 +8413,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@anthropic-ai/claude-agent-sdk@0.1.77(zod@3.25.76)':
+  '@anthropic-ai/claude-agent-sdk@0.1.77(zod@4.3.6)':
     dependencies:
-      zod: 3.25.76
+      zod: 4.3.6
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.33.5
       '@img/sharp-darwin-x64': 0.33.5
@@ -8225,6 +8425,15 @@ snapshots:
       '@img/sharp-linuxmusl-arm64': 0.33.5
       '@img/sharp-linuxmusl-x64': 0.33.5
       '@img/sharp-win32-x64': 0.33.5
+
+  '@anthropic-ai/sandbox-runtime@0.0.32':
+    dependencies:
+      '@pondwader/socks5-server': 1.0.10
+      '@types/lodash-es': 4.17.12
+      commander: 12.1.0
+      lodash-es: 4.17.23
+      shell-quote: 1.8.3
+      zod: 3.25.76
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -8715,6 +8924,13 @@ snapshots:
       reflect-metadata: 0.2.2
 
   '@date-fns/tz@1.4.1': {}
+
+  '@deepracticex/drizzle@0.2.3(drizzle-orm@0.45.1(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1))':
+    dependencies:
+      '@deepracticex/sqlite': 0.2.0
+      drizzle-orm: 0.45.1(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1)
+
+  '@deepracticex/sqlite@0.2.0': {}
 
   '@develar/schema-utils@2.6.5':
     dependencies:
@@ -9634,7 +9850,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/sdk@1.27.1(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.27.1(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.3)
       ajv: 8.18.0
@@ -9651,18 +9867,18 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.1(zod@3.25.76)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/server-filesystem@2026.1.14(zod@3.25.76)':
+  '@modelcontextprotocol/server-filesystem@2026.1.14(zod@4.3.6)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.27.1(zod@3.25.76)
+      '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.6)
       diff: 5.2.0
       glob: 10.5.0
       minimatch: 10.2.4
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.24.6(zod@4.3.6)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -9900,6 +10116,8 @@ snapshots:
     optional: true
 
   '@polka/url@1.0.0-next.29': {}
+
+  '@pondwader/socks5-server@1.0.10': {}
 
   '@radix-ui/number@1.1.1': {}
 
@@ -10307,17 +10525,78 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
-  '@rolexjs/core@0.11.0': {}
+  '@resourcexjs/arp@2.18.0': {}
 
-  '@rolexjs/local-platform@0.11.0':
+  '@resourcexjs/core@0.5.0': {}
+
+  '@resourcexjs/core@2.18.0':
     dependencies:
-      '@rolexjs/core': 0.11.0
-      '@rolexjs/parser': 0.11.0
+      modern-tar: 0.7.5
+      zod: 4.3.6
 
-  '@rolexjs/parser@0.11.0':
+  '@resourcexjs/node-provider@2.18.0':
+    dependencies:
+      '@resourcexjs/core': 2.18.0
+
+  '@rolexjs/core@1.1.0':
+    dependencies:
+      '@resourcexjs/core': 2.18.0
+      '@rolexjs/system': 1.1.0
+
+  '@rolexjs/genesis@1.3.0': {}
+
+  '@rolexjs/local-platform@1.1.0(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1)':
+    dependencies:
+      '@deepracticex/drizzle': 0.2.3(drizzle-orm@0.45.1(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1))
+      '@deepracticex/sqlite': 0.2.0
+      '@resourcexjs/node-provider': 2.18.0
+      '@rolexjs/core': 1.1.0
+      '@rolexjs/system': 1.1.0
+      drizzle-orm: 0.45.1(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1)
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-sqlite3
+      - bun-types
+      - expo-sqlite
+      - gel
+      - knex
+      - kysely
+      - mysql2
+      - pg
+      - postgres
+      - prisma
+      - sql.js
+      - sqlite3
+
+  '@rolexjs/parser@1.1.0':
     dependencies:
       '@cucumber/gherkin': 38.0.0
       '@cucumber/messages': 32.0.1
+
+  '@rolexjs/prototype@1.1.0':
+    dependencies:
+      '@rolexjs/core': 1.1.0
+      '@rolexjs/parser': 1.1.0
+      '@rolexjs/system': 1.1.0
+      resourcexjs: 2.18.0
+
+  '@rolexjs/system@1.1.0': {}
 
   '@rolldown/pluginutils@1.0.0-beta.43': {}
 
@@ -10386,6 +10665,20 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.52.4':
     optional: true
+
+  '@sandboxxjs/cloudflare-isolator@0.5.1': {}
+
+  '@sandboxxjs/core@0.5.1':
+    dependencies:
+      '@anthropic-ai/sandbox-runtime': 0.0.32
+      '@sandboxxjs/cloudflare-isolator': 0.5.1
+      '@sandboxxjs/state': 0.5.1
+      execa: 9.6.1
+      nanoid: 5.1.6
+
+  '@sandboxxjs/state@0.5.1':
+    dependencies:
+      resourcexjs: 0.5.0
 
   '@sec-ant/readable-stream@0.4.1': {}
 
@@ -10612,6 +10905,12 @@ snapshots:
   '@types/keyv@3.1.4':
     dependencies:
       '@types/node': 22.19.12
+
+  '@types/lodash-es@4.17.12':
+    dependencies:
+      '@types/lodash': 4.17.24
+
+  '@types/lodash@4.17.24': {}
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -11868,6 +12167,11 @@ snapshots:
 
   dotenv@8.6.0: {}
 
+  drizzle-orm@0.45.1(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1):
+    optionalDependencies:
+      '@types/better-sqlite3': 7.6.13
+      better-sqlite3: 12.4.1
+
   duck@0.1.12:
     dependencies:
       underscore: 1.13.7
@@ -12297,6 +12601,21 @@ snapshots:
       eventsource-parser: 3.0.6
 
   execa@9.6.0:
+    dependencies:
+      '@sindresorhus/merge-streams': 4.0.0
+      cross-spawn: 7.0.6
+      figures: 6.1.0
+      get-stream: 9.0.1
+      human-signals: 8.0.1
+      is-plain-obj: 4.1.0
+      is-stream: 4.0.1
+      npm-run-path: 6.0.0
+      pretty-ms: 9.3.0
+      signal-exit: 4.1.0
+      strip-final-newline: 4.0.0
+      yoctocolors: 2.1.2
+
+  execa@9.6.1:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
       cross-spawn: 7.0.6
@@ -13466,6 +13785,8 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
+  lodash-es@4.17.23: {}
+
   lodash.camelcase@4.3.0: {}
 
   lodash.clamp@4.0.3: {}
@@ -14108,6 +14429,8 @@ snapshots:
       pkg-types: 1.3.1
       ufo: 1.6.3
 
+  modern-tar@0.7.5: {}
+
   motion-dom@12.34.1:
     dependencies:
       motion-utils: 12.29.2
@@ -14131,6 +14454,8 @@ snapshots:
       thenify-all: 1.6.0
 
   nanoid@3.3.11: {}
+
+  nanoid@5.1.6: {}
 
   napi-build-utils@2.0.0: {}
 
@@ -15116,6 +15441,16 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
+  resourcexjs@0.5.0:
+    dependencies:
+      '@resourcexjs/core': 0.5.0
+
+  resourcexjs@2.18.0:
+    dependencies:
+      '@resourcexjs/arp': 2.18.0
+      '@resourcexjs/core': 2.18.0
+      sandboxxjs: 0.5.1
+
   responselike@2.0.1:
     dependencies:
       lowercase-keys: 2.0.0
@@ -15153,9 +15488,13 @@ snapshots:
       sprintf-js: 1.1.3
     optional: true
 
-  rolexjs@0.11.0:
+  rolexjs@1.1.0:
     dependencies:
-      '@rolexjs/core': 0.11.0
+      '@rolexjs/core': 1.1.0
+      '@rolexjs/parser': 1.1.0
+      '@rolexjs/prototype': 1.1.0
+      '@rolexjs/system': 1.1.0
+      resourcexjs: 2.18.0
 
   rollup@4.52.4:
     dependencies:
@@ -15210,6 +15549,10 @@ snapshots:
   safe-stable-stringify@2.5.0: {}
 
   safer-buffer@2.1.2: {}
+
+  sandboxxjs@0.5.1:
+    dependencies:
+      '@sandboxxjs/core': 0.5.1
 
   sanitize-filename@1.6.3:
     dependencies:
@@ -15325,6 +15668,8 @@ snapshots:
       shebang-regex: 3.0.0
 
   shebang-regex@3.0.0: {}
+
+  shell-quote@1.8.3: {}
 
   side-channel-list@1.0.0:
     dependencies:
@@ -16419,15 +16764,21 @@ snapshots:
 
   yoctocolors@2.1.2: {}
 
-  zod-to-json-schema@3.24.6(zod@3.25.76):
+  zod-to-json-schema@3.24.6(zod@4.3.6):
     dependencies:
-      zod: 3.25.76
+      zod: 4.3.6
 
   zod-to-json-schema@3.25.1(zod@3.25.76):
     dependencies:
       zod: 3.25.76
 
+  zod-to-json-schema@3.25.1(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
+
   zod@3.25.76: {}
+
+  zod@4.3.6: {}
 
   zustand@5.0.11(@types/react@19.2.2)(react@18.3.1):
     optionalDependencies:

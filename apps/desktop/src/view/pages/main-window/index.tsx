@@ -12,10 +12,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Store, FileText, Settings, Pickaxe, MessageSquare, UsersRound, Plus, Upload } from "lucide-react"
+import { Store, FileText, Settings, Pickaxe, MessageSquare, UsersRound, Plus, Upload, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import ResourcesPage from "../resources-window"
 import LogsPage from "../logs-window"
 import SettingsPage from "../settings-window"
@@ -23,6 +25,8 @@ import ToolsPage from "../tools-window"
 import RolesPage from "../roles-window"
 import AgentXPage from "../agentx-window"
 import { ResourceImporter } from "../resources-window/components/ResourceImporter"
+import { NotificationList } from "@/components/notifications/NotificationList"
+import { notificationService } from "@/components/notifications/notificationService"
 import { goToSendMessage } from "../../../utils/goToSendMessage"
 import logo from "../../../../assets/icons/icon-64x64.png"
 type PageType = "resources" | "logs" | "settings" | "update" |"agentx"|"roles"|"tools"
@@ -32,6 +36,8 @@ function MainContent() {
   const [currentPage, setCurrentPage] = useState<PageType>("agentx")
   const [pageKey, setPageKey] = useState(0)
   const { open } = useSidebar()
+  const [notificationOpen, setNotificationOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const navigateTo = (page: PageType) => {
     setCurrentPage(page)
@@ -47,6 +53,31 @@ function MainContent() {
       setEnableV2(config?.enableV2 !== false)
     }).catch(() => {})
   }, [])
+
+  // 自动打开通知弹窗
+  useEffect(() => {
+    const hasShown = notificationService.hasShownNotifications()
+    if (!hasShown) {
+      // 延迟500ms打开，让应用先完全加载
+      const timer = setTimeout(() => {
+        setNotificationOpen(true)
+        notificationService.markAsShown()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  // 更新未读数量
+  useEffect(() => {
+    const updateUnreadCount = () => {
+      setUnreadCount(notificationService.getUnreadCount())
+    }
+    updateUnreadCount()
+
+    // 监听通知变化
+    const interval = setInterval(updateUnreadCount, 1000)
+    return () => clearInterval(interval)
+  }, [notificationOpen])
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -173,6 +204,24 @@ function MainContent() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarFooter className="border-t p-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start relative"
+            onClick={() => setNotificationOpen(true)}
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            <span>{t("notifications.button")}</span>
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="ml-auto h-5 min-w-5 px-1 text-xs"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </SidebarFooter>
       </Sidebar>
 
       <main className={`flex-1 overflow-hidden ${open ? 'ml-[12vw] ' : ''}`}>
@@ -196,6 +245,13 @@ function MainContent() {
         lockedResourceType={importLocked}
         enableV2={enableV2}
         onImportSuccess={() => navigateTo(currentPage)}
+      />
+      <NotificationList
+        isOpen={notificationOpen}
+        onClose={() => {
+          setNotificationOpen(false)
+          setUnreadCount(notificationService.getUnreadCount())
+        }}
       />
     </div>
   )

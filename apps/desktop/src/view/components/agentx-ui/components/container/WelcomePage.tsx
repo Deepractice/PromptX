@@ -12,7 +12,7 @@ import * as React from "react";
 import { Send, Hammer, Sparkles, Bot, Wrench } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/components/agentx-ui/utils";
-import logo from "../../../../../../assets/icons/PromptX-transparent.png";
+import logo from "../../../../../../assets/icons/icon.png";
 
 export interface PresetQuestion {
   id: string;

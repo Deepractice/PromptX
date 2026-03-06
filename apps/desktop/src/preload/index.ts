@@ -174,7 +174,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   // Shell API
   shell: {
-    openExternal: (url: string) => shell.openExternal(url),
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   },
   // System info
   platform: process.platform,

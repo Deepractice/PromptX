@@ -69,6 +69,7 @@ class PromptXDesktopApp {
     this.setupLanguageIPC()
     this.setupLogsIPC()
     this.setupDialogIPC()
+    this.setupShellIPC()
     this.setupAgentXIPC()
     this.setupWebAccessIPC()
 
@@ -562,6 +563,34 @@ class PromptXDesktopApp {
       } catch (error) {
         logger.error('Failed to read file:', String(error))
         return { success: false, error: String(error) }
+      }
+    })
+  }
+
+  private setupShellIPC(): void {
+    // 打开外部链接 - 在新的 Electron 窗口中打开
+    ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+      try {
+        const { BrowserWindow } = await import('electron')
+
+        // 创建新的浏览器窗口
+        const browserWindow = new BrowserWindow({
+          width: 1200,
+          height: 800,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+          },
+          title: 'Browser',
+        })
+
+        // 加载 URL
+        await browserWindow.loadURL(url)
+
+        logger.info('Opened URL in Electron browser window:', url)
+      } catch (error) {
+        logger.error('Failed to open URL in browser window:', String(error))
+        throw error
       }
     })
   }

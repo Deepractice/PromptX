@@ -46,24 +46,33 @@ class RoleProtocol extends ResourceProtocol {
 
   /**
    * 解析角色协议
-   * @param {string} rolePath - 角色路径，如 'java-developer'
+   * @param {string} rolePath - 角色路径，如 'java-developer' 或 'v2:nuwa'
    * @param {Object} queryParams - 查询参数（暂未使用）
    * @returns {Promise<string>} 角色文件内容
    */
   async resolve(rolePath, queryParams = {}) {
     try {
+      // 检查是否为 v2 角色（带 v2: 前缀）
+      if (rolePath.startsWith('v2:')) {
+        const roleId = rolePath.substring(3) // 去掉 'v2:' 前缀
+        const { getRolexBridge } = require('../rolex/RolexBridge')
+        const bridge = getRolexBridge()
+        const content = await bridge.identity(roleId)
+        return content
+      }
+
       // 构建可能的资源ID格式
       const fullResourceId = `role:${rolePath}`
       const shortResourceId = rolePath
-      
+
       // 从RegistryData查找资源
       let resourceData = this.registryManager.registryData.findResourceById(rolePath, 'role')
-      
+
       if (!resourceData) {
         // 如果没找到，尝试其他格式
         resourceData = this.registryManager.registryData.findResourceById(fullResourceId)
       }
-      
+
       if (!resourceData) {
         const availableRoles = this.registryManager.registryData.getResourcesByProtocol('role')
           .map(r => r.id).join(', ')
@@ -72,7 +81,7 @@ class RoleProtocol extends ResourceProtocol {
 
       // 通过ResourceManager加载实际内容
       const result = await this.registryManager.loadResourceByProtocol(resourceData.reference)
-      
+
       return result
     } catch (error) {
       throw new Error(`RoleProtocol.resolve failed: ${error.message}`)

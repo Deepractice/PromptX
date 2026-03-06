@@ -38,6 +38,32 @@ class RememberCommand extends BasePouchCommand {
       return
     }
 
+    // 检查是否为 V2 角色
+    try {
+      const { getRolexBridge } = require('../../rolex')
+      const bridge = getRolexBridge()
+      const isV2 = await bridge.isV2Role(role)
+      if (isV2) {
+        const roleLayer = new RoleLayer()
+        roleLayer.addRoleArea(new StateArea(
+          'error: V2 角色不支持 remember 命令',
+          [
+            'V2 角色使用 RoleX 记忆系统，请使用以下命令：',
+            '- reflect: 反思经历并形成经验',
+            '- realize: 从经验中掌握原则',
+            '- master: 掌握程序/技能',
+            '',
+            '传统的 remember/recall 命令仅适用于 V1 角色'
+          ]
+        ))
+        this.registerLayer(roleLayer)
+        return
+      }
+    } catch (error) {
+      logger.warn('[RememberCommand] Failed to check V2 role:', error)
+      // 如果检查失败，继续执行（向后兼容）
+    }
+
     try {
       logger.info('🧠 [RememberCommand] 开始批量记忆保存流程')
       logger.info(` [RememberCommand] 批量保存 ${engrams.length} 个Engram`)
