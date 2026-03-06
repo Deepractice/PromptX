@@ -933,7 +933,7 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onDelete, on
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {(selectedRole.source ?? "user") !== "system" && (
+            {(selectedRole.source ?? "user") !== "system" && !isV2 && (
               <Button variant="outline" size="sm" onClick={async () => {
                 try {
                   const result = await window.electronAPI?.invoke("resources:download", { id: selectedRole.id, type: "role", source: selectedRole.source ?? "user", version: selectedRole.version ?? "v1" })
@@ -950,7 +950,7 @@ export default function RoleDetailPanel({ selectedRole, onActivate, onDelete, on
                 {t("resources.actions.export")}
               </Button>
             )}
-            {(selectedRole.source ?? "user") !== "system" && (
+            {(selectedRole.source ?? "user") !== "system" && !isV2 && (
               <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => onDelete(selectedRole)}>
                 <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                 {t("resources.actions.delete")}

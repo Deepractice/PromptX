@@ -3,13 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { CheckCircle2, XCircle, Loader2, Plus, Pencil, Trash2, Check } from "lucide-react"
 import { toast } from "sonner"
 
@@ -25,11 +19,70 @@ const EMPTY_FORM = {
   name: "",
   apiKey: "",
   baseUrl: "https://api.anthropic.com",
-  model: "claude-sonnet-4-20250514",
+  model: "claude-sonnet-4-20250514"
 }
 
+const PRESETS = [
+  {
+    id: "anthropic",
+    name: "Anthropic Official",
+    nameZh: "Anthropic 官方",
+    baseUrl: "https://api.anthropic.com",
+    model: "claude-opus-4-6"
+  },
+  {
+    id: "DouBaoSeed",
+    name: "DouBao Seed",
+    nameZh: "豆包 Seed",
+    baseUrl: "https://ark.cn-beijing.volces.com/api/coding",
+    model: "ark-code-latest"
+  },
+  {
+    id: "Kimi Code",
+    name: "Kimi Code",
+    nameZh: "Kimi Code",
+    baseUrl: "https://api.kimi.com/coding",
+    model: "kimi"
+  },
+  {
+    id: "packyapi",
+    name: "PackyAPI",
+    nameZh: "PackyAPI",
+    baseUrl: "https://www.packyapi.com",
+    model: "claude-opus-4-6"
+  },
+  {
+    id: "deepractice",
+    name: "Deepractice",
+    nameZh: "深度实践",
+    baseUrl: "https://relay.deepractice.ai/api",
+    model: "claude-opus-4-6"
+  },
+  {
+    id: "siliconflow",
+    name: "SiliconFlow",
+    nameZh: "硅基流动",
+    baseUrl: "https://api.siliconflow.cn",
+    model: "zai-org/GLM-4.6"
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    nameZh: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api ",
+    model: "claude-opus-4-6"
+  },
+  {
+    id: "custom",
+    name: "Custom",
+    nameZh: "自定义",
+    baseUrl: "",
+    model: "claude-sonnet-4-20250514"
+  }
+]
+
 export function AgentXProfilesConfig() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [profiles, setProfiles] = useState<AgentXProfile[]>([])
   const [activeProfileId, setActiveProfileId] = useState<string | undefined>()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -38,8 +91,11 @@ export function AgentXProfilesConfig() {
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle")
+  const [urlError, setUrlError] = useState<string>("")
 
-  useEffect(() => { loadProfiles() }, [])
+  useEffect(() => {
+    loadProfiles()
+  }, [])
 
   const loadProfiles = async () => {
     const config = await window.electronAPI?.agentx.getConfig()
@@ -53,13 +109,36 @@ export function AgentXProfilesConfig() {
     setEditingId(null)
     setForm(EMPTY_FORM)
     setConnectionStatus("idle")
+    setUrlError("")
     setDialogOpen(true)
+  }
+
+  const validateBaseUrl = (url: string) => {
+    if (url.includes("completions") || url.includes("/v1/chat")) {
+      setUrlError(t("settings.agentx.profiles.openaiNotSupported"))
+      return false
+    }
+    setUrlError("")
+    return true
+  }
+
+  const applyPreset = (preset: (typeof PRESETS)[0]) => {
+    const presetName = i18n.language === "zh-CN" ? preset.nameZh : preset.name
+    setForm(f => ({
+      ...f,
+      name: presetName,
+      baseUrl: preset.baseUrl,
+      model: preset.model
+    }))
+    setConnectionStatus("idle")
   }
 
   const openEdit = (p: AgentXProfile) => {
     setEditingId(p.id)
     setForm({ name: p.name, apiKey: p.apiKey, baseUrl: p.baseUrl, model: p.model })
     setConnectionStatus("idle")
+    setUrlError("")
+    validateBaseUrl(p.baseUrl)
     setDialogOpen(true)
   }
 
@@ -87,7 +166,7 @@ export function AgentXProfilesConfig() {
       const result = await window.electronAPI?.agentx.testConnection({
         apiKey: form.apiKey,
         baseUrl: form.baseUrl,
-        model: form.model,
+        model: form.model
       })
       setConnectionStatus(result?.success ? "success" : "error")
       if (!result?.success) toast.error(result?.error ?? t("settings.agentx.testFailed"))
@@ -108,7 +187,7 @@ export function AgentXProfilesConfig() {
       let newActiveId = (config as any).activeProfileId as string | undefined
 
       if (editingId) {
-        newProfiles = existing.map(p => p.id === editingId ? { ...p, ...form } : p)
+        newProfiles = existing.map(p => (p.id === editingId ? { ...p, ...form } : p))
       } else {
         const newProfile: AgentXProfile = { id: crypto.randomUUID(), ...form }
         newProfiles = [...existing, newProfile]
@@ -135,13 +214,11 @@ export function AgentXProfilesConfig() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{profile.name}</span>
-                {profile.id === activeProfileId && (
-                  <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    {t("settings.agentx.profiles.active")}
-                  </span>
-                )}
+                {profile.id === activeProfileId && <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-400">{t("settings.agentx.profiles.active")}</span>}
               </div>
-              <p className="truncate text-xs text-muted-foreground">{profile.baseUrl} · {profile.model}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {profile.baseUrl} · {profile.model}
+              </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {profile.id !== activeProfileId && (
@@ -168,18 +245,47 @@ export function AgentXProfilesConfig() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editingId ? t("settings.agentx.profiles.editTitle") : t("settings.agentx.profiles.addTitle")}
-            </DialogTitle>
+            <DialogTitle>{editingId ? t("settings.agentx.profiles.editTitle") : t("settings.agentx.profiles.addTitle")}</DialogTitle>
           </DialogHeader>
+
+          {/* Preset buttons - only show when adding new profile */}
+          {!editingId && (
+            <div className="flex flex-wrap gap-2 pb-2">
+              {PRESETS.map(preset => {
+                const displayName = i18n.language === "zh-CN" ? preset.nameZh : preset.name
+                return (
+                  <Button key={preset.id} variant="outline" size="sm" className="flex-1 min-w-[120px]" onClick={() => applyPreset(preset)}>
+                    {displayName}
+                  </Button>
+                )
+              })}
+            </div>
+          )}
+
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>{t("settings.agentx.profiles.name")}</Label>
+              <Input value={form.name} placeholder="My Config" onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Label>{t("settings.agentx.baseUrl.label")}</Label>
+                <span className="text-xs text-muted-foreground">({t("settings.agentx.profiles.anthropicOnly")})</span>
+              </div>
               <Input
-                value={form.name}
-                placeholder="My Config"
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                value={form.baseUrl}
+                placeholder={t("settings.agentx.baseUrl.placeholder")}
+                className={urlError ? "border-red-500" : ""}
+                onChange={e => {
+                  const newUrl = e.target.value
+                  setForm(f => ({ ...f, baseUrl: newUrl }))
+                  validateBaseUrl(newUrl)
+                  setConnectionStatus("idle")
+                }}
               />
+              {urlError && (
+                <p className="text-xs text-red-500">{urlError}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>{t("settings.agentx.apiKey.label")}</Label>
@@ -187,15 +293,10 @@ export function AgentXProfilesConfig() {
                 type="password"
                 value={form.apiKey}
                 placeholder={t("settings.agentx.apiKey.placeholder")}
-                onChange={e => { setForm(f => ({ ...f, apiKey: e.target.value })); setConnectionStatus("idle") }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t("settings.agentx.baseUrl.label")}</Label>
-              <Input
-                value={form.baseUrl}
-                placeholder={t("settings.agentx.baseUrl.placeholder")}
-                onChange={e => { setForm(f => ({ ...f, baseUrl: e.target.value })); setConnectionStatus("idle") }}
+                onChange={e => {
+                  setForm(f => ({ ...f, apiKey: e.target.value }))
+                  setConnectionStatus("idle")
+                }}
               />
             </div>
             <div className="space-y-1.5">
@@ -203,7 +304,10 @@ export function AgentXProfilesConfig() {
               <Input
                 value={form.model}
                 placeholder={t("settings.agentx.model.placeholder")}
-                onChange={e => { setForm(f => ({ ...f, model: e.target.value })); setConnectionStatus("idle") }}
+                onChange={e => {
+                  setForm(f => ({ ...f, model: e.target.value }))
+                  setConnectionStatus("idle")
+                }}
               />
             </div>
           </div>
@@ -215,7 +319,7 @@ export function AgentXProfilesConfig() {
             {connectionStatus === "success" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
             {connectionStatus === "error" && <XCircle className="h-5 w-5 text-red-500" />}
             <div className="flex-1" />
-            <Button disabled={isSaving || !form.name || !form.apiKey} onClick={handleSave}>
+            <Button disabled={isSaving || !form.name || !form.apiKey || !!urlError} onClick={handleSave}>
               {isSaving ? t("settings.agentx.saving") : t("settings.agentx.save")}
             </Button>
           </DialogFooter>
