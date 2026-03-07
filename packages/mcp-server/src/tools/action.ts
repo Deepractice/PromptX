@@ -117,6 +117,7 @@ const V2_EXAMPLES = `
 
 **V2 synthesize (teach knowledge to a role):**
 \`\`\`json
+// synthesize 直接指定目标角色，无需先 activate
 { "operation": "synthesize", "role": "target-role", "name": "domain-knowledge", "source": "Feature: ...", "type": "knowledge" }
 \`\`\`
 
@@ -133,9 +134,10 @@ const V2_EXAMPLES = `
 
 **Organization: establish position & appoint:**
 \`\`\`json
-{ "operation": "establish", "role": "_", "name": "lead", "source": "Feature: ...", "org": "my-team" }
-{ "operation": "appoint", "role": "_", "name": "my-dev", "position": "lead", "org": "my-team" }
-{ "operation": "charge", "role": "_", "position": "lead", "content": "Feature: ..." }
+// ⚠️ 关键：职位名必须是"角色名+岗位"格式，appoint 的 position 必须与 establish 的 name 完全一致
+{ "operation": "establish", "role": "_", "name": "技术负责人岗位", "source": "Feature: ...", "org": "my-team" }
+{ "operation": "appoint", "role": "_", "name": "my-dev", "position": "技术负责人岗位", "org": "my-team" }
+{ "operation": "charge", "role": "_", "position": "技术负责人岗位", "content": "Feature: ..." }
 { "operation": "require", "role": "_", "position": "lead", "skill": "leadership" }
 { "operation": "abolish", "role": "_", "position": "lead" }
 \`\`\`
@@ -259,7 +261,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
           },
           type: {
             type: 'string',
-            description: 'Synthesize type: knowledge, experience, or voice. For synthesize operation, role parameter specifies the target role to teach.'
+            description: 'Synthesize type: knowledge, experience, or voice. For synthesize operation, the role parameter specifies the target role to teach (no need to activate first).'
           },
           experience: {
             type: 'string',
