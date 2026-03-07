@@ -209,13 +209,13 @@ class RolexBridge {
 
   /**
    * 制定计划 (plan)
-   * RoleX 1.1.0: role.plan(plan)
+   * RoleX 1.3.0: role.plan(plan, id, after, fallback)
    */
-  async plan (source) {
+  async plan (source, id, after, fallback) {
     await this.ensureInitialized()
     const roleId = this._requireActiveRole()
     const role = await this.rolex.activate(roleId)
-    return role.plan(source)
+    return role.plan(source, id, after, fallback)
   }
 
   /**

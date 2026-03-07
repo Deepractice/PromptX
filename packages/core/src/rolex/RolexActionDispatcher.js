@@ -120,7 +120,7 @@ class RolexActionDispatcher {
   }
 
   async _plan (args) {
-    return this.bridge.plan(args.source)
+    return this.bridge.plan(args.source, args.id, args.after, args.fallback)
   }
 
   async _todo (args) {

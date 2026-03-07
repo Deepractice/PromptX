@@ -32,17 +32,87 @@ const V2_EXAMPLES = `
 
 **V2 finish task / achieve goal:**
 \`\`\`json
-{ "operation": "finish", "role": "_", "name": "task-id" }
+// finish 操作会创建 encounter 节点，ID 格式为 {task-id}-finished
+{ "operation": "finish", "role": "_", "name": "task-id", "encounter": "遇到的问题和经历..." }
 { "operation": "achieve", "role": "_", "experience": "learned..." }
 \`\`\`
 
-**V2 learning cycle (reflect → realize → master):**
+**V2 complete learning cycle (want → plan → reflect → realize → master → synthesize):**
 \`\`\`json
-{ "operation": "reflect", "role": "_", "encounters": ["enc1", "enc2"], "experience": "Feature: ..." }
-{ "operation": "realize", "role": "_", "experiences": ["exp1"], "principle": "Feature: ..." }
-{ "operation": "master", "role": "_", "procedure": "Feature: ...", "id": "skill-id" }
-{ "operation": "forget", "role": "_", "nodeId": "knowledge-id" }
-{ "operation": "skill", "role": "_", "locator": "npm:@scope/package" }
+// 完整认知循环流程（基于实际测试验证）：
+
+// 1. 创建目标
+{ "operation": "want", "role": "_", "name": "improve-process", "source": "Feature: 改进流程\\n  作为产品经理..." }
+
+// 2. 制定计划（必须传入 id 参数！）
+{ "operation": "plan", "role": "_", "source": "Feature: 分析问题\\n  Scenario: 调研...", "id": "analysis-plan" }
+
+// 3. 反思 - 创建经验（可跳过 encounter，直接创建）
+{
+  "operation": "reflect",
+  "role": "_",
+  "encounters": [],  // 空数组 = 直接创建 experience，无需预定义 encounter
+  "experience": "Feature: 需求变更管理经验\\n  在项目管理中发现...\\n\\n  Scenario: 问题表现\\n    Then 需求反复修改导致延误\\n    And 团队理解不一致产生返工",
+  "id": "exp-1"  // 自定义 ID，用于后续引用
+}
+
+// 4. 领悟 - 提炼原则（必须基于已存在的 experience）
+{
+  "operation": "realize",
+  "role": "_",
+  "experiences": ["exp-1"],  // 必须是已存在的 experience ID 数组（复数！）
+  "principle": "Feature: 需求变更管理原则\\n  Scenario: 预防原则\\n    Then 预防胜于控制\\n    And 充分的需求调研",
+  "id": "principle-1"
+}
+
+// 5. 沉淀 - 创建标准流程
+{
+  "operation": "master",
+  "role": "_",
+  "procedure": "Feature: 需求变更管理SOP\\n  Background:\\n    Given 需求变更是常态\\n\\n  Scenario: 变更申请阶段\\n    When 收到变更请求\\n    Then 记录变更内容\\n    And 评估影响范围",
+  "id": "sop-1"
+}
+
+// 6. 传授 - 向其他角色传授知识
+{
+  "operation": "synthesize",
+  "role": "开发工程师",  // 目标角色（接收知识的角色）
+  "name": "需求变更管理",
+  "source": "Feature: 需求变更管理 - 开发视角\\n  Scenario: 配合要点\\n    Then 及时反馈技术可行性",
+  "type": "knowledge"
+}
+
+// 7. 遗忘 - 清理过时知识（可选）
+{ "operation": "forget", "role": "_", "nodeId": "outdated-knowledge-id" }
+\`\`\`
+
+**V2 learning cycle - 关键要点:**
+\`\`\`
+✅ Gherkin 格式必填: experience/principle/procedure/source 都必须使用 Gherkin 格式
+✅ Feature 开头: 必须以 "Feature: 标题" 开头，包含描述
+✅ Scenario 结构: 使用 Scenario/Background 定义场景，内部使用 Then/And/Given/When
+✅ 空数组可用: reflect 时 encounters: [] 可直接创建 experience，无需预定义 encounter
+✅ ID 数组必填: realize 的 experiences 必须是已存在的 experience ID 数组（复数）
+✅ 角色注意: synthesize 的 role 是目标角色（接收知识的角色），不是当前角色
+
+🚨 CRITICAL - plan 操作必须传入 id 参数:
+   plan 操作如果不传入 id 参数，focused_plan_id 不会被设置，
+   导致后续 todo 操作失败并报错 "No focused plan. Call plan first."
+
+   ❌ 错误: { "operation": "plan", "role": "_", "source": "..." }
+   ✅ 正确: { "operation": "plan", "role": "_", "source": "...", "id": "my-plan" }
+\`\`\`
+
+**V2 alternative: 基于任务完成的认知循环:**
+\`\`\`json
+// 如果想基于实际任务经历：
+// 1. 完成任务 → 自动创建 encounter (ID: {task-id}-finished)
+{ "operation": "finish", "role": "_", "name": "task-1", "encounter": "遇到的问题..." }
+
+// 2. 反思 encounter → 创建 experience
+{ "operation": "reflect", "role": "_", "encounters": ["task-1-finished"], "experience": "Feature: ...", "id": "exp-1" }
+
+// 3-6. 后续步骤同上
 \`\`\`
 
 **V2 synthesize (teach knowledge to a role):**
@@ -193,7 +263,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
           },
           experience: {
             type: 'string',
-            description: 'Reflection text for achieve/abandon operations'
+            description: 'Experience text (Gherkin Feature format) for reflect operation, or reflection text for achieve/abandon operations'
           },
           testable: {
             type: 'boolean',
@@ -214,12 +284,12 @@ Use \`roleResources\` to load additional sections **before** you need them:
           encounters: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Array of encounter IDs for reflect operation'
+            description: 'Array of encounter node IDs for reflect operation. Must be existing encounter IDs (usually created by finish operation), or pass empty array [] to create experience directly without consuming encounters.'
           },
           experiences: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Array of experience IDs for realize operation'
+            description: 'Array of experience node IDs for realize operation. Must be existing experience IDs created by reflect operation. This parameter is REQUIRED for realize.'
           },
           principle: {
             type: 'string',
@@ -251,7 +321,7 @@ Use \`roleResources\` to load additional sections **before** you need them:
           },
           id: {
             type: 'string',
-            description: 'Optional ID for reflect/realize/master operations'
+            description: 'Optional ID for plan/reflect/realize/master operations. IMPORTANT: plan operation REQUIRES id parameter to set focused_plan_id, otherwise todo will fail.'
           },
           skill: {
             type: 'string',
