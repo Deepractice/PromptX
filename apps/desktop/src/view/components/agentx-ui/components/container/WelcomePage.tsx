@@ -9,7 +9,7 @@
  */
 
 import * as React from "react";
-import { Send, Hammer, Sparkles, Bot, Wrench } from "lucide-react";
+import { Send, Hammer, Sparkles, Bot, Wrench, Users, GitBranch } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/components/agentx-ui/utils";
 import logo from "../../../../../../assets/icons/icon.png";
@@ -75,37 +75,71 @@ export function WelcomePage({
 }: WelcomePageProps): React.ReactElement {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = React.useState("");
+  const [enableV2, setEnableV2] = React.useState(false);
+
+  // Load V2 config on mount
+  React.useEffect(() => {
+    window.electronAPI?.invoke("server-config:get").then((config: any) => {
+      if (config?.enableV2) {
+        setEnableV2(true);
+      }
+    }).catch(() => {
+      // Ignore errors, default to false
+    });
+  }, []);
 
   const tagline = t("agentxUI.welcome.tagline");
   const displayText = useTypewriter(tagline, 100, true);
 
   // Preset questions
-  const presetQuestions: PresetQuestion[] = React.useMemo(() => [
-    {
-      id: "luban",
-      icon: <Hammer className="w-4 h-4" />,
-      title: t("agentxUI.welcome.presets.luban"),
-      prompt: t("agentxUI.welcome.presets.lubanPrompt"),
-    },
-    {
-      id: "nuwa",
-      icon: <Sparkles className="w-4 h-4" />,
-      title: t("agentxUI.welcome.presets.nuwa"),
-      prompt: t("agentxUI.welcome.presets.nuwaPrompt"),
-    },
-    {
-      id: "role",
-      icon: <Bot className="w-4 h-4" />,
-      title: t("agentxUI.welcome.presets.role"),
-      prompt: t("agentxUI.welcome.presets.rolePrompt"),
-    },
-    {
-      id: "tool",
-      icon: <Wrench className="w-4 h-4" />,
-      title: t("agentxUI.welcome.presets.tool"),
-      prompt: t("agentxUI.welcome.presets.toolPrompt"),
-    },
-  ], [t]);
+  const presetQuestions: PresetQuestion[] = React.useMemo(() => {
+    const baseQuestions = [
+      {
+        id: "luban",
+        icon: <Hammer className="w-4 h-4" />,
+        title: t("agentxUI.welcome.presets.luban"),
+        prompt: t("agentxUI.welcome.presets.lubanPrompt"),
+      },
+      {
+        id: "nuwa",
+        icon: <Sparkles className="w-4 h-4" />,
+        title: t("agentxUI.welcome.presets.nuwa"),
+        prompt: t("agentxUI.welcome.presets.nuwaPrompt"),
+      },
+      {
+        id: "role",
+        icon: <Bot className="w-4 h-4" />,
+        title: t("agentxUI.welcome.presets.role"),
+        prompt: t("agentxUI.welcome.presets.rolePrompt"),
+      },
+      {
+        id: "tool",
+        icon: <Wrench className="w-4 h-4" />,
+        title: t("agentxUI.welcome.presets.tool"),
+        prompt: t("agentxUI.welcome.presets.toolPrompt"),
+      },
+    ];
+
+    // Add V2-only questions
+    if (enableV2) {
+      baseQuestions.push(
+        {
+          id: "dayu",
+          icon: <GitBranch className="w-4 h-4" />,
+          title: t("agentxUI.welcome.presets.dayu"),
+          prompt: t("agentxUI.welcome.presets.dayuPrompt"),
+        },
+        {
+          id: "directory",
+          icon: <Users className="w-4 h-4" />,
+          title: t("agentxUI.welcome.presets.directory"),
+          prompt: t("agentxUI.welcome.presets.directoryPrompt"),
+        }
+      );
+    }
+
+    return baseQuestions;
+  }, [t, enableV2]);
 
   const handleSend = React.useCallback(() => {
     if (inputValue.trim() && onSend) {
@@ -181,7 +215,10 @@ export function WelcomePage({
 
         {/* Preset question cards */}
         <div className="w-full max-w-3xl">
-          <div className="grid grid-cols-2 gap-3">
+          <div className={cn(
+            "grid gap-3",
+            enableV2 ? "grid-cols-3" : "grid-cols-2"
+          )}>
             {presetQuestions.map((question) => (
               <button
                 key={question.id}

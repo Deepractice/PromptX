@@ -766,7 +766,11 @@
         "role": "探索可用角色",
         "rolePrompt": "有哪些可用的角色？",
         "tool": "探索可用工具",
-        "toolPrompt": "有哪些可用的工具？"
+        "toolPrompt": "有哪些可用的工具？",
+        "dayu": "激活大禹，迁移角色",
+        "dayuPrompt": "激活大禹帮我把v1迁移到v2",
+        "directory": "查看组织架构",
+        "directoryPrompt": "查看我现在的组织架构"
       }
     }
   },
@@ -799,6 +803,10 @@
     "updateV220": {
       "title": "v2.2.0 版本更新",
       "content": "新增通知中心、AgentX 配置增加预设与 OpenAI 协议识别功能、V2 RoleX 内核从 v0.11.0 更新到 v1.3.0、修复对话重命名后无效的 bug、修复 Windows 平台点击 Git 链接无响应的 bug。V2 的角色导入导出与删除功能暂时下架。"
+    },
+    "updateV221": {
+      "title": "v2.2.1 版本更新",
+      "content": "🎉 V2 RoleX 成功支持完整认知循环！\n\n🎯 核心操作：want（制定目标）、plan（制定计划）、todo（创建任务）、finish（完成任务）、achieve（达成目标）、focus（查看进度）、abandon（放弃目标）\n\n🧠 自我沉淀：reflect（反思问题）、realize（总结原则）、master（沉淀流程）、synthesize（传授知识）、forget（遗忘过时知识）\n\n✨ 修复大禹迁移功能，支持 V1 角色迁移到 V2"
     },
     "rolexUpgrade": {
       "title": "RoleX（V2）架构升级",

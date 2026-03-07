@@ -129,7 +129,29 @@ Strip content to minimum essential words. For each word ask: does removing it ch
       if (await dispatcher.isV2Role(args.role)) {
         return outputAdapter.convertToMCPFormat({
           type: 'error',
-          content: `❌ V2 角色 "${args.role}" 不支持 remember 功能\n\nV2 角色（RoleX）使用数据库存储，记忆管理功能正在开发中。\n当前 remember 工具仅支持 V1 角色（DPML 格式）。\n\n如需使用记忆功能，请使用 V1 角色。`
+          content: `❌ V2 角色 "${args.role}" 不支持 remember 工具
+
+V2 角色（RoleX）使用数据库存储和认知循环系统，请使用 action 工具的自我沉淀操作：
+
+🧠 **自我沉淀（学习循环）**：
+• reflect - 反思遇到的问题，创建经验
+• realize - 总结领悟的原则
+• master - 沉淀为标准操作流程（SOP）
+• synthesize - 向其他角色传授知识
+• forget - 遗忘过时的知识
+
+**示例**：
+\`\`\`json
+{
+  "operation": "reflect",
+  "role": "${args.role}",
+  "encounters": [],
+  "experience": "Feature: 学到的经验\\n  Scenario: 具体场景\\n    Then 关键发现",
+  "id": "exp-1"
+}
+\`\`\`
+
+当前 remember 工具仅支持 V1 角色（DPML 格式）。`
         });
       }
     } catch (e) {

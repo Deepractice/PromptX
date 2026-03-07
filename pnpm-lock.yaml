@@ -287,22 +287,22 @@ importers:
         specifier: workspace:*
         version: link:../resource
       '@rolexjs/core':
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0
       '@rolexjs/genesis':
         specifier: ^1.3.0
         version: 1.3.0
       '@rolexjs/local-platform':
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0(@types/better-sqlite3@7.6.13)(better-sqlite3@12.6.2)
       '@rolexjs/parser':
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0
       '@rolexjs/prototype':
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0
       '@rolexjs/system':
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0
       ajv:
         specifier: ^8.17.1
@@ -341,7 +341,7 @@ importers:
         specifier: ^2.14.0
         version: 2.20.0
       rolexjs:
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0
     devDependencies:
       '@alicloud/openapi-client':

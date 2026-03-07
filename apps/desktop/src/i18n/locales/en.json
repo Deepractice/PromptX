@@ -769,7 +769,11 @@
         "role": "Explore available roles",
         "rolePrompt": "What roles are available?",
         "tool": "Explore available tools",
-        "toolPrompt": "What tools are available?"
+        "toolPrompt": "What tools are available?",
+        "dayu": "Activate Dayu to migrate roles",
+        "dayuPrompt": "Activate Dayu to help me migrate v1 roles to v2",
+        "directory": "View organization structure",
+        "directoryPrompt": "Show me the current organization structure"
       }
     }
   },
@@ -802,6 +806,10 @@
     "updateV220": {
       "title": "v2.2.0 Update Released",
       "content": "New notification center, AgentX config with preset & OpenAI protocol detection, RoleX core upgraded from v0.11.0 to v1.3.0, fixed conversation rename bug, fixed Windows Git link issue. V2 role import/export/delete features temporarily disabled."
+    },
+    "updateV221": {
+      "title": "v2.2.1 Update Released",
+      "content": "🎉 V2 RoleX now supports complete cognitive cycle!\n\n🎯 Core Operations: want (set goals), plan (create plans), todo (create tasks), finish (complete tasks), achieve (reach goals), focus (view progress), abandon (give up goals)\n\n🧠 Self-Reflection: reflect (reflect on issues), realize (summarize principles), master (create SOPs), synthesize (teach knowledge), forget (forget outdated knowledge)\n\n✨ Fixed Dayu migration feature, supports V1 to V2 role migration"
     },
     "rolexUpgrade": {
       "title": "RoleX (V2) Architecture Upgrade",

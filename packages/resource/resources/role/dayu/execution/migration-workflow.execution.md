@@ -16,15 +16,14 @@
 
     ### Step 3: 创建V2角色
     - born：用整合后的 persona 描述创建角色
-    - **activate**：born 后必须立即 activate 该角色（synthesize 依赖活跃角色）
-    - synthesize type=voice：迁移有独立价值的 thought
-    - synthesize type=knowledge：迁移专有知识
-    - synthesize type=experience：迁移关键执行经验
-    - ⚠️ 严格顺序：born → activate → synthesize，不可跳过 activate
+    - synthesize type=voice：迁移有独立价值的 thought（传入 targetRole 参数）
+    - synthesize type=knowledge：迁移专有知识（传入 targetRole 参数）
+    - synthesize type=experience：迁移关键执行经验（传入 targetRole 参数）
+    - ⚠️ 关键：synthesize 必须传入 targetRole 参数（角色名），无需先 activate
 
     ### Step 4: 组织安排（可选）
     - 如果角色属于某个团队 → hire 到组织
-    - 如果角色有明确职责 → establish 职位 + appoint
+    - 如果角色有明确职责 → establish 职位（职位名必须是"角色名+岗位"格式）+ appoint（position 参数必须与 establish 的 name 完全一致）
 
     ### Step 5: 验证
     - identity 查看角色完整身份，确认所有 feature 已写入
@@ -33,10 +32,13 @@
   </process>
 
   <rule>
-    - born 之后必须 activate，然后才能 synthesize——这是最常见的错误
+    - synthesize 必须传入 targetRole 参数（角色名），无需先 activate
     - IF V1角色有大量thought THEN 整合为精炼的persona，不要逐个迁移
     - IF knowledge是通用知识 THEN 不迁移（AI已具备）
     - IF execution是标准流程 THEN 映射为duty；IF是领域知识 THEN 映射为knowledge
     - 迁移前必须向用户确认映射方案
+    - ⚠️ 职位命名规范：establish 创建职位时，name 必须是"角色名+岗位"格式（如"产品经理岗位"）
+    - ⚠️ appoint 任命时，position 参数必须与 establish 的 name 完全一致
+    - 验证方式：用 directory 检查 members 列表，而不是只看命令返回值
   </rule>
 </execution>

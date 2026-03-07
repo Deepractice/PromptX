@@ -6,19 +6,19 @@
   |---|---|---|---|---|
   | born | name, source | - | 无 | 创建角色 |
   | activate | role | version | 无 | 激活角色（设为当前活跃角色） |
-  | synthesize | name, source, type | - | **必须先 activate** | 教授知识/经验/声音 |
+  | synthesize | name, source, type | targetRole | 无 | 教授知识/经验/声音 |
   | identity | - | role | 无 | 查看角色身份 |
 
-  > ⚠️ 关键：born 只创建角色，不会自动激活。synthesize 前必须 activate，否则报错 "No active V2 role"。
+  > ⚠️ 关键：born 只创建角色，不会自动激活。synthesize 可以传入 targetRole 参数指定目标角色，无需先 activate。如果不传 targetRole，则使用当前活跃角色（需要先 activate）。
 
   ### 组织操作
   | 操作 | 必需参数 | 可选参数 | 说明 |
   |---|---|---|---|
   | found | name | source, parent | 创建组织 |
-  | establish | name, source, org | - | 在组织中创建职位 |
+  | establish | name, source, org | - | 在组织中创建职位。⚠️ name 必须是"角色名+岗位"格式（如"产品经理岗位"） |
   | hire | name, org | - | 雇佣角色到组织 |
   | fire | name, org | - | 从组织解雇角色 |
-  | appoint | name, position, org | - | 任命角色到职位 |
+  | appoint | name, position, org | - | 任命角色到职位。⚠️ position 必须与 establish 的 name 完全一致 |
   | dismiss | name, org | - | 免除角色职位 |
   | directory | - | - | 查看全局目录 |
 
