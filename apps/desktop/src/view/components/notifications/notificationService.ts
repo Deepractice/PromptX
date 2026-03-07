@@ -6,6 +6,14 @@ const SHOWN_KEY = "promptx_notifications_shown"
 // 默认通知数据
 const defaultNotifications: Notification[] = [
   {
+    id: "update-v2.2.1",
+    title: "notifications.updateV221.title",
+    content: "notifications.updateV221.content",
+    type: "success",
+    timestamp: Date.now(),
+    read: false,
+  },
+  {
     id: "update-v2.2.0",
     title: "notifications.updateV220.title",
     content: "notifications.updateV220.content",
