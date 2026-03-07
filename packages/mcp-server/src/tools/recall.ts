@@ -91,7 +91,38 @@ Step 3: Answer using recalled context
       if (await dispatcher.isV2Role(args.role)) {
         return outputAdapter.convertToMCPFormat({
           type: 'error',
-          content: `❌ V2 角色 "${args.role}" 不支持 recall 功能\n\nV2 角色（RoleX）使用数据库存储，记忆管理功能正在开发中。\n当前 recall 工具仅支持 V1 角色（DPML 格式）。\n\n如需使用记忆功能，请使用 V1 角色。`
+          content: `❌ V2 角色 "${args.role}" 不支持 recall 工具
+
+V2 角色（RoleX）使用数据库存储和认知循环系统，请使用 action 工具查询角色知识：
+
+🔍 **查询角色知识**：
+• identity - 查看角色完整身份和知识体系
+• focus - 查看当前进行中的目标和任务
+
+🧠 **自我沉淀（学习循环）**：
+• reflect - 反思遇到的问题，创建经验
+• realize - 总结领悟的原则
+• master - 沉淀为标准操作流程（SOP）
+• synthesize - 向其他角色传授知识
+• forget - 遗忘过时的知识
+
+**示例 - 查看角色知识**：
+\`\`\`json
+{
+  "operation": "identity",
+  "role": "${args.role}"
+}
+\`\`\`
+
+**示例 - 查看当前进度**：
+\`\`\`json
+{
+  "operation": "focus",
+  "role": "${args.role}"
+}
+\`\`\`
+
+当前 recall 工具仅支持 V1 角色（DPML 格式）。`
         });
       }
     } catch (e) {
