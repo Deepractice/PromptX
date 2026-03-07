@@ -766,7 +766,11 @@
         "role": "探索可用角色",
         "rolePrompt": "有哪些可用的角色？",
         "tool": "探索可用工具",
-        "toolPrompt": "有哪些可用的工具？"
+        "toolPrompt": "有哪些可用的工具？",
+        "dayu": "激活大禹，迁移角色",
+        "dayuPrompt": "激活大禹帮我把v1迁移到v2",
+        "directory": "查看组织架构",
+        "directoryPrompt": "查看我现在的组织架构"
       }
     }
   },

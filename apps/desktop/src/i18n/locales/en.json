@@ -769,7 +769,11 @@
         "role": "Explore available roles",
         "rolePrompt": "What roles are available?",
         "tool": "Explore available tools",
-        "toolPrompt": "What tools are available?"
+        "toolPrompt": "What tools are available?",
+        "dayu": "Activate Dayu to migrate roles",
+        "dayuPrompt": "Activate Dayu to help me migrate v1 roles to v2",
+        "directory": "View organization structure",
+        "directoryPrompt": "Show me the current organization structure"
       }
     }
   },
