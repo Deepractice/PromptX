@@ -35,9 +35,28 @@ export const notificationService = {
   // 获取所有通知
   getNotifications(): Notification[] {
     const stored = localStorage.getItem(STORAGE_KEY)
+    let existingNotifications: Notification[] = []
+
     if (stored) {
-      return JSON.parse(stored)
+      existingNotifications = JSON.parse(stored)
     }
+
+    // 检查是否有新的默认通知需要添加
+    const existingIds = new Set(existingNotifications.map(n => n.id))
+    const newNotifications = defaultNotifications.filter(n => !existingIds.has(n.id))
+
+    if (newNotifications.length > 0) {
+      // 有新通知，合并并保存
+      const merged = [...newNotifications, ...existingNotifications]
+      this.saveNotifications(merged)
+      return merged
+    }
+
+    // 没有新通知
+    if (existingNotifications.length > 0) {
+      return existingNotifications
+    }
+
     // 首次使用，初始化默认通知
     this.saveNotifications(defaultNotifications)
     return defaultNotifications
