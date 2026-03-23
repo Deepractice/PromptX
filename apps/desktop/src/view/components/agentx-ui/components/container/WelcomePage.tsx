@@ -171,7 +171,7 @@ export function WelcomePage({
   return (
     <div className={cn("flex flex-col h-full bg-background", className)}>
       {/* Git warning banner - only on Windows when Git not installed */}
-      {!gitInstalled && (
+      {!gitInstalled && window.electronAPI?.platform === 'win32' && (
         <div className="flex items-center gap-3 px-4 py-3 bg-amber-500/10 border-b border-amber-500/20">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
           <div className="flex-1 min-w-0">

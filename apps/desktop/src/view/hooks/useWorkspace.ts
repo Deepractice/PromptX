@@ -27,19 +27,6 @@ export function useWorkspace() {
     try {
       const result = await window.electronAPI.workspace.getFolders();
       setFolders(result);
-      // Auto-expand all workspace root folders and load their contents
-      if (result.length > 0) {
-        setExpandedPaths(prev => {
-          const next = { ...prev };
-          for (const f of result) next[f.path] = true;
-          return next;
-        });
-        await Promise.allSettled(result.map(f =>
-          window.electronAPI.workspace.listDir(f.path).then(entries =>
-            setDirCache(prev => ({ ...prev, [f.path]: entries }))
-          )
-        ));
-      }
     } finally {
       setIsLoading(false);
     }
