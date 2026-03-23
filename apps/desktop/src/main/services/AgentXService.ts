@@ -1,4 +1,4 @@
-import { createAgentX, type AgentX, type Unsubscribe } from 'agentxjs'
+import { createAgentX, LoggerFactoryImpl, type AgentX, type Unsubscribe } from 'agentxjs'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
@@ -157,6 +157,8 @@ export class AgentXService {
   }
 
   async start(): Promise<void> {
+    LoggerFactoryImpl.configure({ defaultLevel: 'warn' })
+
     if (this.isRunning) {
       logger.info('AgentX service is already running')
       return

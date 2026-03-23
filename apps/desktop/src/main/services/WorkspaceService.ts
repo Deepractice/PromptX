@@ -1,12 +1,13 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { app } from 'electron'
+import { homedir } from 'node:os'
 import { randomUUID } from 'node:crypto'
 
 export interface WorkspaceFolder {
   id: string
   name: string
   path: string
+  added_at: string
 }
 
 interface WorkspaceFoldersConfig {
@@ -17,7 +18,7 @@ export class WorkspaceService {
   private configPath: string
 
   constructor() {
-    this.configPath = path.join(app.getPath('userData'), 'workspace-folders.json')
+    this.configPath = path.join(homedir(), '.promptx', 'workspaces.json')
   }
 
   async getFolders(): Promise<WorkspaceFolder[]> {
@@ -32,7 +33,7 @@ export class WorkspaceService {
 
   async addFolder(folderPath: string, name: string): Promise<WorkspaceFolder> {
     const folders = await this.getFolders()
-    const folder: WorkspaceFolder = { id: randomUUID(), name, path: folderPath }
+    const folder: WorkspaceFolder = { id: randomUUID(), name, path: folderPath, added_at: new Date().toISOString() }
     folders.push(folder)
     await this.saveFolders(folders)
     return folder
@@ -93,6 +94,7 @@ export class WorkspaceService {
   }
 
   private async saveFolders(folders: WorkspaceFolder[]): Promise<void> {
+    await fs.mkdir(path.dirname(this.configPath), { recursive: true })
     await fs.writeFile(this.configPath, JSON.stringify({ folders }, null, 2), 'utf-8')
   }
 }
