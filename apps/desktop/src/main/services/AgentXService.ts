@@ -201,6 +201,12 @@ export class AgentXService {
         }
       }
 
+      // Add built-in mcp-workspace server
+      mcpServers['mcp-workspace'] = {
+        type: 'http',
+        url: 'http://127.0.0.1:18062/mcp',
+      }
+
       // Add user-configured MCP servers
       if (this.config.mcpServers) {
         for (const server of this.config.mcpServers) {
@@ -454,6 +460,16 @@ export class AgentXService {
         description: 'Office document reader (Word, Excel, PDF)',
       })
     }
+
+    // 添加内置的 mcp-workspace 服务器
+    servers.push({
+      name: 'mcp-workspace',
+      type: 'http',
+      url: 'http://127.0.0.1:18062/mcp',
+      enabled: true,
+      builtin: true,
+      description: 'Workspace file explorer (Browse, read, write local files)',
+    })
 
     // 添加用户配置的服务器
     if (this.config.mcpServers) {
