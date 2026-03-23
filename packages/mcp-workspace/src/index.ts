@@ -20,9 +20,4 @@ export {
   writeWorkspaceFile,
   createWorkspaceDirectory,
   deleteWorkspaceItem,
-  listMcpServers,
-  addMcpServer,
-  removeMcpServer,
-  updateMcpServer,
-  type McpServerConfig,
 } from './service/index.js';
