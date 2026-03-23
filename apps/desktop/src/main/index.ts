@@ -760,6 +760,17 @@ class PromptXDesktopApp {
 
     ipcMain.handle('workspace:deleteItem', async (_, itemPath: string) =>
       workspaceService.deleteItem(itemPath))
+
+    ipcMain.handle('system:checkGit', async () => {
+      if (process.platform !== 'win32') return { installed: true }
+      try {
+        const { execSync } = await import('node:child_process')
+        execSync('git --version', { stdio: 'ignore', timeout: 3000 })
+        return { installed: true }
+      } catch {
+        return { installed: false }
+      }
+    })
   }
 
   private setupUpdateIPC(): void {

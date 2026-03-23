@@ -141,6 +141,10 @@ interface ElectronAPI {
     createDir: (dirPath: string) => Promise<void>
     deleteItem: (itemPath: string) => Promise<void>
   }
+  // System API
+  system: {
+    checkGit: () => Promise<{ installed: boolean }>
+  }
   // System info
   platform: string
 }
@@ -214,6 +218,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     writeFile: (filePath: string, content: string) => ipcRenderer.invoke('workspace:writeFile', filePath, content),
     createDir: (dirPath: string) => ipcRenderer.invoke('workspace:createDir', dirPath),
     deleteItem: (itemPath: string) => ipcRenderer.invoke('workspace:deleteItem', itemPath),
+  },
+  // System API
+  system: {
+    checkGit: () => ipcRenderer.invoke('system:checkGit'),
   },
   // System info
   platform: process.platform,
