@@ -16,6 +16,7 @@ import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
 import { CognitionWindow } from '~/main/windows/CognitionWindow'
 import { agentXService } from '~/main/services/AgentXService'
 import { webAccessService } from '~/main/services/WebAccessService'
+import { workspaceService } from '~/main/services/WorkspaceService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
@@ -72,6 +73,7 @@ class PromptXDesktopApp {
     this.setupShellIPC()
     this.setupAgentXIPC()
     this.setupWebAccessIPC()
+    this.setupWorkspaceIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -722,6 +724,42 @@ class PromptXDesktopApp {
         return { success: false, error: String(error) }
       }
     })
+  }
+
+  private setupWorkspaceIPC(): void {
+    ipcMain.handle('workspace:getFolders', async () => workspaceService.getFolders())
+
+    ipcMain.handle('workspace:addFolder', async (_, folderPath: string, name: string) =>
+      workspaceService.addFolder(folderPath, name))
+
+    ipcMain.handle('workspace:removeFolder', async (_, id: string) =>
+      workspaceService.removeFolder(id))
+
+    ipcMain.handle('workspace:pickFolder', async () => {
+      const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+      if (result.canceled || !result.filePaths[0]) return null
+      const folderPath = result.filePaths[0]
+      const name = folderPath.split(/[/\\]/).filter(Boolean).pop() || 'workspace'
+      return { path: folderPath, name }
+    })
+
+    ipcMain.handle('workspace:listDir', async (_, dirPath: string) =>
+      workspaceService.listDir(dirPath))
+
+    ipcMain.handle('workspace:readFile', async (_, filePath: string) =>
+      workspaceService.readFile(filePath))
+
+    ipcMain.handle('workspace:readFileBase64', async (_, filePath: string) =>
+      workspaceService.readFileBase64(filePath))
+
+    ipcMain.handle('workspace:writeFile', async (_, filePath: string, content: string) =>
+      workspaceService.writeFile(filePath, content))
+
+    ipcMain.handle('workspace:createDir', async (_, dirPath: string) =>
+      workspaceService.createDir(dirPath))
+
+    ipcMain.handle('workspace:deleteItem', async (_, itemPath: string) =>
+      workspaceService.deleteItem(itemPath))
   }
 
   private setupUpdateIPC(): void {
