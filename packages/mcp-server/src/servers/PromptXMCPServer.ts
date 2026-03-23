@@ -52,9 +52,7 @@ export class PromptXMCPServer {
       this.server = new StreamableHttpMCPServer({
         name: options.name || 'promptx-mcp-server',
         version: options.version || process.env.npm_package_version || '1.0.0',
-        port: options.port || 5203,
-        host: options.host || 'localhost',
-        corsEnabled: options.corsEnabled || false
+        url: `http://${options.host || 'localhost'}:${options.port || 5203}/mcp`,
       });
     }
     
