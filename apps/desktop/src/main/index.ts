@@ -765,8 +765,26 @@ class PromptXDesktopApp {
       if (process.platform !== 'win32') return { installed: true }
       try {
         const { execSync } = await import('node:child_process')
-        execSync('git --version', { stdio: 'ignore', timeout: 3000 })
-        return { installed: true }
+        // Try git command first
+        try {
+          execSync('git --version', { stdio: 'ignore', timeout: 3000 })
+          return { installed: true }
+        } catch {
+          // Try common Git installation paths on Windows
+          const commonPaths = [
+            'C:\\Program Files\\Git\\cmd\\git.exe',
+            'C:\\Program Files (x86)\\Git\\cmd\\git.exe',
+          ]
+          for (const gitPath of commonPaths) {
+            try {
+              execSync(`"${gitPath}" --version`, { stdio: 'ignore', timeout: 3000 })
+              return { installed: true }
+            } catch {
+              // Continue to next path
+            }
+          }
+          return { installed: false }
+        }
       } catch {
         return { installed: false }
       }
