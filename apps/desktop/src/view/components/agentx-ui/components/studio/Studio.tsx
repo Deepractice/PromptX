@@ -111,7 +111,7 @@ export function Studio({
   const [visitedImages, setVisitedImages] = React.useState<Map<string, string>>(new Map());
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
-  const [workspacePanelOpen, setWorkspacePanelOpen] = React.useState(false);
+  const [workspacePanelOpen, setWorkspacePanelOpen] = React.useState(true);
   const [workspaceActiveTab, setWorkspaceActiveTab] = React.useState("explorer");
 
   // Toast state
