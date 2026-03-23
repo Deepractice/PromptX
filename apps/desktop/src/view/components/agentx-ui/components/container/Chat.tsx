@@ -169,6 +169,31 @@ export function Chat({
   const [droppedFiles, setDroppedFiles] = React.useState<File[] | undefined>(undefined);
   const dragCounterRef = React.useRef(0);
 
+  // Workspace panel file drag state
+  const [wsIsDragging, setWsIsDragging] = React.useState(false);
+  const [droppedWorkspacePaths, setDroppedWorkspacePaths] = React.useState<string[] | undefined>();
+
+  // Listen to workspace file drag custom events from FileTree
+  React.useEffect(() => {
+    const onWsDragStart = () => setWsIsDragging(true);
+    const onWsMouseUp = () => setWsIsDragging(false);
+    const onWsDrop = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { path: string; name: string; isImage: boolean };
+      if (detail?.path) {
+        setDroppedWorkspacePaths([detail.path]);
+      }
+    };
+
+    document.addEventListener("ws-file-drag-start", onWsDragStart);
+    document.addEventListener("mouseup", onWsMouseUp);
+    document.addEventListener("ws-file-drag-drop", onWsDrop);
+    return () => {
+      document.removeEventListener("ws-file-drag-start", onWsDragStart);
+      document.removeEventListener("mouseup", onWsMouseUp);
+      document.removeEventListener("ws-file-drag-drop", onWsDrop);
+    };
+  }, []);
+
   // Handle drag events for full-area drop zone
   const handleDragEnter = React.useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -208,6 +233,10 @@ export function Chat({
   // Clear dropped files after they've been processed by InputPane
   const handleDroppedFilesProcessed = React.useCallback(() => {
     setDroppedFiles(undefined);
+  }, []);
+
+  const handleDroppedWorkspacePathsProcessed = React.useCallback(() => {
+    setDroppedWorkspacePaths(undefined);
   }, []);
 
   // Toolbar items
@@ -274,11 +303,13 @@ export function Chat({
           onToolbarItemClick={handleToolbarClick}
           droppedFiles={droppedFiles}
           onDroppedFilesProcessed={handleDroppedFilesProcessed}
+          droppedWorkspacePaths={droppedWorkspacePaths}
+          onDroppedWorkspacePathsProcessed={handleDroppedWorkspacePathsProcessed}
         />
       </div>
 
       {/* Full-area drop overlay - dark mask style */}
-      {isDragging && (
+      {(isDragging || wsIsDragging) && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 pointer-events-none">
           <div className="w-20 h-20 mb-4 rounded-2xl bg-primary flex items-center justify-center">
             <svg
