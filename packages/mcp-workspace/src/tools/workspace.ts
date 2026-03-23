@@ -13,6 +13,12 @@ import {
   createWorkspaceDirectory,
   deleteWorkspaceItem,
 } from '../service/workspace.service.js';
+import {
+  listMcpServers,
+  addMcpServer,
+  removeMcpServer,
+  updateMcpServer,
+} from '../service/mcp-config.service.js';
 import { createLogger } from '@promptx/logger';
 
 const logger = createLogger();
@@ -121,6 +127,92 @@ export const WORKSPACE_TOOLS: Tool[] = [
       required: ['path'],
     },
   },
+
+  // ── MCP 服务器配置 ──────────────────────────────────────────────────────────
+  {
+    name: 'list_mcp_servers',
+    description: `列出所有已配置的 MCP 服务器（包括内置服务器和用户自定义服务器）。
+
+内置服务器（builtin: true）不可删除或修改。
+返回每个服务器的名称、类型、连接信息、启用状态和描述。`,
+    inputSchema: {
+      type: 'object' as const,
+      properties: {},
+    },
+  },
+  {
+    name: 'add_mcp_server',
+    description: `添加一个新的 MCP 服务器配置。
+
+支持两种传输类型：
+- stdio: 需要 command（命令）和可选的 args（参数列表）、env（环境变量）
+- http/sse: 需要 type（"http" 或 "sse"）和 url
+
+不可添加与内置服务器同名的配置。`,
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        name: { type: 'string', description: '服务器唯一名称（英文，不含空格）' },
+        description: { type: 'string', description: '服务器描述（可选）' },
+        enabled: { type: 'boolean', description: '是否启用，默认 true' },
+        command: { type: 'string', description: 'stdio 模式：可执行命令，如 "node"、"npx"' },
+        args: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'stdio 模式：命令参数列表',
+        },
+        env: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+          description: 'stdio 模式：追加的环境变量',
+        },
+        type: { type: 'string', enum: ['http', 'sse'], description: 'http/sse 模式：传输类型' },
+        url: { type: 'string', description: 'http/sse 模式：服务器 URL' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'remove_mcp_server',
+    description: `删除一个用户自定义的 MCP 服务器配置。
+
+内置服务器不可删除。`,
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        name: { type: 'string', description: '要删除的服务器名称' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'update_mcp_server',
+    description: `更新一个用户自定义 MCP 服务器的配置。
+
+内置服务器不可修改。只传入需要更新的字段。`,
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        name: { type: 'string', description: '要更新的服务器名称' },
+        description: { type: 'string', description: '新描述' },
+        enabled: { type: 'boolean', description: '是否启用' },
+        command: { type: 'string', description: 'stdio 模式：命令' },
+        args: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'stdio 模式：参数列表',
+        },
+        env: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+          description: 'stdio 模式：环境变量',
+        },
+        type: { type: 'string', enum: ['http', 'sse'], description: 'http/sse 模式：类型' },
+        url: { type: 'string', description: 'http/sse 模式：URL' },
+      },
+      required: ['name'],
+    },
+  },
 ];
 
 export async function handleWorkspaceTool(
@@ -163,6 +255,47 @@ export async function handleWorkspaceTool(
         const path = requireString(args, 'path');
         await deleteWorkspaceItem(path);
         return ok({ path, message: '已删除' });
+      }
+
+      // ── MCP 服务器配置 ────────────────────────────────────────────────────
+      case 'list_mcp_servers': {
+        const servers = listMcpServers();
+        return ok(servers);
+      }
+
+      case 'add_mcp_server': {
+        const name = requireString(args, 'name');
+        const entry = await addMcpServer({
+          name,
+          description: args.description as string | undefined,
+          enabled: args.enabled !== false,
+          command: args.command as string | undefined,
+          args: Array.isArray(args.args) ? args.args as string[] : undefined,
+          env: args.env as Record<string, string> | undefined,
+          type: args.type as 'http' | 'sse' | undefined,
+          url: args.url as string | undefined,
+        });
+        return ok({ message: `服务器 "${name}" 已添加`, server: entry });
+      }
+
+      case 'remove_mcp_server': {
+        const name = requireString(args, 'name');
+        await removeMcpServer(name);
+        return ok({ message: `服务器 "${name}" 已删除` });
+      }
+
+      case 'update_mcp_server': {
+        const name = requireString(args, 'name');
+        const updated = await updateMcpServer(name, {
+          description: args.description as string | undefined,
+          enabled: args.enabled as boolean | undefined,
+          command: args.command as string | undefined,
+          args: Array.isArray(args.args) ? args.args as string[] : undefined,
+          env: args.env as Record<string, string> | undefined,
+          type: args.type as 'http' | 'sse' | undefined,
+          url: args.url as string | undefined,
+        });
+        return ok({ message: `服务器 "${name}" 已更新`, server: updated });
       }
 
       default:
