@@ -73,6 +73,13 @@ const PRESETS = [
     model: "claude-opus-4-6"
   },
   {
+    id: "deepseek",
+    name: "DeepSeek",
+    nameZh: "DeepSeek",
+    baseUrl: "https://api.deepseek.com/anthropic",
+    model: "deepseek-chat"
+  },
+  {
     id: "custom",
     name: "Custom",
     nameZh: "自定义",

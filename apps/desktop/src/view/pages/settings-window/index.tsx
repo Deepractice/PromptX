@@ -24,6 +24,56 @@ import { WebAccessConfig } from "./components/WebAccessConfig"
 import { AgentXProfilesConfig } from "./components/AgentXProfilesConfig"
 import { Loader2, Settings, Bot, RefreshCw, Wifi, AlertTriangle } from "lucide-react"
 
+function GitWarningBanner() {
+  const { t } = useTranslation()
+  const [gitInstalled, setGitInstalled] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    if (window.electronAPI?.platform !== "win32") {
+      setGitInstalled(true)
+      return
+    }
+    window.electronAPI?.system?.checkGit().then((result: { installed: boolean }) => {
+      setGitInstalled(result.installed)
+    }).catch(() => {
+      setGitInstalled(true)
+    })
+  }, [])
+
+  if (gitInstalled !== false) return null
+
+  return (
+    <div className="mx-6 mb-6 flex items-start gap-3 rounded-lg border border-yellow-400/50 bg-yellow-50/80 px-4 py-3 dark:bg-yellow-900/20 dark:border-yellow-500/40">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-400" />
+      <p className="text-sm text-yellow-800 dark:text-yellow-300">
+        {t("settings.agentx.windowsGitWarning.text")}{" "}
+        <a
+          href="https://git-scm.com/download/win"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium underline underline-offset-2 hover:text-yellow-900 dark:hover:text-yellow-200"
+          onClick={async (e) => {
+            e.preventDefault()
+            const url = "https://git-scm.com/download/win"
+            try {
+              if (window.electronAPI?.shell?.openExternal) {
+                await window.electronAPI.shell.openExternal(url)
+              } else {
+                window.open(url, "_blank")
+              }
+            } catch (error) {
+              console.error("Failed to open external URL:", error)
+              toast.error("无法打开链接，请手动访问: " + url)
+            }
+          }}
+        >
+          {t("settings.agentx.windowsGitWarning.link")}
+        </a>
+      </p>
+    </div>
+  )
+}
+
 interface ServerConfig {
   host: string
   port: number
@@ -312,37 +362,8 @@ function SettingsWindow() {
                 <AgentXProfilesConfig />
               </CardContent>
 
-              {/* Windows Git requirement warning */}
-              {window.electronAPI?.platform === "win32" && (
-                <div className="mx-6 mb-6 flex items-start gap-3 rounded-lg border border-yellow-400/50 bg-yellow-50/80 px-4 py-3 dark:bg-yellow-900/20 dark:border-yellow-500/40">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-400" />
-                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                    {t("settings.agentx.windowsGitWarning.text")}{" "}
-                    <a
-                      href="https://git-scm.com/download/win"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-medium underline underline-offset-2 hover:text-yellow-900 dark:hover:text-yellow-200"
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        const url = "https://git-scm.com/download/win";
-                        try {
-                          if (window.electronAPI?.shell?.openExternal) {
-                            await window.electronAPI.shell.openExternal(url);
-                          } else {
-                            window.open(url, "_blank");
-                          }
-                        } catch (error) {
-                          console.error("Failed to open external URL:", error);
-                          toast.error("无法打开链接，请手动访问: " + url);
-                        }
-                      }}
-                    >
-                      {t("settings.agentx.windowsGitWarning.link")}
-                    </a>
-                  </p>
-                </div>
-              )}
+              {/* Windows Git requirement warning - only when Git not detected */}
+              <GitWarningBanner />
             </Card>
 
             {/* MCP 配置 */}

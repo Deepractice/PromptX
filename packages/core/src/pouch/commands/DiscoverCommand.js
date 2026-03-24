@@ -236,7 +236,12 @@ class DiscoverCommand extends BasePouchCommand {
       const bridge = getRolexBridge()
       const v2Roles = await bridge.listV2Roles()
       v2Roles.forEach(role => {
-        registry[`v2:${role.id}`] = role
+        // 如果 V1 registry 中已存在同名角色，用 V2 版本覆盖（避免重复）
+        if (registry[role.id]) {
+          registry[role.id] = { ...role, version: 'v2' }
+        } else {
+          registry[`v2:${role.id}`] = role
+        }
       })
       if (v2Roles.length > 0) {
         logger.info(`[DiscoverCommand] Found ${v2Roles.length} V2 roles from RoleX`)

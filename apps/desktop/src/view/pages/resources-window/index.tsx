@@ -81,14 +81,21 @@ export default function ResourcesPage() {
       if (result?.success) {
         const { grouped } = result.data || {}
         const flat: ResourceItem[] = []
+        const seen = new Set<string>()
         Object.keys(grouped || {}).forEach((source) => {
           const group = grouped[source] || {}
-          ;(group.roles || []).forEach((role: any) =>
+          ;(group.roles || []).forEach((role: any) => {
+            const key = `role-${source}-${role.id || role.name}`
+            if (seen.has(key)) return
+            seen.add(key)
             flat.push({ id: role.id || role.name, name: role.name, description: role.description, type: "role", source })
-          )
-          ;(group.tools || []).forEach((tool: any) =>
+          })
+          ;(group.tools || []).forEach((tool: any) => {
+            const key = `tool-${source}-${tool.id || tool.name}`
+            if (seen.has(key)) return
+            seen.add(key)
             flat.push({ id: tool.id || tool.name, name: tool.name, description: tool.description, type: "tool", source })
-          )
+          })
         })
         setItems(flat)
       } else {

@@ -364,10 +364,6 @@ class RolexBridge {
     await this.ensureInitialized()
     const textOutput = await this.rolex.direct('!census.list')
 
-    console.log('[RolexBridge] census.list raw output:')
-    console.log(textOutput)
-    console.log('[RolexBridge] census.list raw output END')
-
     // 解析文本输出为结构化数据
     return this._parseCensusOutput(textOutput)
   }
@@ -416,7 +412,6 @@ class RolexBridge {
       // 检测缩进行（角色/个体成员）
       else if (line.startsWith('  ') && currentOrg) {
         const match = trimmed.match(/^([^\s—]+)(?:\s*\([^)]+\))?\s*—\s*(.+)$/)
-        console.log('[_parseCensus] indented line:', JSON.stringify(trimmed), 'match:', match ? `name=${match[1]}, desc=${match[2]}` : 'NO MATCH')
         if (match) {
           const name = match[1].trim()
           const description = match[2].trim()
