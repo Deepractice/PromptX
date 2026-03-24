@@ -762,14 +762,17 @@ class PromptXDesktopApp {
       workspaceService.deleteItem(itemPath))
 
     ipcMain.handle('system:checkGit', async () => {
+      console.log('[checkGit] platform:', process.platform)
       if (process.platform !== 'win32') return { installed: true }
       try {
         const { execSync } = await import('node:child_process')
         // Try git command first
         try {
-          execSync('git --version', { stdio: 'ignore', timeout: 3000 })
+          const gitVersion = execSync('git --version', { encoding: 'utf-8', timeout: 3000 }).trim()
+          console.log('[checkGit] git --version succeeded:', gitVersion)
           return { installed: true }
-        } catch {
+        } catch (e: any) {
+          console.log('[checkGit] git --version failed:', e?.message || e)
           // Try common Git installation paths on Windows
           const commonPaths = [
             'C:\\Program Files\\Git\\cmd\\git.exe',
@@ -777,15 +780,18 @@ class PromptXDesktopApp {
           ]
           for (const gitPath of commonPaths) {
             try {
-              execSync(`"${gitPath}" --version`, { stdio: 'ignore', timeout: 3000 })
+              const ver = execSync(`"${gitPath}" --version`, { encoding: 'utf-8', timeout: 3000 }).trim()
+              console.log('[checkGit] fallback path succeeded:', gitPath, ver)
               return { installed: true }
-            } catch {
-              // Continue to next path
+            } catch (e2: any) {
+              console.log('[checkGit] fallback path failed:', gitPath, e2?.message || e2)
             }
           }
+          console.log('[checkGit] all checks failed, returning installed: false')
           return { installed: false }
         }
-      } catch {
+      } catch (e: any) {
+        console.log('[checkGit] outer catch:', e?.message || e)
         return { installed: false }
       }
     })
