@@ -135,6 +135,14 @@ export interface InputPaneProps {
    * Callback when dropped files have been processed
    */
   onDroppedFilesProcessed?: () => void;
+  /**
+   * Workspace file paths dropped from workspace panel
+   */
+  droppedWorkspacePaths?: string[];
+  /**
+   * Callback when dropped workspace paths have been processed
+   */
+  onDroppedWorkspacePathsProcessed?: () => void;
 }
 
 /**
@@ -188,6 +196,8 @@ export const InputPane: React.ForwardRefExoticComponent<
       acceptAllFileTypes = true,
       droppedFiles,
       onDroppedFilesProcessed,
+      droppedWorkspacePaths,
+      onDroppedWorkspacePathsProcessed,
     },
     ref
   ) => {
@@ -517,6 +527,18 @@ export const InputPane: React.ForwardRefExoticComponent<
         onDroppedFilesProcessed?.();
       }
     }, [droppedFiles, onDroppedFilesProcessed]);
+
+    // Stable ref for addFilesFromPaths
+    const addFilesFromPathsRef = React.useRef(addFilesFromPaths);
+    addFilesFromPathsRef.current = addFilesFromPaths;
+
+    // Process workspace file paths dragged from workspace panel
+    React.useEffect(() => {
+      if (droppedWorkspacePaths && droppedWorkspacePaths.length > 0) {
+        addFilesFromPathsRef.current(droppedWorkspacePaths);
+        onDroppedWorkspacePathsProcessed?.();
+      }
+    }, [droppedWorkspacePaths, onDroppedWorkspacePathsProcessed]);
 
     /**
      * Handle emoji select

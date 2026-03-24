@@ -11,6 +11,11 @@ export { recallTool } from './recall.js';
 export { rememberTool } from './remember.js';
 export { toolxTool } from './toolx.js';
 
+// V2 拆分工具
+export { lifecycleTool, createLifecycleTool } from './lifecycle.js';
+export { learningTool, createLearningTool } from './learning.js';
+export { organizationTool, createOrganizationTool } from './organization.js';
+
 import { createDiscoverTool } from './welcome.js';
 import { createActionTool } from './action.js';
 import { projectTool } from './project.js';
@@ -18,13 +23,16 @@ import { projectTool } from './project.js';
 import { recallTool } from './recall.js';
 import { rememberTool } from './remember.js';
 import { toolxTool } from './toolx.js';
+import { createLifecycleTool } from './lifecycle.js';
+import { createLearningTool } from './learning.js';
+import { createOrganizationTool } from './organization.js';
 import type { ToolWithHandler } from '~/interfaces/MCPServer.js';
 
 /**
  * 根据 enableV2 标志创建工具列表（工具描述和行为随之变化）
  */
 export function createAllTools(enableV2: boolean): ToolWithHandler[] {
-  return [
+  const tools: ToolWithHandler[] = [
     createDiscoverTool(enableV2),
     createActionTool(enableV2),
     projectTool,
@@ -33,6 +41,17 @@ export function createAllTools(enableV2: boolean): ToolWithHandler[] {
     rememberTool,
     toolxTool
   ];
+
+  // V2 拆分工具：仅在 enableV2 时注册
+  if (enableV2) {
+    tools.push(
+      createLifecycleTool(enableV2),
+      createLearningTool(enableV2),
+      createOrganizationTool(enableV2)
+    );
+  }
+
+  return tools;
 }
 
 /**

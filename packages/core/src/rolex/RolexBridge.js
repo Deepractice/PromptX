@@ -394,6 +394,11 @@ class RolexBridge {
 
       // 检测组织行（没有缩进，可能包含括号）
       if (!line.startsWith(' ')) {
+        // 跳过 ─── unaffiliated ─── 等分隔行，将其下的角色视为无组织
+        if (trimmed.includes('unaffiliated') || /^[─—-]{3,}/.test(trimmed)) {
+          currentOrg = '__unaffiliated__'
+          continue
+        }
         // 这是一个组织名称
         currentOrg = trimmed
         if (!result.organizations.find(o => o.name === currentOrg)) {
@@ -404,48 +409,32 @@ class RolexBridge {
           })
         }
       }
-      // 检测缩进行（角色或职位）
+      // 检测缩进行（角色/个体成员）
       else if (line.startsWith('  ') && currentOrg) {
         const match = trimmed.match(/^([^\s—]+)(?:\s*\([^)]+\))?\s*—\s*(.+)$/)
         if (match) {
           const name = match[1].trim()
           const description = match[2].trim()
 
-          // 判断是角色还是职位
-          // 如果描述包含多个逗号分隔的职位，或者包含 "manager" 等关键词，则是角色
-          // 否则是职位定义
-          const isRole = description.includes(',') ||
-                        description.includes('manager') ||
-                        description.includes('individual') ||
-                        description.includes('organization') ||
-                        description.includes('position')
+          // census.list 缩进行全部是个体（成员），不是职位定义
+          // description 是该成员所任职的职位列表（逗号分隔）
+          const positions = description.split(',').map(p => p.trim())
 
-          if (isRole) {
-            // 这是一个角色
-            const positions = description.split(',').map(p => p.trim())
+          // 添加到 roles 列表（unaffiliated 的角色 org 为空）
+          const isUnaffiliated = currentOrg === '__unaffiliated__'
+          result.roles.push({
+            name: name,
+            org: isUnaffiliated ? undefined : currentOrg,
+            position: positions[0]
+          })
 
-            // 添加到 roles 列表
-            result.roles.push({
-              name: name,
-              org: currentOrg,
-              position: positions[0]
-            })
-
-            // 添加到组织的成员列表
+          // 添加到组织的成员列表（unaffiliated 不添加）
+          if (!isUnaffiliated) {
             const org = result.organizations.find(o => o.name === currentOrg)
             if (org) {
               org.members.push({
                 name: name,
                 position: positions[0]
-              })
-            }
-          } else {
-            // 这是一个职位定义
-            const org = result.organizations.find(o => o.name === currentOrg)
-            if (org) {
-              org.positions.push({
-                name: name,
-                description: description
               })
             }
           }

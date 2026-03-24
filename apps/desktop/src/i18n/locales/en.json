@@ -99,6 +99,53 @@
       "copyUrl": "URL copied",
       "qrHint": "Scan to access on phone or other devices"
     },
+    "feishu": {
+      "title": "Feishu (Lark)",
+      "description": "Connect Feishu bot to interact with PromptX via Feishu messages",
+      "appId": {
+        "label": "App ID",
+        "placeholder": "cli_xxxxxxxxxx"
+      },
+      "appSecret": {
+        "label": "App Secret",
+        "placeholder": "Enter Feishu app secret"
+      },
+      "encryptKey": {
+        "label": "Encrypt Key (Optional)",
+        "placeholder": "Event verification key"
+      },
+      "save": "Save Config",
+      "saving": "Saving...",
+      "saveSuccess": "Feishu config saved",
+      "saveFailed": "Failed to save Feishu config",
+      "testConnection": "Test Connection",
+      "comingSoon": "Feishu integration coming soon",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "configRequired": "Please fill in App ID and App Secret first",
+      "startSuccess": "Feishu bot started",
+      "startFailed": "Failed to start Feishu bot",
+      "stopSuccess": "Feishu bot stopped",
+      "stopFailed": "Failed to stop Feishu bot",
+      "remove": "Disconnect & Remove",
+      "removeSuccess": "Feishu config removed",
+      "removeFailed": "Failed to remove Feishu config",
+      "guide": "Create an app on Feishu Open Platform to get credentials",
+      "guideLink": "Feishu Open Platform"
+    },
+    "wechat": {
+      "title": "WeChat",
+      "description": "Connect personal WeChat to interact with PromptX via WeChat messages",
+      "installTitle": "1. Install Plugin",
+      "installDesc": "First install the openclaw WeChat plugin",
+      "installCmd": "npx -y @tencent-weixin/openclaw-weixin-cli install",
+      "loginTitle": "2. QR Code Login",
+      "loginDesc": "Run the command below and scan the QR code with WeChat",
+      "loginCmd": "openclaw channels login --channel openclaw-weixin",
+      "startBtn": "Start WeChat Integration",
+      "comingSoon": "WeChat integration coming soon",
+      "copied": "Command copied"
+    },
     "server": {
       "title": "Server Configuration",
       "description": "Configure server host, port and debug settings",
@@ -814,6 +861,10 @@
     "rolexUpgrade": {
       "title": "RoleX (V2) Architecture Upgrade",
       "content": "Existing V2 roles need to be upgraded. Please activate Nuwa and ask her to upgrade and migrate your roles to continue using them."
+    },
+    "updateV230": {
+      "title": "v2.3.0 Update Released",
+      "content": "🚀 Comprehensive RoleX improvements with organization operation bug fixes\n\n⚡ Added DeepSeek preset configuration, ready to use out of the box\n\n📂 New workspace feature with project file management\n\n💬 Feishu (Lark) integration for multi-platform access, similar to OpenClaw"
     }
   }
 }

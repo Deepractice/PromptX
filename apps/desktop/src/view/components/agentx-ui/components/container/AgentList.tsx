@@ -143,52 +143,63 @@ export function AgentList({
 
   // First message cache for each image
   const [firstMessages, setFirstMessages] = React.useState<Record<string, string>>({});
+  const firstMessagesCacheRef = React.useRef<Record<string, string>>({});
+  const fetchingRef = React.useRef<Set<string>>(new Set());
 
   // Filter out <file path="...">...</file> tags from text
   const filterFilePathTags = (text: string): string => {
     return text.replace(/<file\s+path="[^"]*">[^<]*<\/file>\s*/g, '').trim();
   };
 
-  // Fetch first message for each image
+  // Fetch first message for a single image
+  const fetchFirstMessage = React.useCallback(async (imageId: string) => {
+    if (!agentx || firstMessagesCacheRef.current[imageId] || fetchingRef.current.has(imageId)) return;
+    fetchingRef.current.add(imageId);
+    try {
+      const response = await agentx.request("image_messages_request", { imageId });
+      const messages = response.data?.messages || [];
+      const firstUserMsg = messages.find((m: any) => m.role === "user");
+      if (firstUserMsg?.content) {
+        let textContent = Array.isArray(firstUserMsg.content)
+          ? firstUserMsg.content.find((c: any) => c.type === "text")?.text || ""
+          : typeof firstUserMsg.content === "string" ? firstUserMsg.content : "";
+        textContent = filterFilePathTags(textContent);
+        if (textContent) {
+          const preview = textContent.slice(0, 50) + (textContent.length > 50 ? "..." : "");
+          firstMessagesCacheRef.current[imageId] = preview;
+          setFirstMessages(prev => ({ ...prev, [imageId]: preview }));
+        }
+      }
+    } catch {
+      // Ignore errors
+    } finally {
+      fetchingRef.current.delete(imageId);
+    }
+  }, [agentx]);
+
+  // Lazy-load first messages in batches (concurrency = 3) after initial render
   React.useEffect(() => {
     if (!agentx || images.length === 0) return;
 
-    const fetchFirstMessages = async () => {
-      const newFirstMessages: Record<string, string> = {};
+    let cancelled = false;
+    const BATCH_SIZE = 3;
 
-      for (const img of images) {
-        // Skip if already cached
-        if (firstMessages[img.imageId]) {
-          newFirstMessages[img.imageId] = firstMessages[img.imageId];
-          continue;
-        }
-
-        try {
-          const response = await agentx.request("image_messages_request", { imageId: img.imageId });
-          const messages = response.data?.messages || [];
-          // Find first user message
-          const firstUserMsg = messages.find((m: any) => m.role === "user");
-          if (firstUserMsg?.content) {
-            // Extract text content
-            let textContent = Array.isArray(firstUserMsg.content)
-              ? firstUserMsg.content.find((c: any) => c.type === "text")?.text || ""
-              : typeof firstUserMsg.content === "string" ? firstUserMsg.content : "";
-            // Filter out file path tags
-            textContent = filterFilePathTags(textContent);
-            if (textContent) {
-              newFirstMessages[img.imageId] = textContent.slice(0, 50) + (textContent.length > 50 ? "..." : "");
-            }
-          }
-        } catch (error) {
-          // Ignore errors, just don't show first message
-        }
+    const loadInBatches = async () => {
+      const uncached = images.filter(img => !firstMessagesCacheRef.current[img.imageId]);
+      for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
+        if (cancelled) break;
+        const batch = uncached.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map(img => fetchFirstMessage(img.imageId)));
       }
-
-      setFirstMessages(prev => ({ ...prev, ...newFirstMessages }));
     };
 
-    fetchFirstMessages();
-  }, [agentx, images]);
+    // Defer to avoid blocking initial render
+    const timer = setTimeout(loadInBatches, 100);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [agentx, images, fetchFirstMessage]);
 
   // Map images to ListPaneItem[]
   const items: ListPaneItem[] = React.useMemo(() => {

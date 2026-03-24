@@ -1,4 +1,4 @@
-import { createAgentX, type AgentX, type Unsubscribe } from 'agentxjs'
+import { createAgentX, LoggerFactoryImpl, type AgentX, type Unsubscribe } from 'agentxjs'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
@@ -157,6 +157,8 @@ export class AgentXService {
   }
 
   async start(): Promise<void> {
+    LoggerFactoryImpl.configure({ defaultLevel: 'warn' })
+
     if (this.isRunning) {
       logger.info('AgentX service is already running')
       return
@@ -194,6 +196,20 @@ export class AgentXService {
         mcpServers['mcp-office'] = {
           command: mcpCommand,
           args: [mcpOfficePath],
+          env: {
+            ...process.env,
+            ELECTRON_RUN_AS_NODE: '1',
+          },
+        }
+      }
+
+      // Add built-in mcp-workspace server (stdio)
+      const mcpWorkspacePath = this.getMcpWorkspacePath()
+      if (mcpWorkspacePath) {
+        const mcpCommand = process.env.PROMPTX_MAC_HELPER_PATH || process.execPath
+        mcpServers['mcp-workspace'] = {
+          command: mcpCommand,
+          args: [mcpWorkspacePath, '--transport', 'stdio'],
           env: {
             ...process.env,
             ELECTRON_RUN_AS_NODE: '1',
@@ -401,6 +417,33 @@ export class AgentXService {
     }
   }
 
+  /**
+   * Get the path to mcp-workspace server (mcp-server.js entry)
+   */
+  private getMcpWorkspacePath(): string {
+    const devPath = path.join(__dirname, '../../../../packages/mcp-workspace/dist/mcp-server.js')
+    const prodPath = path.join(process.resourcesPath || '', 'mcp-workspace/mcp-server.js')
+
+    if (fs.existsSync(devPath)) {
+      return devPath
+    }
+    if (fs.existsSync(prodPath)) {
+      return prodPath
+    }
+
+    const nodeModulesPath = path.join(__dirname, '../../../node_modules/@promptx/mcp-workspace/dist/mcp-server.js')
+    if (fs.existsSync(nodeModulesPath)) {
+      return nodeModulesPath
+    }
+
+    try {
+      return require.resolve('@promptx/mcp-workspace/mcp-server')
+    } catch {
+      logger.warn('MCP Workspace server not found, workspace file access will not be available')
+      return ''
+    }
+  }
+
   getPort(): number {
     return this.port
   }
@@ -452,6 +495,19 @@ export class AgentXService {
         enabled: true,
         builtin: true,
         description: 'Office document reader (Word, Excel, PDF)',
+      })
+    }
+
+    // 添加内置的 mcp-workspace 服务器
+    const mcpWorkspacePath = this.getMcpWorkspacePath()
+    if (mcpWorkspacePath) {
+      servers.push({
+        name: 'mcp-workspace',
+        command: 'node',
+        args: [mcpWorkspacePath, '--transport', 'stdio'],
+        enabled: true,
+        builtin: true,
+        description: 'Workspace file explorer (Browse, read, write local files)',
       })
     }
 

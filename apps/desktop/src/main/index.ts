@@ -16,6 +16,8 @@ import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
 import { CognitionWindow } from '~/main/windows/CognitionWindow'
 import { agentXService } from '~/main/services/AgentXService'
 import { webAccessService } from '~/main/services/WebAccessService'
+import { FeishuManager } from '~/main/services/feishu'
+import { workspaceService } from '~/main/services/WorkspaceService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
@@ -32,6 +34,7 @@ class PromptXDesktopApp {
   private updateManager: UpdateManager | null = null
   private autoStartService: AutoStartService | null = null
   private autoStartWindow: AutoStartWindow | null = null
+  private feishuManager: FeishuManager | null = null
 
   async initialize(): Promise<void> {
     // Capture console output to log file (covers @agentxjs/common runtime logs)
@@ -72,6 +75,8 @@ class PromptXDesktopApp {
     this.setupShellIPC()
     this.setupAgentXIPC()
     this.setupWebAccessIPC()
+    this.setupFeishuIPC()
+    this.setupWorkspaceIPC()
 
     // Setup infrastructure
     logger.info('Setting up infrastructure...')
@@ -692,6 +697,63 @@ class PromptXDesktopApp {
     })
   }
 
+  private setupFeishuIPC(): void {
+    const dataDir = app.getPath('userData')
+    this.feishuManager = new FeishuManager(dataDir, agentXService.getPort())
+
+    ipcMain.handle('feishu:getConfig', async () => {
+      const saved = this.feishuManager!.loadConfig()
+      if (saved?.feishu) {
+        return saved.feishu
+      }
+      return null
+    })
+
+    ipcMain.handle('feishu:saveConfig', async (_, config: any) => {
+      try {
+        this.feishuManager!.saveConfig(config, { name: 'PromptX' })
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    ipcMain.handle('feishu:start', async (_, feishuConfig: any, roleConfig?: any) => {
+      try {
+        const role = roleConfig || { name: 'PromptX' }
+        await this.feishuManager!.start(feishuConfig, role)
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    ipcMain.handle('feishu:stop', async () => {
+      try {
+        await this.feishuManager!.stop()
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    ipcMain.handle('feishu:status', async () => {
+      return this.feishuManager!.getStatus()
+    })
+
+    ipcMain.handle('feishu:remove', async () => {
+      try {
+        await this.feishuManager!.remove()
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    // 尝试恢复已保存的飞书连接
+    this.feishuManager.restore().catch(() => {})
+  }
+
   private setupWebAccessIPC(): void {
     ipcMain.handle('webAccess:getStatus', () => {
       const last = webAccessService.getLastStatus()
@@ -720,6 +782,70 @@ class PromptXDesktopApp {
         return { success: true }
       } catch (error) {
         return { success: false, error: String(error) }
+      }
+    })
+  }
+
+  private setupWorkspaceIPC(): void {
+    ipcMain.handle('workspace:getFolders', async () => workspaceService.getFolders())
+
+    ipcMain.handle('workspace:addFolder', async (_, folderPath: string, name: string) =>
+      workspaceService.addFolder(folderPath, name))
+
+    ipcMain.handle('workspace:removeFolder', async (_, id: string) =>
+      workspaceService.removeFolder(id))
+
+    ipcMain.handle('workspace:pickFolder', async () => {
+      const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+      if (result.canceled || !result.filePaths[0]) return null
+      const folderPath = result.filePaths[0]
+      const name = folderPath.split(/[/\\]/).filter(Boolean).pop() || 'workspace'
+      return { path: folderPath, name }
+    })
+
+    ipcMain.handle('workspace:listDir', async (_, dirPath: string) =>
+      workspaceService.listDir(dirPath))
+
+    ipcMain.handle('workspace:readFile', async (_, filePath: string) =>
+      workspaceService.readFile(filePath))
+
+    ipcMain.handle('workspace:readFileBase64', async (_, filePath: string) =>
+      workspaceService.readFileBase64(filePath))
+
+    ipcMain.handle('workspace:writeFile', async (_, filePath: string, content: string) =>
+      workspaceService.writeFile(filePath, content))
+
+    ipcMain.handle('workspace:createDir', async (_, dirPath: string) =>
+      workspaceService.createDir(dirPath))
+
+    ipcMain.handle('workspace:deleteItem', async (_, itemPath: string) =>
+      workspaceService.deleteItem(itemPath))
+
+    ipcMain.handle('system:checkGit', async () => {
+      if (process.platform !== 'win32') return { installed: true }
+      try {
+        const { execSync } = await import('node:child_process')
+        try {
+          execSync('git --version', { encoding: 'utf-8', timeout: 3000 })
+          return { installed: true }
+        } catch {
+          // Try common Git installation paths on Windows
+          const commonPaths = [
+            'C:\\Program Files\\Git\\cmd\\git.exe',
+            'C:\\Program Files (x86)\\Git\\cmd\\git.exe',
+          ]
+          for (const gitPath of commonPaths) {
+            try {
+              execSync(`"${gitPath}" --version`, { encoding: 'utf-8', timeout: 3000 })
+              return { installed: true }
+            } catch {
+              // continue
+            }
+          }
+          return { installed: false }
+        }
+      } catch {
+        return { installed: false }
       }
     })
   }

@@ -214,44 +214,55 @@ export default function RoleTreeListPanel({
             </div>
           ) : versionFilter === "v2" ? (
             <>
-              {/* V2 角色：显示组织树状结构 */}
-              {Array.from(orgMap.entries()).map(([orgName, orgRoles]) => {
-                const orgInfo = getOrgInfo(orgName)
-                const isExpanded = expandedOrgs.has(orgName)
-                return (
-                  <div key={orgName} className="mb-2">
-                    <button
-                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/80 bg-muted/50"
-                      onClick={() => toggleOrg(orgName)}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                      )}
-                      <Building2 className="h-4 w-4 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold truncate">{orgName}</span>
-                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                            {orgRoles.length}
-                          </span>
-                        </div>
-                        {orgInfo?.charter && (
-                          <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            {orgInfo.charter}
-                          </p>
+              {/* V2 角色：显示组织树状结构，合并 organizations prop 和 filteredRoles */}
+              {(() => {
+                // 合并所有组织：来自 organizations prop + filteredRoles 中的 org
+                const allOrgNames = new Set<string>()
+                organizations.forEach(o => allOrgNames.add(o.name))
+                orgMap.forEach((_, orgName) => allOrgNames.add(orgName))
+
+                return Array.from(allOrgNames).map(orgName => {
+                  const orgInfo = getOrgInfo(orgName)
+                  const orgRoles = orgMap.get(orgName) || []
+                  // 组织来自 directory 但下面没有匹配到的角色时，显示 directory 中的成员信息
+                  const directoryMembers = orgInfo?.roles || []
+                  const displayRoles = orgRoles.length > 0 ? orgRoles : directoryMembers
+                  const isExpanded = expandedOrgs.has(orgName)
+                  return (
+                    <div key={orgName} className="mb-2">
+                      <button
+                        className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/80 bg-muted/50"
+                        onClick={() => toggleOrg(orgName)}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                         )}
-                      </div>
-                    </button>
-                    {isExpanded && (
-                      <div className="ml-6 mt-1 space-y-1 border-l-2 border-muted pl-2">
-                        {orgRoles.map(role => renderRole(role))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+                        <Building2 className="h-4 w-4 text-primary shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold truncate">{orgName}</span>
+                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                              {displayRoles.length}
+                            </span>
+                          </div>
+                          {orgInfo?.charter && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {orgInfo.charter}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                      {isExpanded && (
+                        <div className="ml-6 mt-1 space-y-1 border-l-2 border-muted pl-2">
+                          {displayRoles.map(role => renderRole(role))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              })()}
 
               {/* 无组织的 V2 角色 */}
               {rolesWithoutOrg.length > 0 && (

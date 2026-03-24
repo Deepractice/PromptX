@@ -99,13 +99,27 @@ export default function RolesPage() {
                 })
               }
 
-              // 设置组织列表
+              // 设置组织列表（包含所有组织，即使其下没有匹配到已扫描的角色）
               if (directory?.organizations) {
-                setOrganizations(directory.organizations.map((org: any) => ({
-                  name: org.name,
-                  charter: org.charter,
-                  roles: flat.filter(r => r.org === org.name)
-                })))
+                setOrganizations(directory.organizations.map((org: any) => {
+                  const matchedRoles = flat.filter(r => r.org === org.name)
+                  // 如果没有匹配到的角色，用 directory 中的成员信息构造占位角色
+                  const orgRoles = matchedRoles.length > 0 ? matchedRoles : (org.members || []).map((m: any) => ({
+                    id: m.name,
+                    name: m.name,
+                    description: m.position || '',
+                    type: "role" as const,
+                    source: "user",
+                    version: "v2" as const,
+                    org: org.name,
+                    position: m.position,
+                  }))
+                  return {
+                    name: org.name,
+                    charter: org.charter,
+                    roles: orgRoles,
+                  }
+                }))
               }
             }
           } catch (e) {

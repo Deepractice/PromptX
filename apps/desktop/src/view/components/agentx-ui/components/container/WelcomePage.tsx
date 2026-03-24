@@ -9,7 +9,7 @@
  */
 
 import * as React from "react";
-import { Send, Hammer, Sparkles, Bot, Wrench, Users, GitBranch } from "lucide-react";
+import { Send, Hammer, Sparkles, Bot, Wrench, Users, GitBranch, AlertCircle, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/components/agentx-ui/utils";
 import logo from "../../../../../../assets/icons/icon.png";
@@ -76,8 +76,9 @@ export function WelcomePage({
   const { t } = useTranslation();
   const [inputValue, setInputValue] = React.useState("");
   const [enableV2, setEnableV2] = React.useState(false);
+  const [gitInstalled, setGitInstalled] = React.useState(true);
 
-  // Load V2 config on mount
+  // Load V2 config and check Git on mount
   React.useEffect(() => {
     window.electronAPI?.invoke("server-config:get").then((config: any) => {
       if (config?.enableV2) {
@@ -85,6 +86,12 @@ export function WelcomePage({
       }
     }).catch(() => {
       // Ignore errors, default to false
+    });
+
+    window.electronAPI?.system?.checkGit().then((result: { installed: boolean }) => {
+      setGitInstalled(result.installed);
+    }).catch(() => {
+      setGitInstalled(true); // Assume installed on error
     });
   }, []);
 
@@ -163,6 +170,25 @@ export function WelcomePage({
 
   return (
     <div className={cn("flex flex-col h-full bg-background", className)}>
+      {/* Git warning banner - only on Windows when Git not installed */}
+      {!gitInstalled && window.electronAPI?.platform === 'win32' && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-amber-500/10 border-b border-amber-500/20">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-amber-900 dark:text-amber-100">
+              AgentX 在 Windows 上需要安装 Git。
+            </p>
+          </div>
+          <button
+            onClick={() => window.electronAPI?.shell?.openExternal("https://git-scm.com/download/win")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors shrink-0"
+          >
+            <span>下载 Git for Windows</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Main content - centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-4">
         {/* Logo */}

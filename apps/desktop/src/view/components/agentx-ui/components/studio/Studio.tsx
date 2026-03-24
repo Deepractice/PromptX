@@ -37,7 +37,7 @@
 
 import * as React from "react";
 import type { AgentX } from "agentxjs";
-import { ChevronsRight } from "lucide-react";
+import { ChevronsRight, FolderOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AgentList } from "@/components/agentx-ui/components/container/AgentList";
 import { Chat } from "@/components/agentx-ui/components/container/Chat";
@@ -45,6 +45,9 @@ import { WelcomePage } from "@/components/agentx-ui/components/container/Welcome
 import { ToastContainer, useToast } from "@/components/agentx-ui/components/element/Toast";
 import { useImages } from "@/components/agentx-ui/hooks";
 import { cn } from "@/components/agentx-ui/utils";
+import { WorkspacePanel } from "@/components/agentx-ui/components/workspace/WorkspacePanel";
+import { WorkspaceExplorerAdapter } from "@/components/agentx-ui/components/workspace/WorkspaceExplorerAdapter";
+import type { WorkspacePanelPlugin } from "@/components/agentx-ui/components/workspace/types";
 
 export interface StudioProps {
   /**
@@ -108,6 +111,8 @@ export function Studio({
   const [visitedImages, setVisitedImages] = React.useState<Map<string, string>>(new Map());
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
+  const [workspacePanelOpen, setWorkspacePanelOpen] = React.useState(true);
+  const [workspaceActiveTab, setWorkspaceActiveTab] = React.useState("explorer");
 
   // Toast state
   const { toasts, showToast, dismissToast } = useToast();
@@ -225,6 +230,16 @@ export function Studio({
     };
   }, [agentx, showToast]);
 
+  const workspacePlugins = React.useMemo<WorkspacePanelPlugin[]>(() => [
+    {
+      id: "explorer",
+      label: "文件",
+      icon: <FolderOpen className="w-4 h-4" />,
+      order: 1,
+      component: WorkspaceExplorerAdapter,
+    }
+  ], []);
+
   return (
     <div className={cn("flex h-full bg-background", className)}>
       {/* Sidebar - AgentList or Collapsed Button */}
@@ -263,22 +278,50 @@ export function Studio({
       )}
 
       {/* Main area - WelcomePage or Chat */}
-      <div className="flex-1 min-w-0">
-        {!currentImageId && <WelcomePage onSend={handleWelcomeSend} />}
-        {Array.from(visitedImages.entries()).map(([imageId, imageName]) => (
-          <div key={imageId} className={imageId === currentImageId ? "h-full" : "hidden"}>
-            <Chat
-              agentx={agentx}
-              imageId={imageId}
-              agentName={imageName}
-              showSaveButton={showSaveButton}
-              inputHeightRatio={inputHeightRatio}
-              initialMessage={pendingMessagesRef.current.get(imageId) ?? null}
-              onInitialMessageSent={() => { pendingMessagesRef.current.delete(imageId); }}
-            />
-          </div>
-        ))}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Toolbar with workspace toggle */}
+        <div className="flex items-center justify-end px-2 h-8 border-b border-border/50 bg-background shrink-0">
+          <button
+            onClick={() => setWorkspacePanelOpen(v => !v)}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors",
+              workspacePanelOpen
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+            title="工作区文件"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span>工作区</span>
+          </button>
+        </div>
+        {/* Original main content */}
+        <div className="flex-1 min-h-0">
+          {!currentImageId && <WelcomePage onSend={handleWelcomeSend} />}
+          {Array.from(visitedImages.entries()).map(([imageId, imageName]) => (
+            <div key={imageId} className={imageId === currentImageId ? "h-full" : "hidden"}>
+              <Chat
+                agentx={agentx}
+                imageId={imageId}
+                agentName={imageName}
+                showSaveButton={showSaveButton}
+                inputHeightRatio={inputHeightRatio}
+                initialMessage={pendingMessagesRef.current.get(imageId) ?? null}
+                onInitialMessageSent={() => { pendingMessagesRef.current.delete(imageId); }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Workspace panel on the right */}
+      <WorkspacePanel
+        isOpen={workspacePanelOpen}
+        onClose={() => setWorkspacePanelOpen(false)}
+        plugins={workspacePlugins}
+        activeTabId={workspaceActiveTab}
+        onTabChange={setWorkspaceActiveTab}
+      />
 
       {/* Toast notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} position="top-right" />

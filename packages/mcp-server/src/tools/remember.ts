@@ -131,16 +131,16 @@ Strip content to minimum essential words. For each word ask: does removing it ch
           type: 'error',
           content: `❌ V2 角色 "${args.role}" 不支持 remember 工具
 
-V2 角色（RoleX）使用数据库存储和认知循环系统，请使用 action 工具的自我沉淀操作：
+V2 角色（RoleX）使用数据库存储和认知循环系统，请使用 learning 工具：
 
-🧠 **自我沉淀（学习循环）**：
+🧠 **自我沉淀（learning 工具）**：
 • reflect - 反思遇到的问题，创建经验
 • realize - 总结领悟的原则
 • master - 沉淀为标准操作流程（SOP）
 • synthesize - 向其他角色传授知识
 • forget - 遗忘过时的知识
 
-**示例**：
+**示例**（learning 工具）：
 \`\`\`json
 {
   "operation": "reflect",

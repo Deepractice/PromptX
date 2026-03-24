@@ -40,10 +40,23 @@ interface AgentXConfig {
 }
 
 interface OpenDialogOptions {
-  title?: string
   defaultPath?: string
   filters?: { name: string; extensions: string[] }[]
   properties?: ('openFile' | 'openDirectory' | 'multiSelections' | 'showHiddenFiles')[]
+}
+
+interface WorkspaceFolder {
+  id: string
+  name: string
+  path: string
+}
+
+interface DirEntry {
+  name: string
+  path: string
+  is_dir: boolean
+  size: number
+  modified: string | null
 }
 
 interface OpenDialogResult {
@@ -115,6 +128,23 @@ interface ElectronAPI {
   shell: {
     openExternal: (url: string) => Promise<void>
   }
+  // Workspace API
+  workspace: {
+    getFolders: () => Promise<WorkspaceFolder[]>
+    addFolder: (path: string, name: string) => Promise<WorkspaceFolder>
+    removeFolder: (id: string) => Promise<void>
+    pickFolder: () => Promise<{ path: string; name: string } | null>
+    listDir: (dirPath: string) => Promise<DirEntry[]>
+    readFile: (filePath: string) => Promise<string>
+    readFileBase64: (filePath: string) => Promise<string>
+    writeFile: (filePath: string, content: string) => Promise<void>
+    createDir: (dirPath: string) => Promise<void>
+    deleteItem: (itemPath: string) => Promise<void>
+  }
+  // System API
+  system: {
+    checkGit: () => Promise<{ installed: boolean }>
+  }
   // System info
   platform: string
 }
@@ -175,6 +205,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Shell API
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  },
+  // Workspace API
+  workspace: {
+    getFolders: () => ipcRenderer.invoke('workspace:getFolders'),
+    addFolder: (path: string, name: string) => ipcRenderer.invoke('workspace:addFolder', path, name),
+    removeFolder: (id: string) => ipcRenderer.invoke('workspace:removeFolder', id),
+    pickFolder: () => ipcRenderer.invoke('workspace:pickFolder'),
+    listDir: (dirPath: string) => ipcRenderer.invoke('workspace:listDir', dirPath),
+    readFile: (filePath: string) => ipcRenderer.invoke('workspace:readFile', filePath),
+    readFileBase64: (filePath: string) => ipcRenderer.invoke('workspace:readFileBase64', filePath),
+    writeFile: (filePath: string, content: string) => ipcRenderer.invoke('workspace:writeFile', filePath, content),
+    createDir: (dirPath: string) => ipcRenderer.invoke('workspace:createDir', dirPath),
+    deleteItem: (itemPath: string) => ipcRenderer.invoke('workspace:deleteItem', itemPath),
+  },
+  // System API
+  system: {
+    checkGit: () => ipcRenderer.invoke('system:checkGit'),
   },
   // System info
   platform: process.platform,
