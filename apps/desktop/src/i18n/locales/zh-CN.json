@@ -99,6 +99,53 @@
       "copyUrl": "链接已复制",
       "qrHint": "扫码在手机或其他设备上访问"
     },
+    "feishu": {
+      "title": "飞书接入",
+      "description": "连接飞书机器人，通过飞书消息与 PromptX 交互",
+      "appId": {
+        "label": "App ID",
+        "placeholder": "cli_xxxxxxxxxx"
+      },
+      "appSecret": {
+        "label": "App Secret",
+        "placeholder": "输入飞书应用的 App Secret"
+      },
+      "encryptKey": {
+        "label": "Encrypt Key（可选）",
+        "placeholder": "事件验证密钥"
+      },
+      "save": "保存配置",
+      "saving": "保存中...",
+      "saveSuccess": "飞书配置已保存",
+      "saveFailed": "保存飞书配置失败",
+      "testConnection": "测试连接",
+      "comingSoon": "飞书接入功能即将上线",
+      "connected": "已连接",
+      "disconnected": "未连接",
+      "configRequired": "请先填写 App ID 和 App Secret",
+      "startSuccess": "飞书机器人已启动",
+      "startFailed": "启动飞书机器人失败",
+      "stopSuccess": "飞书机器人已停止",
+      "stopFailed": "停止飞书机器人失败",
+      "remove": "断开并删除配置",
+      "removeSuccess": "飞书配置已删除",
+      "removeFailed": "删除飞书配置失败",
+      "guide": "前往飞书开放平台创建应用并获取凭证",
+      "guideLink": "飞书开放平台"
+    },
+    "wechat": {
+      "title": "微信接入",
+      "description": "连接个人微信，通过微信消息与 PromptX 交互",
+      "installTitle": "1. 安装插件",
+      "installDesc": "首先需要安装 openclaw 微信插件",
+      "installCmd": "npx -y @tencent-weixin/openclaw-weixin-cli install",
+      "loginTitle": "2. 扫码登录",
+      "loginDesc": "运行以下命令，使用微信扫码授权登录",
+      "loginCmd": "openclaw channels login --channel openclaw-weixin",
+      "startBtn": "启动微信接入",
+      "comingSoon": "微信接入功能即将上线",
+      "copied": "命令已复制"
+    },
     "server": {
       "title": "服务器配置",
       "description": "配置服务器主机、端口和调试设置",

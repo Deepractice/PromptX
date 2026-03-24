@@ -16,6 +16,7 @@ import { AutoStartWindow } from '~/main/windows/AutoStartWindow'
 import { CognitionWindow } from '~/main/windows/CognitionWindow'
 import { agentXService } from '~/main/services/AgentXService'
 import { webAccessService } from '~/main/services/WebAccessService'
+import { FeishuManager } from '~/main/services/feishu'
 import { workspaceService } from '~/main/services/WorkspaceService'
 import * as logger from '@promptx/logger'
 import * as path from 'node:path'
@@ -33,6 +34,7 @@ class PromptXDesktopApp {
   private updateManager: UpdateManager | null = null
   private autoStartService: AutoStartService | null = null
   private autoStartWindow: AutoStartWindow | null = null
+  private feishuManager: FeishuManager | null = null
 
   async initialize(): Promise<void> {
     // Capture console output to log file (covers @agentxjs/common runtime logs)
@@ -73,6 +75,7 @@ class PromptXDesktopApp {
     this.setupShellIPC()
     this.setupAgentXIPC()
     this.setupWebAccessIPC()
+    this.setupFeishuIPC()
     this.setupWorkspaceIPC()
 
     // Setup infrastructure
@@ -692,6 +695,63 @@ class PromptXDesktopApp {
     ipcMain.handle('agentx:deleteSkill', async (_event, skillName: string) => {
       return await agentXService.deleteSkill(skillName)
     })
+  }
+
+  private setupFeishuIPC(): void {
+    const dataDir = app.getPath('userData')
+    this.feishuManager = new FeishuManager(dataDir, agentXService.getPort())
+
+    ipcMain.handle('feishu:getConfig', async () => {
+      const saved = this.feishuManager!.loadConfig()
+      if (saved?.feishu) {
+        return saved.feishu
+      }
+      return null
+    })
+
+    ipcMain.handle('feishu:saveConfig', async (_, config: any) => {
+      try {
+        this.feishuManager!.saveConfig(config, { name: 'PromptX' })
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    ipcMain.handle('feishu:start', async (_, feishuConfig: any, roleConfig?: any) => {
+      try {
+        const role = roleConfig || { name: 'PromptX' }
+        await this.feishuManager!.start(feishuConfig, role)
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    ipcMain.handle('feishu:stop', async () => {
+      try {
+        await this.feishuManager!.stop()
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    ipcMain.handle('feishu:status', async () => {
+      return this.feishuManager!.getStatus()
+    })
+
+    ipcMain.handle('feishu:remove', async () => {
+      try {
+        await this.feishuManager!.remove()
+        return { success: true }
+      } catch (error: any) {
+        return { success: false, error: error.message }
+      }
+    })
+
+    // 尝试恢复已保存的飞书连接
+    this.feishuManager.restore().catch(() => {})
   }
 
   private setupWebAccessIPC(): void {

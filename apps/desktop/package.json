@@ -41,6 +41,7 @@
     "@agentxjs/queue": "1.9.0",
     "@agentxjs/runtime": "workspace:*",
     "@agentxjs/ui": "1.9.0",
+    "@larksuiteoapi/node-sdk": "^1.59.0",
     "@promptx/config": "workspace:*",
     "@promptx/core": "workspace:*",
     "@promptx/mcp-office": "workspace:*",

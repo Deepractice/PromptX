@@ -21,6 +21,8 @@ import { LanguageSelector } from "./components/LanguageSelector"
 import { MCPConfig } from "./components/MCPConfig"
 import { SkillsConfig } from "./components/SkillsConfig"
 import { WebAccessConfig } from "./components/WebAccessConfig"
+import { FeishuConfig } from "./components/FeishuConfig"
+// import { WechatConfig } from "./components/WechatConfig"
 import { AgentXProfilesConfig } from "./components/AgentXProfilesConfig"
 import { Loader2, Settings, Bot, RefreshCw, Wifi, AlertTriangle } from "lucide-react"
 
@@ -376,6 +378,8 @@ function SettingsWindow() {
           {/* 远程访问 */}
           <TabsContent value="remote" className="flex-1 overflow-y-auto space-y-6">
             <WebAccessConfig />
+            <FeishuConfig />
+            {/* <WechatConfig /> */}
           </TabsContent>
         </Tabs>
       </div>
