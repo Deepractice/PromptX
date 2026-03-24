@@ -858,6 +858,10 @@
     "rolexUpgrade": {
       "title": "RoleX（V2）架构升级",
       "content": "原有 V2 角色需要升级。请激活女娲，让女娲进行升级与迁移才能继续使用。"
+    },
+    "updateV230": {
+      "title": "v2.3.0 版本更新",
+      "content": "🚀 全面优化 RoleX 功能，修复组织操作相关的 bug\n\n⚡ 新增 DeepSeek 预配置，开箱即用\n\n📂 新增工作区功能，支持项目文件管理\n\n💬 支持连接飞书，实现类似 OpenClaw 的多平台接入能力"
     }
   }
 }
