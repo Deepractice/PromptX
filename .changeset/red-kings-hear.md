@@ -4,6 +4,7 @@
 "@promptx/resource": minor
 "@promptx/core": minor
 "@promptx/desktop": minor
+"@promptx/config": minor
 ---
 
 ## v2.3.0
