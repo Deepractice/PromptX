@@ -5,7 +5,8 @@
     "tabs": {
       "system": "System",
       "agentx": "AgentX",
-      "remote": "Remote Access"
+      "remote": "Remote Access",
+      "platform": "Integrations"
     },
     "language": {
       "title": "Language",
@@ -132,6 +133,13 @@
       "removeFailed": "Failed to remove Feishu config",
       "guide": "Create an app on Feishu Open Platform to get credentials",
       "guideLink": "Feishu Open Platform"
+    },
+    "platform": {
+      "title": "Platform Integrations",
+      "description": "Use PromptX as an MCP service in other AI tools. Copy the config below to the corresponding platform.",
+      "trae": "Trae configuration:",
+      "claude": "Claude / Cursor and other AI tools:",
+      "copied": "Config copied"
     },
     "wechat": {
       "title": "WeChat",

@@ -5,7 +5,8 @@
     "tabs": {
       "system": "系统设置",
       "agentx": "AgentX 设置",
-      "remote": "远程访问"
+      "remote": "远程访问",
+      "platform": "接入其他平台"
     },
     "language": {
       "title": "语言",
@@ -132,6 +133,13 @@
       "removeFailed": "删除飞书配置失败",
       "guide": "前往飞书开放平台创建应用并获取凭证",
       "guideLink": "飞书开放平台"
+    },
+    "platform": {
+      "title": "接入其他平台",
+      "description": "将 PromptX 作为 MCP 服务接入其他 AI 工具，复制以下配置到对应平台即可",
+      "trae": "Trae 可以使用以下配置：",
+      "claude": "Claude / Cursor 等 AI 工具：",
+      "copied": "配置已复制"
     },
     "wechat": {
       "title": "微信接入",

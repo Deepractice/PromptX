@@ -22,9 +22,10 @@ import { MCPConfig } from "./components/MCPConfig"
 import { SkillsConfig } from "./components/SkillsConfig"
 import { WebAccessConfig } from "./components/WebAccessConfig"
 import { FeishuConfig } from "./components/FeishuConfig"
+import { PlatformIntegration } from "./components/PlatformIntegration"
 // import { WechatConfig } from "./components/WechatConfig"
 import { AgentXProfilesConfig } from "./components/AgentXProfilesConfig"
-import { Loader2, Settings, Bot, RefreshCw, Wifi, AlertTriangle } from "lucide-react"
+import { Loader2, Settings, Bot, RefreshCw, Wifi, AlertTriangle, Plug } from "lucide-react"
 
 function GitWarningBanner() {
   const { t } = useTranslation()
@@ -222,7 +223,7 @@ function SettingsWindow() {
       <Toaster />
       <div className="mx-auto max-w-4xl w-full flex-1 flex flex-col">
         <Tabs defaultValue="system" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="system" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               {t("settings.tabs.system")}
@@ -234,6 +235,10 @@ function SettingsWindow() {
             <TabsTrigger value="remote" className="flex items-center gap-2">
               <Wifi className="w-4 h-4" />
               {t("settings.tabs.remote")}
+            </TabsTrigger>
+            <TabsTrigger value="platform" className="flex items-center gap-2">
+              <Plug className="w-4 h-4" />
+              {t("settings.tabs.platform")}
             </TabsTrigger>
           </TabsList>
 
@@ -380,6 +385,11 @@ function SettingsWindow() {
             <WebAccessConfig />
             <FeishuConfig />
             {/* <WechatConfig /> */}
+          </TabsContent>
+
+          {/* 接入其他平台 */}
+          <TabsContent value="platform" className="flex-1 overflow-y-auto space-y-6">
+            <PlatformIntegration />
           </TabsContent>
         </Tabs>
       </div>
