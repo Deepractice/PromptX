@@ -116,6 +116,9 @@ importers:
       '@promptx/mcp-server':
         specifier: workspace:*
         version: link:../../packages/mcp-server
+      '@promptx/mcp-workspace':
+        specifier: workspace:*
+        version: link:../../packages/mcp-workspace
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
