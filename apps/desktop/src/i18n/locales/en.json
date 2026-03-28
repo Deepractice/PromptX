@@ -870,6 +870,10 @@
       "title": "RoleX (V2) Architecture Upgrade",
       "content": "Existing V2 roles need to be upgraded. Please activate Nuwa and ask her to upgrade and migrate your roles to continue using them."
     },
+    "updateV231": {
+      "title": "v2.3.1 Update Released",
+      "content": "🔧 Fixed conversation 600s timeout issue, long conversations no longer interrupted\n\n🔧 Fixed workspace MCP bundling issue\n\n✨ New \"Platform Integrations\" in settings — one-click config for Trae / Claude / Cursor and other AI tools"
+    },
     "updateV230": {
       "title": "v2.3.0 Update Released",
       "content": "🚀 Comprehensive RoleX improvements with organization operation bug fixes\n\n⚡ Added DeepSeek preset configuration, ready to use out of the box\n\n📂 New workspace feature with project file management\n\n💬 Feishu (Lark) integration for multi-platform access, similar to OpenClaw"
