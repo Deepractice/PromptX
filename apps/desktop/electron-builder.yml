@@ -32,6 +32,10 @@ extraResources:
     to: "mcp-office"
     filter:
       - "**/*"
+  - from: "../../packages/mcp-workspace/dist"
+    to: "mcp-workspace"
+    filter:
+      - "**/*"
 
 mac:
   category: public.app-category.developer-tools
