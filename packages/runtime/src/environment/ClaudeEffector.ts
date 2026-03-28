@@ -181,15 +181,15 @@ export class ClaudeEffector implements Effector {
         requestId: meta.requestId,
       });
 
-      // Create pending request with timeout
+      // Create pending request with idle timeout (resets on each stream event)
       this.pendingRequest$ = new Subject<void>();
-      this.pendingSubscription = this.pendingRequest$.pipe(timeout(timeoutMs)).subscribe({
+      this.pendingSubscription = this.pendingRequest$.pipe(timeout({ each: timeoutMs })).subscribe({
         complete: () => {
           logger.debug("Request completed within timeout", { requestId: meta.requestId });
         },
         error: (err) => {
           if (err instanceof TimeoutError) {
-            logger.warn("Request timeout", { timeout: timeoutMs, requestId: meta.requestId });
+            logger.warn("Request idle timeout", { timeout: timeoutMs, requestId: meta.requestId });
             this.handleTimeout(meta);
           }
         },
@@ -221,6 +221,8 @@ export class ClaudeEffector implements Effector {
   private handleStreamEvent(msg: SDKMessage): void {
     if (this.currentMeta) {
       this.receptor.feed(msg as SDKPartialAssistantMessage, this.currentMeta);
+      // Reset idle timeout on each stream event
+      this.pendingRequest$?.next();
     }
   }
 

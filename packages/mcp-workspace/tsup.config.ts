@@ -12,5 +12,5 @@ export default defineConfig({
   clean: true,
   target: 'node18',
   outDir: 'dist',
-  external: ['@promptx/logger', '@modelcontextprotocol/sdk'],
+  noExternal: ['@promptx/logger', '@modelcontextprotocol/sdk'],
 });

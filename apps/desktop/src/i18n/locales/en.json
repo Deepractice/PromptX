@@ -5,7 +5,8 @@
     "tabs": {
       "system": "System",
       "agentx": "AgentX",
-      "remote": "Remote Access"
+      "remote": "Remote Access",
+      "platform": "Integrations"
     },
     "language": {
       "title": "Language",
@@ -132,6 +133,13 @@
       "removeFailed": "Failed to remove Feishu config",
       "guide": "Create an app on Feishu Open Platform to get credentials",
       "guideLink": "Feishu Open Platform"
+    },
+    "platform": {
+      "title": "Platform Integrations",
+      "description": "Use PromptX as an MCP service in other AI tools. Copy the config below to the corresponding platform.",
+      "trae": "Trae configuration:",
+      "claude": "Claude / Cursor and other AI tools:",
+      "copied": "Config copied"
     },
     "wechat": {
       "title": "WeChat",
@@ -861,6 +869,10 @@
     "rolexUpgrade": {
       "title": "RoleX (V2) Architecture Upgrade",
       "content": "Existing V2 roles need to be upgraded. Please activate Nuwa and ask her to upgrade and migrate your roles to continue using them."
+    },
+    "updateV231": {
+      "title": "v2.3.1 Update Released",
+      "content": "🔧 Fixed conversation 600s timeout issue, long conversations no longer interrupted\n\n🔧 Fixed workspace MCP bundling issue\n\n✨ New \"Platform Integrations\" in settings — one-click config for Trae / Claude / Cursor and other AI tools"
     },
     "updateV230": {
       "title": "v2.3.0 Update Released",
