@@ -1,5 +1,18 @@
 # @agentxjs/runtime
 
+## 2.0.1
+
+### Patch Changes
+
+- [#565](https://github.com/Deepractice/PromptX/pull/565) [`51bd52f`](https://github.com/Deepractice/PromptX/commit/51bd52f042c47af8c1ed75a8c4cbb3e3441efb9d) Thanks [@dfwgj](https://github.com/dfwgj)! - ## Bug Fixes
+
+  - **runtime**: 修复对话超时误触发问题 — 将绝对超时改为空闲超时（`timeout({ each: 600000 })`），每次 AI 输出都会重置计时器，只有真正超过 600 秒无任何响应才触发超时
+  - **mcp-workspace**: 修复生产环境打包缺失问题 — 将 `external` 改为 `noExternal`，确保 `@promptx/logger` 和 `@modelcontextprotocol/sdk` 被打包进产物；同时在 `electron-builder.yml` 补充 `extraResources` 配置，生产包中正确包含 mcp-workspace
+
+  ## New Features
+
+  - **desktop**: 设置页新增「接入其他平台」Tab，提供 Trae 及 Claude/Cursor 等 AI 工具的一键复制 MCP 配置
+
 ## 1.9.0
 
 ### Minor Changes
@@ -7,15 +20,18 @@
 - 8f84a87: Add SDK warmup and UI hook tests
 
   **Runtime Package**:
+
   - Add `warmup()` method to `SDKQueryLifecycle` for pre-initializing Claude SDK
   - Add `warmup()` method to `ClaudeEffector` and `ClaudeEnvironment`
   - RuntimeAgent now calls warmup() on construction (fire-and-forget)
   - Reduces first message latency by starting SDK subprocess early
 
   **Types Package**:
+
   - Add optional `warmup()` method to `Environment` interface
 
   **UI Package**:
+
   - Add happy-dom test setup for React hook testing in Bun
   - Add useAgent hook tests for event filtering (imageId matching)
 
@@ -63,12 +79,14 @@
 - 51eab14: fix(runtime): resolve memory leak and timeout issues in ClaudeEffector (#196)
 
   **Memory Leak Fix:**
+
   - Fix `resetState()` to properly terminate Claude subprocess by calling `promptSubject.complete()` and `claudeQuery.interrupt()` before resetting state
   - Fix `dispose()` to call `claudeQuery.interrupt()` before cleanup to ensure subprocess termination
   - Fix error handling to always call `resetState()` on any error (not just abort errors) to prevent stale state
   - Add `AGENTX_ENVIRONMENT=true` environment variable to mark AgentX-spawned processes for debugging
 
   **Timeout Mechanism Fix:**
+
   - Refactor timeout handling to use RxJS `timeout()` operator for request-response correlation
   - Add `pendingRequest$` Subject to track active requests and auto-cancel timeout when result is received
   - Replace manual `setTimeout/clearTimeout` with RxJS-managed timeout that properly fires even after `send()` returns
@@ -79,6 +97,7 @@
 - 51eab14: feat(portagent): add PromptX MCP server as default agent
 
   **Portagent:**
+
   - Add `defaultAgent.ts` with PromptX MCP server configuration
   - Integrate default agent into server startup
   - Add `ENABLE_PROMPTX` environment variable to control (default: enabled)
@@ -86,16 +105,19 @@
   - Add multi-stage Dockerfile with `--target local` for development builds
 
   **Runtime:**
+
   - Increase default request timeout from 30s to 10 minutes (600000ms)
   - Better support for long-running tool executions and code generation
 
 - 51eab14: refactor(runtime): extract SDKQueryLifecycle from ClaudeEffector
 
   Extract SDK lifecycle management into a dedicated `SDKQueryLifecycle` class:
+
   - `SDKQueryLifecycle`: Handles SDK query initialization, background listener, interrupt, reset, and dispose
   - `ClaudeEffector`: Now focuses on event coordination and timeout management, delegates SDK operations to lifecycle
 
   This separation improves:
+
   - Single responsibility: Each class has a clear purpose
   - Testability: SDK lifecycle can be tested independently
   - Maintainability: Smaller, focused classes are easier to understand and modify
@@ -111,6 +133,7 @@
 - cf039bb: feat(persistence): add Node.js 22+ compatibility for SQLite driver
 
   The SQLite driver now automatically detects the runtime environment:
+
   - Bun: uses `bun:sqlite` (built-in)
   - Node.js 22+: uses `node:sqlite` (built-in)
 
@@ -242,6 +265,7 @@
 ### Patch Changes
 
 - 38217f0: Add multimodal content support (images and files/PDFs)
+
   - Add ImageBlock and FileBlock components for displaying attachments
   - Add MessageContent component for rendering multimodal messages
   - Update InputPane with attachment support (paste, drag & drop, file picker)
@@ -309,18 +333,21 @@
 - 5749112: refactor(ui): unify assistant message lifecycle with single component
 
   **Major Changes:**
+
   - Consolidated `ThinkingMessage` and `StreamingMessage` into a single `AssistantMessage` component that handles all lifecycle states
   - Added message-level status types: `UserMessageStatus` and `AssistantMessageStatus`
   - Implemented complete status flow: `queued → thinking → responding → success`
   - Created comprehensive Stories for `AssistantMessage` and `ToolMessage` components
 
   **Technical Improvements:**
+
   - Applied single responsibility principle - one component manages all assistant message states
   - Added `useAgent` hook to manage assistant message status transitions automatically
   - Improved Chat component with unified message rendering logic
   - Fixed `RuntimeOperations.getImageMessages` type signature to use proper `Message[]` type
 
   **UI Enhancements:**
+
   - `queued` state: "Queue..." with animated dots
   - `thinking` state: "Thinking..." with animated dots
   - `responding` state: Streaming text with cursor animation
