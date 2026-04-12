@@ -12,61 +12,9 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
 import mammoth from "mammoth";
 import XLSX from "xlsx";
-
-// ---------------------------------------------------------------------------
-// Path validation — prevents arbitrary local file read (CWE-862)
-// ---------------------------------------------------------------------------
-
-const WORKSPACE_CONFIG_PATH = path.join(os.homedir(), ".promptx", "workspaces.json");
-
-function loadAllowedRoots(): string[] {
-  try {
-    if (fs.existsSync(WORKSPACE_CONFIG_PATH)) {
-      const raw = fs.readFileSync(WORKSPACE_CONFIG_PATH, "utf-8");
-      const config = JSON.parse(raw) as { folders?: { path: string }[] };
-      if (config.folders && config.folders.length > 0) {
-        return config.folders.map(f => path.resolve(f.path));
-      }
-    }
-  } catch {
-    // Fall through to cwd fallback
-  }
-  // No workspace configured — fall back to the process working directory
-  return [path.resolve(process.cwd())];
-}
-
-function isWithinRoot(filePath: string, root: string): boolean {
-  // Append sep to both sides so "/workspace" never matches "/workspaceOther"
-  return (path.resolve(filePath) + path.sep).startsWith(path.resolve(root) + path.sep);
-}
-
-/**
- * Throws if `filePath` is outside every configured workspace root.
- * Validates twice: once on the raw path (catches path-traversal) and once
- * after resolving symlinks (catches symlink-escape attacks).
- */
-function validateFilePath(filePath: string): void {
-  const allowedRoots = loadAllowedRoots();
-
-  if (!allowedRoots.some(root => isWithinRoot(filePath, root))) {
-    throw new Error(`Access denied: path is outside the configured workspace boundaries: ${filePath}`);
-  }
-
-  // Re-validate after resolving symlinks
-  try {
-    const realPath = fs.realpathSync(path.resolve(filePath));
-    if (!allowedRoots.some(root => isWithinRoot(realPath, root))) {
-      throw new Error(`Access denied: resolved path is outside the configured workspace boundaries: ${realPath}`);
-    }
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return; // handled by existsSync below
-    throw err;
-  }
-}
 
 // Encoding description for tool schemas
 const ENCODING_DESC = "Character encoding (optional). Common values: utf8 (default), gbk (Chinese Simplified), big5 (Chinese Traditional), utf16le, utf16be, latin1";
@@ -210,7 +158,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       case "read_docx": {
         const filePath = (args as { path: string }).path;
-        validateFilePath(filePath);
         if (!fs.existsSync(filePath)) {
           return { content: [{ type: "text", text: `Error: File not found: ${filePath}` }] };
         }
@@ -221,7 +168,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "read_xlsx": {
         const { path: filePath, sheet, format = "json", codepage = 65001 } = args as { path: string; sheet?: string; format?: string; codepage?: number };
-        validateFilePath(filePath);
         if (!fs.existsSync(filePath)) {
           return { content: [{ type: "text", text: `Error: File not found: ${filePath}` }] };
         }
@@ -250,7 +196,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "read_pptx": {
         const { path: filePath, encoding = "utf8" } = args as { path: string; encoding?: string };
-        validateFilePath(filePath);
         if (!fs.existsSync(filePath)) {
           return { content: [{ type: "text", text: `Error: File not found: ${filePath}` }] };
         }
@@ -288,7 +233,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "list_xlsx_sheets": {
         const { path: filePath, codepage = 65001 } = args as { path: string; codepage?: number };
-        validateFilePath(filePath);
         if (!fs.existsSync(filePath)) {
           return { content: [{ type: "text", text: `Error: File not found: ${filePath}` }] };
         }
@@ -299,7 +243,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "read_pdf": {
         const filePath = (args as { path: string }).path;
-        validateFilePath(filePath);
         if (!fs.existsSync(filePath)) {
           return { content: [{ type: "text", text: `Error: File not found: ${filePath}` }] };
         }
