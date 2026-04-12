@@ -136,7 +136,15 @@ organization 工具仅支持 V2 角色（RoleX）。
         }
       }
 
-      const result = await dispatcher.dispatch(operation, args);
+      let result;
+      try {
+        result = await dispatcher.dispatch(operation, args);
+      } catch (e: any) {
+        return outputAdapter.convertToMCPFormat({
+          type: 'error',
+          content: `❌ RoleX V2 操作失败: ${e?.message || String(e)}`
+        });
+      }
       return outputAdapter.convertToMCPFormat(result);
     }
   };

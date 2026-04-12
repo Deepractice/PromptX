@@ -61,8 +61,12 @@ class RolexBridge {
     if (this.initializing) return this.initializing
 
     this.initializing = this._doInit()
-    await this.initializing
-    this.initializing = null
+    try {
+      await this.initializing
+    } finally {
+      // 无论成功或失败都清除，避免 rejected Promise 粘连导致后续调用永远失败
+      this.initializing = null
+    }
   }
 
   async _doInit () {
@@ -97,6 +101,18 @@ class RolexBridge {
       this.initialized = true
       logger.info('[RolexBridge] RoleX initialized successfully')
     } catch (error) {
+      // 提供更清晰的 SQLite 错误说明
+      if (error && error.message && (error.message.includes('SQLite') || error.message.includes('sqlite'))) {
+        const nodeVer = process.versions.node
+        const enhanced = new Error(
+          `RoleX V2 需要 Node.js 22+（内置 sqlite）或 Bun 运行时。` +
+          `当前运行时：Node.js ${nodeVer}。` +
+          `如需禁用 V2，设置环境变量 PROMPTX_ENABLE_V2=0。`
+        )
+        enhanced.cause = error
+        logger.error('[RolexBridge] RoleX 初始化失败（SQLite 不可用）:', enhanced.message)
+        throw enhanced
+      }
       logger.error('[RolexBridge] RoleX initialization failed:', error)
       throw error
     }
