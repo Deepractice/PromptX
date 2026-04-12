@@ -45,6 +45,13 @@ export interface ClaudeEffectorConfig {
   timeout?: number;
   /** MCP servers configuration */
   mcpServers?: Record<string, import("@agentxjs/types/runtime").McpServerConfig>;
+  /**
+   * Extra CLI flags for the Claude Code subprocess.
+   * See EnvironmentContext.extraArgs for details and gateway compatibility notes.
+   */
+  extraArgs?: Record<string, string | null>;
+  /** Extra environment variables injected into the Claude Code subprocess. */
+  extraEnv?: Record<string, string>;
 }
 
 /**
@@ -82,6 +89,8 @@ export class ClaudeEffector implements Effector {
         cwd: config.cwd,
         resumeSessionId: config.resumeSessionId,
         mcpServers: config.mcpServers,
+        extraArgs: config.extraArgs,
+        extraEnv: config.extraEnv,
       },
       {
         onStreamEvent: (msg) => this.handleStreamEvent(msg),

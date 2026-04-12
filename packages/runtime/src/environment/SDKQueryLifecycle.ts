@@ -52,6 +52,10 @@ export interface SDKQueryConfig {
   cwd?: string;
   resumeSessionId?: string;
   mcpServers?: Record<string, import("@agentxjs/types/runtime").McpServerConfig>;
+  /** Extra CLI flags forwarded to the Claude Code subprocess. */
+  extraArgs?: Record<string, string | null>;
+  /** Extra env vars injected into the Claude Code subprocess. */
+  extraEnv?: Record<string, string>;
 }
 
 /**
@@ -120,6 +124,8 @@ export class SDKQueryLifecycle {
       cwd: this.config.cwd,
       resume: this.config.resumeSessionId,
       mcpServers: this.config.mcpServers,
+      extraArgs: this.config.extraArgs,
+      extraEnv: this.config.extraEnv,
     };
 
     const sdkOptions = buildOptions(context, this.abortController);
