@@ -65,6 +65,8 @@ export class ClaudeEffector implements Effector {
   private pendingRequest$: Subject<void> | null = null;
   /** Subscription for timeout handling */
   private pendingSubscription: Subscription | null = null;
+  /** Heartbeat timer during tool execution (keeps idle timeout from firing) */
+  private toolHeartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(config: ClaudeEffectorConfig, receptor: ClaudeReceptor) {
     this.config = config;
@@ -223,6 +225,17 @@ export class ClaudeEffector implements Effector {
       this.receptor.feed(msg as SDKPartialAssistantMessage, this.currentMeta);
       // Reset idle timeout on each stream event
       this.pendingRequest$?.next();
+
+      // Detect tool execution starting: after message_delta(stop_reason=tool_use),
+      // the SDK goes silent until the tool completes. Start a heartbeat to keep
+      // the idle timeout from firing during (potentially long) tool execution.
+      const sdkEvent = (msg as SDKPartialAssistantMessage).event;
+      if (sdkEvent?.type === "message_delta") {
+        const delta = (sdkEvent as { delta?: { stop_reason?: string } }).delta;
+        if (delta?.stop_reason === "tool_use") {
+          this.startToolHeartbeat();
+        }
+      }
     }
   }
 
@@ -230,8 +243,12 @@ export class ClaudeEffector implements Effector {
    * Handle user message from SDK (contains tool_result)
    */
   private handleUserMessage(msg: SDKMessage): void {
+    // Tool result arrived - stop heartbeat, execution is done
+    this.stopToolHeartbeat();
     if (this.currentMeta) {
       this.receptor.feedUserMessage(msg as { message?: { content?: unknown[] } }, this.currentMeta);
+      // Reset idle timeout: tool execution completed, activity resumed
+      this.pendingRequest$?.next();
     }
   }
 
@@ -293,6 +310,34 @@ export class ClaudeEffector implements Effector {
   }
 
   /**
+   * Start heartbeat during tool execution to prevent idle timeout from firing.
+   *
+   * The SDK emits no events between message_delta(stop_reason=tool_use) and the
+   * tool_result user message. Without a heartbeat, the idle timeout fires after
+   * timeoutMs even though the request is actively progressing.
+   */
+  private startToolHeartbeat(): void {
+    this.stopToolHeartbeat();
+    // Fire at half the timeout interval so we always reset before the timer fires
+    const heartbeatMs = Math.min(Math.floor((this.config.timeout ?? DEFAULT_TIMEOUT) / 2), 120_000);
+    logger.debug("Tool execution started - starting heartbeat", { heartbeatMs });
+    this.toolHeartbeatTimer = setInterval(() => {
+      this.pendingRequest$?.next();
+      logger.debug("Tool execution heartbeat - idle timeout reset");
+    }, heartbeatMs);
+  }
+
+  /**
+   * Stop the tool execution heartbeat
+   */
+  private stopToolHeartbeat(): void {
+    if (this.toolHeartbeatTimer !== null) {
+      clearInterval(this.toolHeartbeatTimer);
+      this.toolHeartbeatTimer = null;
+    }
+  }
+
+  /**
    * Handle request timeout
    */
   private handleTimeout(meta: ReceptorMeta): void {
@@ -309,6 +354,7 @@ export class ClaudeEffector implements Effector {
    * Clean up pending request subscription
    */
   private cleanupPendingRequest(): void {
+    this.stopToolHeartbeat();
     if (this.pendingSubscription) {
       this.pendingSubscription.unsubscribe();
       this.pendingSubscription = null;
@@ -323,6 +369,7 @@ export class ClaudeEffector implements Effector {
    * Complete pending request (cancels timeout)
    */
   private completePendingRequest(): void {
+    this.stopToolHeartbeat();
     if (this.pendingRequest$) {
       this.pendingRequest$.complete();
       this.pendingRequest$ = null;
