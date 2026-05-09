@@ -9,7 +9,7 @@ Quick deployment of PromptX MCP Server using Docker.
 # Pull and run from Docker Hub
 docker run -d \
   -p 5203:5203 \
-  -v $(pwd)/.promptx:/root/.promptx \
+  -v $(pwd)/.promptx:/home/node/.promptx \
   --name promptx \
   deepracticexs/promptx:latest
 ```
@@ -28,7 +28,7 @@ docker build -t deepracticexs/promptx -f docker/Dockerfile .
 # Run container
 docker run -d \
   -p 5203:5203 \
-  -v $(pwd)/.promptx:/root/.promptx \
+  -v $(pwd)/.promptx:/home/node/.promptx \
   --name promptx \
   deepracticexs/promptx
 ```
