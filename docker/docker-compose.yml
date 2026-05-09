@@ -7,7 +7,7 @@ services:
       - "5203:5203"
     volumes:
       # Data stored in PROMPTX_DATA or .promptx folder next to docker-compose.yml
-      - ${PROMPTX_DATA:-./.promptx}:/root/.promptx
+      - ${PROMPTX_DATA:-./.promptx}:/home/node/.promptx
     restart: unless-stopped
     environment:
       - NODE_ENV=production
